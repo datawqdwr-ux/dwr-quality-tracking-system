@@ -1367,13 +1367,36 @@
       renderFormCustomInputs();
     }
 
-    /* --- ນຳເຂົ້າຂໍ້ມູນຈາກ EXCEL --- */
+    /* --- ນຳເຂົ້າຂໍ້ມູນຈາກ EXCEL (ຮອງຮັບຫຼາຍຕາຕະລາງໃນ Sheet ດຽວ) --- */
     const EXCEL_FIELDS = {
-      code:     ['ລະຫັດສະຖານີ', 'ລະຫັດ', 'code', 'stationcode', 'station code', 'station id', 'id', 'no. station', 'sample id', 'sampleid'],
-      name:     ['ຊື່ສະຖານີ', 'ຊື່ສະຖານີ / ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່', 'ຊື່', 'name', 'station', 'station name', 'stationname', 'location', 'site', 'sampling point'],
-      province: ['ແຂວງ/ເມືອງ', 'ແຂວງ', 'ເມືອງ', 'province', 'district', 'city'],
+      no:       ['no', 'no.', 'ລຳດັບ', 'ລ/ດ', 'ລ.ດ', 'ລດ', '#', 'n°'],
+      code:     ['ລະຫັດສະຖານີ', 'ລະຫັດ', 'code', 'stationcode', 'station code', 'station id', 'id', 'sample id', 'sampleid', 'site code'],
+      name:     ['ຊື່ສະຖານີ', 'ຊື່ສະຖານີ / ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່', 'ຊື່', 'name', 'station', 'station name', 'stationname', 'location', 'site', 'site name', 'sampling point'],
+      village:  ['village', 'ບ້ານ'],
+      river:    ['river', 'ແມ່ນ້ຳ', 'ລຳນ້ຳ', 'stream', 'water body', 'waterbody', 'source'],
+      district: ['district', 'ເມືອງ'],
+      province: ['ແຂວງ/ເມືອງ', 'ແຂວງ', 'province'],
       lat:      ['lat', 'latitude', 'ເສັ້ນຂະໜານ', 'y'],
       lng:      ['lng', 'lon', 'long', 'longitude', 'ເສັ້ນແວງ', 'x']
+    };
+
+    // ຊື່ໂຕຊີ້ວັດມາດຕະຖານ: ໃຊ້ຈັບຄູ່ຊື່ຫຍໍ້ (ເຊັ່ນ T = Temperature) ແລະ ເປັນຫົວໜ່ວຍເລີ່ມຕົ້ນເມື່ອສ້າງໂຕຊີ້ວັດໃໝ່
+    const PARAM_ALIASES = {
+      temperature: { name: 'Temperature', unit: '°C',    aliases: ['t', 'temp', 'temperature', 'watertemperature', 'ອຸນຫະພູມ'] },
+      ph:          { name: 'pH',          unit: '',      aliases: ['ph'] },
+      ec:          { name: 'EC',          unit: 'µS/cm', aliases: ['ec', 'conductivity', 'electricalconductivity'] },
+      turbidity:   { name: 'Turbidity',   unit: 'NTU',   aliases: ['turbidity', 'turb', 'ຄວາມຂຸ່ນ'] },
+      tss:         { name: 'TSS',         unit: 'mg/L',  aliases: ['tss', 'totalsuspendedsolids'] },
+      tds:         { name: 'TDS',         unit: 'mg/L',  aliases: ['tds', 'totaldissolvedsolids'] },
+      do:          { name: 'DO',          unit: 'mg/L',  aliases: ['do', 'dissolvedoxygen'] },
+      bod:         { name: 'BOD',         unit: 'mg/L',  aliases: ['bod', 'bod5'] },
+      cod:         { name: 'COD',         unit: 'mg/L',  aliases: ['cod'] },
+      fe:          { name: 'Fe',          unit: 'mg/L',  aliases: ['fe', 'iron'] },
+      mn:          { name: 'Mn',          unit: 'mg/L',  aliases: ['mn', 'manganese'] },
+      no3:         { name: 'NO3',         unit: 'mg/L',  aliases: ['no3', 'nitrate', 'no3n'] },
+      no2:         { name: 'NO2',         unit: 'mg/L',  aliases: ['no2', 'nitrite', 'no2n'] },
+      as:          { name: 'As',          unit: 'mg/L',  aliases: ['as', 'arsenic'] },
+      salinity:    { name: 'Salinity',    unit: '',      aliases: ['salinity', 'sal'] }
     };
 
     function normHeader(v) {
@@ -1381,6 +1404,13 @@
     }
     function compactHeader(v) {
       return normHeader(v).replace(/\(.*?\)|\[.*?\]/g, '').replace(/[\s_\-\.:]/g, '');
+    }
+    function canonParam(v) {
+      const c = compactHeader(v);
+      for (const [canon, p] of Object.entries(PARAM_ALIASES)) {
+        if (p.aliases.includes(c)) return canon;
+      }
+      return c;
     }
 
     function matchField(header) {
@@ -1393,19 +1423,23 @@
     }
 
     function matchIndicator(header) {
-      const c = compactHeader(header);
+      const c = canonParam(header);
       if (!c) return null;
       const pool = [...customIndicators, ...masterIndicators.filter(m => !customIndicators.some(ci => ci.key === m.key))];
-      return pool.find(i =>
-        compactHeader(i.name) === c ||
-        compactHeader(i.key) === c ||
-        compactHeader(`${i.name}${i.unit || ''}`) === compactHeader(String(header).replace(/[()]/g, ''))
-      ) || null;
+      return pool.find(i => canonParam(i.name) === c || compactHeader(i.key) === c) || null;
     }
 
     function splitNameUnit(header) {
       const m = String(header).trim().match(/^(.*?)\s*[\(\[]\s*(.*?)\s*[\)\]]\s*$/);
       return m ? { name: m[1].trim(), unit: m[2].trim() } : { name: String(header).trim(), unit: '' };
+    }
+
+    // ຊື່ + ຫົວໜ່ວຍ ສຳລັບໂຕຊີ້ວັດໃໝ່: ໃຊ້ຫົວໜ່ວຍໃນວົງເລັບຖ້າມີ, ບໍ່ດັ່ງນັ້ນໃຊ້ຄ່າມາດຕະຖານ
+    function newIndicatorFromHeader(header) {
+      const { name, unit } = splitNameUnit(header);
+      const std = PARAM_ALIASES[canonParam(header)];
+      if (std) return { name: std.name, unit: unit || std.unit };
+      return { name, unit };
     }
 
     function cleanExcelValue(v) {
@@ -1421,6 +1455,91 @@
       if (typeof v === 'number') return v;
       const n = parseFloat(String(v ?? '').replace(',', '.'));
       return isNaN(n) ? NaN : n;
+    }
+
+    const cellText = v => String(v ?? '').trim();
+    const isBlankRow = row => row.every(v => cellText(v) === '');
+    function isTitleRow(row) {
+      const ne = row.filter(v => cellText(v) !== '');
+      return ne.length === 1 && typeof ne[0] === 'string' && cellText(ne[0]).length >= 8 && isNaN(ne[0]);
+    }
+
+    // ແຖວຫົວຕາຕະລາງຂອງສະຖານີ: ມີ Lat+Lng ຫຼື ມີ ລະຫັດ/ຊື່ ພ້ອມຖັນອື່ນ
+    function analyzeHeader(row) {
+      const colMap = {}, indCols = [], unknownCols = [];
+      row.forEach((h, col) => {
+        if (cellText(h) === '') return;
+        const f = matchField(h);
+        if (f && colMap[f] === undefined) { colMap[f] = col; return; }
+        const ind = matchIndicator(h);
+        if (ind && !indCols.some(x => x.ind.key === ind.key)) { indCols.push({ col, ind }); return; }
+        unknownCols.push({ col, header: cellText(h) });
+      });
+      const fields = Object.keys(colMap);
+      const ok = (colMap.lat !== undefined && colMap.lng !== undefined) ||
+                 ((colMap.code !== undefined || colMap.name !== undefined) && fields.length >= 2);
+      return ok ? { colMap, indCols, unknownCols } : null;
+    }
+
+    function blockPrefix(title, used) {
+      let p = 'ST';
+      const basin = title.match(/in\s+(.+?)\s+basin/i);
+      if (basin) p = basin[1].split(/\s+/).map(w => w[0]).join('').toUpperCase();
+      else if (title) p = title.replace(/[^A-Za-z\s]/g, ' ').trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || 'ST';
+      let q = p, n = 2;
+      while (used.has(q)) q = p + (n++);
+      used.add(q);
+      return q;
+    }
+
+    function parseSheetBlocks(rows) {
+      const blocks = [];
+      const usedPrefix = new Set();
+      let lastTitle = '';
+      let cur = null;
+
+      const close = () => { if (cur) { blocks.push(cur); cur = null; } };
+
+      rows.forEach((row, r) => {
+        const excelRow = r + 1;
+        if (isBlankRow(row)) return;
+        if (isTitleRow(row)) { close(); lastTitle = cellText(row.find(v => cellText(v) !== '')); return; }
+
+        const head = analyzeHeader(row);
+        if (head) {
+          close();
+          cur = { title: lastTitle, headerRow: excelRow, ...head, prefix: blockPrefix(lastTitle, usedPrefix), parsed: [], skipped: [] };
+          lastTitle = '';
+          return;
+        }
+        if (!cur) return; // ແຖວທີ່ບໍ່ຢູ່ໃນຕາຕະລາງສະຖານີ (ເຊັ່ນ ຕາຕະລາງສະຫຼຸບ)
+
+        const m = cur.colMap;
+        const get = f => m[f] !== undefined ? cellText(row[m[f]]) : '';
+        const no = get('no'), village = get('village'), river = get('river'), district = get('district'), province = get('province');
+        let code = get('code'), name = get('name');
+        if (!code && !name && !village && !river && !district) return; // ແຖວໝາຍເຫດ
+
+        if (!name) name = (village ? [village, river] : [river, district]).filter(Boolean).join(' - ');
+        if (!code) code = `${cur.prefix}-${String(no || cur.parsed.length + cur.skipped.length + 1).padStart(2, '0')}`;
+        if (!name) name = code;
+
+        const lat = toCoord(m.lat !== undefined ? row[m.lat] : '');
+        const lng = toCoord(m.lng !== undefined ? row[m.lng] : '');
+        if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+          cur.skipped.push({ excelRow, label: name, reason: 'ບໍ່ມີ Lat/Lng ຫຼື ບໍ່ຖືກຕ້ອງ' });
+          return;
+        }
+
+        const customs = {};
+        cur.indCols.forEach(({ col, ind }) => customs[ind.key] = cleanExcelValue(row[col]));
+        const extra = {};
+        cur.unknownCols.forEach(({ col, header }) => extra[canonParam(header)] = cleanExcelValue(row[col]));
+
+        cur.parsed.push({ code, name, province: [district, province].filter(Boolean).join(', '), lat, lng, customs, extra });
+      });
+      close();
+      return blocks.filter(b => b.parsed.length || b.skipped.length);
     }
 
     function handleExcelDrop(e) {
@@ -1444,166 +1563,115 @@
 
       let wb;
       try {
-        const buf = await file.arrayBuffer();
-        wb = XLSX.read(buf, { type: 'array' });
+        wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
       } catch (err) {
         return Swal.fire({ icon: 'error', title: 'ອ່ານໄຟລ໌ບໍ່ໄດ້', text: 'ໄຟລ໌ອາດເສຍ ຫຼື ມີລະຫັດຜ່ານລັອກໄວ້' });
       }
 
-      // ຖ້າມີຫຼາຍ Sheet → ໃຫ້ເລືອກ
       let sheetName = wb.SheetNames[0];
       if (wb.SheetNames.length > 1) {
         const opts = {};
         wb.SheetNames.forEach(n => opts[n] = n);
         const { value, isConfirmed } = await Swal.fire({
           title: '📑 ເລືອກ Sheet ທີ່ຈະນຳເຂົ້າ',
-          input: 'select',
-          inputOptions: opts,
-          inputValue: sheetName,
-          showCancelButton: true,
-          confirmButtonText: 'ຕໍ່ໄປ',
-          cancelButtonText: 'ຍົກເລີກ'
+          input: 'select', inputOptions: opts, inputValue: sheetName,
+          showCancelButton: true, confirmButtonText: 'ຕໍ່ໄປ', cancelButtonText: 'ຍົກເລີກ'
         });
         if (!isConfirmed) return;
         sheetName = value;
       }
 
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, raw: true, defval: '', blankrows: false });
-      if (!rows.length) return Swal.fire({ icon: 'warning', title: 'Sheet ນີ້ບໍ່ມີຂໍ້ມູນ' });
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, raw: true, defval: '', blankrows: true });
+      const blocks = parseSheetBlocks(rows);
 
-      // ຊອກແຖວຫົວຕາຕະລາງ (ໃນ 15 ແຖວທຳອິດ) — ແຖວທີ່ມີຊື່ຖັນທີ່ຮູ້ຈັກຫຼາຍທີ່ສຸດ
-      let headerIdx = -1, best = 0;
-      for (let r = 0; r < Math.min(rows.length, 15); r++) {
-        const score = rows[r].filter(h => matchField(h) || matchIndicator(h)).length;
-        if (score > best) { best = score; headerIdx = r; }
-      }
-      if (headerIdx < 0 || best < 2) {
+      if (!blocks.length) {
         return Swal.fire({
           icon: 'warning',
-          title: 'ບໍ່ພົບຫົວຕາຕະລາງທີ່ລະບົບຮູ້ຈັກ',
-          html: `ແຖວຫົວຕາຕະລາງຕ້ອງມີຖັນເຊັ່ນ <b>ລະຫັດສະຖານີ</b>, <b>ຊື່ສະຖານີ</b>, <b>Lat</b>, <b>Lng</b>.<br><br>ແນະນຳໃຫ້ດາວໂຫລດແບບຟອມ Excel ແລ້ວກອກຂໍ້ມູນຕາມນັ້ນ.`,
-          showCancelButton: true,
-          confirmButtonText: '📄 ດາວໂຫລດແບບຟອມ',
-          cancelButtonText: 'ປິດ'
+          title: 'ບໍ່ພົບຕາຕະລາງສະຖານີທີ່ລະບົບອ່ານໄດ້',
+          html: `ແຖວຫົວຕາຕະລາງຕ້ອງມີຖັນ <b>Lat</b> ແລະ <b>Lng/Long</b> ຫຼື <b>ລະຫັດ/ຊື່ສະຖານີ</b>.<br><br>ແນະນຳໃຫ້ດາວໂຫລດແບບຟອມ Excel ແລ້ວກອກຂໍ້ມູນຕາມນັ້ນ.`,
+          showCancelButton: true, confirmButtonText: '📄 ດາວໂຫລດແບບຟອມ', cancelButtonText: 'ປິດ'
         }).then(r => { if (r.isConfirmed) downloadExcelTemplate(); });
       }
-
-      const headers = rows[headerIdx];
-      const colMap = {};           // field → column index
-      const indCols = [];          // { col, ind }
-      const unknownCols = [];      // { col, header }
-      headers.forEach((h, col) => {
-        if (String(h).trim() === '') return;
-        const f = matchField(h);
-        if (f && colMap[f] === undefined) { colMap[f] = col; return; }
-        const ind = matchIndicator(h);
-        if (ind && !indCols.some(x => x.ind.key === ind.key)) { indCols.push({ col, ind }); return; }
-        if (/^(no|no\.|ລຳດັບ|ລ\/ດ|#|ລດ)$/i.test(String(h).trim())) return; // ຖັນລຳດັບ
-        unknownCols.push({ col, header: String(h).trim() });
-      });
-
-      if (colMap.code === undefined && colMap.name === undefined) {
-        return Swal.fire({ icon: 'warning', title: 'ບໍ່ພົບຖັນ ລະຫັດສະຖານີ ຫຼື ຊື່ສະຖານີ', text: 'ຕ້ອງມີຢ່າງນ້ອຍ 1 ໃນ 2 ຖັນນີ້' });
+      if (!blocks.some(b => b.parsed.length)) {
+        return Swal.fire({ icon: 'warning', title: 'ບໍ່ມີແຖວທີ່ນຳເຂົ້າໄດ້', html: 'ທຸກແຖວຖືກຂ້າມ ເພາະ <b>ບໍ່ມີ Lat/Lng</b> ຫຼື ຄ່າບໍ່ຖືກຕ້ອງ' });
       }
 
-      // ແປງແຕ່ລະແຖວເປັນສະຖານີ
-      const parsed = [], skipped = [];
-      rows.slice(headerIdx + 1).forEach((row, k) => {
-        const excelRow = headerIdx + 2 + k;
-        if (row.every(v => String(v).trim() === '')) return;
-        const code = colMap.code !== undefined ? String(row[colMap.code]).trim() : '';
-        const name = colMap.name !== undefined ? String(row[colMap.name]).trim() : '';
-        if (!code && !name) return; // ແຖວສະຫຼຸບ/ໝາຍເຫດ
-        const lat = colMap.lat !== undefined ? toCoord(row[colMap.lat]) : NaN;
-        const lng = colMap.lng !== undefined ? toCoord(row[colMap.lng]) : NaN;
-        if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
-          skipped.push({ excelRow, label: code || name, reason: 'ບໍ່ມີ Lat/Lng ຫຼື ບໍ່ຖືກຕ້ອງ' });
-          return;
-        }
-        const customs = {};
-        indCols.forEach(({ col, ind }) => customs[ind.key] = cleanExcelValue(row[col]));
-        const extra = {};
-        unknownCols.forEach(({ col, header }) => extra[header] = cleanExcelValue(row[col]));
-        parsed.push({
-          code: code || `ST-${excelRow}`,
-          name: name || code,
-          province: colMap.province !== undefined ? String(row[colMap.province]).trim() : '',
-          lat, lng, customs, extra
-        });
-      });
-
-      if (!parsed.length) {
-        return Swal.fire({
-          icon: 'warning',
-          title: 'ບໍ່ມີແຖວທີ່ນຳເຂົ້າໄດ້',
-          html: skipped.length ? `ທຸກແຖວຖືກຂ້າມ ເພາະ <b>ບໍ່ມີ Lat/Lng</b> ຫຼື ຄ່າບໍ່ຖືກຕ້ອງ.<br>ກະລຸນາເພີ່ມພິກັດໃນໄຟລ໌ Excel ແລ້ວລອງໃໝ່.` : 'ບໍ່ພົບຂໍ້ມູນຂ້າງລຸ່ມຫົວຕາຕະລາງ'
-        });
-      }
-
-      showExcelPreview(file.name, sheetName, parsed, skipped, colMap, indCols, unknownCols);
+      showExcelPreview(file.name, sheetName, blocks);
     }
 
-    function showExcelPreview(fileName, sheetName, parsed, skipped, colMap, indCols, unknownCols) {
-      const fieldLabel = { code: 'ລະຫັດ', name: 'ຊື່ສະຖານີ', province: 'ແຂວງ/ເມືອງ', lat: 'Lat', lng: 'Lng' };
-      const found = Object.keys(fieldLabel).filter(f => colMap[f] !== undefined);
-      const missing = Object.keys(fieldLabel).filter(f => colMap[f] === undefined && f !== 'lat' && f !== 'lng');
-
+    function showExcelPreview(fileName, sheetName, blocks) {
       const th = 'px-2 py-1 border border-slate-300 bg-slate-200 font-bold whitespace-nowrap';
       const td = 'px-2 py-1 border border-slate-300 whitespace-nowrap';
-      const previewRows = parsed.slice(0, 15).map((st, k) => `
-        <tr class="${k % 2 ? 'bg-slate-50' : 'bg-white'}">
-          <td class="${td} font-mono font-bold text-indigo-700">${escAttr(st.code)}</td>
-          <td class="${td}">${escAttr(st.name)}</td>
-          <td class="${td}">${escAttr(st.province || '-')}</td>
-          <td class="${td} text-right">${st.lat}</td>
-          <td class="${td} text-right">${st.lng}</td>
-          ${indCols.map(({ ind }) => `<td class="${td} text-right">${escAttr(st.customs[ind.key])}</td>`).join('')}
-          ${unknownCols.map(({ header }) => `<td class="${td} text-right text-amber-700">${escAttr(st.extra[header])}</td>`).join('')}
-        </tr>`).join('');
+      const good = blocks.filter(b => b.parsed.length);
+      const totalSt = good.reduce((n, b) => n + b.parsed.length, 0);
+      const totalSkip = blocks.reduce((n, b) => n + b.skipped.length, 0);
+      const multi = good.length > 1;
 
+      // ຖັນທີ່ບໍ່ຮູ້ຈັກ (ລວມທຸກຕາຕະລາງ, ບໍ່ຊ້ຳ)
+      const unknownMap = new Map();
+      good.forEach(b => b.unknownCols.forEach(u => { const c = canonParam(u.header); if (!unknownMap.has(c)) unknownMap.set(c, u.header); }));
+
+      const blockCards = good.map((b, bi) => {
+        const cols = [...b.indCols.map(x => ({ label: x.ind.name, get: st => st.customs[x.ind.key], isNew: false })),
+                      ...b.unknownCols.map(u => ({ label: u.header, get: st => st.extra[canonParam(u.header)], isNew: true }))];
+        const rowsHtml = b.parsed.slice(0, 5).map((st, k) => `
+          <tr class="${k % 2 ? 'bg-slate-50' : 'bg-white'}">
+            <td class="${td} font-mono font-bold text-indigo-700">${escAttr(st.code)}</td>
+            <td class="${td}">${escAttr(st.name)}</td>
+            <td class="${td}">${escAttr(st.province || '-')}</td>
+            <td class="${td} text-right">${st.lat}</td>
+            <td class="${td} text-right">${st.lng}</td>
+            ${cols.map(c => `<td class="${td} text-right ${c.isNew ? 'text-amber-700' : ''}">${escAttr(c.get(st))}</td>`).join('')}
+          </tr>`).join('');
+        return `
+          <div class="border rounded-lg p-2 space-y-1.5 ${bi % 2 ? 'bg-slate-50/60' : 'bg-white'}">
+            <div class="flex items-start gap-2">
+              ${multi ? `<input type="checkbox" id="excelBlockUse_${bi}" checked class="mt-2" title="ນຳເຂົ້າຕາຕະລາງນີ້">` : ''}
+              <div class="flex-1">
+                <label class="text-[10px] font-bold text-slate-500">🏢 ຊື່ຊຸດຂໍ້ມູນ (ຕາຕະລາງທີ ${bi + 1} · ແຖວ ${b.headerRow})</label>
+                <input type="text" id="excelBlockTitle_${bi}" value="${escAttr(b.title || fileName.replace(/\.(xlsx|xls|csv)$/i, ''))}" class="w-full border rounded px-2 py-1 text-xs">
+              </div>
+              <span class="shrink-0 mt-4 bg-emerald-100 text-emerald-800 font-bold rounded px-2 py-0.5">${b.parsed.length} ສະຖານີ</span>
+            </div>
+            <div class="overflow-auto max-h-40 border border-slate-400 rounded">
+              <table class="text-[11px] border-collapse min-w-full">
+                <thead class="sticky top-0"><tr>
+                  <th class="${th}">ລະຫັດ</th><th class="${th}">ຊື່ສະຖານີ</th><th class="${th}">ແຂວງ/ເມືອງ</th><th class="${th}">Lat</th><th class="${th}">Lng</th>
+                  ${cols.map(c => `<th class="${th} ${c.isNew ? '!bg-amber-100' : ''}">${c.isNew ? '🆕 ' : ''}${escAttr(c.label)}</th>`).join('')}
+                </tr></thead>
+                <tbody>${rowsHtml}</tbody>
+              </table>
+            </div>
+            ${b.parsed.length > 5 ? `<p class="text-[10px] text-slate-400">ສະແດງ 5 ແຖວທຳອິດ ຈາກ ${b.parsed.length}</p>` : ''}
+          </div>`;
+      }).join('');
+
+      const skippedAll = blocks.flatMap(b => b.skipped);
       const html = `
         <div class="text-left text-xs space-y-3">
           <div class="bg-slate-50 border rounded-lg p-2 leading-relaxed">
             📄 <b>${escAttr(fileName)}</b> · Sheet: <b>${escAttr(sheetName)}</b><br>
-            ✅ ນຳເຂົ້າໄດ້ <b class="text-emerald-700">${parsed.length}</b> ສະຖານີ
-            ${skipped.length ? ` · ⚠️ ຂ້າມ <b class="text-rose-600">${skipped.length}</b> ແຖວ` : ''}
+            ພົບ <b>${good.length}</b> ຕາຕະລາງ · ນຳເຂົ້າໄດ້ <b class="text-emerald-700">${totalSt}</b> ສະຖານີ
+            ${totalSkip ? ` · ⚠️ ຂ້າມ <b class="text-rose-600">${totalSkip}</b> ແຖວ` : ''}
+            ${multi ? `<br><span class="text-indigo-700">ແຕ່ລະຕາຕະລາງຈະຖືກບັນທຶກເປັນ <b>1 ຊຸດຂໍ້ມູນແຍກກັນ</b> ໂດຍກົງ</span>` : ''}
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <div class="border rounded-lg p-2">
-              <p class="font-bold text-slate-700 mb-1">🔗 ຖັນທີ່ຈັບຄູ່ໄດ້</p>
-              <p>${found.map(f => `<span class="inline-block bg-emerald-100 text-emerald-800 rounded px-1.5 py-0.5 m-0.5">${fieldLabel[f]}</span>`).join('')}
-                 ${indCols.map(({ ind }) => `<span class="inline-block bg-sky-100 text-sky-800 rounded px-1.5 py-0.5 m-0.5">🧪 ${escAttr(ind.name)}</span>`).join('')}</p>
-              ${missing.length ? `<p class="text-slate-400 mt-1">ບໍ່ມີຖັນ: ${missing.map(f => fieldLabel[f]).join(', ')}</p>` : ''}
-            </div>
-            <div class="border rounded-lg p-2 ${unknownCols.length ? 'border-amber-300 bg-amber-50' : ''}">
-              <p class="font-bold text-slate-700 mb-1">🆕 ຖັນທີ່ລະບົບຍັງບໍ່ຮູ້ຈັກ</p>
-              ${unknownCols.length ? `
-                <label class="flex items-start gap-1.5 cursor-pointer">
-                  <input type="checkbox" id="excelAddUnknown" checked class="mt-0.5">
-                  <span>ເພີ່ມເປັນ <b>ໂຕຊີ້ວັດໃໝ່</b>: ${unknownCols.map(u => `<b>${escAttr(u.header)}</b>`).join(', ')}</span>
-                </label>
-                <p class="text-[10px] text-slate-500 mt-1">ຖ້າບໍ່ຕິກ ຖັນເຫຼົ່ານີ້ຈະຖືກຂ້າມ</p>` : '<p class="text-slate-400">ບໍ່ມີ — ທຸກຖັນຈັບຄູ່ໄດ້ໝົດ</p>'}
-            </div>
-          </div>
+          ${unknownMap.size ? `
+            <div class="border border-amber-300 bg-amber-50 rounded-lg p-2">
+              <label class="flex items-start gap-1.5 cursor-pointer">
+                <input type="checkbox" id="excelAddUnknown" checked class="mt-0.5">
+                <span>🆕 ເພີ່ມເປັນ <b>ໂຕຊີ້ວັດໃໝ່</b>: ${[...unknownMap.values()].map(h => { const n = newIndicatorFromHeader(h); return `<b>${escAttr(n.name)}</b>${n.unit ? ` (${escAttr(n.unit)})` : ''}`; }).join(', ')}</span>
+              </label>
+              <p class="text-[10px] text-slate-500 mt-1">ຫົວໜ່ວຍທີ່ສະແດງແມ່ນຄ່າມາດຕະຖານ — ແກ້ໄດ້ພາຍຫຼັງໃນ ⚙️ ຕັ້ງຄ່າລະບົບ. ຖ້າບໍ່ຕິກ ຖັນເຫຼົ່ານີ້ຈະຖືກຂ້າມ</p>
+            </div>` : ''}
 
-          <div class="overflow-auto max-h-64 border border-slate-400 rounded">
-            <table class="text-[11px] border-collapse min-w-full">
-              <thead class="sticky top-0"><tr>
-                <th class="${th}">ລະຫັດ</th><th class="${th}">ຊື່ສະຖານີ</th><th class="${th}">ແຂວງ/ເມືອງ</th><th class="${th}">Lat</th><th class="${th}">Lng</th>
-                ${indCols.map(({ ind }) => `<th class="${th}">${escAttr(ind.name)}</th>`).join('')}
-                ${unknownCols.map(({ header }) => `<th class="${th} !bg-amber-100">🆕 ${escAttr(header)}</th>`).join('')}
-              </tr></thead>
-              <tbody>${previewRows}</tbody>
-            </table>
-          </div>
-          ${parsed.length > 15 ? `<p class="text-[10px] text-slate-400">ສະແດງ 15 ແຖວທຳອິດ ຈາກທັງໝົດ ${parsed.length} ແຖວ</p>` : ''}
+          <div class="space-y-2 max-h-[45vh] overflow-auto pr-1">${blockCards}</div>
 
-          ${skipped.length ? `
+          ${skippedAll.length ? `
             <details class="border border-rose-200 bg-rose-50 rounded-lg p-2">
-              <summary class="cursor-pointer font-bold text-rose-700">⚠️ ແຖວທີ່ຖືກຂ້າມ (${skipped.length})</summary>
+              <summary class="cursor-pointer font-bold text-rose-700">⚠️ ແຖວທີ່ຖືກຂ້າມ (${skippedAll.length})</summary>
               <ul class="mt-1 space-y-0.5 max-h-24 overflow-auto">
-                ${skipped.map(x => `<li>ແຖວ ${x.excelRow}: <b>${escAttr(x.label)}</b> — ${x.reason}</li>`).join('')}
+                ${skippedAll.map(x => `<li>ແຖວ ${x.excelRow}: <b>${escAttr(x.label)}</b> — ${x.reason}</li>`).join('')}
               </ul>
             </details>` : ''}
         </div>`;
@@ -1611,36 +1679,50 @@
       Swal.fire({
         title: '📊 ກວດສອບຂໍ້ມູນກ່ອນນຳເຂົ້າ',
         html,
-        width: 900,
+        width: 960,
         showCancelButton: true,
-        confirmButtonText: `✅ ນຳເຂົ້າ ${parsed.length} ສະຖານີ`,
+        confirmButtonText: multi ? `✅ ບັນທຶກ ${good.length} ຊຸດຂໍ້ມູນ` : `✅ ນຳເຂົ້າ ${totalSt} ສະຖານີ`,
         cancelButtonText: 'ຍົກເລີກ',
         confirmButtonColor: '#059669',
         cancelButtonColor: '#64748b',
-        preConfirm: () => ({ addUnknown: !!document.getElementById('excelAddUnknown')?.checked })
+        preConfirm: () => {
+          const chosen = good.map((b, bi) => ({
+            block: b,
+            use: multi ? document.getElementById(`excelBlockUse_${bi}`).checked : true,
+            title: document.getElementById(`excelBlockTitle_${bi}`).value.trim()
+          })).filter(x => x.use);
+          if (!chosen.length) { Swal.showValidationMessage('ກະລຸນາເລືອກຢ່າງນ້ອຍ 1 ຕາຕະລາງ'); return false; }
+          if (chosen.some(x => !x.title)) { Swal.showValidationMessage('ກະລຸນາລະບຸຊື່ຊຸດຂໍ້ມູນໃຫ້ຄົບ'); return false; }
+          const recorder = currentUserName || document.getElementById('recorderName').value.trim();
+          if (multi && !recorder) { Swal.showValidationMessage('ກະລຸນາພິມຊື່ຜູ້ບັນທຶກໃນຟອມກ່ອນ'); return false; }
+          return { chosen, addUnknown: !!document.getElementById('excelAddUnknown')?.checked, recorder };
+        }
       }).then(result => {
         if (!result.isConfirmed) return;
-        applyExcelImport(fileName, parsed, indCols, unknownCols, result.value.addUnknown);
+        applyExcelImport(result.value, unknownMap, multi);
       });
     }
 
-    function applyExcelImport(fileName, parsed, indCols, unknownCols, addUnknown) {
+    function applyExcelImport({ chosen, addUnknown, recorder }, unknownMap, multi) {
       let configChanged = false;
 
       // ໂຕຊີ້ວັດທີ່ມີໃນ master ແຕ່ບໍ່ໄດ້ເປີດໃຊ້ → ເປີດໃຊ້
-      indCols.forEach(({ ind }) => {
+      chosen.forEach(({ block }) => block.indCols.forEach(({ ind }) => {
         if (!customIndicators.some(c => c.key === ind.key)) { customIndicators.push(ind); configChanged = true; }
-      });
+      }));
 
-      // ຖັນໃໝ່ → ສ້າງໂຕຊີ້ວັດໃໝ່
-      const newKeyByHeader = {};
+      // ຖັນໃໝ່ → ສ້າງໂຕຊີ້ວັດໃໝ່ (1 ໂຕຕໍ່ 1 ຊື່, ເຖິງຈະຢູ່ຫຼາຍຕາຕະລາງ)
+      const newKeyByCanon = {};
       if (addUnknown) {
-        unknownCols.forEach(({ header }, n) => {
-          const { name, unit } = splitNameUnit(header);
-          const newInd = { key: 'custom_' + (Date.now() + n), name, unit };
+        let n = 0;
+        unknownMap.forEach((header, canon) => {
+          const usedInChosen = chosen.some(({ block }) => block.unknownCols.some(u => canonParam(u.header) === canon));
+          if (!usedInChosen) return;
+          const { name, unit } = newIndicatorFromHeader(header);
+          const newInd = { key: 'custom_' + (Date.now() + n++), name, unit };
           customIndicators.push(newInd);
           masterIndicators.push(newInd);
-          newKeyByHeader[header] = newInd.key;
+          newKeyByCanon[canon] = newInd.key;
           configChanged = true;
         });
       }
@@ -1653,36 +1735,59 @@
         renderThresholdFields();
       }
 
-      const baseId = Date.now();
-      parsed.forEach((st, n) => {
+      let idSeed = Date.now();
+      const toStations = block => block.parsed.map(st => {
         const customs = { ...st.customs };
-        Object.entries(newKeyByHeader).forEach(([header, key]) => customs[key] = st.extra[header]);
-        tempStations.push({
-          id: baseId + n,
-          code: st.code,
-          name: st.name,
-          province: st.province,
-          lat: st.lat,
-          lng: st.lng,
-          customs,
-          status: evalStatus(customs)
+        Object.entries(newKeyByCanon).forEach(([canon, key]) => { if (canon in st.extra) customs[key] = st.extra[canon]; });
+        return { id: idSeed++, code: st.code, name: st.name, province: st.province, lat: st.lat, lng: st.lng, customs, status: evalStatus(customs) };
+      });
+
+      // 1 ຕາຕະລາງ → ເຂົ້າລາຍການລໍຖ້າບັນທຶກ (ໃຫ້ກວດກ່ອນ)
+      if (!multi) {
+        const { block, title } = chosen[0];
+        tempStations.push(...toStations(block));
+        renderTempList();
+        renderFormCustomInputs();
+        render();
+        const companyEl = document.getElementById('companyName');
+        if (companyEl && !companyEl.value.trim()) companyEl.value = title;
+        return Swal.fire({
+          icon: 'success',
+          title: `ນຳເຂົ້າ ${block.parsed.length} ສະຖານີ ສຳເລັດ!`,
+          html: `ຂໍ້ມູນຢູ່ໃນ <b>📋 ລາຍການສະຖານີທີ່ລໍຖ້າບັນທຶກ</b> ແລ້ວ.<br>ກະລຸນາກວດ <b>ຊື່ບໍລິສັດ</b> ແລະ <b>ເວລາບັນທຶກ</b> ແລ້ວກົດ <b>💾 ບັນທຶກຂໍ້ມູນທັງໝົດ</b>`
+        }).then(() => document.getElementById('saveBatchBtn')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+      }
+
+      // ຫຼາຍຕາຕະລາງ → ບັນທຶກແຍກເປັນແຕ່ລະຊຸດ ໂດຍກົງ
+      const now = new Date().toLocaleString('lo-LA');
+      const saves = chosen.map(({ block, title }) => {
+        const year = (title.match(/\b(?:19|20)\d{2}(?:\s*[-–]\s*(?:19|20)\d{2})?\b/) || [])[0];
+        const stations = toStations(block);
+        return db.ref('water_records').push({
+          id: idSeed++,
+          companyName: title,
+          projectLocation: '',
+          date: year ? `ປີ ${year.replace(/\s+/g, '')}` : now,
+          recordedBy: recorder,
+          stations
+        }).then(() => db.ref('activity_logs').push({
+          action: 'CREATE',
+          itemCode: `${title} (${stations.length} ສະຖານີ · ນຳເຂົ້າຈາກ Excel)`,
+          performedBy: recorder,
+          timestamp: now,
+          userRole: currentUserRole
+        }));
+      });
+
+      Swal.fire({ title: 'ກຳລັງບັນທຶກ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      Promise.all(saves).then(() => {
+        renderFormCustomInputs();
+        Swal.fire({
+          icon: 'success',
+          title: `ບັນທຶກ ${chosen.length} ຊຸດຂໍ້ມູນ ສຳເລັດ!`,
+          text: `ລວມ ${chosen.reduce((n, c) => n + c.block.parsed.length, 0)} ສະຖານີ — ເບິ່ງໄດ້ໃນຕາຕະລາງຖານຂໍ້ມູນ`
         });
-      });
-
-      renderTempList();
-      renderFormCustomInputs();
-      render();
-
-      const companyEl = document.getElementById('companyName');
-      if (companyEl && !companyEl.value.trim()) companyEl.value = fileName.replace(/\.(xlsx|xls|csv)$/i, '');
-
-      Swal.fire({
-        icon: 'success',
-        title: `ນຳເຂົ້າ ${parsed.length} ສະຖານີ ສຳເລັດ!`,
-        html: `ຂໍ້ມູນຢູ່ໃນ <b>📋 ລາຍການສະຖານີທີ່ລໍຖ້າບັນທຶກ</b> ແລ້ວ.<br>ກະລຸນາກວດ <b>ຊື່ບໍລິສັດ</b> ແລະ <b>ເວລາບັນທຶກ</b> ແລ້ວກົດ <b>💾 ບັນທຶກຂໍ້ມູນທັງໝົດ</b>`
-      }).then(() => {
-        document.getElementById('saveBatchBtn')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
+      }).catch(err => Swal.fire({ icon: 'error', title: 'ບັນທຶກບໍ່ສຳເລັດ', text: err.message }));
     }
 
     function downloadExcelTemplate() {
