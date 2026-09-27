@@ -19,6 +19,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+  <!-- SheetJS: ອ່ານ/ສ້າງໄຟລ໌ Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
   <!-- Firebase SDKs (v8) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -216,6 +219,23 @@
               <input type="datetime-local" id="customDatetime" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
             </div>
           </div>
+        </div>
+
+        <!-- ນຳເຂົ້າຂໍ້ມູນຈາກ Excel -->
+        <div id="excelImportBox" class="mb-4">
+          <div id="excelDropZone"
+               onclick="document.getElementById('excelFileInput').click()"
+               ondragover="event.preventDefault(); this.classList.add('border-emerald-500','bg-emerald-50')"
+               ondragleave="this.classList.remove('border-emerald-500','bg-emerald-50')"
+               ondrop="handleExcelDrop(event)"
+               class="cursor-pointer border-2 border-dashed border-emerald-300 bg-emerald-50/40 hover:bg-emerald-50 rounded-xl p-3 text-center transition">
+            <p class="text-sm font-bold text-emerald-700">📂 ນຳເຂົ້າຂໍ້ມູນຈາກ Excel</p>
+            <p class="text-[11px] text-slate-500 mt-0.5">ກົດເພື່ອເລືອກໄຟລ໌ ຫຼື ລາກໄຟລ໌ມາວາງບ່ອນນີ້ (.xlsx, .xls, .csv)</p>
+          </div>
+          <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleExcelFile(this.files[0]); this.value='';">
+          <button type="button" onclick="downloadExcelTemplate()" class="mt-1.5 w-full text-[11px] font-semibold text-emerald-700 hover:underline">
+            📄 ດາວໂຫລດແບບຟອມ Excel (Template) ສຳລັບກອກຂໍ້ມູນ
+          </button>
         </div>
 
         <!-- ຟອມປ້ອນຂໍ້ມູນ Detail: ສະຖານີ -->
@@ -1004,6 +1024,7 @@
         if (quickAddIndBtn) quickAddIndBtn.disabled = false;
         formInputs.forEach(input => input.disabled = false);
         applyRecorderLock();
+        applyImportLock();
 
       } else if (currentUserRole === 'VIEWER') {
         adminBtn.classList.add('hidden');
@@ -1013,10 +1034,16 @@
         if (quickAddIndBtn) quickAddIndBtn.disabled = true;
         formInputs.forEach(input => input.disabled = true);
         applyRecorderLock();
+        applyImportLock();
       }
     }
 
     // ຖ້າເຂົ້າລະບົບດ້ວຍບັນຊີສ່ວນຕົວ → ໃສ່ຊື່ຜູ້ບັນທຶກໃຫ້ອັດຕະໂນມັດ ແລະ ລັອກບໍ່ໃຫ້ປ່ຽນ
+    function applyImportLock() {
+      const box = document.getElementById('excelImportBox');
+      if (box) box.classList.toggle('hidden', currentUserRole === 'VIEWER');
+    }
+
     function applyRecorderLock() {
       const el = document.getElementById('recorderName');
       if (!el) return;
@@ -1338,6 +1365,353 @@
       document.getElementById('code').value = '';
       document.getElementById('name').value = '';
       renderFormCustomInputs();
+    }
+
+    /* --- ນຳເຂົ້າຂໍ້ມູນຈາກ EXCEL --- */
+    const EXCEL_FIELDS = {
+      code:     ['ລະຫັດສະຖານີ', 'ລະຫັດ', 'code', 'stationcode', 'station code', 'station id', 'id', 'no. station', 'sample id', 'sampleid'],
+      name:     ['ຊື່ສະຖານີ', 'ຊື່ສະຖານີ / ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່', 'ຊື່', 'name', 'station', 'station name', 'stationname', 'location', 'site', 'sampling point'],
+      province: ['ແຂວງ/ເມືອງ', 'ແຂວງ', 'ເມືອງ', 'province', 'district', 'city'],
+      lat:      ['lat', 'latitude', 'ເສັ້ນຂະໜານ', 'y'],
+      lng:      ['lng', 'lon', 'long', 'longitude', 'ເສັ້ນແວງ', 'x']
+    };
+
+    function normHeader(v) {
+      return String(v ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+    function compactHeader(v) {
+      return normHeader(v).replace(/\(.*?\)|\[.*?\]/g, '').replace(/[\s_\-\.:]/g, '');
+    }
+
+    function matchField(header) {
+      const h = normHeader(header), c = compactHeader(header);
+      if (!h) return null;
+      for (const [field, aliases] of Object.entries(EXCEL_FIELDS)) {
+        if (aliases.some(a => normHeader(a) === h || compactHeader(a) === c)) return field;
+      }
+      return null;
+    }
+
+    function matchIndicator(header) {
+      const c = compactHeader(header);
+      if (!c) return null;
+      const pool = [...customIndicators, ...masterIndicators.filter(m => !customIndicators.some(ci => ci.key === m.key))];
+      return pool.find(i =>
+        compactHeader(i.name) === c ||
+        compactHeader(i.key) === c ||
+        compactHeader(`${i.name}${i.unit || ''}`) === compactHeader(String(header).replace(/[()]/g, ''))
+      ) || null;
+    }
+
+    function splitNameUnit(header) {
+      const m = String(header).trim().match(/^(.*?)\s*[\(\[]\s*(.*?)\s*[\)\]]\s*$/);
+      return m ? { name: m[1].trim(), unit: m[2].trim() } : { name: String(header).trim(), unit: '' };
+    }
+
+    function cleanExcelValue(v) {
+      if (v === null || v === undefined) return '-';
+      if (typeof v === 'number') return v;
+      let t = String(v).trim();
+      if (t === '') return '-';
+      if (/^-?\d+,\d+$/.test(t)) t = t.replace(',', '.'); // 7,25 → 7.25
+      return parseIndicatorValue(t);
+    }
+
+    function toCoord(v) {
+      if (typeof v === 'number') return v;
+      const n = parseFloat(String(v ?? '').replace(',', '.'));
+      return isNaN(n) ? NaN : n;
+    }
+
+    function handleExcelDrop(e) {
+      e.preventDefault();
+      document.getElementById('excelDropZone').classList.remove('border-emerald-500', 'bg-emerald-50');
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) handleExcelFile(file);
+    }
+
+    async function handleExcelFile(file) {
+      if (!file) return;
+      if (currentUserRole === 'VIEWER') {
+        return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!', text: 'ກະລຸນາເຂົ້າສູ່ລະບົບກ່ອນນຳເຂົ້າຂໍ້ມູນ' });
+      }
+      if (typeof XLSX === 'undefined') {
+        return Swal.fire({ icon: 'error', title: 'ໂຫລດຕົວອ່ານ Excel ບໍ່ສຳເລັດ', text: 'ກະລຸນາກວດອິນເຕີເນັດ ແລ້ວ Refresh ໜ້າເວັບ' });
+      }
+      if (!/\.(xlsx|xls|csv)$/i.test(file.name)) {
+        return Swal.fire({ icon: 'warning', title: 'ຮູບແບບໄຟລ໌ບໍ່ຖືກຕ້ອງ', text: 'ຮອງຮັບສະເພາະ .xlsx, .xls ແລະ .csv' });
+      }
+
+      let wb;
+      try {
+        const buf = await file.arrayBuffer();
+        wb = XLSX.read(buf, { type: 'array' });
+      } catch (err) {
+        return Swal.fire({ icon: 'error', title: 'ອ່ານໄຟລ໌ບໍ່ໄດ້', text: 'ໄຟລ໌ອາດເສຍ ຫຼື ມີລະຫັດຜ່ານລັອກໄວ້' });
+      }
+
+      // ຖ້າມີຫຼາຍ Sheet → ໃຫ້ເລືອກ
+      let sheetName = wb.SheetNames[0];
+      if (wb.SheetNames.length > 1) {
+        const opts = {};
+        wb.SheetNames.forEach(n => opts[n] = n);
+        const { value, isConfirmed } = await Swal.fire({
+          title: '📑 ເລືອກ Sheet ທີ່ຈະນຳເຂົ້າ',
+          input: 'select',
+          inputOptions: opts,
+          inputValue: sheetName,
+          showCancelButton: true,
+          confirmButtonText: 'ຕໍ່ໄປ',
+          cancelButtonText: 'ຍົກເລີກ'
+        });
+        if (!isConfirmed) return;
+        sheetName = value;
+      }
+
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, raw: true, defval: '', blankrows: false });
+      if (!rows.length) return Swal.fire({ icon: 'warning', title: 'Sheet ນີ້ບໍ່ມີຂໍ້ມູນ' });
+
+      // ຊອກແຖວຫົວຕາຕະລາງ (ໃນ 15 ແຖວທຳອິດ) — ແຖວທີ່ມີຊື່ຖັນທີ່ຮູ້ຈັກຫຼາຍທີ່ສຸດ
+      let headerIdx = -1, best = 0;
+      for (let r = 0; r < Math.min(rows.length, 15); r++) {
+        const score = rows[r].filter(h => matchField(h) || matchIndicator(h)).length;
+        if (score > best) { best = score; headerIdx = r; }
+      }
+      if (headerIdx < 0 || best < 2) {
+        return Swal.fire({
+          icon: 'warning',
+          title: 'ບໍ່ພົບຫົວຕາຕະລາງທີ່ລະບົບຮູ້ຈັກ',
+          html: `ແຖວຫົວຕາຕະລາງຕ້ອງມີຖັນເຊັ່ນ <b>ລະຫັດສະຖານີ</b>, <b>ຊື່ສະຖານີ</b>, <b>Lat</b>, <b>Lng</b>.<br><br>ແນະນຳໃຫ້ດາວໂຫລດແບບຟອມ Excel ແລ້ວກອກຂໍ້ມູນຕາມນັ້ນ.`,
+          showCancelButton: true,
+          confirmButtonText: '📄 ດາວໂຫລດແບບຟອມ',
+          cancelButtonText: 'ປິດ'
+        }).then(r => { if (r.isConfirmed) downloadExcelTemplate(); });
+      }
+
+      const headers = rows[headerIdx];
+      const colMap = {};           // field → column index
+      const indCols = [];          // { col, ind }
+      const unknownCols = [];      // { col, header }
+      headers.forEach((h, col) => {
+        if (String(h).trim() === '') return;
+        const f = matchField(h);
+        if (f && colMap[f] === undefined) { colMap[f] = col; return; }
+        const ind = matchIndicator(h);
+        if (ind && !indCols.some(x => x.ind.key === ind.key)) { indCols.push({ col, ind }); return; }
+        if (/^(no|no\.|ລຳດັບ|ລ\/ດ|#|ລດ)$/i.test(String(h).trim())) return; // ຖັນລຳດັບ
+        unknownCols.push({ col, header: String(h).trim() });
+      });
+
+      if (colMap.code === undefined && colMap.name === undefined) {
+        return Swal.fire({ icon: 'warning', title: 'ບໍ່ພົບຖັນ ລະຫັດສະຖານີ ຫຼື ຊື່ສະຖານີ', text: 'ຕ້ອງມີຢ່າງນ້ອຍ 1 ໃນ 2 ຖັນນີ້' });
+      }
+
+      // ແປງແຕ່ລະແຖວເປັນສະຖານີ
+      const parsed = [], skipped = [];
+      rows.slice(headerIdx + 1).forEach((row, k) => {
+        const excelRow = headerIdx + 2 + k;
+        if (row.every(v => String(v).trim() === '')) return;
+        const code = colMap.code !== undefined ? String(row[colMap.code]).trim() : '';
+        const name = colMap.name !== undefined ? String(row[colMap.name]).trim() : '';
+        if (!code && !name) return; // ແຖວສະຫຼຸບ/ໝາຍເຫດ
+        const lat = colMap.lat !== undefined ? toCoord(row[colMap.lat]) : NaN;
+        const lng = colMap.lng !== undefined ? toCoord(row[colMap.lng]) : NaN;
+        if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+          skipped.push({ excelRow, label: code || name, reason: 'ບໍ່ມີ Lat/Lng ຫຼື ບໍ່ຖືກຕ້ອງ' });
+          return;
+        }
+        const customs = {};
+        indCols.forEach(({ col, ind }) => customs[ind.key] = cleanExcelValue(row[col]));
+        const extra = {};
+        unknownCols.forEach(({ col, header }) => extra[header] = cleanExcelValue(row[col]));
+        parsed.push({
+          code: code || `ST-${excelRow}`,
+          name: name || code,
+          province: colMap.province !== undefined ? String(row[colMap.province]).trim() : '',
+          lat, lng, customs, extra
+        });
+      });
+
+      if (!parsed.length) {
+        return Swal.fire({
+          icon: 'warning',
+          title: 'ບໍ່ມີແຖວທີ່ນຳເຂົ້າໄດ້',
+          html: skipped.length ? `ທຸກແຖວຖືກຂ້າມ ເພາະ <b>ບໍ່ມີ Lat/Lng</b> ຫຼື ຄ່າບໍ່ຖືກຕ້ອງ.<br>ກະລຸນາເພີ່ມພິກັດໃນໄຟລ໌ Excel ແລ້ວລອງໃໝ່.` : 'ບໍ່ພົບຂໍ້ມູນຂ້າງລຸ່ມຫົວຕາຕະລາງ'
+        });
+      }
+
+      showExcelPreview(file.name, sheetName, parsed, skipped, colMap, indCols, unknownCols);
+    }
+
+    function showExcelPreview(fileName, sheetName, parsed, skipped, colMap, indCols, unknownCols) {
+      const fieldLabel = { code: 'ລະຫັດ', name: 'ຊື່ສະຖານີ', province: 'ແຂວງ/ເມືອງ', lat: 'Lat', lng: 'Lng' };
+      const found = Object.keys(fieldLabel).filter(f => colMap[f] !== undefined);
+      const missing = Object.keys(fieldLabel).filter(f => colMap[f] === undefined && f !== 'lat' && f !== 'lng');
+
+      const th = 'px-2 py-1 border border-slate-300 bg-slate-200 font-bold whitespace-nowrap';
+      const td = 'px-2 py-1 border border-slate-300 whitespace-nowrap';
+      const previewRows = parsed.slice(0, 15).map((st, k) => `
+        <tr class="${k % 2 ? 'bg-slate-50' : 'bg-white'}">
+          <td class="${td} font-mono font-bold text-indigo-700">${escAttr(st.code)}</td>
+          <td class="${td}">${escAttr(st.name)}</td>
+          <td class="${td}">${escAttr(st.province || '-')}</td>
+          <td class="${td} text-right">${st.lat}</td>
+          <td class="${td} text-right">${st.lng}</td>
+          ${indCols.map(({ ind }) => `<td class="${td} text-right">${escAttr(st.customs[ind.key])}</td>`).join('')}
+          ${unknownCols.map(({ header }) => `<td class="${td} text-right text-amber-700">${escAttr(st.extra[header])}</td>`).join('')}
+        </tr>`).join('');
+
+      const html = `
+        <div class="text-left text-xs space-y-3">
+          <div class="bg-slate-50 border rounded-lg p-2 leading-relaxed">
+            📄 <b>${escAttr(fileName)}</b> · Sheet: <b>${escAttr(sheetName)}</b><br>
+            ✅ ນຳເຂົ້າໄດ້ <b class="text-emerald-700">${parsed.length}</b> ສະຖານີ
+            ${skipped.length ? ` · ⚠️ ຂ້າມ <b class="text-rose-600">${skipped.length}</b> ແຖວ` : ''}
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div class="border rounded-lg p-2">
+              <p class="font-bold text-slate-700 mb-1">🔗 ຖັນທີ່ຈັບຄູ່ໄດ້</p>
+              <p>${found.map(f => `<span class="inline-block bg-emerald-100 text-emerald-800 rounded px-1.5 py-0.5 m-0.5">${fieldLabel[f]}</span>`).join('')}
+                 ${indCols.map(({ ind }) => `<span class="inline-block bg-sky-100 text-sky-800 rounded px-1.5 py-0.5 m-0.5">🧪 ${escAttr(ind.name)}</span>`).join('')}</p>
+              ${missing.length ? `<p class="text-slate-400 mt-1">ບໍ່ມີຖັນ: ${missing.map(f => fieldLabel[f]).join(', ')}</p>` : ''}
+            </div>
+            <div class="border rounded-lg p-2 ${unknownCols.length ? 'border-amber-300 bg-amber-50' : ''}">
+              <p class="font-bold text-slate-700 mb-1">🆕 ຖັນທີ່ລະບົບຍັງບໍ່ຮູ້ຈັກ</p>
+              ${unknownCols.length ? `
+                <label class="flex items-start gap-1.5 cursor-pointer">
+                  <input type="checkbox" id="excelAddUnknown" checked class="mt-0.5">
+                  <span>ເພີ່ມເປັນ <b>ໂຕຊີ້ວັດໃໝ່</b>: ${unknownCols.map(u => `<b>${escAttr(u.header)}</b>`).join(', ')}</span>
+                </label>
+                <p class="text-[10px] text-slate-500 mt-1">ຖ້າບໍ່ຕິກ ຖັນເຫຼົ່ານີ້ຈະຖືກຂ້າມ</p>` : '<p class="text-slate-400">ບໍ່ມີ — ທຸກຖັນຈັບຄູ່ໄດ້ໝົດ</p>'}
+            </div>
+          </div>
+
+          <div class="overflow-auto max-h-64 border border-slate-400 rounded">
+            <table class="text-[11px] border-collapse min-w-full">
+              <thead class="sticky top-0"><tr>
+                <th class="${th}">ລະຫັດ</th><th class="${th}">ຊື່ສະຖານີ</th><th class="${th}">ແຂວງ/ເມືອງ</th><th class="${th}">Lat</th><th class="${th}">Lng</th>
+                ${indCols.map(({ ind }) => `<th class="${th}">${escAttr(ind.name)}</th>`).join('')}
+                ${unknownCols.map(({ header }) => `<th class="${th} !bg-amber-100">🆕 ${escAttr(header)}</th>`).join('')}
+              </tr></thead>
+              <tbody>${previewRows}</tbody>
+            </table>
+          </div>
+          ${parsed.length > 15 ? `<p class="text-[10px] text-slate-400">ສະແດງ 15 ແຖວທຳອິດ ຈາກທັງໝົດ ${parsed.length} ແຖວ</p>` : ''}
+
+          ${skipped.length ? `
+            <details class="border border-rose-200 bg-rose-50 rounded-lg p-2">
+              <summary class="cursor-pointer font-bold text-rose-700">⚠️ ແຖວທີ່ຖືກຂ້າມ (${skipped.length})</summary>
+              <ul class="mt-1 space-y-0.5 max-h-24 overflow-auto">
+                ${skipped.map(x => `<li>ແຖວ ${x.excelRow}: <b>${escAttr(x.label)}</b> — ${x.reason}</li>`).join('')}
+              </ul>
+            </details>` : ''}
+        </div>`;
+
+      Swal.fire({
+        title: '📊 ກວດສອບຂໍ້ມູນກ່ອນນຳເຂົ້າ',
+        html,
+        width: 900,
+        showCancelButton: true,
+        confirmButtonText: `✅ ນຳເຂົ້າ ${parsed.length} ສະຖານີ`,
+        cancelButtonText: 'ຍົກເລີກ',
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#64748b',
+        preConfirm: () => ({ addUnknown: !!document.getElementById('excelAddUnknown')?.checked })
+      }).then(result => {
+        if (!result.isConfirmed) return;
+        applyExcelImport(fileName, parsed, indCols, unknownCols, result.value.addUnknown);
+      });
+    }
+
+    function applyExcelImport(fileName, parsed, indCols, unknownCols, addUnknown) {
+      let configChanged = false;
+
+      // ໂຕຊີ້ວັດທີ່ມີໃນ master ແຕ່ບໍ່ໄດ້ເປີດໃຊ້ → ເປີດໃຊ້
+      indCols.forEach(({ ind }) => {
+        if (!customIndicators.some(c => c.key === ind.key)) { customIndicators.push(ind); configChanged = true; }
+      });
+
+      // ຖັນໃໝ່ → ສ້າງໂຕຊີ້ວັດໃໝ່
+      const newKeyByHeader = {};
+      if (addUnknown) {
+        unknownCols.forEach(({ header }, n) => {
+          const { name, unit } = splitNameUnit(header);
+          const newInd = { key: 'custom_' + (Date.now() + n), name, unit };
+          customIndicators.push(newInd);
+          masterIndicators.push(newInd);
+          newKeyByHeader[header] = newInd.key;
+          configChanged = true;
+        });
+      }
+
+      if (configChanged) {
+        db.ref('system_config/indicators').set(customIndicators);
+        db.ref('system_config/master_indicators').set(masterIndicators);
+        if (!currentSelectedIndicator && customIndicators[0]) currentSelectedIndicator = customIndicators[0].key;
+        renderSettingsList();
+        renderThresholdFields();
+      }
+
+      const baseId = Date.now();
+      parsed.forEach((st, n) => {
+        const customs = { ...st.customs };
+        Object.entries(newKeyByHeader).forEach(([header, key]) => customs[key] = st.extra[header]);
+        tempStations.push({
+          id: baseId + n,
+          code: st.code,
+          name: st.name,
+          province: st.province,
+          lat: st.lat,
+          lng: st.lng,
+          customs,
+          status: evalStatus(customs)
+        });
+      });
+
+      renderTempList();
+      renderFormCustomInputs();
+      render();
+
+      const companyEl = document.getElementById('companyName');
+      if (companyEl && !companyEl.value.trim()) companyEl.value = fileName.replace(/\.(xlsx|xls|csv)$/i, '');
+
+      Swal.fire({
+        icon: 'success',
+        title: `ນຳເຂົ້າ ${parsed.length} ສະຖານີ ສຳເລັດ!`,
+        html: `ຂໍ້ມູນຢູ່ໃນ <b>📋 ລາຍການສະຖານີທີ່ລໍຖ້າບັນທຶກ</b> ແລ້ວ.<br>ກະລຸນາກວດ <b>ຊື່ບໍລິສັດ</b> ແລະ <b>ເວລາບັນທຶກ</b> ແລ້ວກົດ <b>💾 ບັນທຶກຂໍ້ມູນທັງໝົດ</b>`
+      }).then(() => {
+        document.getElementById('saveBatchBtn')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
+
+    function downloadExcelTemplate() {
+      if (typeof XLSX === 'undefined') {
+        return Swal.fire({ icon: 'error', title: 'ໂຫລດຕົວສ້າງ Excel ບໍ່ສຳເລັດ', text: 'ກະລຸນາກວດອິນເຕີເນັດ ແລ້ວ Refresh ໜ້າເວັບ' });
+      }
+      const indHeaders = customIndicators.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`);
+      const headers = ['ລະຫັດສະຖານີ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng', ...indHeaders];
+      const example1 = ['ST-101', 'ນ້ຳຂອງ ທ່າເດື່ອ', 'ນະຄອນຫຼວງ', 17.8771, 102.7154, ...customIndicators.map(() => '')];
+      const example2 = ['ST-102', 'ຫ້ວຍໝາກຮຽວ', 'ນະຄອນຫຼວງ', 17.9543, 102.6122, ...customIndicators.map(() => 'ND')];
+
+      const ws = XLSX.utils.aoa_to_sheet([headers, example1, example2]);
+      ws['!cols'] = headers.map(h => ({ wch: Math.max(12, String(h).length + 4) }));
+
+      const guide = XLSX.utils.aoa_to_sheet([
+        ['ຄຳແນະນຳການກອກຂໍ້ມູນ'],
+        [''],
+        ['1. ກອກຂໍ້ມູນໃນ Sheet "ຂໍ້ມູນ" — 1 ແຖວ = 1 ສະຖານີ (ລຶບແຖວຕົວຢ່າງອອກກ່ອນ)'],
+        ['2. ຖັນ Lat ແລະ Lng ຕ້ອງມີຄ່າ (ເຊັ່ນ 17.9757 / 102.6331) — ແຖວທີ່ບໍ່ມີພິກັດຈະຖືກຂ້າມ'],
+        ['3. ຄ່າໂຕຊີ້ວັດ: ພິມຕົວເລກ, ND = ກວດບໍ່ພົບ, <0.01 ຫຼື >100 ກໍ່ໄດ້, ປ່ອຍຫວ່າງ = ບໍ່ມີຄ່າ'],
+        ['4. ເພີ່ມຖັນໂຕຊີ້ວັດໃໝ່ໄດ້ ເຊັ່ນ "COD (mg/L)" — ລະບົບຈະຖາມວ່າຈະເພີ່ມເປັນໂຕຊີ້ວັດໃໝ່ບໍ່'],
+        ['5. ຢ່າປ່ຽນຊື່ຫົວຖັນ ລະຫັດສະຖານີ, ຊື່ສະຖານີ, ແຂວງ/ເມືອງ, Lat, Lng']
+      ]);
+      guide['!cols'] = [{ wch: 90 }];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'ຂໍ້ມູນ');
+      XLSX.utils.book_append_sheet(wb, guide, 'ຄຳແນະນຳ');
+      XLSX.writeFile(wb, 'ແບບຟອມ_ຄຸນນະພາບນ້ຳ.xlsx');
     }
 
     function renderTempList() {
