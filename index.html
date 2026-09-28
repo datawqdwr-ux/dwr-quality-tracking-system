@@ -215,7 +215,10 @@
               <div id="chartStationList" class="max-h-56 overflow-y-auto space-y-0.5"></div>
             </div>
           </div>
-          <div class="flex rounded-lg border border-slate-300 overflow-hidden font-bold">
+          <label id="chartLogWrap" class="hidden items-center gap-1 border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-semibold text-slate-600 cursor-pointer" title="ໃຊ້ເມື່ອຄ່າແຕ່ລະໂຕຊີ້ວັດຕ່າງກັນຫຼາຍ (ເຊັ່ນ EC 300 ກັບ NO2 0.03)">
+            <input type="checkbox" id="chartLogChk" checked onchange="setChartLog(this.checked)"> ສະເກລ log
+          </label>
+          <div id="chartTypeWrap" class="flex rounded-lg border border-slate-300 overflow-hidden font-bold">
             <button type="button" data-charttype="bar" onclick="setChartType('bar')" class="px-2.5 py-1.5" title="ກຣາຟແທ່ງ">📊</button>
             <button type="button" data-charttype="area" onclick="setChartType('area')" class="px-2.5 py-1.5 border-l border-slate-300" title="ກຣາຟເສັ້ນ">📈</button>
           </div>
@@ -2922,6 +2925,7 @@
     // ຕົວຊີ້ວັດທີ່ເລືອກຕ້ອງມີຢູ່ຈິງ — ຖ້າບໍ່ມີ (ເຊັ່ນ ຄ່າເກົ່າຈາກ localStorage ຫຼື ຖືກລົບ) ໃຫ້ເລືອກໂຕທຳອິດແທນ
     function ensureSelectedIndicator() {
       if (!customIndicators.length) { currentSelectedIndicator = null; return; }
+      if (currentSelectedIndicator === '__ALL__') return;
       if (!customIndicators.some(i => i.key === currentSelectedIndicator)) {
         currentSelectedIndicator = customIndicators[0].key;
       }
@@ -2937,7 +2941,8 @@
         return;
       }
 
-      container.innerHTML = customIndicators.map(i => {
+      const allActive = currentSelectedIndicator === '__ALL__';
+      container.innerHTML = `<button type="button" onclick="switchChartIndicator('__ALL__')" class="px-2.5 py-1 rounded-lg font-bold ${allActive ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}" title="ສະແດງທຸກໂຕຊີ້ວັດຂອງສະຖານີພ້ອມກັນ">🧪 ທຸກໂຕຊີ້ວັດ</button>` + customIndicators.map(i => {
         const isActive = currentSelectedIndicator === i.key;
         return `<button type="button" onclick="switchChartIndicator('${i.key}')" id="chartBtn-${i.key}" class="px-2.5 py-1 rounded-lg font-bold ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'}">${i.name}</button>`;
       }).join('');
@@ -3009,6 +3014,12 @@
         btn.innerHTML = !ds ? '📍 ສະຖານີ: ເລືອກຊຸດກ່ອນ' :
           (!chartStationSel || chartStationSel.size === n) ? `📍 ສະຖານີ: ທັງໝົດ (${n}) ▾` : `📍 ສະຖານີ: ${chartStationSel.size}/${n} ▾`;
       }
+      const allMode = currentSelectedIndicator === '__ALL__';
+      const logWrap = document.getElementById('chartLogWrap');
+      if (logWrap) { logWrap.classList.toggle('hidden', !allMode); logWrap.classList.toggle('flex', allMode); }
+      const logChk = document.getElementById('chartLogChk');
+      if (logChk) logChk.checked = chartLog;
+      document.getElementById('chartTypeWrap')?.classList.toggle('hidden', allMode);
       document.querySelectorAll('[data-charttype]').forEach(b => {
         const on = b.dataset.charttype === chartType;
         b.classList.toggle('bg-indigo-600', on); b.classList.toggle('text-white', on);
@@ -3019,6 +3030,8 @@
     function setChartDataset(key) {
       chartDataset = key;
       chartStationSel = null;
+      const ds = waterData.find(d => d.fbKey === key);
+      if (ds && stationsOf(ds).length === 1) { currentSelectedIndicator = '__ALL__'; renderChartIndicatorTabs(); }
       closeStationPicker();
       renderChartFilterBar();
       drawChartNow();
@@ -3071,6 +3084,9 @@
       if (!chartStationSel) chartStationSel = new Set([...Array(n).keys()]);
       on ? chartStationSel.add(i) : chartStationSel.delete(i);
       if (chartStationSel.size === n) chartStationSel = null;
+      // ເລືອກ 1 ສະຖານີ → ສະແດງທຸກໂຕຊີ້ວັດຂອງສະຖານີນັ້ນອັດຕະໂນມັດ (ຄ່າດຽວບໍ່ມີປະໂຫຍດ)
+      const count = chartStationSel ? chartStationSel.size : n;
+      if (count === 1 && currentSelectedIndicator !== '__ALL__') { currentSelectedIndicator = '__ALL__'; renderChartIndicatorTabs(); }
       renderChartFilterBar();
       drawChartNow();
     }
@@ -3160,6 +3176,85 @@
         ${stations.length > 1 ? '<p class="text-[10px] text-slate-400 mt-1">ສະເລ່ຍ/ຕ່ຳສຸດ/ສູງສຸດ ຄິດສະເພາະຄ່າທີ່ເປັນຕົວເລກ (ບໍ່ນັບ ND ແລະ ຊ່ອງຫວ່າງ)</p>' : ''}`;
     }
 
+    // ໂໝດ "ທຸກໂຕຊີ້ວັດ": ກຣາຟສະແດງຄ່າໂດຍລວມຂອງສະຖານີ (ແກນ X = ໂຕຊີ້ວັດ, ແທ່ງ = ສະຖານີ)
+    const ALL_IND = '__ALL__';
+    let chartLog = true; // ສະເກລ log: ໃຫ້ຄ່ານ້ອຍ (ເຊັ່ນ NO2 0.03) ແລະ ຄ່າໃຫຍ່ (EC 300) ເຫັນພ້ອມກັນໄດ້
+
+    function setChartLog(on) {
+      chartLog = on;
+      drawChartNow();
+    }
+
+    function drawProfileChart(el, chartData) {
+      const MAX_ST = 10;
+      const sts = chartData.slice(0, MAX_ST);
+      const num = v => { const n = parseFloat(v); return (v === undefined || v === null || v === '-' || isNaN(n)) ? null : n; };
+      const inds = customIndicators.filter(i => sts.some(st => num(st.customs ? st.customs[i.key] : undefined) !== null));
+      if (!inds.length) return chartMessage('📭 ສະຖານີທີ່ເລືອກ ບໍ່ມີຄ່າໂຕຊີ້ວັດທີ່ເປັນຕົວເລກ');
+
+      const capEl = document.getElementById('chartCaption');
+      if (capEl && chartData.length > MAX_ST) capEl.innerText += ` · ກຣາຟສະແດງ ${MAX_ST} ສະຖານີທຳອິດ (ເລືອກໜ້ອຍລົງເພື່ອໃຫ້ອ່ານງ່າຍ)`;
+
+      const categories = inds.map(i => i.unit ? [i.name, `(${i.unit})`] : i.name);
+      // log ສະແດງ 0 ບໍ່ໄດ້ → ຄ່າ 0 ຫຼື ຕິດລົບ ບໍ່ແຕ້ມແທ່ງ ແຕ່ຍັງເຫັນໃນ tooltip/ຕາຕະລາງ
+      const plotVal = v => (v === null ? null : (chartLog && v <= 0 ? null : v));
+      const series = sts.map(st => ({
+        name: `${st.name || ''} (${st.code || ''})`,
+        data: inds.map(i => plotVal(num(st.customs ? st.customs[i.key] : undefined)))
+      }));
+      const rawOf = (si, ii) => { const st = sts[si], i = inds[ii]; return st && i && st.customs ? st.customs[i.key] : undefined; };
+      const single = sts.length === 1;
+      const palette = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6', '#f97316', '#64748b', '#84cc16'];
+
+      const drawKey = `${ALL_IND}|${chartLog}|${chartDataset}|${sts.length}`;
+      if (apexChart && el.contains(apexChart.el) && chartIndKey === drawKey) {
+        apexChart.updateOptions({ xaxis: { categories } }, false, false);
+        apexChart.updateSeries(series, true);
+        return;
+      }
+      if (apexChart) { try { apexChart.destroy(); } catch (e) {} apexChart = null; }
+      el.innerHTML = '';
+
+      const options = {
+        chart: { type: 'bar', height: 300, toolbar: { show: true, tools: { download: true, zoom: false, zoomin: false, zoomout: false, pan: false, reset: false } }, animations: { speed: 400 } },
+        theme: { mode: 'light' },
+        series,
+        plotOptions: { bar: { borderRadius: 3, columnWidth: single ? '55%' : '75%', distributed: single, dataLabels: { position: 'top' } } },
+        // 1 ສະຖານີ: ແທ່ງທີ່ເກີນເກນ = ສີແດງ; ຫຼາຍສະຖານີ: ສີແຍກຕາມສະຖານີ
+        colors: single
+          ? inds.map(i => isOutOfThreshold(i.key, rawOf(0, inds.indexOf(i))) ? '#dc2626' : '#6366f1')
+          : palette,
+        legend: { show: !single, position: 'bottom', fontSize: '11px' },
+        dataLabels: {
+          enabled: sts.length <= 3,
+          offsetY: -16,
+          style: { fontSize: '10px', colors: ['#334155'] },
+          formatter: (v, { seriesIndex, dataPointIndex }) => { const r = rawOf(seriesIndex, dataPointIndex); return r === undefined || r === '-' ? '' : r; }
+        },
+        stroke: { show: true, width: 1, colors: ['transparent'] },
+        xaxis: { categories, labels: { style: { colors: '#475569', fontSize: '10px' }, rotate: 0, hideOverlappingLabels: false } },
+        yaxis: {
+          logarithmic: chartLog, logBase: 10, forceNiceScale: !chartLog,
+          labels: { style: { colors: '#64748b' }, formatter: v => v === null || v === undefined ? '' : +Number(v).toPrecision(3) },
+          title: { text: chartLog ? 'ສະເກລ log' : '', style: { fontSize: '10px', color: '#94a3b8', fontWeight: 400 } }
+        },
+        grid: { borderColor: '#e2e8f0' },
+        tooltip: {
+          theme: 'light', shared: false, intersect: true,
+          y: { formatter: (v, { seriesIndex, dataPointIndex }) => { const r = rawOf(seriesIndex, dataPointIndex); const u = inds[dataPointIndex]?.unit; return r === undefined || r === '-' ? 'ບໍ່ມີຄ່າ' : `${r}${u ? ' ' + u : ''}${isOutOfThreshold(inds[dataPointIndex].key, r) ? ' ⚠️ ເກີນເກນ' : ''}`; } }
+        }
+      };
+
+      try {
+        apexChart = new ApexCharts(el, options);
+        apexChart.render();
+        chartIndKey = drawKey;
+      } catch (e) {
+        console.error('Profile chart error:', e);
+        chartMessage('⚠️ ແຕ້ມກຣາຟບໍ່ສຳເລັດ<button onclick="apexChart=null; drawChartNow()" class="bg-indigo-600 text-white font-bold px-3 py-1 rounded-lg">🔄 ລອງໃໝ່</button>');
+      }
+    }
+
     function drawChartNow() {
       clearTimeout(chartTimer);
       const el = document.getElementById('apexChartContainer');
@@ -3188,6 +3283,7 @@
 
       renderChartSummary(chartData);
       if (!chartData.length) return chartMessage('📍 ຍັງບໍ່ໄດ້ເລືອກສະຖານີ — ກົດ "📍 ສະຖານີ" ເພື່ອເລືອກ');
+      if (currentSelectedIndicator === ALL_IND) return drawProfileChart(el, chartData);
 
       const categories = chartData.map(d => `${d.name || ''} (${d.code || ''})`);
       const values = chartData.map(d => {
