@@ -55,6 +55,8 @@
                background: rgba(255,255,255,.95); border: 1px solid #94a3b8; box-shadow: 0 2px 6px rgba(0,0,0,.18); color: #3730a3; font-size: 12px; font-weight: 700; }
     .xl-side:hover { background: #4f46e5; color: #fff; border-color: #4f46e5; }
     .xl-hide { display: none !important; }
+    @keyframes rowflash { 0%, 100% { background: transparent; } 30%, 70% { background: #bbf7d0; } }
+    .row-flash > td { animation: rowflash 1.3s ease 2; }
     .ds-dragging { opacity: 0.45; }
     .ds-drop-target > td { background: #ccfbf1 !important; }
     .ds-drop-target { outline: 2px dashed #0d9488; outline-offset: -2px; }
@@ -365,6 +367,7 @@
         <div id="dragHint" class="hidden mb-2 text-xs font-bold text-teal-800 bg-teal-50 border border-teal-300 rounded-lg px-3 py-2">
           🔗 ວາງໃສ່ຊຸດຂໍ້ມູນທີ່ຕ້ອງການລວມເຂົ້າ
         </div>
+        <div id="mergeBanner" class="no-print hidden mb-2"></div>
         <p id="dragTip" class="no-print hidden text-[11px] text-slate-400 mb-2">💡 ລາກແຖວ ⠿ ໄປວາງໃສ່ອີກຊຸດເພື່ອລວມກັນ · ລາກໄຟລ໌ Excel ມາວາງໃສ່ແຖວໃດ ຈະນຳເຂົ້າເຂົ້າຊຸດນັ້ນ</p>
         <div id="printableTableContainer" class="top-scrollbar-container">
           <table class="w-full text-left text-sm border-collapse">
@@ -879,7 +882,8 @@
             const rec = normalizeRecord(key, data[key]);
             if (rec) waterData.push(rec);
           });
-          waterData.sort((a, b) => (b.id || 0) - (a.id || 0));
+          // ຊຸດທີ່ຫາກໍ່ເພີ່ມ/ລວມຂໍ້ມູນ ຂຶ້ນເທິງສຸດ
+          waterData.sort((a, b) => (b.lastUpdatedTs || b.id || 0) - (a.lastUpdatedTs || a.id || 0));
         }
         dataLoaded = true;
         render();
@@ -1689,16 +1693,19 @@
           date: date || now,
           recordedBy: recorder,
           stations
-        }).then(() => {
+        }).then(ref => {
           db.ref('activity_logs').push({ action: 'CREATE', itemCode: `${title} (${stations.length} ສະຖານີ${source})`, performedBy: recorder, timestamp: now, userRole: currentUserRole });
-          return { type: 'new', title, added: stations.length, updated: 0 };
+          return { type: 'new', title, added: stations.length, updated: 0, fbKey: ref.key };
         });
       }
 
       let result = null;
       return db.ref(`water_records/${target.fbKey}`).transaction(rec => {
         if (!rec) return rec;
-        const r = mergeStations(stationsOf(rec), stations);
+        // ແຖວເດີມທີ່ຍັງບໍ່ມີກຸ່ມ → ໃຊ້ຊື່ໂຄງການຈາກຫົວຂໍ້ເດີມຂອງຊຸດ (ເພື່ອແຍກຕາຕະລາງຍ່ອຍໃຫ້ຖືກ)
+        const oldSec = parseCompanyTitle(rec.companyName || rec.name).section;
+        const existing = stationsOf(rec).map(st => st.section ? st : { ...st, section: oldSec });
+        const r = mergeStations(existing, stations);
         result = r;
         if (!Array.isArray(rec.stations)) {
           // ແປງ record ຮູບແບບເກົ່າ ໃຫ້ເປັນຊຸດທີ່ມີ stations
@@ -1709,11 +1716,13 @@
         if (!rec.projectLocation && projectLocation) rec.projectLocation = projectLocation;
         rec.lastUpdated = now;
         rec.lastUpdatedBy = recorder;
+        rec.lastUpdatedTs = Date.now();
+        rec.companyName = parsed.company || rec.companyName || title; // ຊື່ຊຸດ = ຊື່ບໍລິສັດ (ຕັດ ໂຄງການ/ໄຕມາດ ອອກ)
         return rec;
       }).then(({ committed }) => {
         if (!committed || !result) throw new Error('ລວມຂໍ້ມູນບໍ່ສຳເລັດ ກະລຸນາລອງໃໝ່');
         db.ref('activity_logs').push({ action: 'MERGE', itemCode: `${target.companyName || title} (+${result.added} ໃໝ່, ${result.updated} ອັບເດດ${source})`, performedBy: recorder, timestamp: now, userRole: currentUserRole });
-        return { type: 'merge', title: target.companyName || title, added: result.added, updated: result.updated };
+        return { type: 'merge', title: parsed.company || target.companyName || title, added: result.added, updated: result.updated, fbKey: target.fbKey };
       });
     }
 
@@ -1735,6 +1744,27 @@
         confirmButtonColor: '#059669',
         denyButtonColor: '#6366f1'
       }).then(r => r.isConfirmed ? 'merge' : r.isDenied ? 'new' : null);
+    }
+
+    // ໄປທີ່ຊຸດຂໍ້ມູນ: ເປີດລາຍລະອຽດ, ເລື່ອນໄປຫາ ແລະ ກະພິບໃຫ້ເຫັນ
+    function jumpToRecords(keys) {
+      keys = (keys || []).filter(Boolean);
+      if (!keys.length) return;
+      const si = document.getElementById('searchInput');
+      if (si) si.value = '';
+      const sf = document.getElementById('statusFilter');
+      if (sf) sf.value = 'ALL';
+      keys.forEach(k => expandedRows[k] = true);
+      render();
+      setTimeout(() => {
+        const el = document.getElementById('row_' + keys[0]);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        keys.forEach(k => {
+          const r = document.getElementById('row_' + k);
+          if (r) { r.classList.add('row-flash'); setTimeout(() => r.classList.remove('row-flash'), 2600); }
+        });
+      }, 400);
     }
 
     function mergeResultText(results) {
@@ -1776,7 +1806,8 @@
           const [target, ...rest] = g;
           await mergeRecordsInto(target, rest, who);
         }
-        Swal.fire({ icon: 'success', title: `ລວມ ${dupGroups.length} ກຸ່ມ ສຳເລັດ!` });
+        Swal.fire({ icon: 'success', title: `ລວມ ${dupGroups.length} ບໍລິສັດ ສຳເລັດ!`, confirmButtonText: '👁️ ເບິ່ງຂໍ້ມູນ' })
+          .then(() => setTimeout(() => jumpToRecords(dupGroups.map(g => g[0].fbKey)), 300));
       } catch (err) {
         Swal.fire({ icon: 'error', title: 'ລວມບໍ່ສຳເລັດ', text: err.message });
       }
@@ -1811,6 +1842,7 @@
         if (loc) updates[`water_records/${target.fbKey}/projectLocation`] = loc;
       }
       updates[`water_records/${target.fbKey}/lastUpdated`] = new Date().toLocaleString('lo-LA');
+      updates[`water_records/${target.fbKey}/lastUpdatedTs`] = Date.now();
       updates[`water_records/${target.fbKey}/lastUpdatedBy`] = who;
       sources.forEach(d => { updates[`water_records/${d.fbKey}`] = null; });
       await db.ref().update(updates);
@@ -1857,7 +1889,8 @@
       try {
         const r = await mergeRecordsInto(target, [source], who);
         expandedRows[target.fbKey] = true;
-        Swal.fire({ icon: 'success', title: 'ລວມຂໍ້ມູນສຳເລັດ!', html: `<b>${escAttr(target.companyName || target.name)}</b><br>ເພີ່ມໃໝ່ ${r.added} · ອັບເດດ ${r.updated} · ລວມທັງໝົດ ${r.total} ສະຖານີ` });
+        Swal.fire({ icon: 'success', title: 'ລວມຂໍ້ມູນສຳເລັດ!', html: `<b>${escAttr(parseCompanyTitle(target.companyName || target.name).company)}</b><br>ເພີ່ມໃໝ່ ${r.added} · ອັບເດດ ${r.updated} · ລວມທັງໝົດ ${r.total} ແຖວ` })
+          .then(() => setTimeout(() => jumpToRecords([target.fbKey]), 300));
       } catch (err) {
         Swal.fire({ icon: 'error', title: 'ລວມບໍ່ສຳເລັດ', text: err.message });
       }
@@ -2489,7 +2522,12 @@
         return results;
       })().then(results => {
         renderFormCustomInputs();
-        Swal.fire({ icon: 'success', title: 'ນຳເຂົ້າຂໍ້ມູນສຳເລັດ!', html: `<div class="text-left text-sm leading-relaxed">${mergeResultText(results)}</div>` });
+        const keys = [...new Set(results.map(r => r.fbKey))];
+        Swal.fire({
+          icon: 'success', title: 'ນຳເຂົ້າຂໍ້ມູນສຳເລັດ!',
+          html: `<div class="text-left text-sm leading-relaxed">${mergeResultText(results)}</div>`,
+          confirmButtonText: '👁️ ເບິ່ງຂໍ້ມູນທີ່ນຳເຂົ້າ', confirmButtonColor: '#059669'
+        }).then(() => setTimeout(() => jumpToRecords(keys), 300));
       }).catch(err => Swal.fire({ icon: 'error', title: 'ບັນທຶກບໍ່ສຳເລັດ', text: err.message }));
     }
 
@@ -2576,7 +2614,8 @@
         document.getElementById('waterForm').reset();
         renderTempList();
         applyRecorderLock();
-        Swal.fire({ icon: 'success', title: 'ບັນທຶກຂໍ້ມູນສຳເລັດ!', html: mergeResultText([res]) });
+        Swal.fire({ icon: 'success', title: 'ບັນທຶກຂໍ້ມູນສຳເລັດ!', html: mergeResultText([res]), confirmButtonText: '👁️ ເບິ່ງຂໍ້ມູນ' })
+          .then(() => setTimeout(() => jumpToRecords([res.fbKey]), 300));
       } catch (err) {
         Swal.fire({ icon: 'error', title: 'ບັນທຶກບໍ່ສຳເລັດ', text: err.message });
       }
@@ -2678,6 +2717,27 @@
       });
     }
 
+    // ແຈ້ງເຕືອນ: ບໍລິສັດດຽວກັນ ແຕ່ແຍກເປັນຫຼາຍຊຸດ (ຂໍ້ມູນເກົ່າ) → ກົດລວມໄດ້ເລີຍ
+    function renderMergeBanner() {
+      const box = document.getElementById('mergeBanner');
+      if (!box) return;
+      if (currentUserRole === 'VIEWER') { box.classList.add('hidden'); return; }
+      const groups = {};
+      waterData.forEach(d => {
+        const k = datasetKey(d.companyName || d.name);
+        if (k) (groups[k] = groups[k] || []).push(d);
+      });
+      const dup = Object.values(groups).filter(g => g.length > 1);
+      if (!dup.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+      box.classList.remove('hidden');
+      box.innerHTML = `
+        <div class="flex flex-wrap items-center gap-3 bg-teal-50 border border-teal-300 rounded-xl px-3 py-2 text-xs">
+          <span class="font-bold text-teal-900">🔗 ພົບ ${dup.length} ບໍລິສັດ ທີ່ຍັງແຍກເປັນຫຼາຍຊຸດ</span>
+          <span class="text-teal-800">${dup.slice(0, 3).map(g => `${escAttr(parseCompanyTitle(g[0].companyName || g[0].name).company)} (${g.length} ຊຸດ)`).join(' · ')}${dup.length > 3 ? ' …' : ''}</span>
+          <button onclick="mergeDuplicateDatasets()" class="ml-auto bg-teal-600 hover:bg-teal-500 text-white font-bold px-3 py-1.5 rounded-lg shadow-sm">🔗 ລວມເປັນບໍລິສັດດຽວ</button>
+        </div>`;
+    }
+
     function showMoreRecords() {
       tableLimit += 50;
       render();
@@ -2712,6 +2772,7 @@
       });
 
       updateKPIs(filteredData);
+      renderMergeBanner();
       document.getElementById('stationCount').innerText = `${filteredData.length} Records`;
 
       const canDelete = currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'STAFF';
@@ -2778,7 +2839,7 @@
         if (index >= tableLimit) return;
 
         rowsHtml.push(`
-          <tr class="bg-slate-50 font-semibold border-b border-slate-200 hover:bg-indigo-50/50 transition cursor-pointer select-none" onclick="toggleRow('${item.fbKey}')"
+          <tr id="row_${item.fbKey}" class="bg-slate-50 font-semibold border-b border-slate-200 hover:bg-indigo-50/50 transition cursor-pointer select-none" onclick="toggleRow('${item.fbKey}')"
               ${canDelete ? `draggable="true" ondragstart="dsDragStart(event, '${item.fbKey}')" ondragend="dsDragEnd(event)"` : ''}
               ondragover="dsDragOver(event, '${item.fbKey}')" ondragleave="dsDragLeave(event)" ondrop="dsDrop(event, '${item.fbKey}')">
             <td class="p-3 text-center text-indigo-600 font-bold text-base whitespace-nowrap">${canDelete ? '<span class="drag-handle mr-1" title="ລາກໄປວາງໃສ່ຊຸດອື່ນເພື່ອລວມ">⠿</span>' : ''}${isExpanded ? '▼' : '▶'}</td>
@@ -2786,7 +2847,7 @@
             <td class="p-3">
               ${renderOrgBadge(company)}
             </td>
-            <td class="p-3 text-center"><span class="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-1 rounded-full font-bold">${stations.length} ແຖວ</span>${(() => { const n = new Set(stations.map(x => x && x.section).filter(Boolean)).size; return n ? `<div class="text-[10px] text-indigo-600 font-bold mt-1">📂 ${n} ໂຄງການ</div>` : ''; })()}</td>
+            <td class="p-3 text-center"><span class="inline-block whitespace-nowrap bg-indigo-100 text-indigo-800 text-xs px-2.5 py-1 rounded-full font-bold">${stations.length} ແຖວ</span>${(() => { const n = new Set(stations.map(x => x && x.section).filter(Boolean)).size; return n ? `<div class="text-[10px] text-indigo-600 font-bold mt-1">📂 ${n} ໂຄງການ</div>` : ''; })()}</td>
             <td class="p-3 text-xs text-slate-500">${item.date || '-'}${sampleDateRange(stations) ? `<div class="text-[10px] font-bold text-indigo-600 mt-0.5">📅 ${sampleDateRange(stations)}</div>` : ''}</td>
             <td class="p-3 text-xs font-semibold text-slate-700">${item.recordedBy || 'ບໍ່ລະບຸ'}</td>
             <td class="p-3 text-center no-print" onclick="event.stopPropagation()">
