@@ -1010,7 +1010,9 @@
         tbody.innerHTML = '';
         logsList.forEach(log => {
           let actionBadge = '';
-          if (log.action === 'MERGE') {
+          if (log.action === 'DELETE_INDICATOR') {
+            actionBadge = '<span class="bg-rose-200 text-rose-900 px-2 py-0.5 rounded font-bold">🗑️ ລົບໂຕຊີ້ວັດຖາວອນ</span>';
+          } else if (log.action === 'MERGE') {
             actionBadge = '<span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-bold">🔗 ລວມຂໍ້ມູນ</span>';
           } else if (log.action === 'CREATE') {
             actionBadge = '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">🟢 ບັນທຶກ (CREATE)</span>';
@@ -1329,6 +1331,79 @@
       Swal.fire({ icon: 'success', title: `ສະແດງ "${ind.name}" ຄືນແລ້ວ`, text: `ຂໍ້ມູນເດີມ ${countValuesFor(key)} ຄ່າ ກັບມາສະແດງຄືເກົ່າ`, timer: 1800, showConfirmButton: false });
     }
 
+    // ລົບຖາວອນ: ລົບໂຕຊີ້ວັດ + ຄ່າຂອງມັນໃນທຸກສະຖານີ + ເກນເຕືອນໄພ (ກູ້ຄືນບໍ່ໄດ້)
+    async function deleteIndicatorPermanently(key) {
+      if (currentUserRole !== 'SUPER_ADMIN') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!', text: 'ສະເພາະ Super Admin' });
+      const ind = masterIndicators.find(m => m.key === key) || customIndicators.find(c => c.key === key);
+      if (!ind) return;
+      const n = countValuesFor(key);
+
+      const { isConfirmed } = await Swal.fire({
+        icon: 'warning',
+        title: `🗑️ ລົບ "${ind.name}" ຖາວອນ?`,
+        html: `<div class="text-sm leading-relaxed">
+                 ຈະລົບ <b class="text-rose-600">ຄ່າທີ່ບັນທຶກໄວ້ ${n} ຄ່າ</b> ໃນທຸກສະຖານີ ແລະ ເກນເຕືອນໄພຂອງໂຕນີ້.<br>
+                 <b class="text-rose-600">ກູ້ຄືນບໍ່ໄດ້.</b> ແນະນຳໃຫ້ກົດ 📥 Export Excel ເກັບໄວ້ກ່ອນ.<br><br>
+                 ພິມຊື່ <b>${escAttr(ind.name)}</b> ເພື່ອຢືນຢັນ:
+               </div>`,
+        input: 'text',
+        inputPlaceholder: ind.name,
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '🗑️ ລົບຖາວອນ',
+        cancelButtonText: 'ຍົກເລີກ',
+        inputValidator: v => v.trim() !== ind.name ? `ກະລຸນາພິມ "${ind.name}" ໃຫ້ຖືກຕ້ອງ` : undefined
+      });
+      if (!isConfirmed) return;
+
+      const remaining = customIndicators.filter(c => c.key !== key);
+      const updates = {};
+      waterData.forEach(rec => {
+        const addStation = (basePath, st) => {
+          if (!st || !st.customs || !(key in st.customs)) return;
+          const customs = { ...st.customs };
+          delete customs[key];
+          updates[`${basePath}/customs/${key}`] = null;
+          updates[`${basePath}/status`] = evalStatus(customs);
+        };
+        if (Array.isArray(rec.stations)) rec.stations.forEach((st, i) => addStation(`water_records/${rec.fbKey}/stations/${i}`, st));
+        else if (rec.stations && typeof rec.stations === 'object') Object.entries(rec.stations).forEach(([k, st]) => addStation(`water_records/${rec.fbKey}/stations/${k}`, st));
+        else addStation(`water_records/${rec.fbKey}`, rec);
+      });
+
+      const newMaster = masterIndicators.filter(m => m.key !== key);
+      const newThr = { ...sysThresholds };
+      delete newThr[`cfg_${key}_min`];
+      delete newThr[`cfg_${key}_max`];
+      updates['system_config/indicators'] = remaining;
+      updates['system_config/master_indicators'] = newMaster;
+      updates['system_config/thresholds'] = newThr;
+
+      Swal.fire({ title: 'ກຳລັງລົບ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      try {
+        await db.ref().update(updates);
+        customIndicators = remaining;
+        masterIndicators = newMaster;
+        sysThresholds = newThr;
+        if (currentSelectedIndicator === key) currentSelectedIndicator = customIndicators.length ? customIndicators[0].key : '';
+        await db.ref('activity_logs').push({
+          action: 'DELETE_INDICATOR',
+          itemCode: `${ind.name}${ind.unit ? ' (' + ind.unit + ')' : ''} · ລົບ ${n} ຄ່າ`,
+          performedBy: currentUserName || 'Super Admin',
+          timestamp: new Date().toLocaleString('lo-LA'),
+          userRole: currentUserRole
+        });
+        renderSettingsList();
+        renderFormCustomInputs();
+        renderThresholdFields();
+        render();
+        Swal.fire({ icon: 'success', title: `ລົບ "${ind.name}" ຖາວອນແລ້ວ`, text: `ລົບ ${n} ຄ່າ ອອກຈາກລະບົບ` });
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'ລົບບໍ່ສຳເລັດ', text: err.message });
+      }
+    }
+
     function renderSettingsList() {
       const list = document.getElementById('customIndicatorsList');
       if (!list) return;
@@ -1345,7 +1420,10 @@
             return `
             <li class="flex justify-between items-center bg-white p-2 rounded border border-dashed text-xs text-slate-500">
               <span><strong>${escAttr(i.name)}</strong> (${escAttr(i.unit || '-')}) · <span class="${n ? 'text-emerald-700' : ''}">${n} ຄ່າ</span></span>
-              <button onclick="restoreIndicator('${i.key}')" class="text-emerald-700 font-bold">↩️ ສະແດງຄືນ</button>
+              <span class="flex gap-3 shrink-0">
+                <button onclick="restoreIndicator('${i.key}')" class="text-emerald-700 font-bold">↩️ ສະແດງຄືນ</button>
+                <button onclick="deleteIndicatorPermanently('${i.key}')" class="text-rose-600 font-bold" title="ລົບໂຕຊີ້ວັດ ແລະ ຄ່າທັງໝົດຂອງມັນ">🗑️ ລົບຖາວອນ</button>
+              </span>
             </li>`;
           }).join('')}` : '';
       list.innerHTML = active + hiddenHtml;
