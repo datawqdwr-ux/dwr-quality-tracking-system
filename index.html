@@ -123,7 +123,7 @@
 
   <!-- Navigation -->
   <nav class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-50 shadow-md">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+    <div class="w-full px-4 md:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
       <div class="flex items-center gap-3">
         <span class="text-2xl">🌊</span>
         <div>
@@ -160,7 +160,7 @@
     </div>
   </nav>
 
-  <div class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+  <div class="w-full p-4 md:p-6 space-y-6">
 
     <!-- KPI Metric Dashboard Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
@@ -233,10 +233,10 @@
     </div>
 
     <!-- Form & Table Area -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
       
       <!-- Input Form Layer -->
-      <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+      <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 min-w-0">
         <h2 class="text-lg font-bold text-slate-800 border-b pb-2 mb-4">📝 ຟອມບັນທຶກຜົນວິເຄາະຄຸນນະພາບນ້ຳ</h2>
         
         <!-- ສ່ວນຂໍ້ມູນ Master: ຊື່ບໍລິສັດ ແລະ ຜູ້ບັນທຶກ -->
@@ -343,7 +343,7 @@
       </div>
 
       <!-- Data Table Area (Accordion Table) -->
-      <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+      <div class="lg:col-span-2 2xl:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 min-w-0">
         <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
           <h2 class="text-lg font-bold text-slate-800">📋 ຖານຂໍ້ມູນຜົນການກວດວັດ (ລາຍບໍລິສັດ)</h2>
           <div class="flex gap-2">
@@ -3184,6 +3184,11 @@
     }
 
     const detailDateFilter = {};
+    const showAllCols = {};
+    function toggleAllCols(key) {
+      showAllCols[key] = !showAllCols[key];
+      render();
+    }
     function setDetailDateFilter(key, v) {
       detailDateFilter[key] = v;
       render();
@@ -3204,7 +3209,7 @@
         .filter(x => dFilter === 'ALL' || (x.st.sampleDate || '') === dFilter)
         .sort((a, b) => String(a.st.sampleDate || '').localeCompare(String(b.st.sampleDate || '')) || a.i - b.i);
 
-      const rowFn = list => list.map(({ st, i: stIdx }, pos) => {
+      const rowFn = (list, inds = customIndicators) => list.map(({ st, i: stIdx }, pos) => {
         // Merge ຊ່ອງວັນທີ ຂອງແຖວຕິດກັນທີ່ວັນທີດຽວກັນ (ຄືໃນ Excel)
         const d = st.sampleDate || '';
         const firstOfGroup = pos === 0 || (list[pos - 1].st.sampleDate || '') !== d;
@@ -3215,7 +3220,7 @@
           : '';
         const isEditing = editingStation && editingStation.fbKey === item.fbKey && editingStation.idx === stIdx;
         const zebra = pos % 2 === 0 ? 'bg-white' : 'bg-slate-50';
-        const indCells = customIndicators.map(i => {
+        const indCells = inds.map(i => {
           const val = st.customs ? (st.customs[i.key] ?? '-') : '-';
           const bad = isOutOfThreshold(i.key, val);
           const isNum = val !== '-' && !isNaN(val);
@@ -3253,12 +3258,19 @@
         const sec = { name, list: order.filter(x => (x.st.section || '') === name) };
         const xk = secNames.length > 1 ? `${item.fbKey}__${si}` : item.fbKey;
         const alerts = sec.list.filter(x => x.st.status && x.st.status.isAlert).length;
+        // ຖັນໂຕຊີ້ວັດທີ່ບໍ່ມີຄ່າເລີຍໃນຕາຕະລາງນີ້ → ເຊື່ອງ (ກົດ "ສະແດງທຸກຖັນ" ເພື່ອເບິ່ງ)
+        const hasVal = (i) => sec.list.some(x => { const v = x.st.customs ? x.st.customs[i.key] : undefined; return v !== undefined && v !== '-' && v !== '' && v !== null; });
+        const inds = showAllCols[item.fbKey] ? customIndicators : customIndicators.filter(hasVal);
+        const hiddenCols = customIndicators.length - inds.length;
+        const headers = ['📅 ວັນທີ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng',
+          ...inds.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
         return `
           ${multiSec ? `<div class="flex flex-wrap items-center gap-2 mt-2 px-2 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-[12px]">
             <span class="font-bold text-indigo-900">📂 ${escAttr(name || 'ທົ່ວໄປ')}</span>
             <span class="text-slate-500">${sec.list.length} ແຖວ</span>
             ${sampleDateRange(sec.list.map(x => x.st)) ? `<span class="text-indigo-700">📅 ${escAttr(sampleDateRange(sec.list.map(x => x.st)))}</span>` : ''}
             ${alerts ? `<span class="text-rose-600 font-bold">🚨 ${alerts}</span>` : ''}
+            ${hiddenCols && !showAllCols[item.fbKey] ? `<span class="text-slate-400 text-[11px]">· ເຊື່ອງ ${hiddenCols} ຖັນທີ່ບໍ່ມີຄ່າ</span>` : ''}
           </div>` : ''}
           <div class="relative">
           <div id="xlTop_${xk}" onscroll="xlSyncFromTop('${xk}')" class="xl-topbar no-print" title="ເລື່ອນຊ້າຍ-ຂວາ"><div id="xlTopInner_${xk}" style="height:1px"></div></div>
@@ -3276,7 +3288,7 @@
                   ${canEdit ? `<th class="${th} no-print">ຈັດການ</th>` : ''}
                 </tr>
               </thead>
-              <tbody>${rowFn(sec.list)}</tbody>
+              <tbody>${rowFn(sec.list, inds)}</tbody>
             </table>
           </div>
           </div>
@@ -3302,6 +3314,7 @@
                   <option value="ALL">📅 ທຸກວັນທີ (${dates.length})</option>
                   ${dates.map(d => `<option value="${escAttr(d)}" ${d === dFilter ? 'selected' : ''}>${escAttr(d ? fmtSampleDate(d) : 'ບໍ່ລະບຸວັນທີ')} (${stations.filter(s => (s.sampleDate || '') === d).length})</option>`).join('')}
                 </select>` : ''}
+              <button onclick="toggleAllCols('${item.fbKey}')" class="border border-slate-300 rounded-lg px-2 py-1 text-[11px] font-semibold bg-white hover:bg-slate-50" title="ສະແດງ/ເຊື່ອງ ຖັນໂຕຊີ້ວັດທີ່ບໍ່ມີຄ່າ">${showAllCols[item.fbKey] ? '🙈 ເຊື່ອງຖັນຫວ່າງ' : '👁️ ສະແດງທຸກຖັນ'}</button>
               <button onclick="exportBatchCSV('${item.fbKey}')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm">📥 ດາວໂຫລດຕາຕະລາງນີ້ (Excel)</button>
             </div>
           </div>
