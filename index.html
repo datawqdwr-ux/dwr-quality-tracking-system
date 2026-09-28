@@ -296,6 +296,11 @@
           </div>
 
           <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">📅 ວັນທີເກັບຕົວຢ່າງ (ວັນ/ເດືອນ/ປີ ຂອງຂໍ້ມູນ)</label>
+            <input type="date" id="sampleDate" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-sky-500">
+          </div>
+
+          <div>
             <label class="block text-[11px] font-semibold text-slate-600 mb-1">ຊື່ສະຖານີ / ສະຖານທີ່ກວດວັດ</label>
             <input type="text" id="name" required autocomplete="off" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-sky-500" placeholder="ສະຖານີທີ 1...">
           </div>
@@ -1407,6 +1412,7 @@
         province: document.getElementById('province').value,
         lat: parseFloat(document.getElementById('lat').value),
         lng: parseFloat(document.getElementById('lng').value),
+        sampleDate: document.getElementById('sampleDate').value || '',
         customs: customValues,
         status: evalStatus(customValues)
       };
@@ -1418,6 +1424,49 @@
       document.getElementById('name').value = '';
       renderFormCustomInputs();
     }
+
+    /* --- ວັນທີເກັບຕົວຢ່າງ (ວັນ/ເດືອນ/ປີ ຂອງຂໍ້ມູນແຕ່ລະສະຖານີ) --- */
+    const LAO_MONTHS = ['ມັງກອນ', 'ກຸມພາ', 'ມີນາ', 'ເມສາ', 'ພຶດສະພາ', 'ມິຖຸນາ', 'ກໍລະກົດ', 'ສິງຫາ', 'ກັນຍາ', 'ຕຸລາ', 'ພະຈິກ', 'ທັນວາ'];
+    const EN_MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    const pad2 = n => String(n).padStart(2, '0');
+    const fullYear = y => { y = parseInt(y, 10); return y < 100 ? 2000 + y : y; };
+
+    // ແປງຂໍ້ຄວາມວັນທີ ເປັນ 'YYYY-MM-DD' / 'YYYY-MM' / 'YYYY' — ຖ້າອ່ານບໍ່ໄດ້ ຄືນຂໍ້ຄວາມເດີມ
+    function normalizeDateText(v) {
+      const t = String(v ?? '').trim();
+      if (!t || t === '-') return '';
+      let m;
+      if ((m = t.match(/^(\d{4})[-\/.](\d{1,2})(?:[-\/.](\d{1,2}))?/))) return m[3] ? `${m[1]}-${pad2(m[2])}-${pad2(m[3])}` : `${m[1]}-${pad2(m[2])}`;
+      if ((m = t.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})$/))) return `${fullYear(m[3])}-${pad2(m[2])}-${pad2(m[1])}`; // DD/MM/YYYY
+      if ((m = t.match(/^(\d{1,2})[\/.\-](\d{4})$/))) return `${m[2]}-${pad2(m[1])}`;
+      if ((m = t.match(/^(\d{4})$/))) return m[1];
+      // ຊື່ເດືອນ + ປີ: "April-25", "Apr 2025", "ເມສາ 2025", "25 April 2025"
+      if ((m = t.match(/^(?:(\d{1,2})[\s\-\/.]+)?([A-Za-z\u0E80-\u0EFF]+)\.?[\s\-\/,.]*(\d{2,4})$/))) {
+        const w = m[2].toLowerCase();
+        let mi = EN_MONTHS.findIndex(e => w.startsWith(e));
+        if (mi < 0) mi = LAO_MONTHS.findIndex(l => l === m[2] || m[2].startsWith(l));
+        if (mi >= 0) return m[1] ? `${fullYear(m[3])}-${pad2(mi + 1)}-${pad2(m[1])}` : `${fullYear(m[3])}-${pad2(mi + 1)}`;
+      }
+      return t;
+    }
+
+    // ສະແດງຜົນ: 2025-04-25 → 25/04/2025 · 2025-04 → ເມສາ 2025 · 2025 → ປີ 2025
+    function fmtSampleDate(s) {
+      if (!s) return '';
+      let m;
+      if ((m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/))) return `${m[3]}/${m[2]}/${m[1]}`;
+      if ((m = String(s).match(/^(\d{4})-(\d{2})$/))) return `${LAO_MONTHS[parseInt(m[2], 10) - 1] || m[2]} ${m[1]}`;
+      if (/^\d{4}$/.test(s)) return `ປີ ${s}`;
+      return String(s);
+    }
+
+    function sampleDateRange(stations) {
+      const ds = [...new Set(stations.map(s => s.sampleDate).filter(Boolean))].sort();
+      if (!ds.length) return '';
+      return ds.length === 1 ? fmtSampleDate(ds[0]) : `${fmtSampleDate(ds[0])} – ${fmtSampleDate(ds[ds.length - 1])}`;
+    }
+
+    const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
 
     /* --- ລວມຂໍ້ມູນເຂົ້າຊຸດເດີມ ເມື່ອຫົວຂໍ້ດຽວກັນ --- */
     function normTitle(t) {
@@ -1443,22 +1492,28 @@
     }
 
     const normCode = c => String(c || '').trim().toUpperCase();
-    const sameCoord = (a, b) => Math.abs(Number(a.lat) - Number(b.lat)) < 1e-5 && Math.abs(Number(a.lng) - Number(b.lng)) < 1e-5;
+    const hasCoord = st => st.lat !== null && st.lat !== undefined && st.lat !== '' && !isNaN(st.lat) && st.lng !== null && st.lng !== undefined && st.lng !== '' && !isNaN(st.lng);
+    // ຖ້າຝ່າຍໃດບໍ່ມີພິກັດ ຖືວ່າຈຸດດຽວກັນ (ຈັບຄູ່ດ້ວຍລະຫັດ)
+    const sameCoord = (a, b) => !hasCoord(a) || !hasCoord(b) || (Math.abs(Number(a.lat) - Number(b.lat)) < 1e-5 && Math.abs(Number(a.lng) - Number(b.lng)) < 1e-5);
+    const sameDate = (a, b) => String(a.sampleDate || '') === String(b.sampleDate || '');
 
     // ລວມສະຖານີ: ລະຫັດ + ພິກັດ ຄືກັນ → ອັບເດດຄ່າ; ນອກນັ້ນ → ເພີ່ມໃໝ່ (ຖ້າລະຫັດຊ້ຳແຕ່ຄົນລະຈຸດ ຈະຕໍ່ທ້າຍ -2, -3)
     function mergeStations(existing, incoming) {
       const out = existing.map(s => ({ ...s, customs: { ...(s.customs || {}) } }));
       let added = 0, updated = 0;
       incoming.forEach(st => {
-        const idx = out.findIndex(e => normCode(e.code) === normCode(st.code) && sameCoord(e, st));
+        // ລະຫັດ + ພິກັດ + ວັນທີເກັບຕົວຢ່າງ ຄືກັນ → ແຖວດຽວກັນ (ຄົນລະເດືອນ = ຄົນລະແຖວ)
+        const idx = out.findIndex(e => normCode(e.code) === normCode(st.code) && sameCoord(e, st) && sameDate(e, st));
         if (idx >= 0) {
           const customs = { ...out[idx].customs };
           Object.entries(st.customs || {}).forEach(([k, v]) => { if (v !== '-' && v !== '' && v !== undefined) customs[k] = v; });
-          out[idx] = { ...out[idx], name: st.name || out[idx].name, province: st.province || out[idx].province, customs, status: evalStatus(customs) };
+          out[idx] = { ...out[idx], name: st.name || out[idx].name, province: st.province || out[idx].province,
+                       lat: hasCoord(out[idx]) ? out[idx].lat : st.lat, lng: hasCoord(out[idx]) ? out[idx].lng : st.lng, customs, status: evalStatus(customs) };
           updated++;
         } else {
           let code = st.code;
-          if (out.some(e => normCode(e.code) === normCode(code))) {
+          // ລະຫັດຊ້ຳ ແຕ່ຄົນລະຈຸດ → ຕໍ່ທ້າຍ -2 (ລະຫັດດຽວກັນ ຄົນລະເດືອນ ແມ່ນປົກກະຕິ ບໍ່ຕ້ອງປ່ຽນ)
+          if (out.some(e => normCode(e.code) === normCode(code) && !sameCoord(e, st))) {
             let n = 2;
             while (out.some(e => normCode(e.code) === normCode(`${st.code}-${n}`))) n++;
             code = `${st.code}-${n}`;
@@ -1719,7 +1774,9 @@
     const EXCEL_FIELDS = {
       no:       ['no', 'no.', 'ລຳດັບ', 'ລ/ດ', 'ລ.ດ', 'ລດ', '#', 'n°'],
       code:     ['ລະຫັດສະຖານີ', 'ລະຫັດ', 'code', 'stationcode', 'station code', 'station id', 'id', 'sample id', 'sampleid', 'site code'],
-      name:     ['ຊື່ສະຖານີ', 'ຊື່ສະຖານີ / ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່', 'ຊື່', 'name', 'station', 'station name', 'stationname', 'location', 'site', 'site name', 'sampling point'],
+      name:     ['ຊື່ສະຖານີ', 'ຊື່ສະຖານີ / ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່', 'ຊື່', 'name', 'station', 'station name', 'stationname', 'location', 'site', 'site name'],
+      point:    ['sampling', 'sampling point', 'sampling site', 'sample point', 'sampling location', 'ຈຸດເກັບຕົວຢ່າງ', 'ຈຸດເກັບ', 'ຈຸດກວດ', 'point'],
+      date:     ['date', 'ວັນທີ', 'ວັນທີເກັບຕົວຢ່າງ', 'ວັນເດືອນປີ', 'ວັນ/ເດືອນ/ປີ', 'ເດືອນ', 'month', 'sampling date', 'sample date', 'date of sampling', 'period', 'ວັນທີເກັບ'],
       village:  ['village', 'ບ້ານ'],
       river:    ['river', 'ແມ່ນ້ຳ', 'ລຳນ້ຳ', 'stream', 'water body', 'waterbody', 'source'],
       district: ['district', 'ເມືອງ'],
@@ -1754,7 +1811,7 @@
       return normHeader(v).replace(/\(.*?\)|\[.*?\]/g, '').replace(/[\s_\-\.:]/g, '');
     }
     function canonParam(v) {
-      const c = compactHeader(v);
+      const c = compactHeader(splitNameUnit(v).name);
       for (const [canon, p] of Object.entries(PARAM_ALIASES)) {
         if (p.aliases.includes(c)) return canon;
       }
@@ -1778,8 +1835,12 @@
     }
 
     function splitNameUnit(header) {
-      const m = String(header).trim().match(/^(.*?)\s*[\(\[]\s*(.*?)\s*[\)\]]\s*$/);
-      return m ? { name: m[1].trim(), unit: m[2].trim() } : { name: String(header).trim(), unit: '' };
+      const h = String(header ?? '').trim();
+      let m = h.match(/^(.*?)\s*[\(\[]\s*(.*?)\s*[\)\]]\s*$/);           // "BOD (mg/L)"
+      if (m) return { name: m[1].trim(), unit: m[2].trim() };
+      m = h.match(/^(.+?)[\s_]+((?:mg|µg|ug|ng|g|ppm|ppb|ppt|ntu|°c|oc|ms|µs|us|cfu|mpn|%)[\/\w°µ.]*)$/i); // "DO_mg/L", "EC µS/cm"
+      if (m) return { name: m[1].trim(), unit: m[2].trim() };
+      return { name: h, unit: '' };
     }
 
     // ຊື່ + ຫົວໜ່ວຍ ສຳລັບໂຕຊີ້ວັດໃໝ່: ໃຊ້ຫົວໜ່ວຍໃນວົງເລັບຖ້າມີ, ບໍ່ດັ່ງນັ້ນໃຊ້ຄ່າມາດຕະຖານ
@@ -1823,9 +1884,14 @@
         if (ind && !indCols.some(x => x.ind.key === ind.key)) { indCols.push({ col, ind }); return; }
         unknownCols.push({ col, header: cellText(h) });
       });
+      // ມີທັງ "Station Name" ແລະ "Sampling" → Station Name ແມ່ນຊື່ໂຄງການ (ໃຊ້ເປັນຫົວຂໍ້ຊຸດ), Sampling ແມ່ນຊື່ຈຸດ
+      if (colMap.point !== undefined) {
+        if (colMap.name !== undefined) colMap.group = colMap.name;
+        colMap.name = colMap.point;
+      }
       const fields = Object.keys(colMap);
       const ok = (colMap.lat !== undefined && colMap.lng !== undefined) ||
-                 ((colMap.code !== undefined || colMap.name !== undefined) && fields.length >= 2);
+                 ((colMap.code !== undefined || colMap.name !== undefined) && fields.length >= 2 && (indCols.length + unknownCols.length) > 0);
       return ok ? { colMap, indCols, unknownCols } : null;
     }
 
@@ -1840,7 +1906,7 @@
       return q;
     }
 
-    function parseSheetBlocks(rows) {
+    function parseSheetBlocks(rows, sheetName = '') {
       const blocks = [];
       const usedPrefix = new Set();
       let lastTitle = '';
@@ -1851,12 +1917,17 @@
       rows.forEach((row, r) => {
         const excelRow = r + 1;
         if (isBlankRow(row)) return;
-        if (isTitleRow(row)) { close(); lastTitle = cellText(row.find(v => cellText(v) !== '')); return; }
+        if (isTitleRow(row)) {
+          // ຢູ່ໃນຕາຕະລາງ ແລະ ຂໍ້ຄວາມຢູ່ຖັນ ຊື່/ໂຄງການ/ວັນທີ (ເຊັ່ນ ແຖວທີ່ຍັງບໍ່ກອກຄ່າ) → ບໍ່ແມ່ນຫົວຂໍ້ໃໝ່, ຂ້າມແຖວນີ້
+          const col = row.findIndex(v => cellText(v) !== '');
+          if (cur && ['name', 'group', 'point', 'code', 'date'].some(f => cur.colMap[f] === col)) return;
+          close(); lastTitle = cellText(row[col]); return;
+        }
 
         const head = analyzeHeader(row);
         if (head) {
           close();
-          cur = { title: lastTitle, headerRow: excelRow, ...head, prefix: blockPrefix(lastTitle, usedPrefix), parsed: [], skipped: [] };
+          cur = { title: lastTitle, sheet: sheetName, headerRow: excelRow, ...head, prefix: blockPrefix(lastTitle, usedPrefix), parsed: [], skipped: [] };
           lastTitle = '';
           return;
         }
@@ -1868,26 +1939,83 @@
         let code = get('code'), name = get('name');
         if (!code && !name && !village && !river && !district) return; // ແຖວໝາຍເຫດ
 
-        if (!name) name = (village ? [village, river] : [river, district]).filter(Boolean).join(' - ');
-        if (!code) code = `${cur.prefix}-${String(no || cur.parsed.length + cur.skipped.length + 1).padStart(2, '0')}`;
-        if (!name) name = code;
-
-        const lat = toCoord(m.lat !== undefined ? row[m.lat] : '');
-        const lng = toCoord(m.lng !== undefined ? row[m.lng] : '');
-        if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || (lat === 0 && lng === 0)) {
-          cur.skipped.push({ excelRow, label: name, reason: 'ບໍ່ມີ Lat/Lng ຫຼື ບໍ່ຖືກຕ້ອງ' });
-          return;
-        }
-
         const customs = {};
         cur.indCols.forEach(({ col, ind }) => customs[ind.key] = cleanExcelValue(row[col]));
         const extra = {};
         cur.unknownCols.forEach(({ col, header }) => extra[canonParam(header)] = cleanExcelValue(row[col]));
+        // ແຖວທີ່ບໍ່ມີຄ່າໂຕຊີ້ວັດເລີຍ (ເຊັ່ນ ແຖວທີ່ກຽມໄວ້ສຳລັບເດືອນໜ້າ) → ຂ້າມ
+        if (![...Object.values(customs), ...Object.values(extra)].some(v => v !== '-')) return;
 
-        cur.parsed.push({ code, name, province: [district, province].filter(Boolean).join(', '), lat, lng, customs, extra });
+        if (!name) name = (village ? [village, river] : [river, district]).filter(Boolean).join(' - ');
+        if (!name) name = code;
+
+        let lat = toCoord(m.lat !== undefined ? row[m.lat] : '');
+        let lng = toCoord(m.lng !== undefined ? row[m.lng] : '');
+        // ບໍ່ມີພິກັດ ຫຼື ບໍ່ຖືກຕ້ອງ → ຍັງນຳເຂົ້າໄດ້ ແຕ່ບໍ່ສະແດງໃນແຜນທີ່ (ເພີ່ມພິກັດພາຍຫຼັງໄດ້)
+        if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || (lat === 0 && lng === 0)) { lat = null; lng = null; }
+
+        cur.parsed.push({
+          code, autoCode: !code, no, name, group: get('group'),
+          sampleDate: m.date !== undefined ? normalizeDateText(row[m.date]) : '',
+          province: [district, province].filter(Boolean).join(', '),
+          lat, lng, customs, extra, excelRow
+        });
       });
       close();
-      return blocks.filter(b => b.parsed.length || b.skipped.length);
+
+      // ແຍກຕາມຖັນຊື່ໂຄງການ (ຖ້າມີ) + ກຳນົດຫົວຂໍ້ + ສ້າງລະຫັດສະຖານີ
+      const out = [];
+      blocks.filter(b => b.parsed.length).forEach(b => {
+        const groups = new Map();
+        b.parsed.forEach(st => {
+          const g = b.colMap.group !== undefined ? (st.group || '') : '';
+          if (!groups.has(g)) groups.set(g, []);
+          groups.get(g).push(st);
+        });
+        groups.forEach((sts, g) => {
+          const title = g || b.title || sheetName || '';
+          const blk = { ...b, title, parsed: sts, prefix: g ? blockPrefix(g, usedPrefix) : b.prefix };
+          const byName = new Map();
+          sts.forEach((st, k) => {
+            if (!st.autoCode) return;
+            if (b.colMap.date !== undefined) {
+              // ມີຖັນວັນທີ: ຈຸດດຽວກັນ (ຊື່ຄືກັນ) ຄົນລະເດືອນ → ລະຫັດດຽວກັນ
+              if (!byName.has(st.name)) byName.set(st.name, byName.size + 1);
+              st.code = `${blk.prefix}-${pad2(byName.get(st.name))}`;
+            } else {
+              st.code = `${blk.prefix}-${pad2(st.no || k + 1)}`;
+            }
+          });
+          blk.noCoord = sts.filter(st => st.lat === null).length;
+          blk.hasDate = b.colMap.date !== undefined;
+          out.push(blk);
+        });
+      });
+      return out;
+    }
+
+    // ອ່ານ Sheet: ຕື່ມຄ່າໃນ Cell ທີ່ Merge ລົງລຸ່ມ (ເຊັ່ນ ວັນທີ/ຊື່ໂຄງການ ທີ່ Merge ຫຼາຍແຖວ) ແລະ ແປງວັນທີ Excel ເປັນ ISO
+    function getSheetRows(ws) {
+      (ws['!merges'] || []).forEach(rg => {
+        if (rg.e.r <= rg.s.r) return; // Merge ແນວນອນຢ່າງດຽວ (ເຊັ່ນ ຫົວຂໍ້) → ບໍ່ຕື່ມ
+        const tl = ws[XLSX.utils.encode_cell({ r: rg.s.r, c: rg.s.c })];
+        if (!tl) return;
+        for (let r = rg.s.r + 1; r <= rg.e.r; r++) {
+          ws[XLSX.utils.encode_cell({ r, c: rg.s.c })] = { ...tl };
+        }
+      });
+      Object.keys(ws).forEach(addr => {
+        if (addr[0] === '!') return;
+        const cell = ws[addr];
+        if (cell && cell.t === 'n' && cell.z && XLSX.SSF.is_date(cell.z)) {
+          const d = XLSX.SSF.parse_date_code(cell.v);
+          if (!d) return;
+          const fmt = String(cell.z).replace(/\[[^\]]*\]|"[^"]*"/g, '');
+          const iso = /d/i.test(fmt) ? `${d.y}-${pad2(d.m)}-${pad2(d.d)}` : /m/i.test(fmt) ? `${d.y}-${pad2(d.m)}` : `${d.y}`;
+          ws[addr] = { t: 's', v: iso, w: iso };
+        }
+      });
+      return XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '', blankrows: true });
     }
 
     function handleExcelDrop(e) {
@@ -1911,37 +2039,34 @@
 
       let wb;
       try {
-        wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
+        wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellNF: true });
       } catch (err) {
         return Swal.fire({ icon: 'error', title: 'ອ່ານໄຟລ໌ບໍ່ໄດ້', text: 'ໄຟລ໌ອາດເສຍ ຫຼື ມີລະຫັດຜ່ານລັອກໄວ້' });
       }
 
-      let sheetName = wb.SheetNames[0];
+      let sheetNames = [wb.SheetNames[0]];
       if (wb.SheetNames.length > 1) {
-        const opts = {};
+        const opts = { '__ALL__': `📚 ທຸກ Sheet (${wb.SheetNames.length})` };
         wb.SheetNames.forEach(n => opts[n] = n);
         const { value, isConfirmed } = await Swal.fire({
           title: '📑 ເລືອກ Sheet ທີ່ຈະນຳເຂົ້າ',
-          input: 'select', inputOptions: opts, inputValue: sheetName,
+          input: 'select', inputOptions: opts, inputValue: '__ALL__',
           showCancelButton: true, confirmButtonText: 'ຕໍ່ໄປ', cancelButtonText: 'ຍົກເລີກ'
         });
         if (!isConfirmed) return;
-        sheetName = value;
+        sheetNames = value === '__ALL__' ? wb.SheetNames : [value];
       }
+      const sheetName = sheetNames.length > 1 ? `${sheetNames.length} Sheet` : sheetNames[0];
 
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, raw: true, defval: '', blankrows: true });
-      const blocks = parseSheetBlocks(rows);
+      const blocks = sheetNames.flatMap(n => parseSheetBlocks(getSheetRows(wb.Sheets[n]), n));
 
       if (!blocks.length) {
         return Swal.fire({
           icon: 'warning',
           title: 'ບໍ່ພົບຕາຕະລາງສະຖານີທີ່ລະບົບອ່ານໄດ້',
-          html: `ແຖວຫົວຕາຕະລາງຕ້ອງມີຖັນ <b>Lat</b> ແລະ <b>Lng/Long</b> ຫຼື <b>ລະຫັດ/ຊື່ສະຖານີ</b>.<br><br>ແນະນຳໃຫ້ດາວໂຫລດແບບຟອມ Excel ແລ້ວກອກຂໍ້ມູນຕາມນັ້ນ.`,
+          html: `ແຖວຫົວຕາຕະລາງຕ້ອງມີຖັນ <b>ລະຫັດ/ຊື່ສະຖານີ</b> (ຫຼື Sampling) ແລະ <b>ຖັນໂຕຊີ້ວັດ</b> ຢ່າງນ້ອຍ 1 ຖັນ.<br><br>ແນະນຳໃຫ້ດາວໂຫລດແບບຟອມ Excel ແລ້ວກອກຂໍ້ມູນຕາມນັ້ນ.`,
           showCancelButton: true, confirmButtonText: '📄 ດາວໂຫລດແບບຟອມ', cancelButtonText: 'ປິດ'
         }).then(r => { if (r.isConfirmed) downloadExcelTemplate(); });
-      }
-      if (!blocks.some(b => b.parsed.length)) {
-        return Swal.fire({ icon: 'warning', title: 'ບໍ່ມີແຖວທີ່ນຳເຂົ້າໄດ້', html: 'ທຸກແຖວຖືກຂ້າມ ເພາະ <b>ບໍ່ມີ Lat/Lng</b> ຫຼື ຄ່າບໍ່ຖືກຕ້ອງ' });
       }
 
       showExcelPreview(file.name, sheetName, blocks, opts.targetTitle);
@@ -1983,13 +2108,14 @@
       const blockCards = good.map((b, bi) => {
         const cols = [...b.indCols.map(x => ({ label: x.ind.name, get: st => st.customs[x.ind.key], isNew: false })),
                       ...b.unknownCols.map(u => ({ label: u.header, get: st => st.extra[canonParam(u.header)], isNew: true }))];
-        const rowsHtml = b.parsed.slice(0, 5).map((st, k) => `
+        const rowsHtml = b.parsed.slice(0, 6).map((st, k) => `
           <tr class="${k % 2 ? 'bg-slate-50' : 'bg-white'}">
+            ${b.hasDate ? `<td class="${td} font-semibold text-indigo-900">${escAttr(fmtSampleDate(st.sampleDate) || '-')}</td>` : ''}
             <td class="${td} font-mono font-bold text-indigo-700">${escAttr(st.code)}</td>
             <td class="${td}">${escAttr(st.name)}</td>
             <td class="${td}">${escAttr(st.province || '-')}</td>
-            <td class="${td} text-right">${st.lat}</td>
-            <td class="${td} text-right">${st.lng}</td>
+            <td class="${td} text-right ${st.lat === null ? 'text-amber-600' : ''}">${st.lat ?? '⚠️'}</td>
+            <td class="${td} text-right ${st.lng === null ? 'text-amber-600' : ''}">${st.lng ?? '⚠️'}</td>
             ${cols.map(c => `<td class="${td} text-right ${c.isNew ? 'text-amber-700' : ''}">${escAttr(c.get(st))}</td>`).join('')}
           </tr>`).join('');
         return `
@@ -2006,13 +2132,18 @@
             <div class="overflow-auto max-h-40 border border-slate-400 rounded">
               <table class="text-[11px] border-collapse min-w-full">
                 <thead class="sticky top-0"><tr>
-                  <th class="${th}">ລະຫັດ</th><th class="${th}">ຊື່ສະຖານີ</th><th class="${th}">ແຂວງ/ເມືອງ</th><th class="${th}">Lat</th><th class="${th}">Lng</th>
+                  ${b.hasDate ? `<th class="${th}">📅 ວັນທີ</th>` : ''}<th class="${th}">ລະຫັດ</th><th class="${th}">ຊື່ສະຖານີ</th><th class="${th}">ແຂວງ/ເມືອງ</th><th class="${th}">Lat</th><th class="${th}">Lng</th>
                   ${cols.map(c => `<th class="${th} ${c.isNew ? '!bg-amber-100' : ''}">${c.isNew ? '🆕 ' : ''}${escAttr(c.label)}</th>`).join('')}
                 </tr></thead>
                 <tbody>${rowsHtml}</tbody>
               </table>
             </div>
-            ${b.parsed.length > 5 ? `<p class="text-[10px] text-slate-400">ສະແດງ 5 ແຖວທຳອິດ ຈາກ ${b.parsed.length}</p>` : ''}
+            <p class="text-[10px] text-slate-400">
+              ${b.parsed.length > 6 ? `ສະແດງ 6 ແຖວທຳອິດ ຈາກ ${b.parsed.length}` : ''}
+              ${b.hasDate ? ` · 📅 ${escAttr(sampleDateRange(b.parsed))}` : ''}
+              ${b.sheet ? ` · Sheet: ${escAttr(b.sheet)}` : ''}
+            </p>
+            ${b.noCoord ? `<p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">⚠️ ${b.noCoord} ແຖວ ບໍ່ມີພິກັດ Lat/Lng — ຈະນຳເຂົ້າໄດ້ ແຕ່ບໍ່ສະແດງໃນແຜນທີ່ (ເພີ່ມພິກັດພາຍຫຼັງດ້ວຍປຸ່ມ ✏️)</p>` : ''}
           </div>`;
       }).join('');
 
@@ -2112,7 +2243,7 @@
       const toStations = block => block.parsed.map(st => {
         const customs = { ...st.customs };
         Object.entries(newKeyByCanon).forEach(([canon, key]) => { if (canon in st.extra) customs[key] = st.extra[canon]; });
-        return { id: idSeed++, code: st.code, name: st.name, province: st.province, lat: st.lat, lng: st.lng, customs, status: evalStatus(customs) };
+        return { id: idSeed++, code: st.code, name: st.name, province: st.province, lat: st.lat, lng: st.lng, sampleDate: st.sampleDate || '', customs, status: evalStatus(customs) };
       });
 
       // ຕາຕະລາງທີ່ຫົວຂໍ້ຄືກັນ (ໃນໄຟລ໌ດຽວກັນ) → ລວມເປັນກຸ່ມດຽວກ່ອນບັນທຶກ
@@ -2142,9 +2273,9 @@
         return Swal.fire({ icon: 'error', title: 'ໂຫລດຕົວສ້າງ Excel ບໍ່ສຳເລັດ', text: 'ກະລຸນາກວດອິນເຕີເນັດ ແລ້ວ Refresh ໜ້າເວັບ' });
       }
       const indHeaders = customIndicators.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`);
-      const headers = ['ລະຫັດສະຖານີ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng', ...indHeaders];
-      const example1 = ['ST-101', 'ນ້ຳຂອງ ທ່າເດື່ອ', 'ນະຄອນຫຼວງ', 17.8771, 102.7154, ...customIndicators.map(() => '')];
-      const example2 = ['ST-102', 'ຫ້ວຍໝາກຮຽວ', 'ນະຄອນຫຼວງ', 17.9543, 102.6122, ...customIndicators.map(() => 'ND')];
+      const headers = ['ວັນທີ', 'ລະຫັດສະຖານີ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng', ...indHeaders];
+      const example1 = ['2025-04', 'ST-101', 'ນ້ຳຂອງ ທ່າເດື່ອ', 'ນະຄອນຫຼວງ', 17.8771, 102.7154, ...customIndicators.map(() => '')];
+      const example2 = ['2025-05', 'ST-101', 'ນ້ຳຂອງ ທ່າເດື່ອ', 'ນະຄອນຫຼວງ', 17.8771, 102.7154, ...customIndicators.map(() => 'ND')];
 
       const ws = XLSX.utils.aoa_to_sheet([headers, example1, example2]);
       ws['!cols'] = headers.map(h => ({ wch: Math.max(12, String(h).length + 4) }));
@@ -2153,7 +2284,8 @@
         ['ຄຳແນະນຳການກອກຂໍ້ມູນ'],
         [''],
         ['1. ກອກຂໍ້ມູນໃນ Sheet "ຂໍ້ມູນ" — 1 ແຖວ = 1 ສະຖານີ (ລຶບແຖວຕົວຢ່າງອອກກ່ອນ)'],
-        ['2. ຖັນ Lat ແລະ Lng ຕ້ອງມີຄ່າ (ເຊັ່ນ 17.9757 / 102.6331) — ແຖວທີ່ບໍ່ມີພິກັດຈະຖືກຂ້າມ'],
+        ['2. ຖັນ ວັນທີ: ພິມ 2025-04 (ເດືອນ/ປີ) ຫຼື 25/04/2025 (ວັນ/ເດືອນ/ປີ) — ຈຸດດຽວກັນ ຄົນລະເດືອນ ໃຫ້ໃສ່ລະຫັດດຽວກັນ ຄົນລະແຖວ'],
+        ['   ຖັນ Lat/Lng: ຄວນມີ (ເຊັ່ນ 17.9757 / 102.6331) — ຖ້າບໍ່ມີ ຈະນຳເຂົ້າໄດ້ ແຕ່ບໍ່ສະແດງໃນແຜນທີ່'],
         ['3. ຄ່າໂຕຊີ້ວັດ: ພິມຕົວເລກ, ND = ກວດບໍ່ພົບ, <0.01 ຫຼື >100 ກໍ່ໄດ້, ປ່ອຍຫວ່າງ = ບໍ່ມີຄ່າ'],
         ['4. ເພີ່ມຖັນໂຕຊີ້ວັດໃໝ່ໄດ້ ເຊັ່ນ "COD (mg/L)" — ລະບົບຈະຖາມວ່າຈະເພີ່ມເປັນໂຕຊີ້ວັດໃໝ່ບໍ່'],
         ['5. ຢ່າປ່ຽນຊື່ຫົວຖັນ ລະຫັດສະຖານີ, ຊື່ສະຖານີ, ແຂວງ/ເມືອງ, Lat, Lng']
@@ -2177,7 +2309,7 @@
         container.innerHTML = tempStations.map((st, idx) => `
           <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
             <div>
-              <span class="font-mono font-bold text-indigo-600">${st.code}</span> - <span class="font-medium text-slate-800">${st.name}</span>
+              <span class="font-mono font-bold text-indigo-600">${st.code}</span> - <span class="font-medium text-slate-800">${st.name}</span>${st.sampleDate ? ` <span class="text-[10px] text-slate-500">📅 ${fmtSampleDate(st.sampleDate)}</span>` : ''}
             </div>
             <button onclick="removeTempStation(${idx})" class="text-rose-500 font-bold hover:text-rose-700 px-1">✕</button>
           </div>
@@ -2371,7 +2503,7 @@
               ${renderOrgBadge(company)}
             </td>
             <td class="p-3 text-center"><span class="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-1 rounded-full font-bold">${stations.length} ສະຖານີ</span></td>
-            <td class="p-3 text-xs text-slate-500">${item.date || '-'}</td>
+            <td class="p-3 text-xs text-slate-500">${item.date || '-'}${sampleDateRange(stations) ? `<div class="text-[10px] font-bold text-indigo-600 mt-0.5">📅 ${sampleDateRange(stations)}</div>` : ''}</td>
             <td class="p-3 text-xs font-semibold text-slate-700">${item.recordedBy || 'ບໍ່ລະບຸ'}</td>
             <td class="p-3 text-center no-print" onclick="event.stopPropagation()">
               <div class="flex flex-col items-center gap-1.5">
@@ -2462,6 +2594,7 @@
             ${editInput(p + 'code', 'ລະຫັດສະຖານີ', st.code)}
             ${editInput(p + 'name', 'ຊື່ສະຖານີ / ສະຖານທີ່', st.name)}
             ${editInput(p + 'province', 'ແຂວງ/ເມືອງ', st.province)}
+            ${editInput(p + 'sampleDate', '📅 ວັນທີເກັບຕົວຢ່າງ', st.sampleDate || '', 'placeholder="2025-04-25 ຫຼື 2025-04"')}
             ${editInput(p + 'lat', 'Lat', st.lat)}
             ${editInput(p + 'lng', 'Lng', st.lng)}
           </div>
@@ -2540,12 +2673,13 @@
       const editor = currentUserName || get('editor');
       const code = get('code');
       const name = get('name');
-      const lat = parseFloat(get('lat'));
-      const lng = parseFloat(get('lng'));
+      const noCoord = get('lat') === '' && get('lng') === '';
+      const lat = noCoord ? null : parseFloat(get('lat'));
+      const lng = noCoord ? null : parseFloat(get('lng'));
 
       if (!editor) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາປ້ອນຊື່ຜູ້ແກ້ໄຂ!' });
       if (!code || !name) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາລະບຸລະຫັດ ແລະ ຊື່ສະຖານີ!' });
-      if (isNaN(lat) || isNaN(lng)) return Swal.fire({ icon: 'warning', title: 'ຄ່າ Lat / Lng ບໍ່ຖືກຕ້ອງ!' });
+      if (!noCoord && (isNaN(lat) || isNaN(lng))) return Swal.fire({ icon: 'warning', title: 'ຄ່າ Lat / Lng ບໍ່ຖືກຕ້ອງ!', text: 'ປ່ອຍຫວ່າງທັງສອງຊ່ອງໄດ້ ຖ້າບໍ່ມີພິກັດ' });
 
       const oldStation = item.stations ? item.stations[idx] : item;
       const customs = { ...(oldStation.customs || {}) };
@@ -2555,6 +2689,7 @@
         ...oldStation,
         code, name,
         province: get('province'),
+        sampleDate: normalizeDateText(get('sampleDate')),
         lat, lng,
         customs,
         status: evalStatus(customs)
@@ -2672,17 +2807,38 @@
     }
     window.addEventListener('resize', () => xlRefreshAll());
 
+    const detailDateFilter = {};
+    function setDetailDateFilter(key, v) {
+      detailDateFilter[key] = v;
+      render();
+    }
+
     function renderExcelDetailTable(item, stations, canEdit) {
       const th = 'px-2 py-1.5 border border-slate-300 bg-slate-200 text-slate-700 font-bold whitespace-nowrap text-center';
       const td = 'px-2 py-1.5 border border-slate-300 whitespace-nowrap';
       const colLetters = n => { let s = ''; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
 
-      const headers = ['ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng',
+      const headers = ['📅 ວັນທີ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng',
         ...customIndicators.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
 
-      const rowsHTML = stations.map((st, stIdx) => {
+      // ຈັດລຽງຕາມວັນທີ (ເກົ່າ→ໃໝ່) ແລະ ກອງຕາມວັນທີທີ່ເລືອກ — ເກັບ index ເດີມໄວ້ສຳລັບປຸ່ມແກ້ໄຂ/ລົບ
+      const dates = [...new Set(stations.map(s => s.sampleDate || ''))].sort();
+      const dFilter = detailDateFilter[item.fbKey] || 'ALL';
+      const order = stations.map((st, i) => ({ st, i }))
+        .filter(x => dFilter === 'ALL' || (x.st.sampleDate || '') === dFilter)
+        .sort((a, b) => String(a.st.sampleDate || '').localeCompare(String(b.st.sampleDate || '')) || a.i - b.i);
+
+      const rowsHTML = order.map(({ st, i: stIdx }, pos) => {
+        // Merge ຊ່ອງວັນທີ ຂອງແຖວຕິດກັນທີ່ວັນທີດຽວກັນ (ຄືໃນ Excel)
+        const d = st.sampleDate || '';
+        const firstOfGroup = pos === 0 || (order[pos - 1].st.sampleDate || '') !== d;
+        let span = 1;
+        if (firstOfGroup) while (pos + span < order.length && (order[pos + span].st.sampleDate || '') === d) span++;
+        const dateCell = firstOfGroup
+          ? `<td rowspan="${span}" class="px-2 py-1.5 border border-slate-300 whitespace-nowrap text-center align-middle font-bold text-indigo-900 bg-indigo-50/60">${d ? escAttr(fmtSampleDate(d)) : '<span class="text-slate-400 font-normal">-</span>'}</td>`
+          : '';
         const isEditing = editingStation && editingStation.fbKey === item.fbKey && editingStation.idx === stIdx;
-        const zebra = stIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50';
+        const zebra = pos % 2 === 0 ? 'bg-white' : 'bg-slate-50';
         const indCells = customIndicators.map(i => {
           const val = st.customs ? (st.customs[i.key] ?? '-') : '-';
           const bad = isOutOfThreshold(i.key, val);
@@ -2692,12 +2848,13 @@
 
         return `
           <tr class="${isEditing ? 'bg-amber-50' : zebra} hover:bg-sky-50">
-            <td class="${td} bg-slate-200 text-slate-500 font-bold text-center sticky left-0">${stIdx + 1}</td>
+            <td class="${td} bg-slate-200 text-slate-500 font-bold text-center sticky left-0">${pos + 1}</td>
+            ${dateCell}
             <td class="${td} !whitespace-normal break-words min-w-[70px] max-w-[180px] font-mono font-bold text-indigo-700">${st.code || '-'}</td>
             <td class="${td} !whitespace-normal break-words min-w-[90px] max-w-[220px] font-medium text-slate-800">${st.name || '-'}</td>
             <td class="${td}">${st.province || '-'}</td>
-            <td class="${td} text-right tabular-nums text-slate-500">${st.lat ?? '-'}</td>
-            <td class="${td} text-right tabular-nums text-slate-500">${st.lng ?? '-'}</td>
+            <td class="${td} text-right tabular-nums text-slate-500" ${st.lat === null || st.lat === undefined ? 'title="ບໍ່ມີພິກັດ — ກົດ ✏️ ເພື່ອເພີ່ມ"' : ''}>${st.lat ?? '<span class="text-amber-500">—</span>'}</td>
+            <td class="${td} text-right tabular-nums text-slate-500">${st.lng ?? '<span class="text-amber-500">—</span>'}</td>
             ${indCells}
             <td class="${td} text-center">
               <span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${st.status ? st.status.class : 'bg-emerald-100 text-emerald-800'}">${st.status ? st.status.text : '✅ Normal'}</span>
@@ -2721,10 +2878,16 @@
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="text-[11px] text-slate-600 space-x-3">
               ${item.projectLocation ? `<span>📍 <b>ທີ່ຕັ້ງໂຄງການ:</b> ${item.projectLocation}</span>` : ''}
-              <span>📊 <b>${stations.length}</b> ສະຖານີ</span>
+              <span>📊 <b>${stations.length}</b> ແຖວ</span>
+              ${dates.filter(Boolean).length ? `<span>📅 ${escAttr(sampleDateRange(stations))}</span>` : ''}
               ${alertCount ? `<span class="text-rose-600 font-bold">🚨 ເຕືອນໄພ ${alertCount}</span>` : ''}
             </div>
             <div class="flex items-center gap-2 no-print">
+              ${dates.length > 1 ? `
+                <select onchange="setDetailDateFilter('${item.fbKey}', this.value)" class="border border-slate-300 rounded-lg px-2 py-1 text-[11px] font-semibold bg-white">
+                  <option value="ALL">📅 ທຸກວັນທີ (${dates.length})</option>
+                  ${dates.map(d => `<option value="${escAttr(d)}" ${d === dFilter ? 'selected' : ''}>${escAttr(d ? fmtSampleDate(d) : 'ບໍ່ລະບຸວັນທີ')} (${stations.filter(s => (s.sampleDate || '') === d).length})</option>`).join('')}
+                </select>` : ''}
               <button onclick="exportBatchCSV('${item.fbKey}')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm">📥 ດາວໂຫລດຕາຕະລາງນີ້ (Excel)</button>
             </div>
           </div>
@@ -2760,12 +2923,12 @@
       if (!item) return;
       const stations = item.stations || [item];
       const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-      const head = ['No.', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng', ...customIndicators.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
+      const head = ['No.', 'ວັນທີເກັບຕົວຢ່າງ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng', ...customIndicators.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
       let csv = '\uFEFF' + [q('ບໍລິສັດ: ' + (item.companyName || item.name || '')), q('ວັນທີ: ' + (item.date || '')), q('ຜູ້ບັນທຶກ: ' + (item.recordedBy || ''))].join(',') + '\n';
       if (item.projectLocation) csv += q('ທີ່ຕັ້ງ: ' + item.projectLocation) + '\n';
       csv += '\n' + head.map(q).join(',') + '\n';
       stations.forEach((st, k) => {
-        const row = [k + 1, st.code, st.name, st.province, st.lat, st.lng,
+        const row = [k + 1, st.sampleDate || '', st.code, st.name, st.province, st.lat ?? '', st.lng ?? '',
           ...customIndicators.map(i => st.customs ? (st.customs[i.key] ?? '-') : '-'),
           st.status ? st.status.text.replace(/[^\w\s]/g, '').trim() : 'Normal'];
         csv += row.map(q).join(',') + '\n';
@@ -3066,7 +3229,7 @@
       const q = normHeader(document.getElementById('chartStationSearch')?.value || '');
       const sts = stationsOf(ds);
       list.innerHTML = sts.map((st, i) => {
-        const label = `${st.name || '-'} (${st.code || '-'})`;
+        const label = `${st.name || '-'} (${st.code || '-'})${st.sampleDate ? ' · ' + fmtSampleDate(st.sampleDate) : ''}`;
         if (q && !normHeader(label + ' ' + (st.province || '')).includes(q)) return '';
         const on = !chartStationSel || chartStationSel.has(i);
         return `<label class="flex items-center gap-2 px-2 py-1 rounded hover:bg-indigo-50 cursor-pointer">
@@ -3106,7 +3269,10 @@
       const ds = waterData.find(d => d.fbKey === chartDataset);
       if (!ds) return { list: [], caption: '' };
       const all = stationsOf(ds);
-      const list = all.filter((_, i) => !chartStationSel || chartStationSel.has(i));
+      const list = all.map((st, i) => ({ st, i }))
+        .filter(x => !chartStationSel || chartStationSel.has(x.i))
+        .sort((a, b) => String(a.st.sampleDate || '').localeCompare(String(b.st.sampleDate || '')) || a.i - b.i)
+        .map(x => x.st);
       const title = ds.companyName || ds.name || '';
       return { list, caption: `${title} — ${list.length === all.length ? 'ທຸກສະຖານີ' : list.length + ' ສະຖານີທີ່ເລືອກ'}`, dataset: title };
     }
@@ -3135,7 +3301,7 @@
       const rows = stations.map((st, k) => `
         <tr class="${k % 2 ? 'bg-slate-50' : 'bg-white'} hover:bg-sky-50">
           <td class="${td} sticky left-0 ${k % 2 ? 'bg-slate-50' : 'bg-white'} font-medium text-slate-800 !whitespace-normal min-w-[120px] max-w-[200px]">
-            ${escAttr(st.name || '-')} <span class="font-mono text-[10px] text-indigo-600">(${escAttr(st.code || '-')})</span>
+            ${escAttr(st.name || '-')} <span class="font-mono text-[10px] text-indigo-600">(${escAttr(st.code || '-')})</span>${st.sampleDate ? `<div class="text-[10px] text-slate-500">📅 ${escAttr(fmtSampleDate(st.sampleDate))}</div>` : ''}
           </td>
           ${inds.map(i => {
             const raw = st.customs ? st.customs[i.key] : undefined;
@@ -3199,7 +3365,7 @@
       // log ສະແດງ 0 ບໍ່ໄດ້ → ຄ່າ 0 ຫຼື ຕິດລົບ ບໍ່ແຕ້ມແທ່ງ ແຕ່ຍັງເຫັນໃນ tooltip/ຕາຕະລາງ
       const plotVal = v => (v === null ? null : (chartLog && v <= 0 ? null : v));
       const series = sts.map(st => ({
-        name: `${st.name || ''} (${st.code || ''})`,
+        name: `${st.name || ''} (${st.code || ''})${st.sampleDate ? ' · ' + fmtSampleDate(st.sampleDate) : ''}`,
         data: inds.map(i => plotVal(num(st.customs ? st.customs[i.key] : undefined)))
       }));
       const rawOf = (si, ii) => { const st = sts[si], i = inds[ii]; return st && i && st.customs ? st.customs[i.key] : undefined; };
@@ -3285,7 +3451,7 @@
       if (!chartData.length) return chartMessage('📍 ຍັງບໍ່ໄດ້ເລືອກສະຖານີ — ກົດ "📍 ສະຖານີ" ເພື່ອເລືອກ');
       if (currentSelectedIndicator === ALL_IND) return drawProfileChart(el, chartData);
 
-      const categories = chartData.map(d => `${d.name || ''} (${d.code || ''})`);
+      const categories = chartData.map(d => d.sampleDate ? [`${d.name || ''} (${d.code || ''})`, fmtSampleDate(d.sampleDate)] : `${d.name || ''} (${d.code || ''})`);
       const values = chartData.map(d => {
         const v = d.customs ? d.customs[ind.key] : undefined;
         const n = parseFloat(v);
@@ -3362,7 +3528,7 @@
       if(waterData.length === 0) return Swal.fire({ icon: 'info', title: 'ບໍ່ມີຂໍ້ມູນ' });
       
       let customHead = customIndicators.map(i => i.name).join(',');
-      let csv = `\uFEFFNo.,Company,Station Code,Station Name,Province,Latitude,Longitude,${customHead},Status,Recorded By,Timestamp\n`;
+      let csv = `\uFEFFNo.,Company,Sampling Date,Station Code,Station Name,Province,Latitude,Longitude,${customHead},Status,Recorded By,Timestamp\n`;
       
       let count = 1;
       waterData.forEach((r) => {
@@ -3370,7 +3536,7 @@
         const stations = r.stations || [r];
         stations.forEach(st => {
           let cVals = customIndicators.map(i => st.customs ? (st.customs[i.key] ?? '-') : '-').join(',');
-          csv += `${count++},"${company}","${st.code}","${st.name}","${st.province}",${st.lat},${st.lng},${cVals},"${st.status ? st.status.text : 'Normal'}","${r.recordedBy || 'ບໍ່ລະບຸ'}","${r.date}"\n`;
+          csv += `${count++},"${company}","${st.sampleDate || ''}","${st.code}","${st.name}","${st.province}",${st.lat},${st.lng},${cVals},"${st.status ? st.status.text : 'Normal'}","${r.recordedBy || 'ບໍ່ລະບຸ'}","${r.date}"\n`;
         });
       });
 
