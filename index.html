@@ -47,6 +47,13 @@
       40%, 80% { transform: translateX(8px); }
     }
     .login-shake { animation: login-shake 0.35s ease; }
+    .xl-btn { padding: 4px 9px; color: #334155; background: #fff; transition: background .15s; }
+    .xl-btn:hover:not(:disabled) { background: #e0e7ff; color: #3730a3; }
+    .xl-btn:disabled { color: #cbd5e1; cursor: default; }
+    .xl-side { position: absolute; top: 50%; transform: translateY(-50%); z-index: 30; width: 30px; height: 30px; border-radius: 9999px;
+               background: rgba(255,255,255,.95); border: 1px solid #94a3b8; box-shadow: 0 2px 6px rgba(0,0,0,.18); color: #3730a3; font-size: 12px; font-weight: 700; }
+    .xl-side:hover { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+    .xl-hide { display: none !important; }
     .ds-dragging { opacity: 0.45; }
     .ds-drop-target > td { background: #ccfbf1 !important; }
     .ds-drop-target { outline: 2px dashed #0d9488; outline-offset: -2px; }
@@ -1842,7 +1849,7 @@
 
         const lat = toCoord(m.lat !== undefined ? row[m.lat] : '');
         const lng = toCoord(m.lng !== undefined ? row[m.lng] : '');
-        if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+        if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || (lat === 0 && lng === 0)) {
           cur.skipped.push({ excelRow, label: name, reason: 'ບໍ່ມີ Lat/Lng ຫຼື ບໍ່ຖືກຕ້ອງ' });
           return;
         }
@@ -2383,6 +2390,7 @@
       }
 
       initApexChart(flatStationsForChart);
+      requestAnimationFrame(xlRefreshAll);
     }
 
     /* --- EDIT SYSTEM (ແກ້ໄຂຂໍ້ມູນ ຢູ່ກ້ອງບ໋ອກລາຍລະອຽດ) --- */
@@ -2598,6 +2606,38 @@
       return false;
     }
 
+    // ປຸ່ມເລື່ອນຕາຕະລາງ ຊ້າຍ-ຂວາ (ຈື່ຕຳແໜ່ງໄວ້ ເພື່ອບໍ່ໃຫ້ກັບໄປຊ້າຍສຸດເມື່ອຂໍ້ມູນອັບເດດ)
+    const xlScrollPos = {};
+    function xlScroll(key, dir) {
+      const el = document.getElementById('xl_' + key);
+      if (!el) return;
+      const step = Math.max(200, el.clientWidth * 0.7);
+      if (dir === 'start') el.scrollTo({ left: 0, behavior: 'smooth' });
+      else if (dir === 'end') el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' });
+      else el.scrollBy({ left: dir * step, behavior: 'smooth' });
+    }
+    function xlUpdateNav(key) {
+      const el = document.getElementById('xl_' + key);
+      if (!el) return;
+      xlScrollPos[key] = el.scrollLeft;
+      const overflow = el.scrollWidth - el.clientWidth > 4;
+      const atStart = el.scrollLeft <= 2;
+      const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 2;
+      document.getElementById('xlBar_' + key)?.classList.toggle('xl-hide', !overflow);
+      document.getElementById('xlL_' + key)?.classList.toggle('xl-hide', !overflow || atStart);
+      document.getElementById('xlR_' + key)?.classList.toggle('xl-hide', !overflow || atEnd);
+      ['xlS_', 'xlL2_'].forEach(p => { const b = document.getElementById(p + key); if (b) b.disabled = atStart; });
+      ['xlE_', 'xlR2_'].forEach(p => { const b = document.getElementById(p + key); if (b) b.disabled = atEnd; });
+    }
+    function xlRefreshAll() {
+      document.querySelectorAll('[data-xl]').forEach(el => {
+        const key = el.dataset.xl;
+        if (xlScrollPos[key]) el.scrollLeft = xlScrollPos[key];
+        xlUpdateNav(key);
+      });
+    }
+    window.addEventListener('resize', () => xlRefreshAll());
+
     function renderExcelDetailTable(item, stations, canEdit) {
       const th = 'px-2 py-1.5 border border-slate-300 bg-slate-200 text-slate-700 font-bold whitespace-nowrap text-center';
       const td = 'px-2 py-1.5 border border-slate-300 whitespace-nowrap';
@@ -2619,8 +2659,8 @@
         return `
           <tr class="${isEditing ? 'bg-amber-50' : zebra} hover:bg-sky-50">
             <td class="${td} bg-slate-200 text-slate-500 font-bold text-center sticky left-0">${stIdx + 1}</td>
-            <td class="${td} font-mono font-bold text-indigo-700">${st.code || '-'}</td>
-            <td class="${td} font-medium text-slate-800">${st.name || '-'}</td>
+            <td class="${td} !whitespace-normal break-words min-w-[70px] max-w-[180px] font-mono font-bold text-indigo-700">${st.code || '-'}</td>
+            <td class="${td} !whitespace-normal break-words min-w-[90px] max-w-[220px] font-medium text-slate-800">${st.name || '-'}</td>
             <td class="${td}">${st.province || '-'}</td>
             <td class="${td} text-right tabular-nums text-slate-500">${st.lat ?? '-'}</td>
             <td class="${td} text-right tabular-nums text-slate-500">${st.lng ?? '-'}</td>
@@ -2649,10 +2689,21 @@
               <span>📊 <b>${stations.length}</b> ສະຖານີ</span>
               ${alertCount ? `<span class="text-rose-600 font-bold">🚨 ເຕືອນໄພ ${alertCount}</span>` : ''}
             </div>
-            <button onclick="exportBatchCSV('${item.fbKey}')" class="no-print bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm">📥 ດາວໂຫລດຕາຕະລາງນີ້ (Excel)</button>
+            <div class="flex items-center gap-2 no-print">
+              <div id="xlBar_${item.fbKey}" class="flex items-center rounded-lg border border-slate-300 overflow-hidden text-[11px] font-bold bg-white shadow-sm">
+                <button onclick="xlScroll('${item.fbKey}', 'start')" id="xlS_${item.fbKey}" class="xl-btn" title="ໄປຊ້າຍສຸດ">⏮</button>
+                <button onclick="xlScroll('${item.fbKey}', -1)" id="xlL2_${item.fbKey}" class="xl-btn border-l" title="ເລື່ອນຊ້າຍ">◀ ຊ້າຍ</button>
+                <button onclick="xlScroll('${item.fbKey}', 1)" id="xlR2_${item.fbKey}" class="xl-btn border-l" title="ເລື່ອນຂວາ">ຂວາ ▶</button>
+                <button onclick="xlScroll('${item.fbKey}', 'end')" id="xlE_${item.fbKey}" class="xl-btn border-l" title="ໄປຂວາສຸດ">⏭</button>
+              </div>
+              <button onclick="exportBatchCSV('${item.fbKey}')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm">📥 ດາວໂຫລດຕາຕະລາງນີ້ (Excel)</button>
+            </div>
           </div>
 
-          <div class="overflow-auto max-h-[420px] border border-slate-400 rounded-md shadow-inner bg-white">
+          <div class="relative">
+          <button onclick="xlScroll('${item.fbKey}', -1)" id="xlL_${item.fbKey}" class="xl-side no-print" style="left:40px" title="ເລື່ອນຊ້າຍ">◀</button>
+          <button onclick="xlScroll('${item.fbKey}', 1)" id="xlR_${item.fbKey}" class="xl-side no-print" style="right:8px" title="ເລື່ອນຂວາ">▶</button>
+          <div id="xl_${item.fbKey}" data-xl="${item.fbKey}" onscroll="xlUpdateNav('${item.fbKey}')" class="overflow-auto max-h-[420px] border border-slate-400 rounded-md shadow-inner bg-white">
             <table class="text-[11px] border-collapse min-w-full">
               <thead class="sticky top-0 z-10">
                 <tr>
@@ -2668,6 +2719,7 @@
               </thead>
               <tbody>${rowsHTML}</tbody>
             </table>
+          </div>
           </div>
           <p class="text-[10px] text-slate-400">💡 ຊ່ອງສີແດງ = ຄ່າເກີນເກນເຕືອນໄພ${canEdit ? ' · ກົດ ✏️ ເພື່ອແກ້ໄຂແຖວນັ້ນ' : ''}</p>
 
