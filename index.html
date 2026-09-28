@@ -29,7 +29,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Noto Sans Lao', sans-serif; }
-    #map { height: 340px; z-index: 1; background-color: #aad3df; }
+    #map { height: 340px; min-height: 340px; z-index: 1; background-color: #aad3df; }
+    @media (min-width: 1024px) { #mapCard #map { height: auto; } }
 
     #map:fullscreen {
       width: 100vw !important;
@@ -188,16 +189,16 @@
 
     <!-- Map & Analytics -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+      <div id="mapCard" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col min-w-0">
         <div class="flex justify-between items-center mb-3">
           <h2 class="font-bold text-slate-800 flex items-center gap-2">📍 ແຜນທີ່ Google Maps GIS ສະພາບນ້ຳ</h2>
           <span class="text-xs bg-sky-100 text-sky-800 px-2.5 py-1 rounded-full font-semibold" id="stationCount">0 Batch Records</span>
         </div>
-        <div id="map" class="rounded-xl border border-slate-200"></div>
+        <div id="map" class="rounded-xl border border-slate-200 flex-1"></div>
       </div>
 
       <!-- Chart Panel -->
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+      <div id="chartCard" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col min-w-0">
         <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
           <h2 class="font-bold text-slate-800">📈 ກຣາຟແຍກສະເພາະຕົວຊີ້ວັດ</h2>
           <div id="chartIndicatorTabs" class="flex flex-wrap gap-1 text-[11px]"></div>
@@ -3147,9 +3148,15 @@
       const inner = document.getElementById('xlTopInner_' + key);
       if (!el || !top || !inner) return;
       xlScrollPos[key] = el.scrollLeft;
-      inner.style.width = el.scrollWidth + 'px';
+      // ກ່ອງຕາຕະລາງມີແຖບເລື່ອນແນວຕັ້ງ (ກິນພື້ນທີ່ ~15px) → ບວກສ່ວນຕ່າງ ໃຫ້ແຖບເທິງເລື່ອນໄປຮອດຖັນສຸດທ້າຍແທ້
+      inner.style.width = (el.scrollWidth + Math.max(0, top.clientWidth - el.clientWidth)) + 'px';
       top.classList.toggle('xl-hide', el.scrollWidth - el.clientWidth <= 4);
-      if (!xlSyncing) { xlSyncing = true; top.scrollLeft = el.scrollLeft; requestAnimationFrame(() => xlSyncing = false); }
+      if (!xlSyncing) {
+        xlSyncing = true;
+        const maxEl = el.scrollWidth - el.clientWidth, maxTop = top.scrollWidth - top.clientWidth;
+        top.scrollLeft = maxEl > 0 ? el.scrollLeft / maxEl * maxTop : 0;
+        requestAnimationFrame(() => xlSyncing = false);
+      }
     }
     function xlSyncFromTop(key) {
       if (xlSyncing) return;
@@ -3157,7 +3164,8 @@
       const top = document.getElementById('xlTop_' + key);
       if (!el || !top) return;
       xlSyncing = true;
-      el.scrollLeft = top.scrollLeft;
+      const maxEl = el.scrollWidth - el.clientWidth, maxTop = top.scrollWidth - top.clientWidth;
+      el.scrollLeft = maxTop > 0 ? top.scrollLeft / maxTop * maxEl : 0;
       xlScrollPos[key] = el.scrollLeft;
       requestAnimationFrame(() => xlSyncing = false);
     }
@@ -3169,6 +3177,11 @@
       });
     }
     window.addEventListener('resize', () => xlRefreshAll());
+    // ແຜນທີ່ຍືດຕາມຄວາມສູງຂອງກ່ອງກຣາຟ → ແຈ້ງ Leaflet ໃຫ້ຄິດຂະໜາດໃໝ່
+    if (window.ResizeObserver) {
+      new ResizeObserver(() => { if (typeof map !== 'undefined' && map) map.invalidateSize(); })
+        .observe(document.getElementById('map'));
+    }
 
     const detailDateFilter = {};
     function setDetailDateFilter(key, v) {
@@ -3663,12 +3676,12 @@
     function renderChartSummary(stations) {
       const box = document.getElementById('chartSummary');
       if (!box) return;
-      if (!stations || !stations.length || !customIndicators.length) { box.innerHTML = ''; return; }
+      if (!stations || !stations.length || !customIndicators.length) { box.innerHTML = ''; box.dataset.last = ''; return; }
 
       const num = v => { const n = parseFloat(v); return (v === undefined || v === null || v === '-' || isNaN(n)) ? null : n; };
       // ສະແດງສະເພາະໂຕຊີ້ວັດທີ່ມີຄ່າຢ່າງນ້ອຍ 1 ສະຖານີ
       const inds = customIndicators.filter(i => stations.some(st => st.customs && st.customs[i.key] !== undefined && st.customs[i.key] !== '-' && st.customs[i.key] !== ''));
-      if (!inds.length) { box.innerHTML = ''; return; }
+      if (!inds.length) { box.innerHTML = ''; box.dataset.last = ''; return; }
 
       const th = 'px-2 py-1.5 border border-slate-300 bg-slate-200 text-slate-700 font-bold whitespace-nowrap text-center';
       const td = 'px-2 py-1 border border-slate-300 whitespace-nowrap';
@@ -3711,9 +3724,10 @@
           stat('⬆️ ສູງສຸດ', v => Math.max(...v), 'bg-slate-100 text-slate-700');
       }
 
-      box.innerHTML = `
+      const html = `
         <p class="text-[11px] font-bold text-slate-700 mb-1">📋 ຄ່າທັງໝົດຂອງແຕ່ລະສະຖານີ <span class="font-normal text-slate-400">· ກົດຫົວຖັນເພື່ອເບິ່ງກຣາຟໂຕຊີ້ວັດນັ້ນ</span></p>
-        <div class="overflow-auto max-h-72 border border-slate-400 rounded-md">
+        <div id="xlTop_chartsum" onscroll="xlSyncFromTop('chartsum')" class="xl-topbar"><div id="xlTopInner_chartsum" style="height:1px"></div></div>
+        <div id="xl_chartsum" data-xl="chartsum" onscroll="xlUpdateNav('chartsum'); xlScrollTop.chartsum = this.scrollTop" class="overflow-auto max-h-80 border border-slate-400 rounded-md">
           <table class="text-[11px] border-collapse min-w-full">
             <thead class="sticky top-0 z-10"><tr>
               <th class="${th} sticky left-0 z-20 !bg-slate-300">ສະຖານີ</th>${head}<th class="${th}">ສະຖານະ</th>
@@ -3722,7 +3736,16 @@
           </table>
         </div>
         ${stations.length > 1 ? '<p class="text-[10px] text-slate-400 mt-1">ສະເລ່ຍ/ຕ່ຳສຸດ/ສູງສຸດ ຄິດສະເພາະຄ່າທີ່ເປັນຕົວເລກ (ບໍ່ນັບ ND ແລະ ຊ່ອງຫວ່າງ)</p>' : ''}`;
+      // ເນື້ອໃນຄືເກົ່າ → ບໍ່ແຕ້ມໃໝ່ (ບໍ່ໃຫ້ຕາຕະລາງດີດກັບໄປຊ້າຍສຸດ ເວລາກຳລັງເລື່ອນ)
+      if (box.dataset.last !== html) {
+        box.innerHTML = html;
+        box.dataset.last = html;
+        const el = document.getElementById('xl_chartsum');
+        if (el) { el.scrollLeft = xlScrollPos.chartsum || 0; el.scrollTop = xlScrollTop.chartsum || 0; }
+      }
+      requestAnimationFrame(() => xlUpdateNav('chartsum'));
     }
+    const xlScrollTop = {};
 
     // ໂໝດ "ທຸກໂຕຊີ້ວັດ": ກຣາຟສະແດງຄ່າໂດຍລວມຂອງສະຖານີ (ແກນ X = ໂຕຊີ້ວັດ, ແທ່ງ = ສະຖານີ)
     const ALL_IND = '__ALL__';
