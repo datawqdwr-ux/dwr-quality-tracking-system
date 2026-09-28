@@ -345,7 +345,7 @@
           <h2 class="text-lg font-bold text-slate-800">📋 ຖານຂໍ້ມູນຜົນການກວດວັດ (ລາຍບໍລິສັດ)</h2>
           <div class="flex gap-2">
           <button id="mergeDupBtn" onclick="mergeDuplicateDatasets()" class="bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs px-3 py-1.5 rounded-lg border border-teal-200 hidden">
-            🔗 ລວມຊຸດທີ່ຊື່ຊ້ຳ
+            🔗 ລວມຊຸດຂອງບໍລິສັດດຽວກັນ
           </button>
           <button id="adminClearAllBtn" onclick="clearAllData()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs px-3 py-1.5 rounded-lg border border-rose-200 hidden">
             🗑️ ລ້າງຂໍ້ມູນທັງໝົດ
@@ -1576,6 +1576,22 @@
       return String(s);
     }
 
+    // ຫາວັນທີໃນຂໍ້ຄວາມ (ຫົວຂໍ້ ຫຼື ຊື່ Sheet) ເຊັ່ນ "ຜົນກວດ ເດືອນ ເມສາ 2025", "April-25", "04/2025"
+    function extractDateFromText(text) {
+      const t = String(text || '');
+      let m;
+      const monthWords = [...EN_MONTHS.map(e => e + '[a-z]*'), ...LAO_MONTHS].join('|');
+      if ((m = t.match(new RegExp(`(?:(\\d{1,2})\\s*[\\-\\/. ]\\s*)?(${monthWords})\\.?[\\s\\-\\/,.]*((?:19|20)?\\d{2})(?!\\d)`, 'i')))) {
+        const n = normalizeDateText(`${m[1] ? m[1] + ' ' : ''}${m[2]} ${m[3]}`);
+        if (/^\d{4}-\d{2}/.test(n)) return n;
+      }
+      if ((m = t.match(/(\d{1,2})[\/.\-](\d{1,2})[\/.\-]((?:19|20)\d{2})/))) return normalizeDateText(m[0]);
+      if ((m = t.match(/(?<!\d)(\d{1,2})[\/.\-]((?:19|20)\d{2})(?!\d)/))) return normalizeDateText(m[0]);
+      if ((m = t.match(/((?:19|20)\d{2})[\-\/.](\d{1,2})(?!\d)/))) return normalizeDateText(m[0]);
+      return '';
+    }
+    const isDateLike = v => /^\d{4}(-\d{2}){0,2}$/.test(String(v || ''));
+
     function sampleDateRange(stations) {
       const ds = [...new Set(stations.map(s => s.sampleDate).filter(Boolean))].sort();
       if (!ds.length) return '';
@@ -1589,12 +1605,26 @@
       return String(t || '').toLowerCase().replace(/\s+/g, ' ').trim();
     }
 
+    // ແຍກຫົວຂໍ້ເປັນ ບໍລິສັດ + ໂຄງການ/ຈຸດ:
+    //   "ບໍລິສັດ X(ໂຄງການ Y) ໄຕມາດ 3" → { company: "ບໍລິສັດ X", section: "ໂຄງການ Y" }
+    function parseCompanyTitle(title) {
+      let x = String(title || '').replace(/\s+/g, ' ').trim();
+      // ຕັດ ໄຕມາດ/Quarter ທ້າຍຫົວຂໍ້ອອກ (ວັນທີຂອງແຕ່ລະແຖວບອກຊ່ວງເວລາແລ້ວ)
+      x = x.replace(/[\s,\-–]*(?:ໄຕມາດ|ງວດ|quarter|q)\s*[1-4](?:\s*[\/\-]?\s*(?:19|20)?\d{2})?\s*$/i, '').trim();
+      const m = x.match(/^(.*?)\s*[\(（]\s*(.+?)\s*[\)）]\s*(.*)$/);
+      if (m && m[1].trim().length >= 3 && m[2].length >= 8 && !/^[A-Z0-9 .&\-]+$/.test(m[2])) {
+        return { company: m[1].trim(), section: [m[2], m[3]].filter(Boolean).join(' ').trim() };
+      }
+      return { company: x, section: '' };
+    }
+    const datasetKey = title => normTitle(parseCompanyTitle(title).company);
+
     function findDatasetByTitle(title) {
-      const n = normTitle(title);
+      const n = datasetKey(title);
       if (!n) return null;
-      // ຖ້າມີຫຼາຍຊຸດຊື່ຊ້ຳ ໃຊ້ຊຸດທີ່ສ້າງກ່ອນ (ເກົ່າສຸດ)
+      // ບໍລິສັດດຽວກັນ (ເຖິງຊື່ໂຄງການ/ໄຕມາດຕ່າງກັນ) → ຊຸດດຽວກັນ; ຖ້າມີຫຼາຍຊຸດ ໃຊ້ຊຸດທີ່ສ້າງກ່ອນ
       return waterData
-        .filter(d => normTitle(d.companyName || d.name) === n)
+        .filter(d => datasetKey(d.companyName || d.name) === n)
         .sort((a, b) => (a.id || 0) - (b.id || 0))[0] || null;
     }
 
@@ -1612,6 +1642,7 @@
     // ຖ້າຝ່າຍໃດບໍ່ມີພິກັດ ຖືວ່າຈຸດດຽວກັນ (ຈັບຄູ່ດ້ວຍລະຫັດ)
     const sameCoord = (a, b) => !hasCoord(a) || !hasCoord(b) || (Math.abs(Number(a.lat) - Number(b.lat)) < 1e-5 && Math.abs(Number(a.lng) - Number(b.lng)) < 1e-5);
     const sameDate = (a, b) => String(a.sampleDate || '') === String(b.sampleDate || '');
+    const sameSection = (a, b) => normTitle(a.section) === normTitle(b.section);
 
     // ລວມສະຖານີ: ລະຫັດ + ພິກັດ ຄືກັນ → ອັບເດດຄ່າ; ນອກນັ້ນ → ເພີ່ມໃໝ່ (ຖ້າລະຫັດຊ້ຳແຕ່ຄົນລະຈຸດ ຈະຕໍ່ທ້າຍ -2, -3)
     function mergeStations(existing, incoming) {
@@ -1619,7 +1650,7 @@
       let added = 0, updated = 0;
       incoming.forEach(st => {
         // ລະຫັດ + ພິກັດ + ວັນທີເກັບຕົວຢ່າງ ຄືກັນ → ແຖວດຽວກັນ (ຄົນລະເດືອນ = ຄົນລະແຖວ)
-        const idx = out.findIndex(e => normCode(e.code) === normCode(st.code) && sameCoord(e, st) && sameDate(e, st));
+        const idx = out.findIndex(e => normCode(e.code) === normCode(st.code) && sameSection(e, st) && sameCoord(e, st) && sameDate(e, st));
         if (idx >= 0) {
           const customs = { ...out[idx].customs };
           Object.entries(st.customs || {}).forEach(([k, v]) => { if (v !== '-' && v !== '' && v !== undefined) customs[k] = v; });
@@ -1629,7 +1660,7 @@
         } else {
           let code = st.code;
           // ລະຫັດຊ້ຳ ແຕ່ຄົນລະຈຸດ → ຕໍ່ທ້າຍ -2 (ລະຫັດດຽວກັນ ຄົນລະເດືອນ ແມ່ນປົກກະຕິ ບໍ່ຕ້ອງປ່ຽນ)
-          if (out.some(e => normCode(e.code) === normCode(code) && !sameCoord(e, st))) {
+          if (out.some(e => normCode(e.code) === normCode(code) && sameSection(e, st) && !sameCoord(e, st))) {
             let n = 2;
             while (out.some(e => normCode(e.code) === normCode(`${st.code}-${n}`))) n++;
             code = `${st.code}-${n}`;
@@ -1645,6 +1676,10 @@
     function saveToDataset({ title, stations, projectLocation = '', date, recorder, mode, source = '' }) {
       const now = new Date().toLocaleString('lo-LA');
       const target = mode === 'merge' ? findDatasetByTitle(title) : null;
+      const parsed = parseCompanyTitle(title);
+      // ສະຖານີທີ່ຍັງບໍ່ມີກຸ່ມ → ໃຊ້ຊື່ໂຄງການຈາກຫົວຂໍ້ ເປັນກຸ່ມຕາຕະລາງ
+      stations = stations.map(st => st.section ? st : { ...st, section: parsed.section });
+      if (mode === 'merge' || parsed.section) title = parsed.company || title;
 
       if (!target) {
         return db.ref('water_records').push({
@@ -1713,18 +1748,19 @@
       if (currentUserRole === 'VIEWER') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
       const groups = {};
       waterData.forEach(d => {
-        const n = normTitle(d.companyName || d.name);
+        const n = datasetKey(d.companyName || d.name);
         if (n) (groups[n] = groups[n] || []).push(d);
       });
       const dupGroups = Object.values(groups).filter(g => g.length > 1).map(g => g.sort((a, b) => (a.id || 0) - (b.id || 0)));
       if (!dupGroups.length) return Swal.fire({ icon: 'info', title: 'ບໍ່ມີຊຸດຂໍ້ມູນທີ່ຊື່ຊ້ຳກັນ' });
 
-      const list = dupGroups.map(g => `<li>• <b>${escAttr(g[0].companyName || g[0].name)}</b> — ${g.length} ຊຸດ (${g.reduce((n, d) => n + stationsOf(d).length, 0)} ສະຖານີ)</li>`).join('');
+      const list = dupGroups.map(g => `<li>• <b>${escAttr(parseCompanyTitle(g[0].companyName || g[0].name).company)}</b> — ${g.length} ຊຸດ (${g.reduce((n, d) => n + stationsOf(d).length, 0)} ແຖວ)
+               <div class="text-[11px] text-slate-500 pl-3">${g.map(d => '· ' + escAttr(d.companyName || d.name)).join('<br>')}</div></li>`).join('');
       const ok = await Swal.fire({
         icon: 'question',
-        title: '🔗 ລວມຊຸດຂໍ້ມູນທີ່ຊື່ຊ້ຳ?',
+        title: '🔗 ລວມຊຸດຂໍ້ມູນຂອງບໍລິສັດດຽວກັນ?',
         html: `<ul class="text-left text-sm space-y-1">${list}</ul>
-               <p class="text-xs text-slate-500 mt-3">ແຕ່ລະກຸ່ມຈະຖືກລວມເຂົ້າຊຸດທີ່ສ້າງກ່ອນ. ສະຖານີທີ່ລະຫັດ ແລະ ພິກັດຄືກັນຈະບໍ່ຖືກນັບຊ້ຳ. ຊຸດທີ່ເຫຼືອຈະຖືກລົບອອກ.</p>`,
+               <p class="text-xs text-slate-500 mt-3">ແຕ່ລະບໍລິສັດ ຈະເຫຼືອ 1 ຊຸດ. ແຕ່ລະໂຄງການ/ຈຸດ ຈະເປັນຕາຕະລາງຍ່ອຍແຍກກັນພາຍໃນ. ແຖວທີ່ລະຫັດ, ວັນທີ ແລະ ໂຄງການຄືກັນ ຈະບໍ່ຖືກນັບຊ້ຳ.</p>`,
         showCancelButton: true,
         confirmButtonText: '🔗 ລວມເລີຍ',
         cancelButtonText: 'ຍົກເລີກ',
@@ -1749,10 +1785,19 @@
     /* --- ລາກວາງເພື່ອລວມຂໍ້ມູນ --- */
     // ລວມຫຼາຍຊຸດເຂົ້າຊຸດເປົ້າໝາຍ ແລ້ວລົບຊຸດທີ່ຖືກລວມອອກ
     async function mergeRecordsInto(target, sources, who) {
-      let stations = stationsOf(target);
+      const tTitle = target.companyName || target.name || '';
+      const tParsed = parseCompanyTitle(tTitle);
+      // ແຕ່ລະຊຸດທີ່ລວມເຂົ້າ ກາຍເປັນ 1 ຕາຕະລາງຍ່ອຍ (ກຸ່ມ) ຕາມຊື່ໂຄງການ/ຊື່ເດີມຂອງມັນ
+      const withSection = (rec, isTarget) => {
+        const t = rec.companyName || rec.name || '';
+        const ps = parseCompanyTitle(t);
+        const sec = ps.section || (!isTarget && datasetKey(t) !== datasetKey(tTitle) ? t : '');
+        return stationsOf(rec).map(st => st.section ? st : { ...st, section: sec });
+      };
+      let stations = withSection(target, true);
       let added = 0, updated = 0;
       sources.forEach(d => {
-        const r = mergeStations(stations, stationsOf(d));
+        const r = mergeStations(stations, withSection(d, false));
         stations = r.stations; added += r.added; updated += r.updated;
       });
       const updates = {};
@@ -1760,7 +1805,7 @@
       if (!Array.isArray(target.stations)) {
         ['code', 'name', 'province', 'lat', 'lng', 'customs', 'status'].forEach(k => { if (target[k] !== undefined) updates[`water_records/${target.fbKey}/${k}`] = null; });
       }
-      if (!target.companyName) updates[`water_records/${target.fbKey}/companyName`] = target.name || 'ບໍ່ລະບຸ';
+      updates[`water_records/${target.fbKey}/companyName`] = tParsed.company || tTitle || 'ບໍ່ລະບຸ';
       if (!target.projectLocation) {
         const loc = sources.map(d => d.projectLocation).find(Boolean);
         if (loc) updates[`water_records/${target.fbKey}/projectLocation`] = loc;
@@ -1892,7 +1937,8 @@
       code:     ['ລະຫັດສະຖານີ', 'ລະຫັດ', 'code', 'stationcode', 'station code', 'station id', 'id', 'sample id', 'sampleid', 'site code'],
       name:     ['ຊື່ສະຖານີ', 'ຊື່ສະຖານີ / ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່', 'ຊື່', 'name', 'station', 'station name', 'stationname', 'location', 'site', 'site name'],
       point:    ['sampling', 'sampling point', 'sampling site', 'sample point', 'sampling location', 'ຈຸດເກັບຕົວຢ່າງ', 'ຈຸດເກັບ', 'ຈຸດກວດ', 'point'],
-      date:     ['date', 'ວັນທີ', 'ວັນທີເກັບຕົວຢ່າງ', 'ວັນເດືອນປີ', 'ວັນ/ເດືອນ/ປີ', 'ເດືອນ', 'month', 'sampling date', 'sample date', 'date of sampling', 'period', 'ວັນທີເກັບ'],
+      date:     ['date', 'ວັນທີ', 'ວັນທີເກັບຕົວຢ່າງ', 'ວັນເດືອນປີ', 'ວັນ/ເດືອນ/ປີ', 'ວັນທີ/ເດືອນ/ປີ', 'ເດືອນ', 'ເດືອນ/ປີ', 'ເດືອນປີ', 'ປີ', 'month', 'year', 'month/year', 'month-year',
+                 'sampling date', 'sample date', 'date of sampling', 'sampling time', 'date/time', 'datetime', 'period', 'ວັນທີເກັບ', 'ວັນທີກວດ', 'ວັນທີວິເຄາະ', 'ໄຕມາດ', 'quarter'],
       village:  ['village', 'ບ້ານ'],
       river:    ['river', 'ແມ່ນ້ຳ', 'ລຳນ້ຳ', 'stream', 'water body', 'waterbody', 'source'],
       district: ['district', 'ເມືອງ'],
@@ -2033,9 +2079,21 @@
       rows.forEach((row, r) => {
         const excelRow = r + 1;
         if (isBlankRow(row)) return;
+        // ແຖວທີ່ມີແຕ່ວັນທີສັ້ນໆ (ເຊັ່ນ "May-25") ພາຍໃນຕາຕະລາງ → ວັນທີຂອງແຖວຕໍ່ໄປ
+        if (cur) {
+          const ne = row.filter(v => cellText(v) !== '');
+          if (ne.length === 1) {
+            const n = normalizeDateText(ne[0]);
+            if (isDateLike(n) && !/^\d{4}$/.test(n)) { cur.rowDate = n; return; }
+          }
+        }
         if (isTitleRow(row)) {
           // ຢູ່ໃນຕາຕະລາງ ແລະ ຂໍ້ຄວາມຢູ່ຖັນ ຊື່/ໂຄງການ/ວັນທີ (ເຊັ່ນ ແຖວທີ່ຍັງບໍ່ກອກຄ່າ) → ບໍ່ແມ່ນຫົວຂໍ້ໃໝ່, ຂ້າມແຖວນີ້
           const col = row.findIndex(v => cellText(v) !== '');
+          // ແຖວທີ່ມີແຕ່ວັນທີ (ເຊັ່ນ "ເດືອນ ເມສາ 2025") ພາຍໃນຕາຕະລາງ → ວັນທີຂອງແຖວຕໍ່ໄປ
+          const txt = cellText(row[col]);
+          const d = !cur ? '' : isDateLike(normalizeDateText(txt)) ? normalizeDateText(txt) : (txt.length <= 30 ? extractDateFromText(txt) : '');
+          if (cur && d) { cur.rowDate = d; return; }
           if (cur && ['name', 'group', 'point', 'code', 'date'].some(f => cur.colMap[f] === col)) return;
           close(); lastTitle = cellText(row[col]); return;
         }
@@ -2054,6 +2112,11 @@
         const no = get('no'), village = get('village'), river = get('river'), district = get('district'), province = get('province');
         let code = get('code'), name = get('name');
         if (!code && !name && !village && !river && !district) return; // ແຖວໝາຍເຫດ
+        // ຊ່ອງ ວັນທີ / ຊື່ໂຄງການ ທີ່ປ່ອຍຫວ່າງ (ຂຽນໄວ້ແຕ່ແຖວທຳອິດຂອງກຸ່ມ) → ໃຊ້ຄ່າຂອງແຖວກ່ອນໜ້າ
+        const rawDate = m.date !== undefined ? normalizeDateText(row[m.date]) : '';
+        if (rawDate) cur.lastDate = rawDate;
+        const rawGroup = get('group');
+        if (rawGroup) cur.lastGroup = rawGroup;
 
         const customs = {};
         cur.indCols.forEach(({ col, ind }) => customs[ind.key] = cleanExcelValue(row[col]));
@@ -2071,8 +2134,8 @@
         if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || (lat === 0 && lng === 0)) { lat = null; lng = null; }
 
         cur.parsed.push({
-          code, autoCode: !code, no, name, group: get('group'),
-          sampleDate: m.date !== undefined ? normalizeDateText(row[m.date]) : '',
+          code, autoCode: !code, no, name, group: rawGroup || cur.lastGroup || '',
+          sampleDate: rawDate || (m.date !== undefined ? cur.lastDate : '') || cur.rowDate || '',
           province: [district, province].filter(Boolean).join(', '),
           lat, lng, customs, extra, excelRow
         });
@@ -2085,16 +2148,21 @@
         const groups = new Map();
         b.parsed.forEach(st => {
           const g = b.colMap.group !== undefined ? (st.group || '') : '';
-          if (!groups.has(g)) groups.set(g, []);
-          groups.get(g).push(st);
+          const full = g || b.title || sheetName || '';
+          const pc = parseCompanyTitle(full);
+          // ບໍລິສັດດຽວກັນ → ຕາຕະລາງດຽວກັນໃນໜ້ານຳເຂົ້າ; ໂຄງການ (ໃນວົງເລັບ) → ກຸ່ມຕາຕະລາງຍ່ອຍ
+          st.section = pc.section || (g && sheetName && normTitle(pc.company) !== normTitle(sheetName) ? '' : '');
+          const key = normTitle(pc.company) + '||' + normTitle(pc.section);
+          if (!groups.has(key)) groups.set(key, { title: pc.company || full, section: pc.section, sts: [] });
+          groups.get(key).sts.push(st);
         });
-        groups.forEach((sts, g) => {
-          const title = g || b.title || sheetName || '';
-          const blk = { ...b, title, parsed: sts, prefix: g ? blockPrefix(g, usedPrefix) : b.prefix };
+        groups.forEach(({ title, section, sts }) => {
+          const g = section || title;
+          const blk = { ...b, title, section, parsed: sts, prefix: blockPrefix(g, usedPrefix) };
           const byName = new Map();
           sts.forEach((st, k) => {
             if (!st.autoCode) return;
-            if (b.colMap.date !== undefined) {
+            if (b.colMap.date !== undefined || sts.some(x => x.sampleDate)) {
               // ມີຖັນວັນທີ: ຈຸດດຽວກັນ (ຊື່ຄືກັນ) ຄົນລະເດືອນ → ລະຫັດດຽວກັນ
               if (!byName.has(st.name)) byName.set(st.name, byName.size + 1);
               st.code = `${blk.prefix}-${pad2(byName.get(st.name))}`;
@@ -2103,7 +2171,10 @@
             }
           });
           blk.noCoord = sts.filter(st => st.lat === null).length;
-          blk.hasDate = b.colMap.date !== undefined;
+          blk.hasDate = sts.some(st => st.sampleDate);
+          blk.missingDate = sts.filter(st => !st.sampleDate).length;
+          // ວັນທີແນະນຳ ຈາກຫົວຂໍ້ ຫຼື ຊື່ Sheet (ໃຊ້ກັບແຖວທີ່ບໍ່ມີວັນທີ)
+          blk.suggestDate = extractDateFromText(g) || extractDateFromText(b.title) || extractDateFromText(sheetName);
           out.push(blk);
         });
       });
@@ -2189,6 +2260,15 @@
     }
 
     // ສະແດງວ່າຕາຕະລາງນີ້ຈະ ລວມເຂົ້າຊຸດເດີມ ຫຼື ສ້າງຊຸດໃໝ່ (ອັບເດດເມື່ອແກ້ຊື່)
+    let excelPreviewBlocks = [];
+    function copyBlockDateToAll(bi, n) {
+      const v = document.getElementById(`excelBlockDate_${bi}`)?.value || '';
+      for (let k = 0; k < n; k++) {
+        const el = document.getElementById(`excelBlockDate_${k}`);
+        if (el) { el.value = v; updateExcelBlockTarget(k); }
+      }
+    }
+
     function updateExcelBlockTarget(bi) {
       const box = document.getElementById(`excelBlockTarget_${bi}`);
       const input = document.getElementById(`excelBlockTitle_${bi}`);
@@ -2196,13 +2276,24 @@
       const prev = document.getElementById(`excelBlockMode_${bi}`)?.value;
       const target = findDatasetByTitle(input.value);
       if (target) {
+        // ຄາດຄະເນຜົນ: ຈະເພີ່ມໃໝ່ຈັກແຖວ / ອັບເດດ (ຂຽນທັບ) ຈັກແຖວ
+        const blk = excelPreviewBlocks[bi];
+        const bDate = document.getElementById(`excelBlockDate_${bi}`)?.value || '';
+        let est = null;
+        if (blk && prev !== 'new') {
+          const inc = blk.parsed.map(st => ({ code: st.code, lat: st.lat, lng: st.lng, sampleDate: st.sampleDate || bDate, section: st.section || blk.section || '', customs: st.customs }));
+          est = mergeStations(stationsOf(target), inc);
+        }
         box.innerHTML = `
-          <div class="flex flex-wrap items-center gap-2 bg-emerald-50 border border-emerald-300 rounded px-2 py-1 text-[11px]">
-            <span>🔗 ມີຊຸດນີ້ແລ້ວ (${stationsOf(target).length} ສະຖານີ)</span>
-            <select id="excelBlockMode_${bi}" class="border rounded px-1 py-0.5 text-[11px] bg-white">
+          <div class="flex flex-wrap items-center gap-2 ${est && est.updated && blk.missingDate && !bDate ? 'bg-rose-50 border-rose-300' : 'bg-emerald-50 border-emerald-300'} border rounded px-2 py-1 text-[11px]">
+            <span>🔗 ມີຊຸດນີ້ແລ້ວ (${stationsOf(target).length} ແຖວ)</span>
+            <select id="excelBlockMode_${bi}" onchange="updateExcelBlockTarget(${bi})" class="border rounded px-1 py-0.5 text-[11px] bg-white">
               <option value="merge" ${prev !== 'new' ? 'selected' : ''}>ລວມເຂົ້າຊຸດເດີມ</option>
               <option value="new" ${prev === 'new' ? 'selected' : ''}>ສ້າງຊຸດໃໝ່ແຍກ</option>
             </select>
+            ${est ? `<span class="font-bold ${est.added ? 'text-emerald-700' : 'text-slate-500'}">➕ ເພີ່ມໃໝ່ ${est.added}</span>
+                     <span class="font-bold ${est.updated ? 'text-amber-700' : 'text-slate-500'}">✏️ ຂຽນທັບ ${est.updated}</span>` : ''}
+            ${est && est.updated && blk.missingDate && !bDate ? `<span class="w-full text-rose-700 font-bold">⚠️ ບໍ່ມີວັນທີ → ຄ່າເກົ່າ ${est.updated} ແຖວ ຈະຖືກຂຽນທັບ. ຖ້າເປັນເດືອນໃໝ່ ກະລຸນາເລືອກເດືອນຂ້າງເທິງ</span>` : ''}
           </div>`;
       } else {
         box.innerHTML = `<span class="text-[11px] text-indigo-600">🆕 ຈະສ້າງເປັນຊຸດໃໝ່</span><input type="hidden" id="excelBlockMode_${bi}" value="merge">`;
@@ -2210,6 +2301,7 @@
     }
 
     function showExcelPreview(fileName, sheetName, blocks, targetTitle) {
+      excelPreviewBlocks = blocks.filter(b => b.parsed.length);
       const th = 'px-2 py-1 border border-slate-300 bg-slate-200 font-bold whitespace-nowrap';
       const td = 'px-2 py-1 border border-slate-300 whitespace-nowrap';
       const good = blocks.filter(b => b.parsed.length);
@@ -2239,8 +2331,16 @@
             <div class="flex items-start gap-2">
               ${multi ? `<input type="checkbox" id="excelBlockUse_${bi}" checked class="mt-2" title="ນຳເຂົ້າຕາຕະລາງນີ້">` : ''}
               <div class="flex-1">
-                <label class="text-[10px] font-bold text-slate-500">🏢 ຊື່ຊຸດຂໍ້ມູນ (ຕາຕະລາງທີ ${bi + 1} · ແຖວ ${b.headerRow})</label>
+                <label class="text-[10px] font-bold text-slate-500">🏢 ຊື່ຊຸດຂໍ້ມູນ / ບໍລິສັດ (ຕາຕະລາງທີ ${bi + 1} · ແຖວ ${b.headerRow})</label>
+                ${b.section ? `<div class="text-[11px] text-indigo-700 font-semibold mb-0.5">📂 ຕາຕະລາງຍ່ອຍ: ${escAttr(b.section)}</div>` : ''}
                 <input type="text" id="excelBlockTitle_${bi}" value="${escAttr(targetTitle || b.title || fileName.replace(/\.(xlsx|xls|csv)$/i, ''))}" oninput="updateExcelBlockTarget(${bi})" class="w-full border rounded px-2 py-1 text-xs">
+                <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] ${b.missingDate ? 'bg-amber-50 border border-amber-300 rounded px-2 py-1' : ''}">
+                  ${b.missingDate ? `<span class="font-bold text-amber-800">📅 ${b.missingDate === b.parsed.length ? 'ບໍ່ພົບວັນທີໃນຕາຕະລາງນີ້' : `${b.missingDate} ແຖວບໍ່ມີວັນທີ`} — ຂໍ້ມູນນີ້ເປັນເດືອນໃດ?</span>` : '<span class="text-slate-500">📅 ມີວັນທີໃນໄຟລ໌ແລ້ວ</span>'}
+                  ${b.missingDate ? `
+                    <input type="month" id="excelBlockDate_${bi}" value="${escAttr((b.suggestDate || '').slice(0, 7))}" oninput="updateExcelBlockTarget(${bi})" class="border rounded px-1.5 py-0.5 bg-white">
+                    ${good.length > 1 ? `<button type="button" onclick="copyBlockDateToAll(${bi}, ${good.length})" class="text-indigo-600 font-bold hover:underline">ໃຊ້ກັບທຸກຕາຕະລາງ</button>` : ''}
+                    ${b.suggestDate ? '<span class="text-slate-500">(ອ່ານຈາກຫົວຂໍ້/Sheet)</span>' : ''}` : ''}
+                </div>
                 <div id="excelBlockTarget_${bi}" class="mt-1"></div>
               </div>
               <span class="shrink-0 mt-4 bg-emerald-100 text-emerald-800 font-bold rounded px-2 py-0.5">${b.parsed.length} ສະຖານີ</span>
@@ -2303,18 +2403,26 @@
         cancelButtonText: 'ຍົກເລີກ',
         confirmButtonColor: '#059669',
         cancelButtonColor: '#64748b',
-        didOpen: () => good.forEach((_, bi) => updateExcelBlockTarget(bi)),
+        didOpen: () => { window.__excelOverwriteOk = false; good.forEach((_, bi) => updateExcelBlockTarget(bi)); },
         preConfirm: () => {
           const chosen = good.map((b, bi) => ({
             block: b,
             use: multi ? document.getElementById(`excelBlockUse_${bi}`).checked : true,
             title: document.getElementById(`excelBlockTitle_${bi}`).value.trim(),
-            mode: document.getElementById(`excelBlockMode_${bi}`)?.value || 'new'
+            mode: document.getElementById(`excelBlockMode_${bi}`)?.value || 'new',
+            blockDate: document.getElementById(`excelBlockDate_${bi}`)?.value || ''
           })).filter(x => x.use);
           if (!chosen.length) { Swal.showValidationMessage('ກະລຸນາເລືອກຢ່າງນ້ອຍ 1 ຕາຕະລາງ'); return false; }
           if (chosen.some(x => !x.title)) { Swal.showValidationMessage('ກະລຸນາລະບຸຊື່ຊຸດຂໍ້ມູນໃຫ້ຄົບ'); return false; }
           const recorder = currentUserName || document.getElementById('recorderName').value.trim();
           if (!recorder) { Swal.showValidationMessage('ກະລຸນາພິມຊື່ຜູ້ບັນທຶກໃນຟອມກ່ອນ'); return false; }
+          const risky = chosen.filter((x, k) => x.mode === 'merge' && !x.blockDate && x.block.missingDate && findDatasetByTitle(x.title));
+          if (risky.length && !window.__excelOverwriteOk) {
+            window.__excelOverwriteOk = true;
+            Swal.showValidationMessage(`⚠️ ${risky.length} ຕາຕະລາງ ບໍ່ມີວັນທີ ແລະ ຈະຂຽນທັບຂໍ້ມູນເດີມ. ເລືອກເດືອນກ່ອນ — ຫຼື ກົດບັນທຶກອີກເທື່ອ ຖ້າຕັ້ງໃຈອັບເດດຄ່າເກົ່າແທ້`);
+            return false;
+          }
+          window.__excelOverwriteOk = false;
           return { chosen, addUnknown: !!document.getElementById('excelAddUnknown')?.checked, recorder };
         }
       }).then(result => {
@@ -2356,19 +2464,20 @@
       }
 
       let idSeed = Date.now();
-      const toStations = block => block.parsed.map(st => {
+      const toStations = (block, blockDate = '') => block.parsed.map(st => {
         const customs = { ...st.customs };
         Object.entries(newKeyByCanon).forEach(([canon, key]) => { if (canon in st.extra) customs[key] = st.extra[canon]; });
-        return { id: idSeed++, code: st.code, name: st.name, province: st.province, lat: st.lat, lng: st.lng, sampleDate: st.sampleDate || '', customs, status: evalStatus(customs) };
+        return { id: idSeed++, code: st.code, name: st.name, province: st.province, lat: st.lat, lng: st.lng, sampleDate: st.sampleDate || blockDate || '', section: st.section || block.section || '', customs, status: evalStatus(customs) };
       });
 
       // ຕາຕະລາງທີ່ຫົວຂໍ້ຄືກັນ (ໃນໄຟລ໌ດຽວກັນ) → ລວມເປັນກຸ່ມດຽວກ່ອນບັນທຶກ
       const groups = [];
-      chosen.forEach(({ block, title, mode }) => {
-        const g = groups.find(x => normTitle(x.title) === normTitle(title));
+      chosen.forEach(({ block, title, mode, blockDate }) => {
+        const g = groups.find(x => datasetKey(x.title) === datasetKey(title));
         const year = (title.match(/\b(?:19|20)\d{2}(?:\s*[-–]\s*(?:19|20)\d{2})?\b/) || [])[0];
-        if (g) g.stations = mergeStations(g.stations, toStations(block)).stations;
-        else groups.push({ title, mode, stations: toStations(block), date: year ? `ປີ ${year.replace(/\s+/g, '')}` : undefined });
+        const sts = toStations(block, blockDate);
+        if (g) g.stations = mergeStations(g.stations, sts).stations;
+        else groups.push({ title, mode, stations: sts, date: year ? `ປີ ${year.replace(/\s+/g, '')}` : undefined });
       });
 
       Swal.fire({ title: 'ກຳລັງບັນທຶກ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -2677,7 +2786,7 @@
             <td class="p-3">
               ${renderOrgBadge(company)}
             </td>
-            <td class="p-3 text-center"><span class="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-1 rounded-full font-bold">${stations.length} ສະຖານີ</span></td>
+            <td class="p-3 text-center"><span class="bg-indigo-100 text-indigo-800 text-xs px-2.5 py-1 rounded-full font-bold">${stations.length} ແຖວ</span>${(() => { const n = new Set(stations.map(x => x && x.section).filter(Boolean)).size; return n ? `<div class="text-[10px] text-indigo-600 font-bold mt-1">📂 ${n} ໂຄງການ</div>` : ''; })()}</td>
             <td class="p-3 text-xs text-slate-500">${item.date || '-'}${sampleDateRange(stations) ? `<div class="text-[10px] font-bold text-indigo-600 mt-0.5">📅 ${sampleDateRange(stations)}</div>` : ''}</td>
             <td class="p-3 text-xs font-semibold text-slate-700">${item.recordedBy || 'ບໍ່ລະບຸ'}</td>
             <td class="p-3 text-center no-print" onclick="event.stopPropagation()">
@@ -2785,6 +2894,7 @@
             ${editInput(p + 'name', 'ຊື່ສະຖານີ / ສະຖານທີ່', st.name)}
             ${editInput(p + 'province', 'ແຂວງ/ເມືອງ', st.province)}
             ${editInput(p + 'sampleDate', '📅 ວັນທີເກັບຕົວຢ່າງ', st.sampleDate || '', 'placeholder="2025-04-25 ຫຼື 2025-04"')}
+            ${editInput(p + 'section', '📂 ໂຄງການ / ກຸ່ມຕາຕະລາງ', st.section || '', 'placeholder="ປ່ອຍຫວ່າງ = ທົ່ວໄປ"')}
             ${editInput(p + 'lat', 'Lat', st.lat)}
             ${editInput(p + 'lng', 'Lng', st.lng)}
           </div>
@@ -2880,6 +2990,7 @@
         code, name,
         province: get('province'),
         sampleDate: normalizeDateText(get('sampleDate')),
+        section: get('section'),
         lat, lng,
         customs,
         status: evalStatus(customs)
@@ -3019,12 +3130,12 @@
         .filter(x => dFilter === 'ALL' || (x.st.sampleDate || '') === dFilter)
         .sort((a, b) => String(a.st.sampleDate || '').localeCompare(String(b.st.sampleDate || '')) || a.i - b.i);
 
-      const rowsHTML = order.map(({ st, i: stIdx }, pos) => {
+      const rowFn = list => list.map(({ st, i: stIdx }, pos) => {
         // Merge ຊ່ອງວັນທີ ຂອງແຖວຕິດກັນທີ່ວັນທີດຽວກັນ (ຄືໃນ Excel)
         const d = st.sampleDate || '';
-        const firstOfGroup = pos === 0 || (order[pos - 1].st.sampleDate || '') !== d;
+        const firstOfGroup = pos === 0 || (list[pos - 1].st.sampleDate || '') !== d;
         let span = 1;
-        if (firstOfGroup) while (pos + span < order.length && (order[pos + span].st.sampleDate || '') === d) span++;
+        if (firstOfGroup) while (pos + span < list.length && (list[pos + span].st.sampleDate || '') === d) span++;
         const dateCell = firstOfGroup
           ? `<td rowspan="${span}" class="px-2 py-1.5 border border-slate-300 whitespace-nowrap text-center align-middle font-bold text-indigo-900 bg-indigo-50/60">${d ? escAttr(fmtSampleDate(d)) : '<span class="text-slate-400 font-normal">-</span>'}</td>`
           : '';
@@ -3060,6 +3171,44 @@
           </tr>`;
       }).join('');
 
+      // ແຍກເປັນຕາຕະລາງຍ່ອຍ ຕາມໂຄງການ/ຈຸດ (section) — ລຽງຕາມລຳດັບທີ່ພົບກ່ອນ
+      const secNames = [];
+      order.forEach(x => { const n = x.st.section || ''; if (!secNames.includes(n)) secNames.push(n); });
+      const multiSec = secNames.length > 1 || (secNames.length === 1 && secNames[0]);
+      const sectionTables = secNames.map((name, si) => {
+        const sec = { name, list: order.filter(x => (x.st.section || '') === name) };
+        const xk = secNames.length > 1 ? `${item.fbKey}__${si}` : item.fbKey;
+        const alerts = sec.list.filter(x => x.st.status && x.st.status.isAlert).length;
+        return `
+          ${multiSec ? `<div class="flex flex-wrap items-center gap-2 mt-2 px-2 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-[12px]">
+            <span class="font-bold text-indigo-900">📂 ${escAttr(name || 'ທົ່ວໄປ')}</span>
+            <span class="text-slate-500">${sec.list.length} ແຖວ</span>
+            ${sampleDateRange(sec.list.map(x => x.st)) ? `<span class="text-indigo-700">📅 ${escAttr(sampleDateRange(sec.list.map(x => x.st)))}</span>` : ''}
+            ${alerts ? `<span class="text-rose-600 font-bold">🚨 ${alerts}</span>` : ''}
+          </div>` : ''}
+          <div class="relative">
+          <div id="xlTop_${xk}" onscroll="xlSyncFromTop('${xk}')" class="xl-topbar no-print" title="ເລື່ອນຊ້າຍ-ຂວາ"><div id="xlTopInner_${xk}" style="height:1px"></div></div>
+          <div id="xl_${xk}" data-xl="${xk}" onscroll="xlUpdateNav('${xk}')" class="overflow-auto max-h-[420px] border border-slate-400 rounded-md shadow-inner bg-white">
+            <table class="text-[11px] border-collapse min-w-full">
+              <thead class="sticky top-0 z-10">
+                <tr>
+                  <th class="${th} bg-slate-300 sticky left-0 z-20 w-8"></th>
+                  ${headers.map((_, k) => `<th class="px-2 py-0.5 border border-slate-300 bg-slate-100 text-slate-400 font-normal text-[10px]">${colLetters(k)}</th>`).join('')}
+                  ${canEdit ? `<th class="px-2 py-0.5 border border-slate-300 bg-slate-100 no-print"></th>` : ''}
+                </tr>
+                <tr>
+                  <th class="${th} bg-slate-300 sticky left-0 z-20">#</th>
+                  ${headers.map(h => `<th class="${th}">${h}</th>`).join('')}
+                  ${canEdit ? `<th class="${th} no-print">ຈັດການ</th>` : ''}
+                </tr>
+              </thead>
+              <tbody>${rowFn(sec.list)}</tbody>
+            </table>
+          </div>
+          </div>
+`;
+      }).join('');
+
       const alertCount = stations.filter(st => st.status && st.status.isAlert).length;
       const editIdx = (editingStation && editingStation.fbKey === item.fbKey) ? editingStation.idx : -1;
 
@@ -3083,26 +3232,7 @@
             </div>
           </div>
 
-          <div class="relative">
-          <div id="xlTop_${item.fbKey}" onscroll="xlSyncFromTop('${item.fbKey}')" class="xl-topbar no-print" title="ເລື່ອນຊ້າຍ-ຂວາ"><div id="xlTopInner_${item.fbKey}" style="height:1px"></div></div>
-          <div id="xl_${item.fbKey}" data-xl="${item.fbKey}" onscroll="xlUpdateNav('${item.fbKey}')" class="overflow-auto max-h-[420px] border border-slate-400 rounded-md shadow-inner bg-white">
-            <table class="text-[11px] border-collapse min-w-full">
-              <thead class="sticky top-0 z-10">
-                <tr>
-                  <th class="${th} bg-slate-300 sticky left-0 z-20 w-8"></th>
-                  ${headers.map((_, k) => `<th class="px-2 py-0.5 border border-slate-300 bg-slate-100 text-slate-400 font-normal text-[10px]">${colLetters(k)}</th>`).join('')}
-                  ${canEdit ? `<th class="px-2 py-0.5 border border-slate-300 bg-slate-100 no-print"></th>` : ''}
-                </tr>
-                <tr>
-                  <th class="${th} bg-slate-300 sticky left-0 z-20">#</th>
-                  ${headers.map(h => `<th class="${th}">${h}</th>`).join('')}
-                  ${canEdit ? `<th class="${th} no-print">ຈັດການ</th>` : ''}
-                </tr>
-              </thead>
-              <tbody>${rowsHTML}</tbody>
-            </table>
-          </div>
-          </div>
+          ${sectionTables}
           <p class="text-[10px] text-slate-400">💡 ຊ່ອງສີແດງ = ຄ່າເກີນເກນເຕືອນໄພ${canEdit ? ' · ກົດ ✏️ ເພື່ອແກ້ໄຂແຖວນັ້ນ' : ''}</p>
 
           ${canEdit && editIdx >= 0 && stations[editIdx] ? renderStationEditSection(item.fbKey, editIdx, stations[editIdx]) : ''}
@@ -3114,12 +3244,12 @@
       if (!item) return;
       const stations = item.stations || [item];
       const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-      const head = ['No.', 'ວັນທີເກັບຕົວຢ່າງ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng', ...customIndicators.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
+      const head = ['No.', 'ໂຄງການ/ກຸ່ມ', 'ວັນທີເກັບຕົວຢ່າງ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng', ...customIndicators.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
       let csv = '\uFEFF' + [q('ບໍລິສັດ: ' + (item.companyName || item.name || '')), q('ວັນທີ: ' + (item.date || '')), q('ຜູ້ບັນທຶກ: ' + (item.recordedBy || ''))].join(',') + '\n';
       if (item.projectLocation) csv += q('ທີ່ຕັ້ງ: ' + item.projectLocation) + '\n';
       csv += '\n' + head.map(q).join(',') + '\n';
       stations.forEach((st, k) => {
-        const row = [k + 1, st.sampleDate || '', st.code, st.name, st.province, st.lat ?? '', st.lng ?? '',
+        const row = [k + 1, st.section || '', st.sampleDate || '', st.code, st.name, st.province, st.lat ?? '', st.lng ?? '',
           ...customIndicators.map(i => st.customs ? (st.customs[i.key] ?? '-') : '-'),
           st.status ? st.status.text.replace(/[^\w\s]/g, '').trim() : 'Normal'];
         csv += row.map(q).join(',') + '\n';
@@ -3420,7 +3550,7 @@
       const q = normHeader(document.getElementById('chartStationSearch')?.value || '');
       const sts = stationsOf(ds);
       list.innerHTML = sts.map((st, i) => {
-        const label = `${st.name || '-'} (${st.code || '-'})${st.sampleDate ? ' · ' + fmtSampleDate(st.sampleDate) : ''}`;
+        const label = `${st.section ? '[' + st.section.slice(0, 18) + '] ' : ''}${st.name || '-'} (${st.code || '-'})${st.sampleDate ? ' · ' + fmtSampleDate(st.sampleDate) : ''}`;
         if (q && !normHeader(label + ' ' + (st.province || '')).includes(q)) return '';
         const on = !chartStationSel || chartStationSel.has(i);
         return `<label class="flex items-center gap-2 px-2 py-1 rounded hover:bg-indigo-50 cursor-pointer">
