@@ -1271,52 +1271,84 @@
       render();
     }
 
+    // "ເຊື່ອງ" ໂຕຊີ້ວັດ: ຄ່າທີ່ບັນທຶກໄວ້ໃນທຸກສະຖານີ ແລະ ເກນເຕືອນໄພ ຍັງຢູ່ຄົບ — ກູ້ຄືນໄດ້ທຸກເວລາ
+    function countValuesFor(key) {
+      let n = 0;
+      waterData.forEach(d => stationsOf(d).forEach(st => {
+        const v = st.customs ? st.customs[key] : undefined;
+        if (v !== undefined && v !== '-' && v !== '') n++;
+      }));
+      return n;
+    }
+
     function removeCustomIndicator(key) {
       if (currentUserRole !== 'SUPER_ADMIN') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
+      const ind = customIndicators.find(i => i.key === key);
+      if (!ind) return;
+      const n = countValuesFor(key);
 
       Swal.fire({
-        title: '⚠️ ຢືນຢັນການລົບ Indicator?',
-        text: 'ເກນເຕືອນໄພ (Thresholds) ຂອງ Indicator ນີ້ຈະຖືກລົບອອກນຳ',
-        icon: 'warning',
+        title: `🙈 ເຊື່ອງ "${ind.name}"?`,
+        html: `ໂຕຊີ້ວັດນີ້ຈະຫາຍຈາກ ຟອມ, ຕາຕະລາງ, ກຣາຟ ແລະ ແຜນທີ່.<br><br>
+               <b class="text-emerald-700">✅ ຄ່າທີ່ບັນທຶກໄວ້ ${n} ຄ່າ ຈະບໍ່ຖືກລົບ</b> — ຍັງເກັບໄວ້ໃນລະບົບຄົບ,
+               ພ້ອມເກນເຕືອນໄພ. ກົດ <b>↩️ ສະແດງຄືນ</b> ໄດ້ທຸກເວລາ ແລ້ວຂໍ້ມູນຈະກັບມາຄືເກົ່າ.`,
+        icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#ef4444',
+        confirmButtonColor: '#6366f1',
         cancelButtonColor: '#64748b',
-        confirmButtonText: 'ຕົກລົງ',
+        confirmButtonText: '🙈 ເຊື່ອງ',
         cancelButtonText: 'ຍົກເລີກ'
       }).then((result) => {
-        if (result.isConfirmed) {
-          delete sysThresholds[`cfg_${key}_min`];
-          delete sysThresholds[`cfg_${key}_max`];
-          db.ref('system_config/thresholds').set(sysThresholds);
-
-          customIndicators = customIndicators.filter(i => i.key !== key);
-          db.ref('system_config/indicators').set(customIndicators);
-          
-          if (currentSelectedIndicator === key) {
-            currentSelectedIndicator = customIndicators.length > 0 ? customIndicators[0].key : '';
-          }
-
-          renderSettingsList();
-          renderFormCustomInputs();
-          renderThresholdFields();
-          render();
-
-          Swal.fire({ icon: 'success', title: 'ລົບ Indicator ສຳເລັດ!', timer: 1500, showConfirmButton: false });
+        if (!result.isConfirmed) return;
+        if (!masterIndicators.some(m => m.key === key)) {
+          masterIndicators.push(ind);
+          db.ref('system_config/master_indicators').set(masterIndicators);
         }
+        customIndicators = customIndicators.filter(i => i.key !== key);
+        db.ref('system_config/indicators').set(customIndicators);
+        if (currentSelectedIndicator === key) currentSelectedIndicator = customIndicators.length ? customIndicators[0].key : '';
+
+        renderSettingsList();
+        renderFormCustomInputs();
+        renderThresholdFields();
+        render();
+        Swal.fire({ icon: 'success', title: `ເຊື່ອງ "${ind.name}" ແລ້ວ`, text: 'ຂໍ້ມູນຍັງຢູ່ຄົບ — ກູ້ຄືນໄດ້ໃນ ⚙️ ຕັ້ງຄ່າລະບົບ', timer: 1800, showConfirmButton: false });
       });
+    }
+
+    function restoreIndicator(key) {
+      if (currentUserRole !== 'SUPER_ADMIN') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
+      const ind = masterIndicators.find(m => m.key === key);
+      if (!ind || customIndicators.some(c => c.key === key)) return;
+      customIndicators.push(ind);
+      db.ref('system_config/indicators').set(customIndicators);
+      renderSettingsList();
+      renderFormCustomInputs();
+      renderThresholdFields();
+      render();
+      Swal.fire({ icon: 'success', title: `ສະແດງ "${ind.name}" ຄືນແລ້ວ`, text: `ຂໍ້ມູນເດີມ ${countValuesFor(key)} ຄ່າ ກັບມາສະແດງຄືເກົ່າ`, timer: 1800, showConfirmButton: false });
     }
 
     function renderSettingsList() {
       const list = document.getElementById('customIndicatorsList');
-      list.innerHTML = '';
-      customIndicators.forEach(i => {
-        list.innerHTML += `
+      if (!list) return;
+      const active = customIndicators.map(i => `
           <li class="flex justify-between items-center bg-slate-50 p-2 rounded border text-xs">
-            <span><strong>${i.name}</strong> (${i.unit || '-'})</span>
-            <button onclick="removeCustomIndicator('${i.key}')" class="text-rose-600 font-bold">ລົບ</button>
-          </li>
-        `;
-      });
+            <span><strong>${escAttr(i.name)}</strong> (${escAttr(i.unit || '-')})</span>
+            <button onclick="removeCustomIndicator('${i.key}')" class="text-indigo-600 font-bold" title="ເຊື່ອງ (ຂໍ້ມູນບໍ່ຫາຍ)">🙈 ເຊື່ອງ</button>
+          </li>`).join('');
+      const hidden = masterIndicators.filter(m => !customIndicators.some(c => c.key === m.key));
+      const hiddenHtml = hidden.length ? `
+          <li class="pt-2 mt-1 border-t text-[11px] font-bold text-slate-500">🙈 ໂຕຊີ້ວັດທີ່ເຊື່ອງໄວ້ (ຂໍ້ມູນຍັງຢູ່ຄົບ)</li>
+          ${hidden.map(i => {
+            const n = countValuesFor(i.key);
+            return `
+            <li class="flex justify-between items-center bg-white p-2 rounded border border-dashed text-xs text-slate-500">
+              <span><strong>${escAttr(i.name)}</strong> (${escAttr(i.unit || '-')}) · <span class="${n ? 'text-emerald-700' : ''}">${n} ຄ່າ</span></span>
+              <button onclick="restoreIndicator('${i.key}')" class="text-emerald-700 font-bold">↩️ ສະແດງຄືນ</button>
+            </li>`;
+          }).join('')}` : '';
+      list.innerHTML = active + hiddenHtml;
     }
 
     function renderFormCustomInputs() {
@@ -2548,6 +2580,7 @@
 
       initApexChart(flatStationsForChart);
       requestAnimationFrame(xlRefreshAll);
+      renderSettingsList(); // ອັບເດດຈຳນວນຄ່າຂອງໂຕຊີ້ວັດທີ່ເຊື່ອງໄວ້
     }
 
     /* --- EDIT SYSTEM (ແກ້ໄຂຂໍ້ມູນ ຢູ່ກ້ອງບ໋ອກລາຍລະອຽດ) --- */
