@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   
   <!-- ApexCharts -->
-  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js"></script>
 
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -2540,87 +2540,156 @@
       });
     }
 
+    // ຕົວຊີ້ວັດທີ່ເລືອກຕ້ອງມີຢູ່ຈິງ — ຖ້າບໍ່ມີ (ເຊັ່ນ ຄ່າເກົ່າຈາກ localStorage ຫຼື ຖືກລົບ) ໃຫ້ເລືອກໂຕທຳອິດແທນ
+    function ensureSelectedIndicator() {
+      if (!customIndicators.length) { currentSelectedIndicator = null; return; }
+      if (!customIndicators.some(i => i.key === currentSelectedIndicator)) {
+        currentSelectedIndicator = customIndicators[0].key;
+      }
+    }
+
     function renderChartIndicatorTabs() {
       const container = document.getElementById('chartIndicatorTabs');
       if (!container) return;
-      let html = '';
+      ensureSelectedIndicator();
 
       if (customIndicators.length === 0) {
         container.innerHTML = '';
         return;
       }
 
-      customIndicators.forEach(i => {
+      container.innerHTML = customIndicators.map(i => {
         const isActive = currentSelectedIndicator === i.key;
-        html += `<button type="button" onclick="switchChartIndicator('${i.key}')" id="chartBtn-${i.key}" class="px-2.5 py-1 rounded-lg font-bold ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'}">${i.name}</button>`;
-      });
-      container.innerHTML = html;
+        return `<button type="button" onclick="switchChartIndicator('${i.key}')" id="chartBtn-${i.key}" class="px-2.5 py-1 rounded-lg font-bold ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'}">${i.name}</button>`;
+      }).join('');
     }
 
     function switchChartIndicator(indKey) {
       currentSelectedIndicator = indKey;
       renderChartIndicatorTabs();
-      render();
+      drawChartNow();
     }
 
+    /* --- ກຣາຟ: ລໍຖ້າຂໍ້ມູນໂຫລດຄົບກ່ອນແຕ້ມ, ອັບເດດແທນການສ້າງໃໝ່, ແຕ້ມຄືນເມື່ອເປີດໜ້າຈໍ --- */
+    let chartStations = [];
+    let chartTimer = null;
+    let apexLoadPromise = null;
+    let chartIndKey = null; // ໂຕຊີ້ວັດທີ່ກຣາຟປັດຈຸບັນແຕ້ມຢູ່
+
+    function loadApexCharts() {
+      if (window.ApexCharts) return Promise.resolve(true);
+      if (apexLoadPromise) return apexLoadPromise;
+      // ສຳຮອງ: ຖ້າ CDN ຫຼັກໂຫລດບໍ່ໄດ້ (ເນັດຊ້າ) ໃຫ້ລອງອີກແຫຼ່ງໜຶ່ງ
+      apexLoadPromise = new Promise(resolve => {
+        const sc = document.createElement('script');
+        sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.54.1/apexcharts.min.js';
+        sc.onload = () => resolve(!!window.ApexCharts);
+        sc.onerror = () => { apexLoadPromise = null; resolve(false); };
+        document.head.appendChild(sc);
+      });
+      return apexLoadPromise;
+    }
+
+    function chartMessage(html) {
+      const el = document.getElementById('apexChartContainer');
+      if (!el) return;
+      if (apexChart) { try { apexChart.destroy(); } catch (e) {} apexChart = null; }
+      chartIndKey = null;
+      el.innerHTML = `<div class="h-full w-full flex flex-col items-center justify-center text-center text-xs text-slate-400 gap-2">${html}</div>`;
+    }
+
+    // ເອີ້ນຈາກ render(): ລວມການເອີ້ນຫຼາຍເທື່ອຕິດກັນ (ຕອນເປີດໜ້າ Firebase ສົ່ງຂໍ້ມູນມາຫຼາຍຊຸດ) ໃຫ້ແຕ້ມເທື່ອດຽວ
     function initApexChart(flatStations) {
-      const chartContainer = document.getElementById('apexChartContainer');
-      if (!chartContainer) return;
-      chartContainer.innerHTML = '';
+      chartStations = flatStations || [];
       renderChartIndicatorTabs();
+      clearTimeout(chartTimer);
+      chartTimer = setTimeout(drawChartNow, 150);
+    }
 
-      if (customIndicators.length === 0) return;
+    function drawChartNow() {
+      clearTimeout(chartTimer);
+      const el = document.getElementById('apexChartContainer');
+      if (!el) return;
 
-      if (!currentSelectedIndicator && customIndicators.length > 0) {
-        currentSelectedIndicator = customIndicators[0].key;
-      }
-
-      const chartData = [...flatStations].reverse().slice(-15);
-      const categories = chartData.map(d => `${d.name || ''} (${d.code || ''})`);
-      
-      const safeParse = (val) => {
-        const num = parseFloat(val);
-        return isNaN(num) ? 0 : num;
-      };
-
-      let seriesName = 'Value';
-      let seriesColor = '#6366f1';
-      let seriesValues = [];
-
-      const customObj = customIndicators.find(i => i.key === currentSelectedIndicator);
-      if (customObj) {
-        seriesName = `${customObj.name} (${customObj.unit || ''})`;
-        seriesValues = chartData.map(d => {
-          if (!d.customs || d.customs[customObj.key] === undefined || d.customs[customObj.key] === '-') {
-            return 0;
-          }
-          return safeParse(d.customs[customObj.key]);
+      if (!window.ApexCharts) {
+        chartMessage('⏳ ກຳລັງໂຫລດກຣາຟ...');
+        loadApexCharts().then(ok => {
+          if (ok) drawChartNow();
+          else chartMessage('⚠️ ໂຫລດກຣາຟບໍ່ສຳເລັດ (ອິນເຕີເນັດອາດຊ້າ)<button onclick="drawChartNow()" class="bg-indigo-600 text-white font-bold px-3 py-1 rounded-lg">🔄 ລອງໃໝ່</button>');
         });
+        return;
       }
 
+      ensureSelectedIndicator();
+      if (!customIndicators.length) return chartMessage('🧪 ຍັງບໍ່ມີໂຕຊີ້ວັດ — ເພີ່ມໄດ້ໃນ ⚙️ ຕັ້ງຄ່າລະບົບ');
+      if (!chartStations.length) return chartMessage(waterData.length ? '🔍 ບໍ່ມີຂໍ້ມູນທີ່ກົງກັບການຄົ້ນຫາ' : '⏳ ກຳລັງລໍຖ້າຂໍ້ມູນ...');
+
+      // ກ່ອງກຣາຟຍັງບໍ່ມີຄວາມກວ້າງ (ໜ້າຍັງຈັດ layout ບໍ່ແລ້ວ) → ລອງໃໝ່ຈັກໜ່ອຍ
+      if (el.offsetWidth === 0) { chartTimer = setTimeout(drawChartNow, 300); return; }
+
+      const ind = customIndicators.find(i => i.key === currentSelectedIndicator);
+      const chartData = [...chartStations].reverse().slice(-15);
+      const categories = chartData.map(d => `${d.name || ''} (${d.code || ''})`);
+      const values = chartData.map(d => {
+        const v = d.customs ? d.customs[ind.key] : undefined;
+        const n = parseFloat(v);
+        return (v === undefined || v === '-' || isNaN(n)) ? null : n; // ບໍ່ມີຄ່າ/ND → ບໍ່ແຕ້ມຈຸດ (ບໍ່ໃສ່ 0 ໃຫ້ເຂົ້າໃຈຜິດ)
+      });
+      const seriesName = `${ind.name}${ind.unit ? ' (' + ind.unit + ')' : ''}`;
+
+      if (values.every(v => v === null)) {
+        return chartMessage(`📭 ບໍ່ມີຄ່າ <b>${ind.name}</b> ໃນ 15 ສະຖານີລ່າສຸດ<br>ລອງເລືອກໂຕຊີ້ວັດອື່ນ`);
+      }
+
+      const series = [{ name: seriesName, data: values }];
+
+      // ມີກຣາຟຢູ່ແລ້ວ ແລະ ຍັງຢູ່ໃນໜ້າ → ອັບເດດຂໍ້ມູນເທົ່ານັ້ນ (ໄວກວ່າ ແລະ ບໍ່ກະພິບ)
+      if (apexChart && el.contains(apexChart.el) && chartIndKey === ind.key) {
+        apexChart.updateOptions({ xaxis: { categories } }, false, false);
+        apexChart.updateSeries(series, true);
+        return;
+      }
+
+      if (apexChart) { try { apexChart.destroy(); } catch (e) {} apexChart = null; }
+      el.innerHTML = '';
       const options = {
         chart: {
           type: 'area',
           height: 220,
           toolbar: { show: true, tools: { zoom: true, zoomin: true, zoomout: true, pan: true, reset: true } },
-          animations: { enabled: true, easing: 'easeinout', speed: 800 }
+          animations: { enabled: true, easing: 'easeinout', speed: 500 }
         },
-        series: [{ name: seriesName, data: seriesValues }],
+        theme: { mode: 'light' },
+        series,
         stroke: { curve: 'smooth', width: 3 },
+        markers: { size: 3 },
         fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.3 } },
-        colors: [seriesColor],
-        xaxis: { categories: categories, labels: { style: { colors: '#64748b' } } },
-        yaxis: { labels: { style: { colors: '#64748b' } } },
+        colors: ['#6366f1'],
+        dataLabels: { enabled: false },
+        noData: { text: 'ບໍ່ມີຂໍ້ມູນ' },
+        xaxis: { categories, labels: { style: { colors: '#64748b' }, rotate: -35, trim: true, hideOverlappingLabels: true } },
+        yaxis: { labels: { style: { colors: '#64748b' }, formatter: v => v === null ? '' : +Number(v).toFixed(3) } },
         grid: { borderColor: '#e2e8f0' },
-        tooltip: { theme: 'light' }
+        tooltip: { theme: 'light', y: { formatter: v => v === null ? 'ບໍ່ມີຄ່າ' : `${v}${ind.unit ? ' ' + ind.unit : ''}` } }
       };
 
-      if (apexChart) {
-        try { apexChart.destroy(); } catch(e) {}
+      try {
+        apexChart = new ApexCharts(el, options);
+        apexChart.render();
+        chartIndKey = ind.key;
+      } catch (e) {
+        console.error('Chart error:', e);
+        chartMessage('⚠️ ແຕ້ມກຣາຟບໍ່ສຳເລັດ<button onclick="apexChart=null; drawChartNow()" class="bg-indigo-600 text-white font-bold px-3 py-1 rounded-lg">🔄 ລອງໃໝ່</button>');
       }
-      apexChart = new ApexCharts(chartContainer, options);
-      apexChart.render();
     }
+
+    // ກັບມາເປີດແຖບ Browser / ປ່ຽນຂະໜາດໜ້າຈໍ → ແຕ້ມຄືນ ເພື່ອບໍ່ໃຫ້ກຣາຟຫວ່າງ
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      if (apexChart) { try { apexChart.destroy(); } catch (e) {} apexChart = null; }
+      drawChartNow();
+    });
+    window.addEventListener('pageshow', () => drawChartNow());
 
     function exportCSV() {
       if(waterData.length === 0) return Swal.fire({ icon: 'info', title: 'ບໍ່ມີຂໍ້ມູນ' });
