@@ -2681,8 +2681,9 @@
       const alertCount = stations.filter(st => st.status && st.status.isAlert).length;
       const editIdx = (editingStation && editingStation.fbKey === item.fbKey) ? editingStation.idx : -1;
 
+      // width:0 + min-width:100% → ຕາຕະລາງລາຍລະອຽດບໍ່ດັນໃຫ້ຕາຕະລາງຫຼັກກວ້າງອອກ, ຈຶ່ງເລື່ອນຢູ່ພາຍໃນກ່ອງຂອງມັນເອງ (ປຸ່ມເລື່ອນຈຶ່ງເຮັດວຽກ)
       return `
-        <div class="space-y-2">
+        <div class="space-y-2" style="width:0; min-width:100%;">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div class="text-[11px] text-slate-600 space-x-3">
               ${item.projectLocation ? `<span>📍 <b>ທີ່ຕັ້ງໂຄງການ:</b> ${item.projectLocation}</span>` : ''}
