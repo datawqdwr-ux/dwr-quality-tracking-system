@@ -47,6 +47,11 @@
       40%, 80% { transform: translateX(8px); }
     }
     .login-shake { animation: login-shake 0.35s ease; }
+    .ds-dragging { opacity: 0.45; }
+    .ds-drop-target > td { background: #ccfbf1 !important; }
+    .ds-drop-target { outline: 2px dashed #0d9488; outline-offset: -2px; }
+    .drag-handle { cursor: grab; color: #94a3b8; }
+    .drag-handle:active { cursor: grabbing; }
     .marker-alert-pulse {
       animation: pulse-red 1.8s infinite;
     }
@@ -301,9 +306,14 @@
       <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
           <h2 class="text-lg font-bold text-slate-800">📋 ຖານຂໍ້ມູນຜົນການກວດວັດ (ລາຍບໍລິສັດ)</h2>
+          <div class="flex gap-2">
+          <button id="mergeDupBtn" onclick="mergeDuplicateDatasets()" class="bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs px-3 py-1.5 rounded-lg border border-teal-200 hidden">
+            🔗 ລວມຊຸດທີ່ຊື່ຊ້ຳ
+          </button>
           <button id="adminClearAllBtn" onclick="clearAllData()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs px-3 py-1.5 rounded-lg border border-rose-200 hidden">
             🗑️ ລ້າງຂໍ້ມູນທັງໝົດ
           </button>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
@@ -315,6 +325,10 @@
           </select>
         </div>
 
+        <div id="dragHint" class="hidden mb-2 text-xs font-bold text-teal-800 bg-teal-50 border border-teal-300 rounded-lg px-3 py-2">
+          🔗 ວາງໃສ່ຊຸດຂໍ້ມູນທີ່ຕ້ອງການລວມເຂົ້າ
+        </div>
+        <p id="dragTip" class="no-print hidden text-[11px] text-slate-400 mb-2">💡 ລາກແຖວ ⠿ ໄປວາງໃສ່ອີກຊຸດເພື່ອລວມກັນ · ລາກໄຟລ໌ Excel ມາວາງໃສ່ແຖວໃດ ຈະນຳເຂົ້າເຂົ້າຊຸດນັ້ນ</p>
         <div id="printableTableContainer" class="top-scrollbar-container">
           <table class="w-full text-left text-sm border-collapse">
             <thead>
@@ -959,7 +973,9 @@
         tbody.innerHTML = '';
         logsList.forEach(log => {
           let actionBadge = '';
-          if (log.action === 'CREATE') {
+          if (log.action === 'MERGE') {
+            actionBadge = '<span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-bold">🔗 ລວມຂໍ້ມູນ</span>';
+          } else if (log.action === 'CREATE') {
             actionBadge = '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">🟢 ບັນທຶກ (CREATE)</span>';
           } else if (log.action === 'DELETE') {
             actionBadge = '<span class="bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-bold">🔴 ລົບທັງໝົດ</span>';
@@ -1042,6 +1058,10 @@
     function applyImportLock() {
       const box = document.getElementById('excelImportBox');
       if (box) box.classList.toggle('hidden', currentUserRole === 'VIEWER');
+      const mergeBtn = document.getElementById('mergeDupBtn');
+      if (mergeBtn) mergeBtn.classList.toggle('hidden', currentUserRole === 'VIEWER');
+      const tip = document.getElementById('dragTip');
+      if (tip) tip.classList.toggle('hidden', currentUserRole === 'VIEWER');
     }
 
     function applyRecorderLock() {
@@ -1367,6 +1387,302 @@
       renderFormCustomInputs();
     }
 
+    /* --- ລວມຂໍ້ມູນເຂົ້າຊຸດເດີມ ເມື່ອຫົວຂໍ້ດຽວກັນ --- */
+    function normTitle(t) {
+      return String(t || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+
+    function findDatasetByTitle(title) {
+      const n = normTitle(title);
+      if (!n) return null;
+      // ຖ້າມີຫຼາຍຊຸດຊື່ຊ້ຳ ໃຊ້ຊຸດທີ່ສ້າງກ່ອນ (ເກົ່າສຸດ)
+      return waterData
+        .filter(d => normTitle(d.companyName || d.name) === n)
+        .sort((a, b) => (a.id || 0) - (b.id || 0))[0] || null;
+    }
+
+    function stationsOf(rec) {
+      if (Array.isArray(rec.stations)) return rec.stations;
+      if (rec.stations && typeof rec.stations === 'object') return Object.values(rec.stations);
+      // ຂໍ້ມູນຮູບແບບເກົ່າ: record ຕົວມັນເອງແມ່ນ 1 ສະຖານີ
+      return rec.code || rec.lat !== undefined
+        ? [{ id: rec.id, code: rec.code, name: rec.name, province: rec.province, lat: rec.lat, lng: rec.lng, customs: rec.customs || {}, status: rec.status }]
+        : [];
+    }
+
+    const normCode = c => String(c || '').trim().toUpperCase();
+    const sameCoord = (a, b) => Math.abs(Number(a.lat) - Number(b.lat)) < 1e-5 && Math.abs(Number(a.lng) - Number(b.lng)) < 1e-5;
+
+    // ລວມສະຖານີ: ລະຫັດ + ພິກັດ ຄືກັນ → ອັບເດດຄ່າ; ນອກນັ້ນ → ເພີ່ມໃໝ່ (ຖ້າລະຫັດຊ້ຳແຕ່ຄົນລະຈຸດ ຈະຕໍ່ທ້າຍ -2, -3)
+    function mergeStations(existing, incoming) {
+      const out = existing.map(s => ({ ...s, customs: { ...(s.customs || {}) } }));
+      let added = 0, updated = 0;
+      incoming.forEach(st => {
+        const idx = out.findIndex(e => normCode(e.code) === normCode(st.code) && sameCoord(e, st));
+        if (idx >= 0) {
+          const customs = { ...out[idx].customs };
+          Object.entries(st.customs || {}).forEach(([k, v]) => { if (v !== '-' && v !== '' && v !== undefined) customs[k] = v; });
+          out[idx] = { ...out[idx], name: st.name || out[idx].name, province: st.province || out[idx].province, customs, status: evalStatus(customs) };
+          updated++;
+        } else {
+          let code = st.code;
+          if (out.some(e => normCode(e.code) === normCode(code))) {
+            let n = 2;
+            while (out.some(e => normCode(e.code) === normCode(`${st.code}-${n}`))) n++;
+            code = `${st.code}-${n}`;
+          }
+          out.push({ ...st, code, status: evalStatus(st.customs || {}) });
+          added++;
+        }
+      });
+      return { stations: out, added, updated };
+    }
+
+    // ບັນທຶກເຂົ້າຊຸດເດີມ (merge) ຫຼື ສ້າງຊຸດໃໝ່ (new)
+    function saveToDataset({ title, stations, projectLocation = '', date, recorder, mode, source = '' }) {
+      const now = new Date().toLocaleString('lo-LA');
+      const target = mode === 'merge' ? findDatasetByTitle(title) : null;
+
+      if (!target) {
+        return db.ref('water_records').push({
+          id: Date.now() + Math.floor(Math.random() * 1000),
+          companyName: title,
+          projectLocation,
+          date: date || now,
+          recordedBy: recorder,
+          stations
+        }).then(() => {
+          db.ref('activity_logs').push({ action: 'CREATE', itemCode: `${title} (${stations.length} ສະຖານີ${source})`, performedBy: recorder, timestamp: now, userRole: currentUserRole });
+          return { type: 'new', title, added: stations.length, updated: 0 };
+        });
+      }
+
+      let result = null;
+      return db.ref(`water_records/${target.fbKey}`).transaction(rec => {
+        if (!rec) return rec;
+        const r = mergeStations(stationsOf(rec), stations);
+        result = r;
+        if (!Array.isArray(rec.stations)) {
+          // ແປງ record ຮູບແບບເກົ່າ ໃຫ້ເປັນຊຸດທີ່ມີ stations
+          ['code', 'name', 'province', 'lat', 'lng', 'customs', 'status'].forEach(k => delete rec[k]);
+          rec.companyName = rec.companyName || title;
+        }
+        rec.stations = r.stations;
+        if (!rec.projectLocation && projectLocation) rec.projectLocation = projectLocation;
+        rec.lastUpdated = now;
+        rec.lastUpdatedBy = recorder;
+        return rec;
+      }).then(({ committed }) => {
+        if (!committed || !result) throw new Error('ລວມຂໍ້ມູນບໍ່ສຳເລັດ ກະລຸນາລອງໃໝ່');
+        db.ref('activity_logs').push({ action: 'MERGE', itemCode: `${target.companyName || title} (+${result.added} ໃໝ່, ${result.updated} ອັບເດດ${source})`, performedBy: recorder, timestamp: now, userRole: currentUserRole });
+        return { type: 'merge', title: target.companyName || title, added: result.added, updated: result.updated };
+      });
+    }
+
+    // ກ່ອງຖາມ: ມີຊຸດຊື່ນີ້ແລ້ວ → ລວມ ຫຼື ສ້າງໃໝ່?
+    function askMergeOrNew(title, count) {
+      const target = findDatasetByTitle(title);
+      if (!target) return Promise.resolve('new');
+      return Swal.fire({
+        icon: 'question',
+        title: '🔗 ມີຊຸດຂໍ້ມູນນີ້ຢູ່ແລ້ວ',
+        html: `ມີ <b>"${escAttr(target.companyName || target.name)}"</b> ຢູ່ໃນລະບົບແລ້ວ (${stationsOf(target).length} ສະຖານີ).<br><br>
+               ຈະເອົາ <b>${count}</b> ສະຖານີໃໝ່ນີ້ <b>ລວມເຂົ້າຊຸດເດີມ</b> ບໍ່?<br>
+               <span class="text-xs text-slate-500">ສະຖານີທີ່ລະຫັດ ແລະ ພິກັດຄືກັນ ຈະຖືກອັບເດດຄ່າ, ສະຖານີອື່ນຈະຖືກເພີ່ມຕໍ່ທ້າຍ</span>`,
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: '🔗 ລວມເຂົ້າຊຸດເດີມ',
+        denyButtonText: '🆕 ສ້າງຊຸດໃໝ່',
+        cancelButtonText: 'ຍົກເລີກ',
+        confirmButtonColor: '#059669',
+        denyButtonColor: '#6366f1'
+      }).then(r => r.isConfirmed ? 'merge' : r.isDenied ? 'new' : null);
+    }
+
+    function mergeResultText(results) {
+      return results.map(r => r.type === 'merge'
+        ? `🔗 <b>${escAttr(r.title)}</b>: ລວມເຂົ້າຊຸດເດີມ — ເພີ່ມໃໝ່ ${r.added}, ອັບເດດ ${r.updated}`
+        : `🆕 <b>${escAttr(r.title)}</b>: ສ້າງຊຸດໃໝ່ ${r.added} ສະຖານີ`).join('<br>');
+    }
+
+    // ເຄື່ອງມື: ລວມຊຸດຂໍ້ມູນທີ່ມີຊື່ຊ້ຳກັນຢູ່ແລ້ວໃນລະບົບ
+    async function mergeDuplicateDatasets() {
+      if (currentUserRole === 'VIEWER') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
+      const groups = {};
+      waterData.forEach(d => {
+        const n = normTitle(d.companyName || d.name);
+        if (n) (groups[n] = groups[n] || []).push(d);
+      });
+      const dupGroups = Object.values(groups).filter(g => g.length > 1).map(g => g.sort((a, b) => (a.id || 0) - (b.id || 0)));
+      if (!dupGroups.length) return Swal.fire({ icon: 'info', title: 'ບໍ່ມີຊຸດຂໍ້ມູນທີ່ຊື່ຊ້ຳກັນ' });
+
+      const list = dupGroups.map(g => `<li>• <b>${escAttr(g[0].companyName || g[0].name)}</b> — ${g.length} ຊຸດ (${g.reduce((n, d) => n + stationsOf(d).length, 0)} ສະຖານີ)</li>`).join('');
+      const ok = await Swal.fire({
+        icon: 'question',
+        title: '🔗 ລວມຊຸດຂໍ້ມູນທີ່ຊື່ຊ້ຳ?',
+        html: `<ul class="text-left text-sm space-y-1">${list}</ul>
+               <p class="text-xs text-slate-500 mt-3">ແຕ່ລະກຸ່ມຈະຖືກລວມເຂົ້າຊຸດທີ່ສ້າງກ່ອນ. ສະຖານີທີ່ລະຫັດ ແລະ ພິກັດຄືກັນຈະບໍ່ຖືກນັບຊ້ຳ. ຊຸດທີ່ເຫຼືອຈະຖືກລົບອອກ.</p>`,
+        showCancelButton: true,
+        confirmButtonText: '🔗 ລວມເລີຍ',
+        cancelButtonText: 'ຍົກເລີກ',
+        confirmButtonColor: '#059669'
+      });
+      if (!ok.isConfirmed) return;
+
+      const who = currentUserName || document.getElementById('recorderName').value.trim() || 'ບໍ່ລະບຸ';
+      const now = new Date().toLocaleString('lo-LA');
+      Swal.fire({ title: 'ກຳລັງລວມຂໍ້ມູນ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      try {
+        for (const g of dupGroups) {
+          const [target, ...rest] = g;
+          await mergeRecordsInto(target, rest, who);
+        }
+        Swal.fire({ icon: 'success', title: `ລວມ ${dupGroups.length} ກຸ່ມ ສຳເລັດ!` });
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'ລວມບໍ່ສຳເລັດ', text: err.message });
+      }
+    }
+
+    /* --- ລາກວາງເພື່ອລວມຂໍ້ມູນ --- */
+    // ລວມຫຼາຍຊຸດເຂົ້າຊຸດເປົ້າໝາຍ ແລ້ວລົບຊຸດທີ່ຖືກລວມອອກ
+    async function mergeRecordsInto(target, sources, who) {
+      let stations = stationsOf(target);
+      let added = 0, updated = 0;
+      sources.forEach(d => {
+        const r = mergeStations(stations, stationsOf(d));
+        stations = r.stations; added += r.added; updated += r.updated;
+      });
+      const updates = {};
+      updates[`water_records/${target.fbKey}/stations`] = stations;
+      if (!Array.isArray(target.stations)) {
+        ['code', 'name', 'province', 'lat', 'lng', 'customs', 'status'].forEach(k => { if (target[k] !== undefined) updates[`water_records/${target.fbKey}/${k}`] = null; });
+      }
+      if (!target.companyName) updates[`water_records/${target.fbKey}/companyName`] = target.name || 'ບໍ່ລະບຸ';
+      if (!target.projectLocation) {
+        const loc = sources.map(d => d.projectLocation).find(Boolean);
+        if (loc) updates[`water_records/${target.fbKey}/projectLocation`] = loc;
+      }
+      updates[`water_records/${target.fbKey}/lastUpdated`] = new Date().toLocaleString('lo-LA');
+      updates[`water_records/${target.fbKey}/lastUpdatedBy`] = who;
+      sources.forEach(d => { updates[`water_records/${d.fbKey}`] = null; });
+      await db.ref().update(updates);
+      await db.ref('activity_logs').push({
+        action: 'MERGE',
+        itemCode: `${sources.map(d => d.companyName || d.name).join(', ')} → ${target.companyName || target.name} (+${added} ໃໝ່, ${updated} ອັບເດດ)`,
+        performedBy: who,
+        timestamp: new Date().toLocaleString('lo-LA'),
+        userRole: currentUserRole
+      });
+      return { added, updated, total: stations.length };
+    }
+
+    async function mergeDatasetInto(srcKey, dstKey) {
+      if (currentUserRole === 'VIEWER') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
+      if (!srcKey || !dstKey || srcKey === dstKey) return;
+      const src = waterData.find(d => d.fbKey === srcKey);
+      const dst = waterData.find(d => d.fbKey === dstKey);
+      if (!src || !dst) return;
+
+      const srcName = src.companyName || src.name, dstName = dst.companyName || dst.name;
+      const ok = await Swal.fire({
+        icon: 'question',
+        title: '🔗 ລວມຊຸດຂໍ້ມູນ?',
+        html: `<div class="text-sm leading-relaxed">
+                 <div class="bg-slate-100 rounded-lg p-2"><b>${escAttr(srcName)}</b><br><span class="text-xs text-slate-500">${stationsOf(src).length} ສະຖານີ</span></div>
+                 <div class="text-2xl my-1">⬇️</div>
+                 <div class="bg-emerald-50 border border-emerald-300 rounded-lg p-2"><b>${escAttr(dstName)}</b><br><span class="text-xs text-slate-500">${stationsOf(dst).length} ສະຖານີ</span></div>
+                 <p class="text-xs text-slate-500 mt-3">ສະຖານີທີ່ລະຫັດ ແລະ ພິກັດຄືກັນ ຈະຖືກອັບເດດແທນການເພີ່ມຊ້ຳ.<br>ຊຸດ "${escAttr(srcName)}" ຈະຖືກລົບອອກຫຼັງລວມ.</p>
+               </div>`,
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: '🔗 ລວມເລີຍ',
+        denyButtonText: `⇅ ກັບກັນ: ລວມເຂົ້າ "${srcName.length > 25 ? srcName.slice(0, 25) + '…' : srcName}"`,
+        cancelButtonText: 'ຍົກເລີກ',
+        confirmButtonColor: '#059669',
+        denyButtonColor: '#6366f1'
+      });
+      if (ok.isDismissed) return;
+      const [target, source] = ok.isDenied ? [src, dst] : [dst, src];
+
+      const who = currentUserName || document.getElementById('recorderName').value.trim() || 'ບໍ່ລະບຸ';
+      Swal.fire({ title: 'ກຳລັງລວມຂໍ້ມູນ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      try {
+        const r = await mergeRecordsInto(target, [source], who);
+        expandedRows[target.fbKey] = true;
+        Swal.fire({ icon: 'success', title: 'ລວມຂໍ້ມູນສຳເລັດ!', html: `<b>${escAttr(target.companyName || target.name)}</b><br>ເພີ່ມໃໝ່ ${r.added} · ອັບເດດ ${r.updated} · ລວມທັງໝົດ ${r.total} ສະຖານີ` });
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'ລວມບໍ່ສຳເລັດ', text: err.message });
+      }
+    }
+
+    let draggingKey = null;
+    const isFileDrag = e => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
+
+    function dsDragStart(e, key) {
+      draggingKey = key;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', key);
+      e.currentTarget.classList.add('ds-dragging');
+      document.getElementById('dragHint')?.classList.remove('hidden');
+    }
+
+    function dsDragEnd(e) {
+      draggingKey = null;
+      e.currentTarget.classList.remove('ds-dragging');
+      document.querySelectorAll('.ds-drop-target').forEach(el => el.classList.remove('ds-drop-target'));
+      document.getElementById('dragHint')?.classList.add('hidden');
+    }
+
+    function dsDragOver(e, key) {
+      if (currentUserRole === 'VIEWER') return;
+      if (!isFileDrag(e) && (!draggingKey || draggingKey === key)) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = isFileDrag(e) ? 'copy' : 'move';
+      e.currentTarget.classList.add('ds-drop-target');
+    }
+
+    function dsDragLeave(e) {
+      if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.classList.remove('ds-drop-target');
+    }
+
+    function dsDrop(e, key) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.currentTarget.classList.remove('ds-drop-target');
+      document.getElementById('dragHint')?.classList.add('hidden');
+
+      // ລາກໄຟລ໌ Excel ມາວາງໃສ່ຊຸດຂໍ້ມູນ → ນຳເຂົ້າເຂົ້າຊຸດນັ້ນເລີຍ
+      if (isFileDrag(e)) {
+        const file = e.dataTransfer.files[0];
+        const dst = waterData.find(d => d.fbKey === key);
+        if (file && dst) handleExcelFile(file, { targetTitle: dst.companyName || dst.name });
+        return;
+      }
+
+      const src = draggingKey || e.dataTransfer.getData('text/plain');
+      draggingKey = null;
+      mergeDatasetInto(src, key);
+    }
+
+    // ບໍ່ໃຫ້ Browser ເປີດໄຟລ໌ແທນໜ້າເວັບ ຖ້າວາງພາດບ່ອນ
+    window.addEventListener('dragover', e => { if (isFileDrag(e)) e.preventDefault(); });
+    window.addEventListener('drop', e => { if (isFileDrag(e)) e.preventDefault(); });
+
+    // ສຳລັບມືຖື (ລາກວາງບໍ່ໄດ້): ເລືອກຊຸດແລ້ວກົດລວມ
+    function renderMergeIntoControl(item) {
+      const others = waterData.filter(d => d.fbKey !== item.fbKey);
+      if (!others.length) return '';
+      return `
+        <div class="mt-2 flex flex-wrap items-center gap-2 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2 text-[11px]">
+          <span class="font-bold text-teal-800">🔗 ລວມຊຸດນີ້ເຂົ້າກັບ:</span>
+          <select id="mergeInto_${item.fbKey}" class="flex-1 min-w-[160px] border rounded px-2 py-1 bg-white">
+            ${others.map(d => `<option value="${d.fbKey}">${escAttr(d.companyName || d.name)} (${stationsOf(d).length})</option>`).join('')}
+          </select>
+          <button onclick="mergeDatasetInto('${item.fbKey}', document.getElementById('mergeInto_${item.fbKey}').value)" class="bg-teal-600 hover:bg-teal-500 text-white font-bold px-3 py-1 rounded">ລວມ</button>
+          <span class="text-slate-400 w-full">💡 ຢູ່ຄອມ: ລາກແຖວຊຸດຂໍ້ມູນ (⠿) ໄປວາງໃສ່ອີກຊຸດໜຶ່ງກໍ່ລວມໄດ້</span>
+        </div>`;
+    }
+
     /* --- ນຳເຂົ້າຂໍ້ມູນຈາກ EXCEL (ຮອງຮັບຫຼາຍຕາຕະລາງໃນ Sheet ດຽວ) --- */
     const EXCEL_FIELDS = {
       no:       ['no', 'no.', 'ລຳດັບ', 'ລ/ດ', 'ລ.ດ', 'ລດ', '#', 'n°'],
@@ -1549,7 +1865,7 @@
       if (file) handleExcelFile(file);
     }
 
-    async function handleExcelFile(file) {
+    async function handleExcelFile(file, opts = {}) {
       if (!file) return;
       if (currentUserRole === 'VIEWER') {
         return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!', text: 'ກະລຸນາເຂົ້າສູ່ລະບົບກ່ອນນຳເຂົ້າຂໍ້ມູນ' });
@@ -1596,10 +1912,31 @@
         return Swal.fire({ icon: 'warning', title: 'ບໍ່ມີແຖວທີ່ນຳເຂົ້າໄດ້', html: 'ທຸກແຖວຖືກຂ້າມ ເພາະ <b>ບໍ່ມີ Lat/Lng</b> ຫຼື ຄ່າບໍ່ຖືກຕ້ອງ' });
       }
 
-      showExcelPreview(file.name, sheetName, blocks);
+      showExcelPreview(file.name, sheetName, blocks, opts.targetTitle);
     }
 
-    function showExcelPreview(fileName, sheetName, blocks) {
+    // ສະແດງວ່າຕາຕະລາງນີ້ຈະ ລວມເຂົ້າຊຸດເດີມ ຫຼື ສ້າງຊຸດໃໝ່ (ອັບເດດເມື່ອແກ້ຊື່)
+    function updateExcelBlockTarget(bi) {
+      const box = document.getElementById(`excelBlockTarget_${bi}`);
+      const input = document.getElementById(`excelBlockTitle_${bi}`);
+      if (!box || !input) return;
+      const prev = document.getElementById(`excelBlockMode_${bi}`)?.value;
+      const target = findDatasetByTitle(input.value);
+      if (target) {
+        box.innerHTML = `
+          <div class="flex flex-wrap items-center gap-2 bg-emerald-50 border border-emerald-300 rounded px-2 py-1 text-[11px]">
+            <span>🔗 ມີຊຸດນີ້ແລ້ວ (${stationsOf(target).length} ສະຖານີ)</span>
+            <select id="excelBlockMode_${bi}" class="border rounded px-1 py-0.5 text-[11px] bg-white">
+              <option value="merge" ${prev !== 'new' ? 'selected' : ''}>ລວມເຂົ້າຊຸດເດີມ</option>
+              <option value="new" ${prev === 'new' ? 'selected' : ''}>ສ້າງຊຸດໃໝ່ແຍກ</option>
+            </select>
+          </div>`;
+      } else {
+        box.innerHTML = `<span class="text-[11px] text-indigo-600">🆕 ຈະສ້າງເປັນຊຸດໃໝ່</span><input type="hidden" id="excelBlockMode_${bi}" value="merge">`;
+      }
+    }
+
+    function showExcelPreview(fileName, sheetName, blocks, targetTitle) {
       const th = 'px-2 py-1 border border-slate-300 bg-slate-200 font-bold whitespace-nowrap';
       const td = 'px-2 py-1 border border-slate-300 whitespace-nowrap';
       const good = blocks.filter(b => b.parsed.length);
@@ -1629,7 +1966,8 @@
               ${multi ? `<input type="checkbox" id="excelBlockUse_${bi}" checked class="mt-2" title="ນຳເຂົ້າຕາຕະລາງນີ້">` : ''}
               <div class="flex-1">
                 <label class="text-[10px] font-bold text-slate-500">🏢 ຊື່ຊຸດຂໍ້ມູນ (ຕາຕະລາງທີ ${bi + 1} · ແຖວ ${b.headerRow})</label>
-                <input type="text" id="excelBlockTitle_${bi}" value="${escAttr(b.title || fileName.replace(/\.(xlsx|xls|csv)$/i, ''))}" class="w-full border rounded px-2 py-1 text-xs">
+                <input type="text" id="excelBlockTitle_${bi}" value="${escAttr(targetTitle || b.title || fileName.replace(/\.(xlsx|xls|csv)$/i, ''))}" oninput="updateExcelBlockTarget(${bi})" class="w-full border rounded px-2 py-1 text-xs">
+                <div id="excelBlockTarget_${bi}" class="mt-1"></div>
               </div>
               <span class="shrink-0 mt-4 bg-emerald-100 text-emerald-800 font-bold rounded px-2 py-0.5">${b.parsed.length} ສະຖານີ</span>
             </div>
@@ -1651,9 +1989,10 @@
         <div class="text-left text-xs space-y-3">
           <div class="bg-slate-50 border rounded-lg p-2 leading-relaxed">
             📄 <b>${escAttr(fileName)}</b> · Sheet: <b>${escAttr(sheetName)}</b><br>
+            ${targetTitle ? `📥 ນຳເຂົ້າ <b>ທຸກຕາຕະລາງ</b> ເຂົ້າຊຸດ <b class="text-emerald-700">${escAttr(targetTitle)}</b><br>` : ''}
             ພົບ <b>${good.length}</b> ຕາຕະລາງ · ນຳເຂົ້າໄດ້ <b class="text-emerald-700">${totalSt}</b> ສະຖານີ
             ${totalSkip ? ` · ⚠️ ຂ້າມ <b class="text-rose-600">${totalSkip}</b> ແຖວ` : ''}
-            ${multi ? `<br><span class="text-indigo-700">ແຕ່ລະຕາຕະລາງຈະຖືກບັນທຶກເປັນ <b>1 ຊຸດຂໍ້ມູນແຍກກັນ</b> ໂດຍກົງ</span>` : ''}
+            <br><span class="text-indigo-700">ຕາຕະລາງທີ່ <b>ຫົວຂໍ້ຄືກັບຊຸດທີ່ມີຢູ່ແລ້ວ</b> ຈະຖືກລວມເຂົ້າຊຸດເດີມ · ຕາຕະລາງທີ່ຫົວຂໍ້ຊ້ຳກັນໃນໄຟລ໌ຈະລວມເປັນຊຸດດຽວ</span>
           </div>
 
           ${unknownMap.size ? `
@@ -1681,29 +2020,31 @@
         html,
         width: 960,
         showCancelButton: true,
-        confirmButtonText: multi ? `✅ ບັນທຶກ ${good.length} ຊຸດຂໍ້ມູນ` : `✅ ນຳເຂົ້າ ${totalSt} ສະຖານີ`,
+        confirmButtonText: `✅ ບັນທຶກ ${totalSt} ສະຖານີ`,
         cancelButtonText: 'ຍົກເລີກ',
         confirmButtonColor: '#059669',
         cancelButtonColor: '#64748b',
+        didOpen: () => good.forEach((_, bi) => updateExcelBlockTarget(bi)),
         preConfirm: () => {
           const chosen = good.map((b, bi) => ({
             block: b,
             use: multi ? document.getElementById(`excelBlockUse_${bi}`).checked : true,
-            title: document.getElementById(`excelBlockTitle_${bi}`).value.trim()
+            title: document.getElementById(`excelBlockTitle_${bi}`).value.trim(),
+            mode: document.getElementById(`excelBlockMode_${bi}`)?.value || 'new'
           })).filter(x => x.use);
           if (!chosen.length) { Swal.showValidationMessage('ກະລຸນາເລືອກຢ່າງນ້ອຍ 1 ຕາຕະລາງ'); return false; }
           if (chosen.some(x => !x.title)) { Swal.showValidationMessage('ກະລຸນາລະບຸຊື່ຊຸດຂໍ້ມູນໃຫ້ຄົບ'); return false; }
           const recorder = currentUserName || document.getElementById('recorderName').value.trim();
-          if (multi && !recorder) { Swal.showValidationMessage('ກະລຸນາພິມຊື່ຜູ້ບັນທຶກໃນຟອມກ່ອນ'); return false; }
+          if (!recorder) { Swal.showValidationMessage('ກະລຸນາພິມຊື່ຜູ້ບັນທຶກໃນຟອມກ່ອນ'); return false; }
           return { chosen, addUnknown: !!document.getElementById('excelAddUnknown')?.checked, recorder };
         }
       }).then(result => {
         if (!result.isConfirmed) return;
-        applyExcelImport(result.value, unknownMap, multi);
+        applyExcelImport(result.value, unknownMap);
       });
     }
 
-    function applyExcelImport({ chosen, addUnknown, recorder }, unknownMap, multi) {
+    function applyExcelImport({ chosen, addUnknown, recorder }, unknownMap) {
       let configChanged = false;
 
       // ໂຕຊີ້ວັດທີ່ມີໃນ master ແຕ່ບໍ່ໄດ້ເປີດໃຊ້ → ເປີດໃຊ້
@@ -1742,51 +2083,25 @@
         return { id: idSeed++, code: st.code, name: st.name, province: st.province, lat: st.lat, lng: st.lng, customs, status: evalStatus(customs) };
       });
 
-      // 1 ຕາຕະລາງ → ເຂົ້າລາຍການລໍຖ້າບັນທຶກ (ໃຫ້ກວດກ່ອນ)
-      if (!multi) {
-        const { block, title } = chosen[0];
-        tempStations.push(...toStations(block));
-        renderTempList();
-        renderFormCustomInputs();
-        render();
-        const companyEl = document.getElementById('companyName');
-        if (companyEl && !companyEl.value.trim()) companyEl.value = title;
-        return Swal.fire({
-          icon: 'success',
-          title: `ນຳເຂົ້າ ${block.parsed.length} ສະຖານີ ສຳເລັດ!`,
-          html: `ຂໍ້ມູນຢູ່ໃນ <b>📋 ລາຍການສະຖານີທີ່ລໍຖ້າບັນທຶກ</b> ແລ້ວ.<br>ກະລຸນາກວດ <b>ຊື່ບໍລິສັດ</b> ແລະ <b>ເວລາບັນທຶກ</b> ແລ້ວກົດ <b>💾 ບັນທຶກຂໍ້ມູນທັງໝົດ</b>`
-        }).then(() => document.getElementById('saveBatchBtn')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-      }
-
-      // ຫຼາຍຕາຕະລາງ → ບັນທຶກແຍກເປັນແຕ່ລະຊຸດ ໂດຍກົງ
-      const now = new Date().toLocaleString('lo-LA');
-      const saves = chosen.map(({ block, title }) => {
+      // ຕາຕະລາງທີ່ຫົວຂໍ້ຄືກັນ (ໃນໄຟລ໌ດຽວກັນ) → ລວມເປັນກຸ່ມດຽວກ່ອນບັນທຶກ
+      const groups = [];
+      chosen.forEach(({ block, title, mode }) => {
+        const g = groups.find(x => normTitle(x.title) === normTitle(title));
         const year = (title.match(/\b(?:19|20)\d{2}(?:\s*[-–]\s*(?:19|20)\d{2})?\b/) || [])[0];
-        const stations = toStations(block);
-        return db.ref('water_records').push({
-          id: idSeed++,
-          companyName: title,
-          projectLocation: '',
-          date: year ? `ປີ ${year.replace(/\s+/g, '')}` : now,
-          recordedBy: recorder,
-          stations
-        }).then(() => db.ref('activity_logs').push({
-          action: 'CREATE',
-          itemCode: `${title} (${stations.length} ສະຖານີ · ນຳເຂົ້າຈາກ Excel)`,
-          performedBy: recorder,
-          timestamp: now,
-          userRole: currentUserRole
-        }));
+        if (g) g.stations = mergeStations(g.stations, toStations(block)).stations;
+        else groups.push({ title, mode, stations: toStations(block), date: year ? `ປີ ${year.replace(/\s+/g, '')}` : undefined });
       });
 
       Swal.fire({ title: 'ກຳລັງບັນທຶກ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-      Promise.all(saves).then(() => {
+      (async () => {
+        const results = [];
+        for (const g of groups) {  // ເຮັດເທື່ອລະກຸ່ມ ເພື່ອບໍ່ໃຫ້ຊົນກັນ
+          results.push(await saveToDataset({ title: g.title, stations: g.stations, date: g.date, recorder, mode: g.mode, source: ' · ຈາກ Excel' }));
+        }
+        return results;
+      })().then(results => {
         renderFormCustomInputs();
-        Swal.fire({
-          icon: 'success',
-          title: `ບັນທຶກ ${chosen.length} ຊຸດຂໍ້ມູນ ສຳເລັດ!`,
-          text: `ລວມ ${chosen.reduce((n, c) => n + c.block.parsed.length, 0)} ສະຖານີ — ເບິ່ງໄດ້ໃນຕາຕະລາງຖານຂໍ້ມູນ`
-        });
+        Swal.fire({ icon: 'success', title: 'ນຳເຂົ້າຂໍ້ມູນສຳເລັດ!', html: `<div class="text-left text-sm leading-relaxed">${mergeResultText(results)}</div>` });
       }).catch(err => Swal.fire({ icon: 'error', title: 'ບັນທຶກບໍ່ສຳເລັດ', text: err.message }));
     }
 
@@ -1846,7 +2161,7 @@
       renderTempList();
     }
 
-    function saveAllBatch() {
+    async function saveAllBatch() {
       if (currentUserRole === 'VIEWER') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
 
       const companyName = document.getElementById('companyName').value.trim();
@@ -1857,41 +2172,25 @@
       if (!recorderName) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາລະບຸຊື່ຜູ້ບັນທຶກ!' });
       if (tempStations.length === 0) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາເພີ່ມຢ່າງນ້ອຍ 1 ສະຖານີ!' });
 
+      const mode = await askMergeOrNew(companyName, tempStations.length);
+      if (!mode) return;
+
       const inputDatetime = document.getElementById('customDatetime').value;
       const recordDate = inputDatetime ? new Date(inputDatetime).toLocaleString('lo-LA') : new Date().toLocaleString('lo-LA');
 
-      const batchRecord = {
-        id: Date.now(),
-        companyName: companyName,
-        projectLocation: projectLocation,
-        date: recordDate,
-        recordedBy: recorderName,
-        stations: tempStations
-      };
-
-      db.ref('water_records').push(batchRecord).then(() => {
-        db.ref('activity_logs').push({
-          action: 'CREATE',
-          itemCode: `${companyName} (${tempStations.length} ສະຖານີ)`,
-          performedBy: recorderName,
-          timestamp: new Date().toLocaleString('lo-LA'),
-          userRole: currentUserRole
-        });
-
+      Swal.fire({ title: 'ກຳລັງບັນທຶກ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      try {
+        const res = await saveToDataset({ title: companyName, stations: tempStations, projectLocation, date: recordDate, recorder: recorderName, mode });
         tempStations = [];
         document.getElementById('companyName').value = '';
         document.getElementById('projectLocation').value = '';
         document.getElementById('waterForm').reset();
         renderTempList();
-
-        Swal.fire({
-          icon: 'success',
-          title: 'ບັນທຶກຂໍ້ມູນທັງໝົດສຳເລັດ!',
-          text: 'ບັນທຶກຂໍ້ມູນເຂົ້າຖານຂໍ້ມູນຮຽບຮ້ອຍແລ້ວ',
-          timer: 1800,
-          showConfirmButton: false
-        });
-      });
+        applyRecorderLock();
+        Swal.fire({ icon: 'success', title: 'ບັນທຶກຂໍ້ມູນສຳເລັດ!', html: mergeResultText([res]) });
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'ບັນທຶກບໍ່ສຳເລັດ', text: err.message });
+      }
     }
 
     function toggleRow(key) {
@@ -2031,8 +2330,10 @@
         });
 
         tbody.innerHTML += `
-          <tr class="bg-slate-50 font-semibold border-b border-slate-200 hover:bg-indigo-50/50 transition cursor-pointer select-none" onclick="toggleRow('${item.fbKey}')">
-            <td class="p-3 text-center text-indigo-600 font-bold text-base">${isExpanded ? '▼' : '▶'}</td>
+          <tr class="bg-slate-50 font-semibold border-b border-slate-200 hover:bg-indigo-50/50 transition cursor-pointer select-none" onclick="toggleRow('${item.fbKey}')"
+              ${canDelete ? `draggable="true" ondragstart="dsDragStart(event, '${item.fbKey}')" ondragend="dsDragEnd(event)"` : ''}
+              ondragover="dsDragOver(event, '${item.fbKey}')" ondragleave="dsDragLeave(event)" ondrop="dsDrop(event, '${item.fbKey}')">
+            <td class="p-3 text-center text-indigo-600 font-bold text-base whitespace-nowrap">${canDelete ? '<span class="drag-handle mr-1" title="ລາກໄປວາງໃສ່ຊຸດອື່ນເພື່ອລວມ">⠿</span>' : ''}${isExpanded ? '▼' : '▶'}</td>
             <td class="p-3 text-center font-bold text-slate-500">${index + 1}</td>
             <td class="p-3">
               ${renderOrgBadge(company)}
@@ -2152,7 +2453,8 @@
         return `
           <button onclick="openMasterEdit('${item.fbKey}')" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] px-3 py-1.5 rounded-lg border border-dashed border-indigo-300 transition">
             ✏️ ແກ້ໄຂຂໍ້ມູນຫຼັກ (ຊື່ບໍລິສັດ / ທີ່ຕັ້ງ / ຜູ້ບັນທຶກ / ເວລາ)
-          </button>`;
+          </button>
+          ${renderMergeIntoControl(item)}`;
       }
       const p = `editm_${item.fbKey}_`;
       return `
