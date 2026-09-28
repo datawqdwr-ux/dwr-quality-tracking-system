@@ -222,6 +222,7 @@
         </div>
         <p id="chartCaption" class="text-[11px] text-slate-500 mb-1"></p>
         <div class="relative w-full" style="min-height:260px" id="apexChartContainer"></div>
+        <div id="chartSummary" class="mt-3"></div>
       </div>
     </div>
 
@@ -3094,6 +3095,71 @@
       return { list, caption: `${title} — ${list.length === all.length ? 'ທຸກສະຖານີ' : list.length + ' ສະຖານີທີ່ເລືອກ'}`, dataset: title };
     }
 
+    // ຕາຕະລາງຄ່າທັງໝົດຂອງແຕ່ລະສະຖານີ (ທຸກໂຕຊີ້ວັດ) ລຸ່ມກຣາຟ + ແຖວສະເລ່ຍ/ຕ່ຳສຸດ/ສູງສຸດ
+    function renderChartSummary(stations) {
+      const box = document.getElementById('chartSummary');
+      if (!box) return;
+      if (!stations || !stations.length || !customIndicators.length) { box.innerHTML = ''; return; }
+
+      const num = v => { const n = parseFloat(v); return (v === undefined || v === null || v === '-' || isNaN(n)) ? null : n; };
+      // ສະແດງສະເພາະໂຕຊີ້ວັດທີ່ມີຄ່າຢ່າງນ້ອຍ 1 ສະຖານີ
+      const inds = customIndicators.filter(i => stations.some(st => st.customs && st.customs[i.key] !== undefined && st.customs[i.key] !== '-' && st.customs[i.key] !== ''));
+      if (!inds.length) { box.innerHTML = ''; return; }
+
+      const th = 'px-2 py-1.5 border border-slate-300 bg-slate-200 text-slate-700 font-bold whitespace-nowrap text-center';
+      const td = 'px-2 py-1 border border-slate-300 whitespace-nowrap';
+      const fmt = v => v === null ? '-' : +Number(v).toFixed(3);
+
+      const head = inds.map(i => {
+        const active = i.key === currentSelectedIndicator;
+        return `<th class="${th} cursor-pointer hover:bg-indigo-100 ${active ? '!bg-indigo-600 !text-white' : ''}" onclick="switchChartIndicator('${i.key}')" title="ກົດເພື່ອເບິ່ງກຣາຟໂຕຊີ້ວັດນີ້">
+                  ${escAttr(i.name)}${i.unit ? `<div class="text-[9px] font-normal opacity-75">${escAttr(i.unit)}</div>` : ''}</th>`;
+      }).join('');
+
+      const rows = stations.map((st, k) => `
+        <tr class="${k % 2 ? 'bg-slate-50' : 'bg-white'} hover:bg-sky-50">
+          <td class="${td} sticky left-0 ${k % 2 ? 'bg-slate-50' : 'bg-white'} font-medium text-slate-800 !whitespace-normal min-w-[120px] max-w-[200px]">
+            ${escAttr(st.name || '-')} <span class="font-mono text-[10px] text-indigo-600">(${escAttr(st.code || '-')})</span>
+          </td>
+          ${inds.map(i => {
+            const raw = st.customs ? st.customs[i.key] : undefined;
+            const bad = isOutOfThreshold(i.key, raw);
+            const isNum = num(raw) !== null;
+            return `<td class="${td} ${isNum ? 'text-right tabular-nums' : 'text-center text-slate-400'} ${bad ? 'bg-rose-100 text-rose-700 font-bold' : ''} ${i.key === currentSelectedIndicator ? 'ring-1 ring-inset ring-indigo-300' : ''}">${escAttr(raw ?? '-')}</td>`;
+          }).join('')}
+          <td class="${td} text-center"><span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold ${st.status ? st.status.class : 'bg-emerald-100 text-emerald-800'}">${st.status ? st.status.text : '✅ Normal'}</span></td>
+        </tr>`).join('');
+
+      let statRows = '';
+      if (stations.length > 1) {
+        const stat = (label, fn, cls) => `
+          <tr class="${cls} font-bold">
+            <td class="${td} sticky left-0 ${cls}">${label}</td>
+            ${inds.map(i => {
+              const vals = stations.map(st => num(st.customs ? st.customs[i.key] : undefined)).filter(v => v !== null);
+              return `<td class="${td} text-right tabular-nums">${vals.length ? fmt(fn(vals)) : '-'}</td>`;
+            }).join('')}
+            <td class="${td}"></td>
+          </tr>`;
+        statRows =
+          stat('📊 ສະເລ່ຍ', v => v.reduce((a, b) => a + b, 0) / v.length, 'bg-indigo-50 text-indigo-900') +
+          stat('⬇️ ຕ່ຳສຸດ', v => Math.min(...v), 'bg-slate-100 text-slate-700') +
+          stat('⬆️ ສູງສຸດ', v => Math.max(...v), 'bg-slate-100 text-slate-700');
+      }
+
+      box.innerHTML = `
+        <p class="text-[11px] font-bold text-slate-700 mb-1">📋 ຄ່າທັງໝົດຂອງແຕ່ລະສະຖານີ <span class="font-normal text-slate-400">· ກົດຫົວຖັນເພື່ອເບິ່ງກຣາຟໂຕຊີ້ວັດນັ້ນ</span></p>
+        <div class="overflow-auto max-h-72 border border-slate-400 rounded-md">
+          <table class="text-[11px] border-collapse min-w-full">
+            <thead class="sticky top-0 z-10"><tr>
+              <th class="${th} sticky left-0 z-20 !bg-slate-300">ສະຖານີ</th>${head}<th class="${th}">ສະຖານະ</th>
+            </tr></thead>
+            <tbody>${rows}${statRows}</tbody>
+          </table>
+        </div>
+        ${stations.length > 1 ? '<p class="text-[10px] text-slate-400 mt-1">ສະເລ່ຍ/ຕ່ຳສຸດ/ສູງສຸດ ຄິດສະເພາະຄ່າທີ່ເປັນຕົວເລກ (ບໍ່ນັບ ND ແລະ ຊ່ອງຫວ່າງ)</p>' : ''}`;
+    }
+
     function drawChartNow() {
       clearTimeout(chartTimer);
       const el = document.getElementById('apexChartContainer');
@@ -3110,6 +3176,7 @@
       }
 
       ensureSelectedIndicator();
+      if (!customIndicators.length || (chartDataset === 'ALL' && !chartStations.length)) renderChartSummary([]);
       if (!customIndicators.length) return chartMessage('🧪 ຍັງບໍ່ມີໂຕຊີ້ວັດ — ເພີ່ມໄດ້ໃນ ⚙️ ຕັ້ງຄ່າລະບົບ');
       if (chartDataset === 'ALL' && !chartStations.length) return chartMessage(waterData.length ? '🔍 ບໍ່ມີຂໍ້ມູນທີ່ກົງກັບການຄົ້ນຫາ' : '⏳ ກຳລັງລໍຖ້າຂໍ້ມູນ...');
       if (el.offsetWidth === 0) { chartTimer = setTimeout(drawChartNow, 300); return; }
@@ -3119,6 +3186,7 @@
       const capEl = document.getElementById('chartCaption');
       if (capEl) capEl.innerText = caption ? `ສະແດງ: ${caption}` : '';
 
+      renderChartSummary(chartData);
       if (!chartData.length) return chartMessage('📍 ຍັງບໍ່ໄດ້ເລືອກສະຖານີ — ກົດ "📍 ສະຖານີ" ເພື່ອເລືອກ');
 
       const categories = chartData.map(d => `${d.name || ''} (${d.code || ''})`);
