@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ຍ້າຍຂໍ້ມູນເກົ່າ — ລະບົບການນຳໃຊ້ນ້ຳ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans Lao', system-ui, sans-serif; background: #eef4f5; color: #12303f; margin: 0; padding: 24px; }
+    .card { max-width: 900px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 28px; border: 1px solid #d7e4e7; }
+    h1 { font-size: 22px; margin: 0 0 6px; color: #0b3a53; }
+    p { margin: 6px 0; color: #587584; }
+    button { font: inherit; font-weight: 700; border: 0; border-radius: 10px; padding: 11px 20px; cursor: pointer; }
+    .primary { background: #13667a; color: #fff; }
+    .go { background: #0f9d58; color: #fff; }
+    button:disabled { opacity: .5; cursor: default; }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; align-items: center; }
+    .stat { background: #f1f7f8; border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+    .stat b { font-size: 18px; color: #0b3a53; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+    th, td { border: 1px solid #d7e4e7; padding: 6px 8px; text-align: left; }
+    th { background: #e3eef0; }
+    .box { max-height: 340px; overflow: auto; border-radius: 8px; }
+    .msg { margin-top: 14px; padding: 12px 14px; border-radius: 10px; font-size: 14px; display: none; }
+    .ok { background: #e7f7ee; color: #0b6b3a; border: 1px solid #a7e3c1; }
+    .err { background: #fdecef; color: #9f1d35; border: 1px solid #f4b8c3; }
+    .info { background: #eef4ff; color: #274690; border: 1px solid #c3d3fb; }
+    label { font-size: 14px; }
+    a { color: #13667a; font-weight: 700; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>📦 ຍ້າຍຂໍ້ມູນເກົ່າ ຂອງລະບົບການນຳໃຊ້ນ້ຳ</h1>
+  <p>ດຶງຂໍ້ມູນຈາກຖານຂໍ້ມູນເກົ່າ (Firebase AI Studio: erudite-ceremony) ມາໃສ່ຖານຂໍ້ມູນໃໝ່ (dwr-quality-tracking-system) ທີ່ໃຊ້ຮ່ວມກັບລະບົບຄຸນນະພາບນ້ຳ.</p>
+  <p>ໃຊ້ເທື່ອດຽວ. ຍ້າຍສຳເລັດແລ້ວ ລົບໄຟລ໌ນີ້ອອກຈາກ GitHub ໄດ້.</p>
+
+  <div class="row"><button id="scanBtn" class="primary">🔍 1. ກວດຂໍ້ມູນເກົ່າ</button></div>
+  <div id="stats" class="row"></div>
+  <div id="listWrap" style="display:none">
+    <div class="row">
+      <label><input type="checkbox" id="chkAll" checked> ເລືອກທຸກໂຄງການ</label>
+      <label><input type="checkbox" id="chkLogs" checked> ຍ້າຍປະຫວັດ (Logs)</label>
+      <label><input type="checkbox" id="chkMsgs" checked> ຍ້າຍຂໍ້ຄວາມ</label>
+      <label><input type="checkbox" id="chkUsers"> ຍ້າຍບັນຊີຜູ້ໃຊ້ (ຍົກເວັ້ນບັນຊີຕົວຢ່າງ password123)</label>
+    </div>
+    <div class="box"><table><thead><tr><th></th><th>ຊື່ໂຄງການ / ກິດຈະການ</th><th>ເຈົ້າຂອງ</th><th>ແຂວງ</th><th>ອັບເດດລ່າສຸດ</th><th>ໝາຍເຫດ</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div class="row"><button id="goBtn" class="go">📥 2. ຍ້າຍເຂົ້າຖານຂໍ້ມູນໃໝ່</button><span id="selCount"></span></div>
+  </div>
+  <div id="msg" class="msg"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
+// ຖານຂໍ້ມູນເກົ່າ (ຈາກໄຟລ໌ water-monitoring-app_1.html)
+const oldApp = initializeApp({
+  projectId: "erudite-ceremony-7wh4c",
+  appId: "1:457422900674:web:cacfbdf5530c031aa0da5b",
+  apiKey: "AIzaSyDtEr0-O0yDhvmjXNAvjBa6B29tjVnjT5M",
+  authDomain: "erudite-ceremony-7wh4c.firebaseapp.com",
+  storageBucket: "erudite-ceremony-7wh4c.firebasestorage.app",
+  messagingSenderId: "457422900674"
+}, "old");
+const oldDb = getFirestore(oldApp, "ai-studio-2222a7b1-fce2-4aef-9fc4-161ae88c1ada");
+
+// ຖານຂໍ້ມູນໃໝ່ (ດຽວກັບ ລະບົບຄຸນນະພາບນ້ຳ)
+const newApp = initializeApp({
+  apiKey: "AIzaSyA0paCtpkuPfQ82MNpcppqpKl9eShPqzNM",
+  authDomain: "dwr-quality-tracking-system.firebaseapp.com",
+  databaseURL: "https://dwr-quality-tracking-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "dwr-quality-tracking-system",
+  storageBucket: "dwr-quality-tracking-system.firebasestorage.app",
+  messagingSenderId: "630601148685",
+  appId: "1:630601148685:web:4ab2080bb36a15744a6844"
+}, "new");
+const rtdb = getDatabase(newApp);
+
+const Q = { admin: "SUPER_ADMIN", officer: "STAFF", viewer: "VIEWER" };
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const safeKey = (k) => String(k).replace(/[.#$\[\]\/]/g, "_");
+
+// Firestore → Realtime Database: ແປງ Timestamp ເປັນຂໍ້ຄວາມ, ຊື່ field ທີ່ມີ . # $ [ ] / ປ່ຽນເປັນ _, ລົບ undefined
+function toRtdb(v) {
+  if (v === undefined) return null;
+  if (v && typeof v.toDate === "function") return v.toDate().toISOString();
+  if (typeof v === "number" && !isFinite(v)) return null;
+  if (Array.isArray(v)) return v.map(toRtdb);
+  if (v && typeof v === "object") {
+    const o = {};
+    Object.keys(v).forEach((k) => { if (v[k] !== undefined) o[safeKey(k)] = toRtdb(v[k]); });
+    return o;
+  }
+  return v;
+}
+
+function show(type, html) {
+  const m = $("msg");
+  m.className = "msg " + type;
+  m.innerHTML = html;
+  m.style.display = "block";
+}
+
+let data = { projects: [], logs: [], messages: [], users: [] };
+
+async function readCol(name) {
+  const snap = await getDocs(collection(oldDb, name));
+  const out = [];
+  snap.forEach((d) => out.push({ id: d.id, ...d.data() }));
+  return out;
+}
+
+$("scanBtn").onclick = async () => {
+  $("scanBtn").disabled = true;
+  show("info", "⏳ ກຳລັງອ່ານຂໍ້ມູນເກົ່າ...");
+  try {
+    const [projects, logs, messages, users] = await Promise.all([
+      readCol("waterProjects"), readCol("auditLogs").catch(() => []), readCol("directMessages").catch(() => []), readCol("userProfiles").catch(() => [])
+    ]);
+    data = { projects, logs, messages, users };
+    const existing = (await get(ref(rtdb, "water_usage/projects"))).val() || {};
+    const realUsers = users.filter((u) => u.password && u.password !== "password123");
+
+    $("stats").innerHTML = `
+      <div class="stat">ໂຄງການເກົ່າ <b>${projects.length}</b></div>
+      <div class="stat">ປະຫວັດ <b>${logs.length}</b></div>
+      <div class="stat">ຂໍ້ຄວາມ <b>${messages.length}</b></div>
+      <div class="stat">ບັນຊີ (ບໍ່ນັບຕົວຢ່າງ) <b>${realUsers.length}</b></div>
+      <div class="stat">ຢູ່ຖານໃໝ່ແລ້ວ <b>${Object.keys(existing).length}</b></div>`;
+
+    $("rows").innerHTML = projects
+      .sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")))
+      .map((p, i) => {
+        const demo = p.syncedBy && !p.createdBy;
+        const already = existing[safeKey(p.id)];
+        return `<tr>
+          <td><input type="checkbox" class="pick" data-id="${esc(p.id)}" checked></td>
+          <td>${esc(p.projectName || p.id)}</td><td>${esc(p.ownerName || "")}</td><td>${esc(p.province || "")}</td>
+          <td>${esc(String(p.updatedAt || "").slice(0, 10))}</td>
+          <td>${demo ? "🧪 ອາດເປັນຂໍ້ມູນຕົວຢ່າງ" : ""}${already ? " 🔁 ມີຢູ່ຖານໃໝ່ແລ້ວ (ຈະຂຽນທັບ)" : ""}</td>
+        </tr>`;
+      }).join("") || `<tr><td colspan="6">ບໍ່ພົບໂຄງການໃນຖານຂໍ້ມູນເກົ່າ</td></tr>`;
+
+    $("listWrap").style.display = projects.length ? "block" : "none";
+    updateCount();
+    show(projects.length ? "ok" : "info", projects.length
+      ? `✅ ອ່ານຂໍ້ມູນເກົ່າໄດ້ ${projects.length} ໂຄງການ. ກວດລາຍການ ແລ້ວກົດ <b>2. ຍ້າຍເຂົ້າຖານຂໍ້ມູນໃໝ່</b>`
+      : "ບໍ່ພົບໂຄງການໃນຖານຂໍ້ມູນເກົ່າ");
+  } catch (err) {
+    console.error(err);
+    show("err", `⚠️ ອ່ານຖານຂໍ້ມູນເກົ່າບໍ່ໄດ້: ${esc(err.code || err.message)}<br><br>
+      ທາງເລືອກ: ເປີດລະບົບເກົ່າຢູ່ Google AI Studio → ເມນູ <b>Backup</b> → <b>Export</b> ເອົາໄຟລ໌ JSON,
+      ແລ້ວໄປລະບົບໃໝ່ (water-usage.html) → <b>Backup</b> → <b>Restore</b> ໄຟລ໌ນັ້ນ.`);
+  } finally {
+    $("scanBtn").disabled = false;
+  }
+};
+
+function updateCount() {
+  const n = [...document.querySelectorAll(".pick")].filter((c) => c.checked).length;
+  $("selCount").innerText = `ເລືອກ ${n} ໂຄງການ`;
+}
+document.addEventListener("change", (e) => {
+  if (e.target.id === "chkAll") document.querySelectorAll(".pick").forEach((c) => c.checked = e.target.checked);
+  if (e.target.id === "chkAll" || e.target.classList.contains("pick")) updateCount();
+});
+
+$("goBtn").onclick = async () => {
+  const ids = new Set([...document.querySelectorAll(".pick")].filter((c) => c.checked).map((c) => c.dataset.id));
+  if (!ids.size) return show("err", "ກະລຸນາເລືອກຢ່າງນ້ອຍ 1 ໂຄງການ");
+  if (!confirm(`ຍ້າຍ ${ids.size} ໂຄງການ ເຂົ້າຖານຂໍ້ມູນໃໝ່?`)) return;
+  $("goBtn").disabled = true;
+  show("info", "⏳ ກຳລັງຍ້າຍຂໍ້ມູນ...");
+  try {
+    const now = new Date().toISOString();
+    const updates = {};
+    data.projects.filter((p) => ids.has(p.id)).forEach((p) => {
+      updates[`water_usage/projects/${safeKey(p.id)}`] = toRtdb({ ...p, migratedAt: now });
+    });
+    if ($("chkLogs").checked) data.logs.forEach((l) => updates[`water_usage/audit_logs/${safeKey(l.id)}`] = toRtdb(l));
+    if ($("chkMsgs").checked) data.messages.forEach((m) => updates[`water_usage/messages/${safeKey(m.id)}`] = toRtdb(m));
+
+    let userCount = 0;
+    if ($("chkUsers").checked) {
+      const current = (await get(ref(rtdb, "system_config/users"))).val() || {};
+      const names = new Set(Object.values(current).map((u) => String(u.name || u.username || "").toLowerCase()));
+      data.users.forEach((u) => {
+        const username = String(u.username || "").toLowerCase().trim();
+        if (!u.password || u.password === "password123" || !username || names.has(username)) return; // ຂ້າມ ຕົວຢ່າງ ແລະ ຊື່ຊ້ຳ
+        updates[`system_config/users/${safeKey(u.id)}`] = toRtdb({ ...u, name: username, username, role: Q[u.role] || "VIEWER" });
+        userCount++;
+      });
+    }
+
+    await update(ref(rtdb), updates);
+    await update(ref(rtdb), { [`water_usage/audit_logs/log-${Date.now()}-migrate`]: {
+      id: `log-${Date.now()}-migrate`, action: "restore", entityName: "ລະບົບຂໍ້ມູນ",
+      details: `ຍ້າຍຂໍ້ມູນຈາກຖານເກົ່າ: ${ids.size} ໂຄງການ${userCount ? `, ${userCount} ບັນຊີ` : ""}`, userName: "ເຄື່ອງມືຍ້າຍຂໍ້ມູນ", timestamp: now
+    } });
+    show("ok", `✅ ຍ້າຍສຳເລັດ: <b>${ids.size}</b> ໂຄງການ${userCount ? `, <b>${userCount}</b> ບັນຊີ` : ""}.<br><br>
+      <a href="water-usage.html">👉 ເປີດລະບົບການນຳໃຊ້ນ້ຳ</a> ເພື່ອກວດເບິ່ງ (ກົດ Ctrl+F5).`);
+  } catch (err) {
+    console.error(err);
+    show("err", `⚠️ ຍ້າຍບໍ່ສຳເລັດ: ${esc(err.code || err.message)}`);
+  } finally {
+    $("goBtn").disabled = false;
+  }
+};
+</script>
+</body>
+</html>
