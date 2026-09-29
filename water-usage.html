@@ -1682,7 +1682,7 @@ var Navbar = ({
                   "@",
                   currentUser.username
                 ] }),
-                /* @__PURE__ */ jsx("span", { className: "text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full uppercase", children: currentUser.role })
+                /* @__PURE__ */ jsx("span", { className: "text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full uppercase", children: ROLE_TEXT(currentUser.role) })
               ] }),
               /* @__PURE__ */ jsx("p", { className: "font-bold text-xs text-white truncate", children: currentUser.fullName }),
               /* @__PURE__ */ jsxs("p", { className: "text-[10px] text-slate-400 truncate mt-0.5", children: [
@@ -4025,6 +4025,108 @@ import {
   FileText as FileText2
 } from "lucide-react";
 import { jsx as jsx7, jsxs as jsxs7 } from "react/jsx-runtime";
+/* --- ✏️ ແກ້ໄຂບັນຊີຜູ້ໃຊ້ (Admin): ຊື່ເຂົ້າລະບົບ, ຊື່ເຕັມ, ຕຳແໜ່ງ, ສິດ, ຕັ້ງລະຫັດໃໝ່ ---
+   ບັນຊີຮ່ວມກັບ ລະບົບຄຸນນະພາບນ້ຳ → ປ່ຽນຢູ່ນີ້ ມີຜົນທັງສອງລະບົບ */
+function openUserEditor(usr, currentUser, users) {
+  const isAdmin = currentUser && currentUser.role === "admin";
+  const isSelf = currentUser && usr.id === currentUser.id;
+  if (!isAdmin && !isSelf) { alert("ສະເພາະຜູ້ດູແລລະບົບ (admin) ເທົ່ານັ້ນ ທີ່ແກ້ໄຂບັນຊີຂອງຄົນອື່ນໄດ້"); return; }
+  const esc = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const isDefault = String(usr.id).startsWith("default-");
+  const inp = "width:100%;box-sizing:border-box;background:#0f172a;border:1px solid #334155;color:#f1f5f9;border-radius:12px;padding:10px 12px;font-size:14px;outline:none;font-family:inherit";
+  const lab = "display:block;font-size:12px;font-weight:700;color:#94a3b8;margin:12px 0 4px";
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "position:fixed;inset:0;z-index:10050;background:rgba(2,6,23,.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px";
+  wrap.innerHTML = `
+    <form style="background:#0f172a;border:1px solid #1e293b;border-radius:24px;max-width:460px;width:100%;padding:24px;color:#e2e8f0;font-family:inherit;max-height:92vh;overflow:auto;box-shadow:0 25px 50px rgba(0,0,0,.5)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <h3 style="margin:0;font-size:18px;font-weight:800;color:#fff">✏️ ແກ້ໄຂບັນຊີຜູ້ໃຊ້</h3>
+        <button type="button" data-x style="background:none;border:0;color:#94a3b8;font-size:22px;cursor:pointer">×</button>
+      </div>
+      <p style="margin:0;font-size:12px;color:#64748b">ໃຊ້ໄດ້ທັງ ລະບົບການນຳໃຊ້ນ້ຳ ແລະ ລະບົບຄຸນນະພາບນ້ຳ</p>
+      ${isDefault ? `<p style="margin:10px 0 0;font-size:12px;color:#fbbf24">⚠️ ນີ້ແມ່ນບັນຊີເລີ່ມຕົ້ນ. ບັນທຶກແລ້ວ ຈະກາຍເປັນບັນຊີແທ້.</p>` : ""}
+      <label style="${lab}">🔤 ຊື່ເຂົ້າລະບົບ (ສັ້ນໆ, ພາສາອັງກິດ ຫຼື ຕົວເລກ, ໃຊ້ Login)</label>
+      <input name="username" style="${inp}" value="${esc(usr.username)}" autocomplete="off">
+      <label style="${lab}">👤 ຊື່ເຕັມ</label>
+      <input name="fullName" style="${inp}" value="${esc(usr.fullName)}" autocomplete="off">
+      <label style="${lab}">💼 ຕຳແໜ່ງ</label>
+      <input name="position" style="${inp}" value="${esc(usr.position)}" autocomplete="off">
+      <label style="${lab}">🏢 ພະແນກ / ໜ່ວຍງານ</label>
+      <input name="department" style="${inp}" value="${esc(usr.department)}" autocomplete="off">
+      <label style="${lab}">📞 ເບີໂທ</label>
+      <input name="phone" style="${inp}" value="${esc(usr.phone)}" autocomplete="off">
+      <label style="${lab}">🎖️ ສິດ</label>
+      <select name="role" style="${inp}" ${!isAdmin || isSelf ? "disabled" : ""}>
+        <option value="admin" ${usr.role === "admin" ? "selected" : ""}>🛡️ ຜູ້ດູແລລະບົບ (Super Admin)</option>
+        <option value="officer" ${usr.role === "officer" ? "selected" : ""}>📋 ເຈົ້າໜ້າທີ່ຕິດຕາມ (Staff)</option>
+        <option value="viewer" ${usr.role === "viewer" ? "selected" : ""}>👁️ ຜູ້ສັງເກດການ (ເບິ່ງຢ່າງດຽວ)</option>
+      </select>
+      ${isSelf ? `<p style="margin:4px 0 0;font-size:11px;color:#64748b">ປ່ຽນສິດຂອງຕົນເອງບໍ່ໄດ້</p>` : ""}
+      <label style="${lab}">🔑 ລະຫັດຜ່ານໃໝ່ <span style="font-weight:400;color:#64748b">(ປ່ອຍຫວ່າງ = ໃຊ້ລະຫັດເດີມ)</span></label>
+      <input name="password" type="text" style="${inp}" placeholder="ພິມລະຫັດໃໝ່ ຖ້າຕ້ອງການປ່ຽນ" autocomplete="off">
+      <p data-err style="display:none;margin:12px 0 0;padding:10px 12px;border-radius:12px;background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.35);color:#fda4af;font-size:13px;font-weight:700"></p>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button type="submit" style="flex:1;background:linear-gradient(90deg,#0ea5e9,#2563eb);color:#fff;border:0;border-radius:12px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit">💾 ບັນທຶກ</button>
+        <button type="button" data-x style="background:#1e293b;color:#cbd5e1;border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer;font-family:inherit">ຍົກເລີກ</button>
+      </div>
+    </form>`;
+  document.body.appendChild(wrap);
+  const form = wrap.querySelector("form");
+  const close = () => wrap.remove();
+  wrap.querySelectorAll("[data-x]").forEach((b) => b.addEventListener("click", close));
+  wrap.addEventListener("click", (e) => { if (e.target === wrap) close(); });
+  const showErr = (m) => { const p = wrap.querySelector("[data-err]"); p.textContent = "⚠️ " + m; p.style.display = "block"; };
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(form).entries());
+    const username = String(f.username || "").trim().toLowerCase().replace(/\s+/g, "");
+    const fullName = String(f.fullName || "").trim() || username;
+    const newPass = String(f.password || "").trim();
+    const role = (!isAdmin || isSelf) ? usr.role : (f.role || usr.role);
+    if (!username) return showErr("ກະລຸນາລະບຸຊື່ເຂົ້າລະບົບ");
+    if (username.length > 30) return showErr("ຊື່ເຂົ້າລະບົບຍາວເກີນ (ບໍ່ເກີນ 30 ໂຕ) — ໃສ່ຊື່ເຕັມໃນຊ່ອງ ຊື່ເຕັມ ແທນ");
+    if (["admin", "staff"].includes(username) && !isDefault) return showErr("ຊື່ admin ແລະ staff ສະຫງວນໄວ້ສຳລັບບັນຊີເລີ່ມຕົ້ນ");
+    if (users.some((u) => u.id !== usr.id && !String(u.id).startsWith("default-") && (u.username || "").toLowerCase() === username)) return showErr(`ຊື່ເຂົ້າລະບົບ "${username}" ມີແລ້ວ`);
+    if (newPass && newPass.length < 4) return showErr("ລະຫັດຜ່ານຕ້ອງມີຢ່າງນ້ອຍ 4 ໂຕອັກສອນ");
+    if (usr.role === "admin" && role !== "admin" && users.filter((u) => u.role === "admin" && !String(u.id).startsWith("default-")).length <= 1) return showErr("ຕ້ອງມີຜູ້ດູແລລະບົບ (admin) ຢ່າງນ້ອຍ 1 ຄົນ");
+
+    const updated = {
+      ...usr,
+      id: isDefault ? `usr-${Date.now()}` : usr.id,
+      username, fullName,
+      position: String(f.position || "").trim(),
+      department: String(f.department || "").trim(),
+      phone: String(f.phone || "").trim(),
+      role,
+      password: newPass || usr.password,
+      avatarColor: role === "admin" ? "bg-blue-600" : role === "officer" ? "bg-emerald-600" : "bg-purple-600",
+      updatedAt: new Date().toISOString()
+    };
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true; btn.textContent = "⏳ ກຳລັງບັນທຶກ...";
+    try {
+      await saveUserProfile(updated);
+      await addAuditLog("update", "ບັນຊີຜູ້ໃຊ້ງານ", `ແກ້ໄຂບັນຊີ: @${updated.username} (${updated.fullName}) ສິດ: ${updated.role}${newPass ? " · ຕັ້ງລະຫັດຜ່ານໃໝ່" : ""}`, `${currentUser.fullName} (@${currentUser.username})`);
+      if (isSelf) {
+        localStorage.setItem("lao_water_current_user_v2", JSON.stringify(updated));
+        localStorage.setItem("waterSession", JSON.stringify({ key: updated.id, role: U2Q[updated.role] || "VIEWER", name: updated.fullName }));
+      }
+      form.innerHTML = `
+        <h3 style="margin:0 0 12px;font-size:18px;font-weight:800;color:#fff">✅ ບັນທຶກແລ້ວ</h3>
+        <p style="margin:6px 0;font-size:14px">ຊື່ເຂົ້າລະບົບ: <b style="color:#38bdf8;font-family:monospace">${esc(updated.username)}</b></p>
+        ${newPass ? `<p style="margin:6px 0;font-size:14px">ລະຫັດຜ່ານໃໝ່: <b style="color:#38bdf8;font-family:monospace">${esc(newPass)}</b></p>
+        <p style="margin:6px 0;font-size:12px;color:#94a3b8">ກະລຸນາແຈ້ງລະຫັດນີ້ໃຫ້ເຈົ້າຂອງບັນຊີ</p>` : ""}
+        <button type="button" data-x style="margin-top:16px;width:100%;background:#1e293b;color:#e2e8f0;border:0;border-radius:12px;padding:12px;font-weight:700;cursor:pointer;font-family:inherit">ປິດ</button>`;
+      form.querySelector("[data-x]").addEventListener("click", () => { close(); if (isSelf) location.reload(); });
+    } catch (err) {
+      btn.disabled = false; btn.textContent = "💾 ບັນທຶກ";
+      showErr("ບັນທຶກບໍ່ສຳເລັດ: " + (err.message || err));
+    }
+  });
+}
+
+var ROLE_TEXT = (r) => r === "admin" ? "👑 Super Admin" : r === "officer" ? "🛠️ Staff" : "👁️ ເບິ່ງຢ່າງດຽວ";
 var SecurityAndSettings = ({
   currentUser,
   users,
@@ -4160,7 +4262,7 @@ var SecurityAndSettings = ({
                 "@",
                 currentUser.username
               ] }),
-              /* @__PURE__ */ jsx7("span", { className: `text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${currentUser.role === "admin" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30" : currentUser.role === "officer" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : "bg-purple-500/20 text-purple-300 border border-purple-500/30"}`, children: currentUser.role === "admin" ? "🛡️ ຜູ້ດູແລລະບົບ" : currentUser.role === "officer" ? "📋 ເຈົ້າໜ້າທີ່ຕິດຕາມ" : "👁️ ຜູ້ສັງເກດການ" })
+              /* @__PURE__ */ jsx7("span", { className: `text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${currentUser.role === "admin" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30" : currentUser.role === "officer" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : "bg-purple-500/20 text-purple-300 border border-purple-500/30"}`, children: ROLE_TEXT(currentUser.role) })
             ] }),
             /* @__PURE__ */ jsxs7("p", { className: "text-xs text-slate-300 mt-1 flex items-center gap-2 flex-wrap", children: [
               /* @__PURE__ */ jsx7("span", { children: currentUser.position || "ວິຊາການ" }),
@@ -4409,9 +4511,9 @@ var SecurityAndSettings = ({
                   onChange: (e) => setProfile({ ...profile, role: e.target.value }),
                   className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-sky-500 cursor-pointer",
                   children: [
-                    /* @__PURE__ */ jsx7("option", { value: "admin", children: "Admin - ຜູ້ດູແລລະບົບ (ສາມາດຈັດການຂໍ້ມູນໂຄງການ ແລະ ບັນຊີຜູ້ໃຊ້ອື່ນ)" }),
-                    /* @__PURE__ */ jsx7("option", { value: "officer", children: "Officer - ເຈົ້າໜ້າທີ່ (ສາມາດເພີ່ມ, ແກ້ໄຂ ແລະ ລຶບຂໍ້ມູນໂຄງການ)" }),
-                    /* @__PURE__ */ jsx7("option", { value: "viewer", children: "Viewer - ຜູ້ສັງເກດການ (ສາມາດເບິ່ງ, ຄົ້ນຫາ ແລະ ສົ່ງອອກລາຍງານ)" })
+                    /* @__PURE__ */ jsx7("option", { value: "admin", children: "👑 Super Admin (ຈັດການທຸກຢ່າງ ແລະ ບັນຊີຜູ້ໃຊ້)" }),
+                    /* @__PURE__ */ jsx7("option", { value: "officer", children: "🛠️ Staff (ເພີ່ມ, ແກ້ໄຂ ແລະ ລຶບຂໍ້ມູນ)" }),
+                    /* @__PURE__ */ jsx7("option", { value: "viewer", children: "👁️ ເບິ່ງຢ່າງດຽວ (ເບິ່ງ, ຄົ້ນຫາ ແລະ ສົ່ງອອກລາຍງານ)" })
                   ]
                 }
               )
@@ -4545,11 +4647,11 @@ var SecurityAndSettings = ({
                 /* @__PURE__ */ jsxs7("div", { children: [
                   /* @__PURE__ */ jsx7("h4", { className: "font-bold text-sm text-white truncate max-w-[150px]", children: usr.fullName }),
                   /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-1.5 mt-0.5", children: [
-                    /* @__PURE__ */ jsxs7("span", { className: "font-mono text-xs text-sky-400 font-bold", children: [
+                    /* @__PURE__ */ jsxs7("span", { className: `font-mono text-xs font-bold truncate max-w-[150px] ${(usr.username || "").length > 30 ? "text-amber-400" : "text-sky-400"}`, title: (usr.username || "").length > 30 ? "ຊື່ເຂົ້າລະບົບຍາວເກີນ — ກົດ ✏️ ແກ້ໄຂ ແລ້ວຕັ້ງຊື່ສັ້ນໆ" : "ຊື່ເຂົ້າລະບົບ", children: [
                       "@",
                       usr.username
                     ] }),
-                    /* @__PURE__ */ jsx7("span", { className: `text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ${usr.role === "admin" ? "bg-rose-500/20 text-rose-300" : usr.role === "officer" ? "bg-emerald-500/20 text-emerald-300" : "bg-purple-500/20 text-purple-300"}`, children: usr.role })
+                    /* @__PURE__ */ jsx7("span", { className: `text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ${usr.role === "admin" ? "bg-rose-500/20 text-rose-300" : usr.role === "officer" ? "bg-emerald-500/20 text-emerald-300" : "bg-purple-500/20 text-purple-300"}`, children: ROLE_TEXT(usr.role) })
                   ] })
                 ] })
               ] }),
@@ -4577,7 +4679,17 @@ var SecurityAndSettings = ({
                     ]
                   }
                 ) : /* @__PURE__ */ jsx7("span", { className: "flex-1 py-1.5 text-center text-xs text-slate-400 font-medium italic", children: "ກໍາລັງໃຊ້ງານ" }),
-                users.length > 1 && !isCurrent && /* @__PURE__ */ jsx7(
+                (currentUser.role === "admin" || isCurrent) && /* @__PURE__ */ jsx7(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: () => openUserEditor(usr, currentUser, users),
+                    className: "py-1.5 px-3 rounded-xl bg-slate-800 hover:bg-sky-600 text-sky-300 hover:text-white text-xs font-bold transition-colors cursor-pointer",
+                    title: "ແກ້ໄຂ ຊື່ເຂົ້າລະບົບ / ຊື່ເຕັມ / ສິດ / ຕັ້ງລະຫັດໃໝ່",
+                    children: "✏️ ແກ້ໄຂ"
+                  }
+                ),
+                currentUser.role === "admin" && users.length > 1 && !isCurrent && !String(usr.id).startsWith("default-") && /* @__PURE__ */ jsx7(
                   "button",
                   {
                     type: "button",
@@ -4742,9 +4854,9 @@ var SecurityAndSettings = ({
                   onChange: (e) => setNewUserData({ ...newUserData, role: e.target.value }),
                   className: "w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-emerald-500",
                   children: [
-                    /* @__PURE__ */ jsx7("option", { value: "officer", children: "Officer - ເຈົ້າໜ້າທີ່" }),
-                    /* @__PURE__ */ jsx7("option", { value: "admin", children: "Admin - ຜູ້ດູແລລະບົບ" }),
-                    /* @__PURE__ */ jsx7("option", { value: "viewer", children: "Viewer - ຜູ້ສັງເກດການ" })
+                    /* @__PURE__ */ jsx7("option", { value: "officer", children: "🛠️ Staff" }),
+                    /* @__PURE__ */ jsx7("option", { value: "admin", children: "👑 Super Admin" }),
+                    /* @__PURE__ */ jsx7("option", { value: "viewer", children: "👁️ ເບິ່ງຢ່າງດຽວ" })
                   ]
                 }
               )
@@ -4908,7 +5020,7 @@ var SecurityAndSettings = ({
                 "@",
                 userToDelete.username
               ] }),
-              /* @__PURE__ */ jsx7("span", { className: `text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${userToDelete.role === "admin" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30" : userToDelete.role === "officer" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : "bg-purple-500/20 text-purple-300 border border-purple-500/30"}`, children: userToDelete.role })
+              /* @__PURE__ */ jsx7("span", { className: `text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${userToDelete.role === "admin" ? "bg-rose-500/20 text-rose-300 border border-rose-500/30" : userToDelete.role === "officer" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : "bg-purple-500/20 text-purple-300 border border-purple-500/30"}`, children: ROLE_TEXT(userToDelete.role) })
             ] })
           ] })
         ] }),
@@ -7026,6 +7138,11 @@ function App() {
   };
   const handleSwitchUser = async (user) => {
     setCurrentUser(user);
+    try {
+      const key = user.id === "default-admin" ? "default:SUPER_ADMIN" : user.id === "default-staff" ? "default:STAFF" : user.id;
+      localStorage.setItem("waterSession", JSON.stringify({ key, role: U2Q[user.role] || "VIEWER", name: user.fullName }));
+      sessionStorage.removeItem("guestMode");
+    } catch (e) {}
     localStorage.setItem("lao_water_current_user_v2", JSON.stringify(user));
     await addAuditLog(
       "login",
@@ -7456,7 +7573,7 @@ import { jsx as jsx15 } from "react/jsx-runtime";
 /* ================================================================
    ການເຂົ້າສູ່ລະບົບຮ່ວມ (ໜ້າຕາ + ວິທີ + ລະຫັດ ຄືກັບ ລະບົບຄຸນນະພາບນ້ຳ)
    - ບັນຊີ: system_config/users (ບ່ອນດຽວກັນ)
-   - Session: sessionStorage "waterSession" { key, role } ໃຊ້ຮ່ວມກັນ
+   - Session: localStorage "waterSession" { key, role, name } ໃຊ້ຮ່ວມກັນ (ບໍ່ຕ້ອງ Login ໃໝ່ເວລາຍ້າຍໄປມາ)
      → Login ຢູ່ລະບົບໃດ ກໍ່ເຂົ້າອີກລະບົບໄດ້ເລີຍ (ໃນແຖບ Browser ດຽວກັນ)
    ================================================================ */
 var SHARED_SESSION_KEY = "waterSession";
@@ -7541,7 +7658,7 @@ async function sharedLogin(e) {
     const users = await fetchSharedUsers();
     const acc = findSharedAccount(users, username, password);
     if (!acc) { showSharedLoginError("ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ! ກະລຸນາລອງໃໝ່"); return; }
-    sessionStorage.setItem(SHARED_SESSION_KEY, JSON.stringify({ key: acc.key, role: acc.role }));
+    localStorage.setItem(SHARED_SESSION_KEY, JSON.stringify({ key: acc.key, role: acc.role, name: acc.user.fullName }));
     sessionStorage.removeItem("guestMode");
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(acc.user));
     addAuditLog("login", "ການເຂົ້າສູ່ລະບົບ", `ເຂົ້າສູ່ລະບົບສໍາເລັດ: @${acc.user.username} (${acc.user.fullName})`, `${acc.user.fullName} (@${acc.user.username})`).catch(() => {});
@@ -7554,14 +7671,14 @@ async function sharedLogin(e) {
 }
 function sharedGuest() {
   sessionStorage.setItem("guestMode", "true");
-  sessionStorage.removeItem(SHARED_SESSION_KEY);
+  localStorage.removeItem(SHARED_SESSION_KEY); sessionStorage.removeItem(SHARED_SESSION_KEY);
   const hadUser = !!localStorage.getItem(CURRENT_USER_KEY);
   localStorage.removeItem(CURRENT_USER_KEY);
   hideSharedLogin();
   if (hadUser) location.reload();
 }
 function sharedLogout() {
-  sessionStorage.removeItem(SHARED_SESSION_KEY);
+  localStorage.removeItem(SHARED_SESSION_KEY); sessionStorage.removeItem(SHARED_SESSION_KEY);
   sessionStorage.removeItem("guestMode");
   localStorage.removeItem(CURRENT_USER_KEY);
   showSharedLogin();
@@ -7580,7 +7697,7 @@ window.sharedLogout = sharedLogout;
   });
 
   let sess = null;
-  try { sess = JSON.parse(sessionStorage.getItem(SHARED_SESSION_KEY) || "null"); } catch (e) {}
+  try { sess = JSON.parse(localStorage.getItem(SHARED_SESSION_KEY) || sessionStorage.getItem(SHARED_SESSION_KEY) || "null"); } catch (e) {}
   const guest = sessionStorage.getItem("guestMode") === "true";
 
   if (sess) {
@@ -7591,7 +7708,7 @@ window.sharedLogout = sharedLogout;
         hideSharedLogin();
         return mountApp();
       }
-      sessionStorage.removeItem(SHARED_SESSION_KEY); // ບັນຊີຖືກລົບ ຫຼື ປ່ຽນສິດ
+      localStorage.removeItem(SHARED_SESSION_KEY); sessionStorage.removeItem(SHARED_SESSION_KEY); // ບັນຊີຖືກລົບ ຫຼື ປ່ຽນສິດ
     } catch (e) {
       // ເນັດຂາດ: ໃຊ້ຜູ້ໃຊ້ທີ່ຈື່ໄວ້ໃນເຄື່ອງໄປກ່ອນ
       if (localStorage.getItem(CURRENT_USER_KEY)) { hideSharedLogin(); return mountApp(); }
@@ -7608,7 +7725,9 @@ window.sharedLogout = sharedLogout;
  */
 
   </script>
-<a href="index.html" title="ກັບໄປໜ້າເລືອກລະບົບ"
-   style="position:fixed;left:14px;bottom:14px;z-index:9000;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#0b3a53;color:#fff;font:600 13px 'Noto Sans Lao',sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(11,58,83,.35)">🏠 ໜ້າຫຼັກ</a>
+<div style="position:fixed;left:14px;bottom:14px;z-index:9000;display:flex;gap:8px;font:600 13px 'Noto Sans Lao',sans-serif">
+  <a href="index.html" title="ກັບໄປໜ້າເລືອກລະບົບ" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#0b3a53;color:#fff;text-decoration:none;box-shadow:0 4px 14px rgba(11,58,83,.35)">🏠 ໜ້າຫຼັກ</a>
+  <a href="water-quality.html" title="ໄປລະບົບຄຸນນະພາບນ້ຳ (ບໍ່ຕ້ອງ Login ໃໝ່)" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#13667a;color:#fff;text-decoration:none;box-shadow:0 4px 14px rgba(19,102,122,.35)">🧪 ໄປລະບົບຄຸນນະພາບນ້ຳ</a>
+</div>
 </body>
 </html>
