@@ -140,6 +140,7 @@
         </div>
 
         <a href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1 shadow" title="ກັບໄປໜ້າເລືອກລະບົບ">🏠 ໜ້າຫຼັກ</a>
+        <a href="water-usage.html" class="bg-amber-700 hover:bg-amber-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1 shadow" title="ໄປລະບົບການນຳໃຊ້ນ້ຳ (ບໍ່ຕ້ອງ Login ໃໝ່)">💧 ໄປລະບົບການນຳໃຊ້ນ້ຳ</a>
         <button onclick="toggleLogsModal()" class="bg-indigo-700 hover:bg-indigo-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1 shadow">
           📜 ປະວັດການໃຊ້ງານ (Activity Logs)
         </button>
@@ -472,21 +473,32 @@
       </div>
 
       <div id="tabContent-users" class="space-y-3 hidden">
-        <p class="text-[11px] text-slate-500">ເພີ່ມຜູ້ໃຊ້ພ້ອມກຳນົດລະຫັດຜ່ານສະເພາະຄົນ. ຜູ້ໃຊ້ຈະ Login ດ້ວຍ <b>ຊື່ຜູ້ໃຊ້</b> ແລະ <b>ລະຫັດຜ່ານ</b> ນີ້ ຢູ່ໜ້າເຂົ້າສູ່ລະບົບ, ແລະ ລະບົບຈະລົງຊື່ໃນທຸກການບັນທຶກ/ແກ້ໄຂ/ລົບອັດຕະໂນມັດ.</p>
+        <p class="text-[11px] text-slate-500">ບັນຊີນີ້ໃຊ້ໄດ້ທັງ <b>ລະບົບຄຸນນະພາບນ້ຳ</b> ແລະ <b>ລະບົບການນຳໃຊ້ນ້ຳ</b>. Login ດ້ວຍ <b>ຊື່ເຂົ້າລະບົບ</b> + <b>ລະຫັດຜ່ານ</b>; <b>ຊື່ເຕັມ</b> ຈະສະແດງໃນລະບົບ ແລະ ປະຫວັດ.</p>
         <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-1">⚠️ ບັນຊີເລີ່ມຕົ້ນ (admin / 9999 ແລະ staff / 1234) ຈະໃຊ້ບໍ່ໄດ້ອີກ ເມື່ອສ້າງຜູ້ໃຊ້ຂອງສິດນັ້ນແລ້ວ. ກະລຸນາສ້າງຜູ້ໃຊ້ Super Admin ໃຫ້ຕົນເອງກ່ອນ ແລະ ຈື່ລະຫັດໄວ້.</p>
         <div class="flex flex-col gap-2">
-          <input type="text" id="newUserName" autocomplete="off" placeholder="ຊື່ຜູ້ໃຊ້" class="border p-2 rounded-lg text-sm w-full outline-none">
           <div class="flex gap-2">
-            <input type="password" id="newUserPass" autocomplete="off" placeholder="ລະຫັດຜ່ານ" class="border p-2 rounded-lg text-sm flex-1 outline-none">
-            <select id="newUserRole" class="border p-2 rounded-lg text-sm outline-none bg-white">
-              <option value="STAFF">🛠️ Staff</option>
-              <option value="SUPER_ADMIN">👑 Super Admin</option>
-            </select>
+            <div class="flex-1">
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">🔤 ຊື່ເຂົ້າລະບົບ (ສັ້ນໆ, ໃຊ້ Login)</label>
+              <input type="text" id="newUserName" autocomplete="off" placeholder="ເຊັ່ນ: palami" class="border p-2 rounded-lg text-sm w-full outline-none">
+            </div>
+            <div class="flex-1">
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">🔑 ລະຫັດຜ່ານ</label>
+              <input type="password" id="newUserPass" autocomplete="new-password" placeholder="ຢ່າງນ້ອຍ 4 ໂຕ" class="border p-2 rounded-lg text-sm w-full outline-none">
+            </div>
           </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-0.5">👤 ຊື່ເຕັມ / ຕຳແໜ່ງ (ສະແດງໃນລະບົບ ແລະ ປະຫວັດ)</label>
+            <input type="text" id="newUserFullName" autocomplete="off" placeholder="ເຊັ່ນ: ນ. ປາລະມີ ແສງບົວພາ, ພະແນກຄຸ້ມຄອງການນຳໃຊ້ນ້ຳ" class="border p-2 rounded-lg text-sm w-full outline-none">
+          </div>
+          <select id="newUserRole" class="border p-2 rounded-lg text-sm outline-none bg-white">
+            <option value="STAFF">🛠️ Staff (ບັນທຶກ/ແກ້ໄຂໄດ້)</option>
+            <option value="SUPER_ADMIN">👑 Super Admin (ທຸກຢ່າງ + ຈັດການຜູ້ໃຊ້)</option>
+            <option value="VIEWER">👁️ ເບິ່ງຢ່າງດຽວ</option>
+          </select>
         </div>
         <button onclick="addSystemUser()" class="w-full bg-indigo-700 text-white font-medium py-2 rounded-lg text-sm shadow">➕ ເພີ່ມຜູ້ໃຊ້</button>
         <div class="border-t pt-2">
-          <ul id="systemUsersList" class="space-y-1 max-h-40 overflow-y-auto"></ul>
+          <ul id="systemUsersList" class="space-y-1 max-h-72 overflow-y-auto"></ul>
         </div>
       </div>
     </div>
@@ -560,6 +572,8 @@
 
     /* --- LOGIN: ຊື່ຜູ້ໃຊ້ + ລະຫັດຜ່ານ (ເຂົ້າເທື່ອດຽວ) --- */
     const SESSION_KEY = 'waterSession';
+    // Session ໃຊ້ຮ່ວມກັບ ລະບົບການນຳໃຊ້ນ້ຳ (localStorage → ຍ້າຍໄປມາ ຫຼື ເປີດແຖບໃໝ່ ບໍ່ຕ້ອງ Login ໃໝ່)
+    const getSharedSessionRaw = () => localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
     // ບັນຊີເລີ່ມຕົ້ນ ໃຊ້ໄດ້ສະເພາະຕອນທີ່ຍັງບໍ່ມີຜູ້ໃຊ້ຂອງສິດນັ້ນ (ໃຊ້ເພື່ອສ້າງຜູ້ໃຊ້ຄົນທຳອິດ)
     const DEFAULT_ACCOUNTS = [
       { username: 'admin', password: '9999', role: 'SUPER_ADMIN', name: 'Admin (ບັນຊີເລີ່ມຕົ້ນ)' },
@@ -569,7 +583,7 @@
     function normName(v) { return String(v || '').trim().toLowerCase(); }
 
     function findAccount(users, username, password) {
-      const u = users.find(x => normName(x.name) === normName(username) && x.password === password);
+      const u = users.find(x => (normName(x.username) === normName(username) || normName(x.name) === normName(username)) && String(x.password) === password);
       if (u) return { role: u.role, name: u.fullName || u.name, key: u.fbKey };
       const d = DEFAULT_ACCOUNTS.find(x => x.username === normName(username) && x.password === password);
       if (d && !users.some(x => x.role === d.role)) return { role: d.role, name: d.name, key: 'default:' + d.role };
@@ -589,8 +603,8 @@
     function setSession(role, name, key) {
       currentUserRole = role;
       currentUserName = name;
-      if (key) sessionStorage.setItem(SESSION_KEY, JSON.stringify({ key, role }));
-      else sessionStorage.removeItem(SESSION_KEY);
+      if (key) localStorage.setItem(SESSION_KEY, JSON.stringify({ key, role, name }));
+      else { localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY); }
       editingStation = null;
       editingMaster = null;
       updateRBACUI();
@@ -701,7 +715,7 @@
     function restoreSession(users) {
       if (sessionChecked) {
         // ຖ້າ Admin ລົບ ຫຼື ປ່ຽນສິດຂອງຜູ້ໃຊ້ທີ່ກຳລັງໃຊ້ຢູ່ → ອອກຈາກລະບົບອັດຕະໂນມັດ
-        const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+        const saved = JSON.parse(getSharedSessionRaw() || 'null');
         if (saved && !saved.key.startsWith('default:')) {
           const u = users.find(x => x.fbKey === saved.key);
           if (!u || u.role !== saved.role) {
@@ -713,7 +727,7 @@
       }
       sessionChecked = true;
 
-      const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+      const saved = JSON.parse(getSharedSessionRaw() || 'null');
       if (saved) {
         let acc = null;
         if (saved.key.startsWith('default:')) {
@@ -724,7 +738,7 @@
           if (u && u.role === saved.role) acc = { role: u.role, name: u.fullName || u.name, key: u.fbKey };
         }
         if (acc) { hideLoginScreen(); setSession(acc.role, acc.name, acc.key); return; }
-        sessionStorage.removeItem(SESSION_KEY);
+        localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY);
       }
       if (sessionStorage.getItem('guestMode') === 'true') hideLoginScreen();
       else showLoginScreen();
@@ -992,28 +1006,100 @@
     }
 
     /* --- USER MANAGEMENT (per-user password instead of one shared code) --- */
+    const loginOf = u => u.username || u.name || '';
+    const ROLE_LABEL = { SUPER_ADMIN: '👑 Super Admin', STAFF: '🛠️ Staff', VIEWER: '👁️ ເບິ່ງຢ່າງດຽວ' };
+    const ROLE_CLASS = { SUPER_ADMIN: 'bg-amber-100 text-amber-800', STAFF: 'bg-sky-100 text-sky-800', VIEWER: 'bg-purple-100 text-purple-800' };
+
+    function validateLogin(login, exceptKey) {
+      if (!login) return 'ກະລຸນາລະບຸຊື່ເຂົ້າລະບົບ!';
+      if (login.length > 30) return 'ຊື່ເຂົ້າລະບົບຍາວເກີນໄປ (ບໍ່ເກີນ 30 ໂຕ) — ໃສ່ຊື່ເຕັມໃນຊ່ອງ "ຊື່ເຕັມ" ແທນ';
+      if (systemUsers.some(u => u.fbKey !== exceptKey && normName(loginOf(u)) === normName(login))) return 'ຊື່ເຂົ້າລະບົບນີ້ມີແລ້ວ! ກະລຸນາໃຊ້ຊື່ອື່ນ';
+      if (DEFAULT_ACCOUNTS.some(d => d.username === normName(login))) return 'ຊື່ນີ້ສະຫງວນໄວ້ສຳລັບບັນຊີເລີ່ມຕົ້ນ (admin, staff)';
+      return '';
+    }
+
     function addSystemUser() {
       if (currentUserRole !== 'SUPER_ADMIN') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
 
-      const name = document.getElementById('newUserName').value.trim();
+      const login = document.getElementById('newUserName').value.trim();
+      const fullName = document.getElementById('newUserFullName').value.trim() || login;
       const password = document.getElementById('newUserPass').value;
       const role = document.getElementById('newUserRole').value;
 
-      if (!name) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາລະບຸຊື່ຜູ້ໃຊ້!' });
-      if (systemUsers.some(u => normName(u.name) === normName(name))) return Swal.fire({ icon: 'warning', title: 'ຊື່ຜູ້ໃຊ້ນີ້ມີແລ້ວ!', text: 'ກະລຸນາໃຊ້ຊື່ອື່ນ ເພາະຊື່ນີ້ໃຊ້ເພື່ອ Login' });
-      if (DEFAULT_ACCOUNTS.some(d => d.username === normName(name))) return Swal.fire({ icon: 'warning', title: 'ຊື່ນີ້ສະຫງວນໄວ້ສຳລັບບັນຊີເລີ່ມຕົ້ນ', text: 'ກະລຸນາໃຊ້ຊື່ອື່ນ' });
+      const err = validateLogin(login, null);
+      if (err) return Swal.fire({ icon: 'warning', title: err });
       if (!password || password.length < 4) return Swal.fire({ icon: 'warning', title: 'ລະຫັດຜ່ານຕ້ອງມີຢ່າງນ້ອຍ 4 ໂຕອັກສອນ!' });
 
-      db.ref('system_config/users').push({ name: name.trim(), fullName: name.trim(), password, role, createdAt: new Date().toISOString() }).then(() => {
-        document.getElementById('newUserName').value = '';
-        document.getElementById('newUserPass').value = '';
-        Swal.fire({ icon: 'success', title: `ເພີ່ມຜູ້ໃຊ້ "${name}" ສຳເລັດ!`, timer: 1500, showConfirmButton: false });
+      db.ref('system_config/users').push({
+        name: login, username: login.toLowerCase(), fullName, password, role,
+        createdAt: new Date().toISOString(), createdBy: currentUserName || ''
+      }).then(() => {
+        ['newUserName', 'newUserFullName', 'newUserPass'].forEach(id => document.getElementById(id).value = '');
+        Swal.fire({ icon: 'success', title: `ເພີ່ມຜູ້ໃຊ້ "${fullName}" ສຳເລັດ!`, html: `ເຂົ້າລະບົບດ້ວຍ: <b>${escAttr(login)}</b>`, timer: 2200, showConfirmButton: false });
+      });
+    }
+
+    // ✏️ ແກ້ໄຂ ຊື່ເຂົ້າລະບົບ / ຊື່ເຕັມ / ສິດ / ຕັ້ງລະຫັດໃໝ່
+    async function editSystemUser(fbKey) {
+      if (currentUserRole !== 'SUPER_ADMIN') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
+      const u = systemUsers.find(x => x.fbKey === fbKey);
+      if (!u) return;
+      const saved = JSON.parse(getSharedSessionRaw() || 'null');
+      const isSelf = saved && saved.key === fbKey;
+      const inp = 'w-full border border-slate-300 p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-400';
+      const lab = 'block text-left text-[11px] font-bold text-slate-600 mb-0.5 mt-2';
+
+      const { value: form, isConfirmed } = await Swal.fire({
+        title: '✏️ ແກ້ໄຂຜູ້ໃຊ້',
+        html: `
+          <label class="${lab}">🔤 ຊື່ເຂົ້າລະບົບ (ສັ້ນໆ, ໃຊ້ Login)</label>
+          <input id="eu_login" class="${inp}" value="${escAttr(loginOf(u))}" autocomplete="off">
+          <label class="${lab}">👤 ຊື່ເຕັມ / ຕຳແໜ່ງ</label>
+          <input id="eu_full" class="${inp}" value="${escAttr(u.fullName || u.name || '')}" autocomplete="off">
+          <label class="${lab}">🎖️ ສິດ</label>
+          <select id="eu_role" class="${inp} bg-white" ${isSelf ? 'disabled title="ປ່ຽນສິດຂອງຕົນເອງບໍ່ໄດ້"' : ''}>
+            ${['SUPER_ADMIN', 'STAFF', 'VIEWER'].map(r => `<option value="${r}" ${u.role === r ? 'selected' : ''}>${ROLE_LABEL[r]}</option>`).join('')}
+          </select>
+          <label class="${lab}">🔑 ລະຫັດຜ່ານໃໝ່ <span class="font-normal text-slate-400">(ປ່ອຍຫວ່າງ = ໃຊ້ລະຫັດເດີມ)</span></label>
+          <input id="eu_pass" type="text" class="${inp}" placeholder="ພິມລະຫັດໃໝ່ ຖ້າຕ້ອງການປ່ຽນ" autocomplete="off">
+          <p class="text-left text-[11px] text-slate-400 mt-2">ໃຊ້ໄດ້ທັງ ລະບົບຄຸນນະພາບນ້ຳ ແລະ ລະບົບການນຳໃຊ້ນ້ຳ. ຖ້າປ່ຽນລະຫັດ ຫຼື ສິດ, ຄົນນັ້ນຕ້ອງ Login ໃໝ່.</p>`,
+        showCancelButton: true,
+        confirmButtonText: '💾 ບັນທຶກ',
+        cancelButtonText: 'ຍົກເລີກ',
+        confirmButtonColor: '#4f46e5',
+        focusConfirm: false,
+        preConfirm: () => {
+          const login = document.getElementById('eu_login').value.trim();
+          const fullName = document.getElementById('eu_full').value.trim() || login;
+          const role = document.getElementById('eu_role').value;
+          const pass = document.getElementById('eu_pass').value;
+          const err = validateLogin(login, fbKey);
+          if (err) { Swal.showValidationMessage(err); return false; }
+          if (pass && pass.length < 4) { Swal.showValidationMessage('ລະຫັດຜ່ານຕ້ອງມີຢ່າງນ້ອຍ 4 ໂຕອັກສອນ'); return false; }
+          if (!isSelf && u.role === 'SUPER_ADMIN' && role !== 'SUPER_ADMIN' && systemUsers.filter(x => x.role === 'SUPER_ADMIN').length <= 1) {
+            Swal.showValidationMessage('ຕ້ອງມີ Super Admin ຢ່າງນ້ອຍ 1 ຄົນ'); return false;
+          }
+          return { login, fullName, role: isSelf ? u.role : role, pass };
+        }
+      });
+      if (!isConfirmed || !form) return;
+
+      const upd = { name: form.login, username: form.login.toLowerCase(), fullName: form.fullName, role: form.role, updatedAt: new Date().toISOString() };
+      if (form.pass) upd.password = form.pass;
+      await db.ref('system_config/users/' + fbKey).update(upd);
+      if (isSelf) {
+        currentUserName = form.fullName;
+        updateRBACUI();
+      }
+      Swal.fire({
+        icon: 'success', title: 'ບັນທຶກແລ້ວ',
+        html: `ເຂົ້າລະບົບດ້ວຍ: <b>${escAttr(form.login)}</b>${form.pass ? `<br>ລະຫັດຜ່ານໃໝ່: <b>${escAttr(form.pass)}</b><br><span class="text-xs text-slate-500">ກະລຸນາແຈ້ງລະຫັດນີ້ໃຫ້ເຈົ້າຂອງບັນຊີ</span>` : ''}`
       });
     }
 
     function removeSystemUser(fbKey, name) {
       if (currentUserRole !== 'SUPER_ADMIN') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
-      const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+      const saved = JSON.parse(getSharedSessionRaw() || 'null');
       if (saved && saved.key === fbKey) return Swal.fire({ icon: 'warning', title: 'ລົບບັນຊີຂອງຕົນເອງບໍ່ໄດ້' });
 
       Swal.fire({
@@ -1038,15 +1124,29 @@
         list.innerHTML = `<p class="text-xs text-slate-400 text-center py-2 bg-slate-50 rounded-lg border border-dashed border-slate-200">ຍັງບໍ່ມີຜູ້ໃຊ້ (ໃຊ້ລະຫັດເລີ່ມຕົ້ນໄປກ່ອນ)</p>`;
         return;
       }
-      list.innerHTML = systemUsers.map(u => `
-        <li class="flex justify-between items-center bg-slate-50 p-2 rounded border text-xs">
-          <span>
-            <strong>${escAttr(u.name)}</strong>${u.fullName && u.fullName !== u.name ? ` <span class="text-slate-500">(${escAttr(u.fullName)})</span>` : ''}
-            <span class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'SUPER_ADMIN' ? 'bg-amber-100 text-amber-800' : u.role === 'STAFF' ? 'bg-sky-100 text-sky-800' : 'bg-purple-100 text-purple-800'}">${u.role === 'SUPER_ADMIN' ? '👑 Super Admin' : u.role === 'STAFF' ? '🛠️ Staff' : '👁️ ເບິ່ງຢ່າງດຽວ'}</span>
-          </span>
-          <button data-name="${escAttr(u.name)}" onclick="removeSystemUser('${u.fbKey}', this.dataset.name)" class="text-rose-600 font-bold">ລົບ</button>
-        </li>
-      `).join('');
+      const saved = JSON.parse(getSharedSessionRaw() || 'null');
+      list.innerHTML = systemUsers
+        .slice().sort((a, b) => (a.role === 'SUPER_ADMIN' ? 0 : a.role === 'STAFF' ? 1 : 2) - (b.role === 'SUPER_ADMIN' ? 0 : b.role === 'STAFF' ? 1 : 2))
+        .map(u => {
+          const login = loginOf(u);
+          const long = login.length > 30;
+          const me = saved && saved.key === u.fbKey;
+          return `
+        <li class="flex justify-between items-center gap-2 bg-slate-50 p-2 rounded border text-xs ${long ? 'border-amber-300 bg-amber-50' : ''}">
+          <div class="min-w-0">
+            <div class="font-bold text-slate-800 truncate">${escAttr(u.fullName || u.name)}${me ? ' <span class="text-emerald-600">(ທ່ານ)</span>' : ''}</div>
+            <div class="flex flex-wrap items-center gap-1.5 mt-0.5">
+              <span class="font-mono text-[11px] text-indigo-700 truncate max-w-[200px]" title="ຊື່ເຂົ້າລະບົບ">🔤 ${escAttr(login)}</span>
+              <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold ${ROLE_CLASS[u.role] || ROLE_CLASS.VIEWER}">${ROLE_LABEL[u.role] || ROLE_LABEL.VIEWER}</span>
+            </div>
+            ${long ? '<div class="text-[10px] text-amber-700 mt-0.5">⚠️ ຊື່ເຂົ້າລະບົບຍາວເກີນ — ກົດ ✏️ ແລ້ວຕັ້ງຊື່ສັ້ນໆ</div>' : ''}
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="editSystemUser('${u.fbKey}')" class="px-2 py-1 rounded border border-indigo-200 bg-white text-indigo-700 font-bold hover:bg-indigo-50">✏️ ແກ້ໄຂ</button>
+            ${me ? '' : `<button data-name="${escAttr(u.fullName || u.name)}" onclick="removeSystemUser('${u.fbKey}', this.dataset.name)" class="text-rose-600 font-bold">ລົບ</button>`}
+          </div>
+        </li>`;
+        }).join('');
     }
 
     function toggleLogsModal() {
@@ -1112,7 +1212,7 @@
         roleBadge.innerText = currentUserRole === 'SUPER_ADMIN' ? '👑 Super Admin' : currentUserRole === 'STAFF' ? '🛠️ Staff' : '👁️ ຜູ້ເບິ່ງທົ່ວໄປ';
       }
       const authBtn = document.getElementById('authBtn');
-      if (authBtn) authBtn.innerText = sessionStorage.getItem(SESSION_KEY) ? '🚪 ອອກຈາກລະບົບ' : '🔑 ເຂົ້າສູ່ລະບົບ';
+      if (authBtn) authBtn.innerText = getSharedSessionRaw() ? '🚪 ອອກຈາກລະບົບ' : '🔑 ເຂົ້າສູ່ລະບົບ';
 
       const userLabel = document.getElementById('loggedInUserLabel');
       if (userLabel) {
