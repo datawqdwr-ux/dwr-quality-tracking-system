@@ -62,6 +62,44 @@
   </script>
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased min-h-screen">
+  <style>
+    @keyframes sl-shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+    .sl-shake { animation: sl-shake .35s ease; }
+    .sl-bad { border-color:#fb7185 !important; background:#fff1f2 !important; }
+    #sharedLoginScreen input { color:#1e293b; }
+  </style>
+  <div id="sharedLoginScreen" style="display:flex" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[9999] items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl border border-slate-700 space-y-6 text-slate-800">
+      <div class="text-center space-y-2">
+        <div class="text-5xl mb-2">💧</div>
+        <h2 class="text-xl font-bold text-slate-800">ເຂົ້າສູ່ລະບົບຕິດຕາມການນຳໃຊ້ນ້ຳ</h2>
+        <p class="text-xs text-slate-500">ໃຊ້ບັນຊີດຽວກັບ ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ</p>
+      </div>
+      <form id="sl_form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">👤 ຊື່ຜູ້ໃຊ້</label>
+          <input type="text" id="sl_username" required autocomplete="username" class="w-full border border-slate-300 p-2.5 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50" placeholder="ປ້ອນຊື່ຜູ້ໃຊ້...">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">🔑 ລະຫັດຜ່ານ</label>
+          <div class="relative">
+            <input type="password" id="sl_password" required autocomplete="current-password" class="w-full border border-slate-300 p-2.5 pr-10 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50" placeholder="ປ້ອນລະຫັດຜ່ານ...">
+            <button type="button" id="sl_pwToggle" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm px-1" title="ສະແດງ/ເຊື່ອງລະຫັດ">👁️</button>
+          </div>
+        </div>
+        <div id="sl_error" style="display:none" class="hidden bg-rose-50 border border-rose-300 text-rose-700 text-xs font-bold rounded-lg px-3 py-2.5 items-center gap-2">
+          <span>⛔</span><span id="sl_errorText">ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ!</span>
+        </div>
+        <button type="submit" id="sl_submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg transition duration-200">🔓 ເຂົ້າສູ່ລະບົບ</button>
+      </form>
+      <div class="flex items-center gap-3 text-[11px] text-slate-400">
+        <div class="flex-1 h-px bg-slate-200"></div> ຫຼື <div class="flex-1 h-px bg-slate-200"></div>
+      </div>
+      <button type="button" id="sl_guest" class="w-full bg-white hover:bg-slate-50 text-slate-700 font-bold py-2.5 rounded-xl border border-slate-300 transition">👁️ ເຂົ້າເບິ່ງແບບທົ່ວໄປ (ບໍ່ຕ້ອງ Login)</button>
+      <p class="text-[11px] text-slate-400 text-center -mt-3">ເບິ່ງແຜນທີ່ ແລະ ຂໍ້ມູນໄດ້ ແຕ່ບັນທຶກ/ແກ້ໄຂບໍ່ໄດ້</p>
+      <a href="index.html" class="block text-center text-[11px] font-semibold text-indigo-600 hover:underline">🏠 ກັບໄປໜ້າຫຼັກ</a>
+    </div>
+  </div>
   <div id="root"></div>
   <script type="module">
 // ../sb/react-shim.js
@@ -84,7 +122,8 @@ import {
   update,
   remove,
   query as dbQuery,
-  limitToLast
+  limitToLast,
+  get
 } from "firebase/database";
 
 // firebase-applet-config.json
@@ -661,7 +700,10 @@ function toStoredUser(user) {
   return clean({ ...rest, id, name: user.username, role: U2Q[user.role] || "VIEWER" });
 }
 function withDefaultAdmin(list) {
-  return list.some((u) => u.role === "admin") ? list : [...list, normalizeUser(DEFAULT_ADMIN, "default-admin")];
+  let out = list;
+  if (!out.some((u) => u.role === "admin")) out = [...out, normalizeUser(DEFAULT_ADMIN, "default-admin")];
+  if (!list.some((u) => u.role === "officer")) out = [...out, normalizeUser({ id: "default-staff", username: "staff", password: "1234", fullName: "Staff (ບັນຊີເລີ່ມຕົ້ນ)", role: "officer", notes: "ບັນຊີເລີ່ມຕົ້ນ" }, "default-staff")];
+  return out;
 }
 function subscribeToUserProfiles(onUpdate, onError) {
   const cached = readCache(LOCAL_USERS_KEY);
@@ -682,7 +724,7 @@ async function saveUserProfile(user) {
   await set(dbRef(rtdb, `${PATHS.users}/${safeKey(user.id)}`), toStoredUser(updatedUser));
 }
 async function deleteUserProfile(userId) {
-  if (!userId || userId === "default-admin" || userId === "guest") return;
+  if (!userId || userId === "default-admin" || userId === "default-staff" || userId === "guest") return;
   await remove(dbRef(rtdb, `${PATHS.users}/${safeKey(userId)}`));
 }
 
@@ -6849,7 +6891,7 @@ function App() {
   const [isSearchOpen, setIsSearchOpen] = useState13(false);
   const [projectToDelete, setProjectToDelete] = useState13(null);
   const [isDeleting, setIsDeleting] = useState13(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState13(() => !localStorage.getItem("lao_water_current_user_v2"));
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState13(false);
   const [pickingMode, setPickingMode] = useState13(null);
   const [pickedCoordinates, setPickedCoordinates] = useState13(null);
   const [users, setUsers] = useState13(() => {
@@ -7015,7 +7057,7 @@ function App() {
     setAuditLogs(getAuditLogs());
     setCurrentUser(GUEST_USER);
     localStorage.removeItem("lao_water_current_user_v2");
-    setIsLoginModalOpen(true);
+    if (window.sharedLogout) window.sharedLogout();
   };
   const handleSaveProject = async (project) => {
     const isEdit = !!projects.find((p) => p.id === project.id);
@@ -7120,7 +7162,7 @@ function App() {
         currentUser,
         users,
         onSwitchUser: handleSwitchUser,
-        onOpenLogin: () => setIsLoginModalOpen(true),
+        onOpenLogin: () => window.showSharedLogin ? window.showSharedLogin() : setIsLoginModalOpen(true),
         onLogout: handleLogout,
         isFirebaseConnected
       }
@@ -7410,9 +7452,156 @@ function App() {
 
 // src/main.tsx
 import { jsx as jsx15 } from "react/jsx-runtime";
-createRoot(document.getElementById("root")).render(
-  /* @__PURE__ */ jsx15(StrictMode, { children: /* @__PURE__ */ jsx15(App, {}) })
-);
+
+/* ================================================================
+   ການເຂົ້າສູ່ລະບົບຮ່ວມ (ໜ້າຕາ + ວິທີ + ລະຫັດ ຄືກັບ ລະບົບຄຸນນະພາບນ້ຳ)
+   - ບັນຊີ: system_config/users (ບ່ອນດຽວກັນ)
+   - Session: sessionStorage "waterSession" { key, role } ໃຊ້ຮ່ວມກັນ
+     → Login ຢູ່ລະບົບໃດ ກໍ່ເຂົ້າອີກລະບົບໄດ້ເລີຍ (ໃນແຖບ Browser ດຽວກັນ)
+   ================================================================ */
+var SHARED_SESSION_KEY = "waterSession";
+var CURRENT_USER_KEY = "lao_water_current_user_v2";
+var SHARED_DEFAULTS = [
+  { username: "admin", password: "9999", role: "SUPER_ADMIN", name: "Admin (ບັນຊີເລີ່ມຕົ້ນ)", uid: "default-admin" },
+  { username: "staff", password: "1234", role: "STAFF", name: "Staff (ບັນຊີເລີ່ມຕົ້ນ)", uid: "default-staff" }
+];
+var normLogin = (v) => String(v || "").trim().toLowerCase();
+
+async function fetchSharedUsers() {
+  const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("TIMEOUT")), 8000));
+  const snap = await Promise.race([get(dbRef(rtdb, PATHS.users)), timeout]);
+  const v = snap.val() || {};
+  return Object.keys(v).map((k) => ({ fbKey: k, ...v[k] }));
+}
+function defaultAccountUser(d) {
+  return normalizeUser({ id: d.uid, username: d.username, password: d.password, fullName: d.name, role: d.role, notes: "ບັນຊີເລີ່ມຕົ້ນ" }, d.uid);
+}
+// ກົດດຽວກັບ ລະບົບຄຸນນະພາບນ້ຳ: ບັນຊີເລີ່ມຕົ້ນໃຊ້ໄດ້ສະເພາະຕອນທີ່ຍັງບໍ່ມີຜູ້ໃຊ້ສິດນັ້ນ
+function findSharedAccount(users, username, password) {
+  const u = users.find((x) => normLogin(x.name || x.username) === normLogin(username) && String(x.password) === password);
+  if (u) return { key: u.fbKey, role: u.role, user: normalizeUser({ ...u, id: u.fbKey }, u.fbKey) };
+  const d = SHARED_DEFAULTS.find((x) => x.username === normLogin(username) && x.password === password);
+  if (d && !users.some((x) => x.role === d.role)) return { key: "default:" + d.role, role: d.role, user: defaultAccountUser(d) };
+  return null;
+}
+function findBySession(users, sess) {
+  if (!sess || !sess.key) return null;
+  if (String(sess.key).startsWith("default:")) {
+    const d = SHARED_DEFAULTS.find((x) => "default:" + x.role === sess.key);
+    return d && !users.some((x) => x.role === d.role) ? { key: sess.key, role: d.role, user: defaultAccountUser(d) } : null;
+  }
+  const u = users.find((x) => x.fbKey === sess.key);
+  return u && u.role === sess.role ? { key: u.fbKey, role: u.role, user: normalizeUser({ ...u, id: u.fbKey }, u.fbKey) } : null;
+}
+
+var appMounted = false;
+function mountApp() {
+  if (appMounted) return;
+  appMounted = true;
+  createRoot(document.getElementById("root")).render(
+    /* @__PURE__ */ jsx15(StrictMode, { children: /* @__PURE__ */ jsx15(App, {}) })
+  );
+}
+
+function showSharedLogin() {
+  const el = document.getElementById("sharedLoginScreen");
+  if (!el) return;
+  el.classList.remove("hidden");
+  el.style.display = "flex";
+  setTimeout(() => document.getElementById("sl_username")?.focus(), 100);
+}
+function hideSharedLogin() {
+  const el = document.getElementById("sharedLoginScreen");
+  if (el) { el.classList.add("hidden"); el.style.display = "none"; }
+}
+function showSharedLoginError(msg) {
+  const box = document.getElementById("sl_error");
+  document.getElementById("sl_errorText").innerText = msg;
+  box.classList.remove("hidden");
+  box.style.display = "flex";
+  ["sl_username", "sl_password"].forEach((id) => document.getElementById(id).classList.add("sl-bad"));
+  const form = document.getElementById("sl_form");
+  form.classList.remove("sl-shake"); void form.offsetWidth; form.classList.add("sl-shake");
+  const pw = document.getElementById("sl_password");
+  pw.value = ""; pw.focus();
+}
+function clearSharedLoginError() {
+  const box = document.getElementById("sl_error");
+  if (box) { box.classList.add("hidden"); box.style.display = "none"; }
+  ["sl_username", "sl_password"].forEach((id) => document.getElementById(id)?.classList.remove("sl-bad"));
+}
+
+async function sharedLogin(e) {
+  e.preventDefault();
+  const username = document.getElementById("sl_username").value;
+  const password = document.getElementById("sl_password").value;
+  const btn = document.getElementById("sl_submit");
+  btn.disabled = true; btn.innerText = "⏳ ກຳລັງກວດສອບ...";
+  try {
+    const users = await fetchSharedUsers();
+    const acc = findSharedAccount(users, username, password);
+    if (!acc) { showSharedLoginError("ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ! ກະລຸນາລອງໃໝ່"); return; }
+    sessionStorage.setItem(SHARED_SESSION_KEY, JSON.stringify({ key: acc.key, role: acc.role }));
+    sessionStorage.removeItem("guestMode");
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(acc.user));
+    addAuditLog("login", "ການເຂົ້າສູ່ລະບົບ", `ເຂົ້າສູ່ລະບົບສໍາເລັດ: @${acc.user.username} (${acc.user.fullName})`, `${acc.user.fullName} (@${acc.user.username})`).catch(() => {});
+    location.reload(); // ໂຫລດໃໝ່ ໃຫ້ທຸກສ່ວນຂອງລະບົບເຫັນຜູ້ໃຊ້ທີ່ເຂົ້າ
+  } catch (err) {
+    showSharedLoginError(err && err.message === "TIMEOUT" ? "ເຊື່ອມຕໍ່ຖານຂໍ້ມູນຊ້າເກີນໄປ ກະລຸນາກວດອິນເຕີເນັດ ແລ້ວລອງໃໝ່" : "ເຊື່ອມຕໍ່ຖານຂໍ້ມູນບໍ່ໄດ້ ກະລຸນາກວດອິນເຕີເນັດ ແລ້ວລອງໃໝ່");
+  } finally {
+    btn.disabled = false; btn.innerText = "🔓 ເຂົ້າສູ່ລະບົບ";
+  }
+}
+function sharedGuest() {
+  sessionStorage.setItem("guestMode", "true");
+  sessionStorage.removeItem(SHARED_SESSION_KEY);
+  const hadUser = !!localStorage.getItem(CURRENT_USER_KEY);
+  localStorage.removeItem(CURRENT_USER_KEY);
+  hideSharedLogin();
+  if (hadUser) location.reload();
+}
+function sharedLogout() {
+  sessionStorage.removeItem(SHARED_SESSION_KEY);
+  sessionStorage.removeItem("guestMode");
+  localStorage.removeItem(CURRENT_USER_KEY);
+  showSharedLogin();
+}
+window.showSharedLogin = showSharedLogin;
+window.sharedLogout = sharedLogout;
+
+(async function startSharedAuth() {
+  document.getElementById("sl_form")?.addEventListener("submit", sharedLogin);
+  document.getElementById("sl_guest")?.addEventListener("click", sharedGuest);
+  ["sl_username", "sl_password"].forEach((id) => document.getElementById(id)?.addEventListener("input", clearSharedLoginError));
+  document.getElementById("sl_pwToggle")?.addEventListener("click", () => {
+    const el = document.getElementById("sl_password");
+    el.type = el.type === "password" ? "text" : "password";
+    document.getElementById("sl_pwToggle").innerText = el.type === "password" ? "👁️" : "🙈";
+  });
+
+  let sess = null;
+  try { sess = JSON.parse(sessionStorage.getItem(SHARED_SESSION_KEY) || "null"); } catch (e) {}
+  const guest = sessionStorage.getItem("guestMode") === "true";
+
+  if (sess) {
+    try {
+      const acc = findBySession(await fetchSharedUsers(), sess);
+      if (acc) {
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(acc.user));
+        hideSharedLogin();
+        return mountApp();
+      }
+      sessionStorage.removeItem(SHARED_SESSION_KEY); // ບັນຊີຖືກລົບ ຫຼື ປ່ຽນສິດ
+    } catch (e) {
+      // ເນັດຂາດ: ໃຊ້ຜູ້ໃຊ້ທີ່ຈື່ໄວ້ໃນເຄື່ອງໄປກ່ອນ
+      if (localStorage.getItem(CURRENT_USER_KEY)) { hideSharedLogin(); return mountApp(); }
+    }
+  }
+  localStorage.removeItem(CURRENT_USER_KEY);
+  mountApp();
+  if (guest) hideSharedLogin(); else showSharedLogin();
+})();
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -7420,6 +7609,6 @@ createRoot(document.getElementById("root")).render(
 
   </script>
 <a href="index.html" title="ກັບໄປໜ້າເລືອກລະບົບ"
-   style="position:fixed;left:14px;bottom:14px;z-index:99999;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#0b3a53;color:#fff;font:600 13px 'Noto Sans Lao',sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(11,58,83,.35)">🏠 ໜ້າຫຼັກ</a>
+   style="position:fixed;left:14px;bottom:14px;z-index:9000;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#0b3a53;color:#fff;font:600 13px 'Noto Sans Lao',sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(11,58,83,.35)">🏠 ໜ້າຫຼັກ</a>
 </body>
 </html>
