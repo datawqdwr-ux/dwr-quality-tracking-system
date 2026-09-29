@@ -337,7 +337,13 @@
                 ➕ ເພີ່ມໂຕຊີ້ວັດສະເພາະຈຸດ
               </button>
             </div>
-            <div id="dynamicFormIndicators" oninput="updateFormIndCount()" class="grid grid-cols-1 gap-2 pt-1"></div>
+            <div id="formIndBox" class="border border-slate-300 rounded-xl bg-slate-50/60 overflow-hidden">
+              <div class="p-2 border-b border-slate-200 bg-white">
+                <input type="text" id="formIndSearch" oninput="filterFormInds(this.value)" autocomplete="off" placeholder="🔍 ຄົ້ນຫາໂຕຊີ້ວັດ... (ເຊັ່ນ pH, BOD)" class="w-full border border-slate-200 px-2 py-1.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-sky-400 bg-slate-50">
+              </div>
+              <div id="dynamicFormIndicators" oninput="updateFormIndCount()" class="p-2 max-h-[360px] overflow-y-auto" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 8px;"></div>
+              <p id="formIndNoMatch" class="hidden text-center text-[11px] text-slate-400 pb-2">ບໍ່ພົບໂຕຊີ້ວັດທີ່ຄົ້ນຫາ</p>
+            </div>
           </div>
 
           <button type="button" onclick="clearStationForm()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold py-2 rounded-lg transition mt-2">🧹 ລ້າງຄ່າທີ່ປ້ອນໃນຟອມ</button>
@@ -1666,7 +1672,7 @@
 
       formInds().forEach(i => {
         container.innerHTML += `
-          <div>
+          <div data-indname="${escAttr(normHeader(i.name + ' ' + (i.unit || '')))}">
             <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">${i.name} ${i.unit ? '(' + i.unit + ')' : ''}</label>
             <div class="flex gap-1.5">
               <input type="text" id="input_${i.key}" ${isDisabled} autocomplete="off" placeholder="ຕົວເລກ, <0.01, >100" class="flex-1 min-w-0 border p-1.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-sky-500">
@@ -2813,9 +2819,11 @@
     try { formIndCollapsed = localStorage.getItem('formIndCollapsed') === '1'; } catch (e) {}
 
     function applyFormIndCollapse() {
-      const box = document.getElementById('dynamicFormIndicators');
+      const box = document.getElementById('formIndBox');
       const arrow = document.getElementById('formIndArrow');
       if (box) box.classList.toggle('hidden', formIndCollapsed);
+      const q = document.getElementById('formIndSearch');
+      if (q && q.value) filterFormInds(q.value);
       if (arrow) arrow.innerText = formIndCollapsed ? '▶' : '▼';
       updateFormIndCount();
     }
@@ -2824,6 +2832,18 @@
       try { localStorage.setItem('formIndCollapsed', formIndCollapsed ? '1' : '0'); } catch (e) {}
       applyFormIndCollapse();
     }
+    // ຄົ້ນຫາໂຕຊີ້ວັດໃນກ່ອງຟອມ (ເຊື່ອງອັນທີ່ບໍ່ກົງ — ຄ່າທີ່ປ້ອນໄວ້ບໍ່ຫາຍ)
+    function filterFormInds(q) {
+      const nq = normHeader(q);
+      let shown = 0;
+      document.querySelectorAll('#dynamicFormIndicators [data-indname]').forEach(el => {
+        const ok = !nq || el.dataset.indname.includes(nq);
+        el.style.display = ok ? '' : 'none';
+        if (ok) shown++;
+      });
+      document.getElementById('formIndNoMatch')?.classList.toggle('hidden', shown > 0);
+    }
+
     function updateFormIndCount() {
       const el = document.getElementById('formIndCount');
       if (!el) return;
@@ -2847,6 +2867,8 @@
     function clearStationForm() {
       ['code', 'name'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
       document.querySelectorAll('#dynamicFormIndicators input[id^="input_"]').forEach(x => x.value = '');
+      const q = document.getElementById('formIndSearch');
+      if (q) { q.value = ''; filterFormInds(''); }
       updateFormIndCount();
       scrollToFormTop();
     }
