@@ -1518,10 +1518,9 @@
         icon: 'warning',
         title: `🗑️ ລົບ ${inds.length} ໂຕຊີ້ວັດ ຖາວອນ?`,
         html: `<div class="text-sm leading-relaxed">${inds.map(i => `<b>${escAttr(i.name)}</b>`).join(', ')}<br><br>
-               ຈະລົບ <b class="text-rose-600">${n} ຄ່າ</b> ໃນທຸກສະຖານີ ແລະ ເກນເຕືອນໄພ. <b class="text-rose-600">ກູ້ຄືນບໍ່ໄດ້.</b><br><br>ພິມ <b>ລົບ</b> ເພື່ອຢືນຢັນ:</div>`,
-        input: 'text', inputPlaceholder: 'ລົບ',
+               ຈະລົບ <b class="text-rose-600">${n} ຄ່າ</b> ໃນທຸກສະຖານີ ແລະ ເກນເຕືອນໄພ. <b class="text-rose-600">ກູ້ຄືນບໍ່ໄດ້.</b></div>`,
+        focusCancel: true,
         showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: '🗑️ ລົບຖາວອນ', cancelButtonText: 'ຍົກເລີກ',
-        inputValidator: v => v.trim() !== 'ລົບ' ? 'ກະລຸນາພິມ "ລົບ"' : undefined
       });
       if (!isConfirmed) return;
       for (const k of keys) await deleteIndicatorPermanently(k, true);
@@ -1542,16 +1541,13 @@
         html: `<div class="text-sm leading-relaxed">
                  ຈະລົບ <b class="text-rose-600">ຄ່າທີ່ບັນທຶກໄວ້ ${n} ຄ່າ</b> ໃນທຸກສະຖານີ ແລະ ເກນເຕືອນໄພຂອງໂຕນີ້.<br>
                  <b class="text-rose-600">ກູ້ຄືນບໍ່ໄດ້.</b> ແນະນຳໃຫ້ກົດ 📥 Export Excel ເກັບໄວ້ກ່ອນ.<br><br>
-                 ພິມຊື່ <b>${escAttr(ind.name)}</b> ເພື່ອຢືນຢັນ:
                </div>`,
-        input: 'text',
-        inputPlaceholder: ind.name,
         showCancelButton: true,
+        focusCancel: true,
         confirmButtonColor: '#dc2626',
         cancelButtonColor: '#64748b',
         confirmButtonText: '🗑️ ລົບຖາວອນ',
-        cancelButtonText: 'ຍົກເລີກ',
-        inputValidator: v => v.trim() !== ind.name ? `ກະລຸນາພິມ "${ind.name}" ໃຫ້ຖືກຕ້ອງ` : undefined
+        cancelButtonText: 'ຍົກເລີກ'
       });
       if (!isConfirmed) return;
 
@@ -2420,7 +2416,7 @@
     const EXCEL_FIELDS = {
       no:       ['no', 'no.', 'ລຳດັບ', 'ລ/ດ', 'ລ.ດ', 'ລດ', '#', 'n°'],
       code:     ['ລະຫັດສະຖານີ', 'ລະຫັດ', 'code', 'stationcode', 'station code', 'station id', 'id', 'sample id', 'sampleid', 'site code'],
-      name:     ['ຊື່ສະຖານີ', 'ຊື່ສະຖານີ / ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່', 'ຊື່', 'name', 'station', 'station name', 'stationname', 'location', 'site', 'site name'],
+      name:     ['ຊື່ສະຖານີ', 'ຊື່ສະຖານີ / ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່ກວດວັດ', 'ສະຖານທີ່', 'ຊື່', 'name', 'station', 'station name', 'stationname', 'site', 'site name'],
       point:    ['sampling', 'sampling point', 'sampling site', 'sample point', 'sampling location', 'ຈຸດເກັບຕົວຢ່າງ', 'ຈຸດເກັບ', 'ຈຸດກວດ', 'point'],
       date:     ['date', 'ວັນທີ', 'ວັນທີເກັບຕົວຢ່າງ', 'ວັນເດືອນປີ', 'ວັນ/ເດືອນ/ປີ', 'ວັນທີ/ເດືອນ/ປີ', 'ເດືອນ', 'ເດືອນ/ປີ', 'ເດືອນປີ', 'ປີ', 'month', 'year', 'month/year', 'month-year',
                  'sampling date', 'sample date', 'date of sampling', 'sampling time', 'date/time', 'datetime', 'period', 'ວັນທີເກັບ', 'ວັນທີກວດ', 'ວັນທີວິເຄາະ', 'ໄຕມາດ', 'quarter'],
@@ -2465,9 +2461,14 @@
       return c;
     }
 
+    // ຖັນ GPS / Location / ພິກັດ → ເປັນພິກັດຂອງສະຖານີ (ບໍ່ແມ່ນໂຕຊີ້ວັດ, ບໍ່ເຂົ້າຕາຕະລາງຄ່າ ແລະ ກຣາຟ)
+    const COORD_HEADER = /gps|location|coordinat|lat\s*[\/,&-]?\s*lo?ng|latlng|utm|ພິກັດ|ຈຸດທີ່ຕັ້ງ|ທີ່ຕັ້ງຈຸດ|ຕຳແໜ່ງ/i;
+    const isCoordHeader = h => COORD_HEADER.test(String(h || ''));
+
     function matchField(header) {
       const h = normHeader(header), c = compactHeader(header);
       if (!h) return null;
+      if (isCoordHeader(header) && !/^(lat|latitude|lng|lon|long|longitude)$/i.test(c)) return 'coord';
       for (const [field, aliases] of Object.entries(EXCEL_FIELDS)) {
         if (aliases.some(a => normHeader(a) === h || compactHeader(a) === c)) return field;
       }
@@ -2525,11 +2526,13 @@
       row.forEach((h, col) => {
         if (cellText(h) === '') return;
         const f = matchField(h);
+        if (f === 'coord') { (colMap.coordCols = colMap.coordCols || []).push(col); if (colMap.coord === undefined) colMap.coord = col; return; } // ຫຼາຍຖັນ GPS/Location ໄດ້
         if (f && colMap[f] === undefined) { colMap[f] = col; return; }
         const ind = matchIndicator(h);
         if (ind && !indCols.some(x => x.ind.key === ind.key)) { indCols.push({ col, ind }); return; }
         unknownCols.push({ col, header: cellText(h) });
       });
+      // ຖັນ GPS/Location ຖືກໃຊ້ເປັນພິກັດ ບໍ່ນັບເປັນໂຕຊີ້ວັດ
       // ມີທັງ "Station Name" ແລະ "Sampling" → Station Name ແມ່ນຊື່ໂຄງການ (ໃຊ້ເປັນຫົວຂໍ້ຊຸດ), Sampling ແມ່ນຊື່ຈຸດ
       if (colMap.point !== undefined) {
         if (colMap.name !== undefined) colMap.group = colMap.name;
@@ -2594,8 +2597,11 @@
         const m = cur.colMap;
         const get = f => m[f] !== undefined ? cellText(row[m[f]]) : '';
         const no = get('no'), village = get('village'), river = get('river'), district = get('district'), province = get('province');
+        // ຖັນ GPS/Location (ອາດມີຫຼາຍຖັນ): ເອົາຖັນທີ່ເປັນພິກັດກ່ອນ, ບໍ່ດັ່ງນັ້ນເອົາຂໍ້ຄວາມທຳອິດ
+        const coordVals = (m.coordCols || []).map(c => cellText(row[c])).filter(Boolean);
+        const coordText = coordVals.find(v => parseCoordPair(v)) || coordVals[0] || '';
         let code = get('code'), name = get('name');
-        if (!code && !name && !village && !river && !district) return; // ແຖວໝາຍເຫດ
+        if (!code && !name && !village && !river && !district && !coordText) return; // ແຖວໝາຍເຫດ
         // ຊ່ອງ ວັນທີ / ຊື່ໂຄງການ ທີ່ປ່ອຍຫວ່າງ (ຂຽນໄວ້ແຕ່ແຖວທຳອິດຂອງກຸ່ມ) → ໃຊ້ຄ່າຂອງແຖວກ່ອນໜ້າ
         const rawDate = m.date !== undefined ? normalizeDateText(row[m.date]) : '';
         if (rawDate) cur.lastDate = rawDate;
@@ -2609,7 +2615,7 @@
         // ແຖວທີ່ບໍ່ມີຄ່າໂຕຊີ້ວັດເລີຍ (ເຊັ່ນ ແຖວທີ່ກຽມໄວ້ສຳລັບເດືອນໜ້າ) → ຂ້າມ
         if (![...Object.values(customs), ...Object.values(extra)].some(v => v !== '-')) return;
 
-        if (!name) name = (village ? [village, river] : [river, district]).filter(Boolean).join(' - ');
+        if (!name) name = (village ? [village, river] : [river, district]).filter(Boolean).join(' - ') || (coordText && !parseCoordPair(coordText) ? coordText : '');
         if (!name) name = code;
 
         let lat = toCoord(m.lat !== undefined ? row[m.lat] : '');
@@ -2618,6 +2624,11 @@
         // ຖັນ Lat ມີທັງຄູ່ ເຊັ່ນ "17°58'13"N 102°35'48"E" → ແຍກເປັນ 2 ຄ່າ
         if (m.lat !== undefined && (isNaN(lng) || m.lng === undefined)) {
           const pr = parseCoordPair(row[m.lat]);
+          if (pr) { lat = pr.lat; lng = pr.lng; }
+        }
+        // ຖັນ GPS / Location → ພິກັດ
+        if ((isNaN(lat) || isNaN(lng)) && coordText) {
+          const pr = parseCoordPair(coordText);
           if (pr) { lat = pr.lat; lng = pr.lng; }
         }
         // ບໍ່ມີ Lat/Lng → ຫາພິກັດອົງສາໃນຖັນອື່ນຂອງແຖວ (ເຊັ່ນ ຖັນ location / GPS / ຈຸດທີ່ຕັ້ງ)
@@ -2631,6 +2642,8 @@
           code, autoCode: !code, no, name, group: rawGroup || cur.lastGroup || '',
           sampleDate: rawDate || (m.date !== undefined ? cur.lastDate : '') || cur.rowDate || '',
           province: [district, province].filter(Boolean).join(', '),
+          // ຖັນ Location ທີ່ເປັນຊື່ສະຖານທີ່ (ບໍ່ແມ່ນພິກັດ) → ເກັບເປັນໝາຍເຫດທີ່ຕັ້ງ
+          locationNote: coordVals.find(v => !parseCoordPair(v)) || '',
           lat, lng, customs, extra, excelRow
         });
       });
@@ -2961,7 +2974,7 @@
       const toStations = (block, blockDate = '') => block.parsed.map(st => {
         const customs = { ...st.customs };
         Object.entries(newKeyByCanon).forEach(([canon, key]) => { if (canon in st.extra) customs[key] = st.extra[canon]; });
-        return { id: idSeed++, code: st.code, name: st.name, province: st.province, lat: st.lat, lng: st.lng, sampleDate: st.sampleDate || blockDate || '', section: st.section || block.section || '', customs, status: evalStatus(customs) };
+        return { id: idSeed++, code: st.code, name: st.name, province: st.province, lat: st.lat, lng: st.lng, sampleDate: st.sampleDate || blockDate || '', section: st.section || block.section || '', locationNote: st.locationNote || '', customs, status: evalStatus(customs) };
       });
 
       // ຕາຕະລາງທີ່ຫົວຂໍ້ຄືກັນ (ໃນໄຟລ໌ດຽວກັນ) → ລວມເປັນກຸ່ມດຽວກ່ອນບັນທຶກ
@@ -3442,6 +3455,7 @@
                 ${st.section ? `<span style="color:#6366f1;">📂 ${escAttr(st.section)}</span><br>` : ''}
                 <b style="font-size: 13px; color: #0f172a;">📍 ${st.name} (${st.code})</b><br>
                 ${st.sampleDate ? `<b>📅 ວັນທີ:</b> ${fmtSampleDate(st.sampleDate)}<br>` : ''}
+                ${st.locationNote ? `<b>📌 ທີ່ຕັ້ງ:</b> ${escAttr(st.locationNote)}<br>` : ''}
                 <b>ແຂວງ:</b> ${st.province}<br>
                 ${customPopupHTML}
                 <b>ສະຖານະ:</b> <span style="font-weight: bold; color: ${st.status && st.status.isAlert ? '#dc2626' : '#16a34a'};">${st.status ? st.status.text : '✅ Normal'}</span>
