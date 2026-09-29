@@ -330,9 +330,13 @@
             <input type="text" id="name" required autocomplete="off" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-sky-500" placeholder="ສະຖານີທີ 1...">
           </div>
 
-          <div class="grid grid-cols-2 gap-2">
-            <input type="text" inputmode="decimal" id="lat" required autocomplete="off" class="w-full border p-2 rounded text-xs outline-none" placeholder="Lat ຫຼື ວາງ 17°58'13&quot;N 102°35'48&quot;E" value="17.9757" title="ໃສ່ທົດສະນິຍົມ ຫຼື ວາງພິກັດອົງສາ ທັງຄູ່ ລະບົບຈະແປງໃຫ້">
-            <input type="text" inputmode="decimal" id="lng" required autocomplete="off" class="w-full border p-2 rounded text-xs outline-none" placeholder="Lng" value="102.6331">
+          <div class="rounded-lg border border-slate-200 p-2 space-y-1.5 bg-slate-50/60">
+            <label class="block text-[11px] font-semibold text-slate-600">🧭 ພິກັດ GPS — ໃສ່ແບບໃດກໍ່ໄດ້ (ອີກແບບຈະແປງໃຫ້ເອງ)</label>
+            <input type="text" id="gpsDms" autocomplete="off" class="w-full border p-2 rounded text-xs outline-none focus:ring-2 focus:ring-sky-500 bg-white" placeholder="ແບບອົງສາ: 17°58'13.0&quot;N 102°35'48.1&quot;E">
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" inputmode="decimal" id="lat" required autocomplete="off" class="w-full border p-2 rounded text-xs outline-none bg-white" placeholder="Lat (ເຊັ່ນ 17.9757)" value="17.9757" title="Latitude ແບບທົດສະນິຍົມ">
+              <input type="text" inputmode="decimal" id="lng" required autocomplete="off" class="w-full border p-2 rounded text-xs outline-none bg-white" placeholder="Lng (ເຊັ່ນ 102.6331)" value="102.6331" title="Longitude ແບບທົດສະນິຍົມ">
+            </div>
           </div>
 
           <!-- Dynamic Indicators Container & Quick Add Section -->
@@ -851,6 +855,7 @@
         (position) => {
           document.getElementById('lat').value = position.coords.latitude.toFixed(6);
           document.getElementById('lng').value = position.coords.longitude.toFixed(6);
+          document.getElementById('lat').dispatchEvent(new Event('change')); // ອັບເດດຊ່ອງພິກັດອົງສາ
           gpsBtn.innerText = '🎯 ດຶງ GPS';
           gpsBtn.disabled = false;
 
@@ -1871,6 +1876,7 @@
         lat: parseCoordPart(document.getElementById('lat').value),
         lng: parseCoordPart(document.getElementById('lng').value),
         sampleDate: document.getElementById('sampleDate').value || '',
+        gps: (document.getElementById('gpsDms')?.value || '').trim() || toDMS(parseCoordPart(document.getElementById('lat').value), parseCoordPart(document.getElementById('lng').value)),
         customs: customValues,
         status: evalStatus(customValues)
       };
@@ -2391,6 +2397,47 @@
       Swal.fire({ icon: 'success', title: `ແປງພິກັດແລ້ວ ${fixes.length} ສະຖານີ`, text: 'ຈຸດສະແດງໃນແຜນທີ່ແລ້ວ', timer: 2000, showConfirmButton: false });
     }
 
+    // ທົດສະນິຍົມ → ອົງສາ: 17.970278, 102.596694 → 17°58'13.0"N 102°35'48.1"E
+    function toDMSPart(v, pos, neg) {
+      if (v === null || v === undefined || v === '' || isNaN(v)) return '';
+      const a = Math.abs(Number(v));
+      let d = Math.floor(a), m = Math.floor((a - d) * 60), sec = Math.round(((a - d) * 60 - m) * 600) / 10;
+      if (sec >= 60) { sec = 0; m++; }
+      if (m >= 60) { m = 0; d++; }
+      return `${d}°${String(m).padStart(2, '0')}'${sec.toFixed(1).padStart(4, '0')}"${Number(v) < 0 ? neg : pos}`;
+    }
+    function toDMS(lat, lng) {
+      const a = toDMSPart(lat, 'N', 'S'), b = toDMSPart(lng, 'E', 'W');
+      return a && b ? `${a} ${b}` : '';
+    }
+    // ຂໍ້ຄວາມພິກັດອົງສາຂອງສະຖານີ: ທີ່ບັນທຶກໄວ້ → ຈາກຊ່ອງໂຕຊີ້ວັດເກົ່າ (GPS/location) → ແປງຈາກ Lat/Lng
+    function gpsTextOf(st) {
+      if (!st) return '';
+      if (st.gps) return st.gps;
+      const v = Object.values(st.customs || {}).find(x => looksLikeCoordText(x) && parseCoordPair(x));
+      if (v) return v;
+      return hasCoord(st) ? toDMS(st.lat, st.lng) : '';
+    }
+    // ເຊື່ອມ 3 ຊ່ອງ: ອົງສາ ↔ Lat/Lng (ພິມຊ່ອງໃດ ອີກຊ່ອງອັບເດດໃຫ້ເອງ)
+    function bindGpsFields(dmsEl, latEl, lngEl) {
+      if (!dmsEl || !latEl || !lngEl || dmsEl.dataset.bound) return;
+      dmsEl.dataset.bound = '1';
+      const fromDms = () => {
+        const pr = parseCoordPair(dmsEl.value);
+        dmsEl.classList.toggle('ring-2', !!dmsEl.value.trim() && !pr);
+        dmsEl.classList.toggle('ring-rose-300', !!dmsEl.value.trim() && !pr);
+        if (pr) { latEl.value = pr.lat; lngEl.value = pr.lng; }
+      };
+      const fromDec = () => {
+        const la = parseCoordPart(latEl.value), lo = parseCoordPart(lngEl.value);
+        if (!isNaN(la) && !isNaN(lo) && document.activeElement !== dmsEl) dmsEl.value = toDMS(la, lo);
+      };
+      dmsEl.addEventListener('input', fromDms);
+      [latEl, lngEl].forEach(el => el.addEventListener('input', fromDec));
+      [latEl, lngEl].forEach(el => el.addEventListener('change', fromDec));
+      if (!dmsEl.value) fromDec();
+    }
+
     // ຊ່ອງ Lat/Lng: ວາງພິກັດອົງສາ (ຫຼື ຄູ່ Lat, Lng) → ແປງ ແລະ ແຍກໃສ່ 2 ຊ່ອງໃຫ້ເອງ
     function smartCoordInput(latEl, lngEl) {
       if (!latEl || !lngEl || latEl.dataset.smart) return;
@@ -2405,6 +2452,7 @@
           const n = parseCoordPart(v);
           if (!isNaN(n)) el.value = n;
         }
+        latEl.dispatchEvent(new Event('change'));
       };
       [latEl, lngEl].forEach(el => {
         el.addEventListener('change', () => handle(el));
@@ -2644,6 +2692,7 @@
           province: [district, province].filter(Boolean).join(', '),
           // ຖັນ Location ທີ່ເປັນຊື່ສະຖານທີ່ (ບໍ່ແມ່ນພິກັດ) → ເກັບເປັນໝາຍເຫດທີ່ຕັ້ງ
           locationNote: coordVals.find(v => !parseCoordPair(v)) || '',
+          gps: coordVals.find(v => parseCoordPair(v) && /[°º˚]/.test(v)) || (m.lat !== undefined && /[°º˚]/.test(cellText(row[m.lat])) ? [cellText(row[m.lat]), m.lng !== undefined ? cellText(row[m.lng]) : ''].filter(Boolean).join(' ') : ''),
           lat, lng, customs, extra, excelRow
         });
       });
@@ -2974,7 +3023,7 @@
       const toStations = (block, blockDate = '') => block.parsed.map(st => {
         const customs = { ...st.customs };
         Object.entries(newKeyByCanon).forEach(([canon, key]) => { if (canon in st.extra) customs[key] = st.extra[canon]; });
-        return { id: idSeed++, code: st.code, name: st.name, province: st.province, lat: st.lat, lng: st.lng, sampleDate: st.sampleDate || blockDate || '', section: st.section || block.section || '', locationNote: st.locationNote || '', customs, status: evalStatus(customs) };
+        return { id: idSeed++, code: st.code, name: st.name, province: st.province, lat: st.lat, lng: st.lng, sampleDate: st.sampleDate || blockDate || '', section: st.section || block.section || '', locationNote: st.locationNote || '', gps: st.gps || (st.lat !== null ? toDMS(st.lat, st.lng) : ''), customs, status: evalStatus(customs) };
       });
 
       // ຕາຕະລາງທີ່ຫົວຂໍ້ຄືກັນ (ໃນໄຟລ໌ດຽວກັນ) → ລວມເປັນກຸ່ມດຽວກ່ອນບັນທຶກ
@@ -3456,6 +3505,7 @@
                 <b style="font-size: 13px; color: #0f172a;">📍 ${st.name} (${st.code})</b><br>
                 ${st.sampleDate ? `<b>📅 ວັນທີ:</b> ${fmtSampleDate(st.sampleDate)}<br>` : ''}
                 ${st.locationNote ? `<b>📌 ທີ່ຕັ້ງ:</b> ${escAttr(st.locationNote)}<br>` : ''}
+                <b>🧭 ພິກັດ:</b> <span style="font-family:monospace">${escAttr(gpsTextOf(st))}</span><br>
                 <b>ແຂວງ:</b> ${st.province}<br>
                 ${customPopupHTML}
                 <b>ສະຖານະ:</b> <span style="font-weight: bold; color: ${st.status && st.status.isAlert ? '#dc2626' : '#16a34a'};">${st.status ? st.status.text : '✅ Normal'}</span>
@@ -3575,9 +3625,14 @@
 
     document.addEventListener('focusin', e => {
       const id = e.target && e.target.id || '';
-      if (id === 'lat' || id === 'lng') smartCoordInput(document.getElementById('lat'), document.getElementById('lng'));
+      if (id === 'lat' || id === 'lng' || id === 'gpsDms') {
+        smartCoordInput(document.getElementById('lat'), document.getElementById('lng'));
+        bindGpsFields(document.getElementById('gpsDms'), document.getElementById('lat'), document.getElementById('lng'));
+      }
       const m = id.match(/^(edit_.+_)(lat|lng)$/);
       if (m) smartCoordInput(document.getElementById(m[1] + 'lat'), document.getElementById(m[1] + 'lng'));
+      const g = id.match(/^(edit_.+_)(lat|lng|gps)$/);
+      if (g) bindGpsFields(document.getElementById(g[1] + 'gps'), document.getElementById(g[1] + 'lat'), document.getElementById(g[1] + 'lng'));
     });
 
     function renderStationEditSection(fbKey, stIdx, st) {
@@ -3597,8 +3652,9 @@
             ${editInput(p + 'province', 'ແຂວງ/ເມືອງ', st.province)}
             ${editInput(p + 'sampleDate', '📅 ວັນທີເກັບຕົວຢ່າງ', st.sampleDate || '', 'placeholder="2025-04-25 ຫຼື 2025-04"')}
             ${editInput(p + 'section', '📂 ໂຄງການ / ກຸ່ມຕາຕະລາງ', st.section || '', 'placeholder="ປ່ອຍຫວ່າງ = ທົ່ວໄປ"')}
-            ${editInput(p + 'lat', 'Lat', st.lat)}
-            ${editInput(p + 'lng', 'Lng', st.lng)}
+            ${editInput(p + 'gps', '🧭 ພິກັດອົງສາ (GPS)', gpsTextOf(st), 'placeholder="17°58\'13.0&quot;N 102°35\'48.1&quot;E"')}
+            ${editInput(p + 'lat', 'Lat', st.lat ?? '')}
+            ${editInput(p + 'lng', 'Lng', st.lng ?? '')}
           </div>
           ${valueInds().length ? `
             <div>
@@ -3675,6 +3731,12 @@
       const editor = currentUserName || get('editor');
       const code = get('code');
       const name = get('name');
+      // ມີແຕ່ຊ່ອງອົງສາ → ແປງເປັນ Lat/Lng
+      const gpsPair = parseCoordPair(get('gps'));
+      if (gpsPair && get('lat') === '' && get('lng') === '') {
+        document.getElementById(p + 'lat').value = gpsPair.lat;
+        document.getElementById(p + 'lng').value = gpsPair.lng;
+      }
       const noCoord = get('lat') === '' && get('lng') === '';
       // ບໍ່ມີ Lat/Lng ແຕ່ມີພິກັດອົງສາໃນຊ່ອງໂຕຊີ້ວັດ (ເຊັ່ນ location) → ໃຊ້ອັນນັ້ນ
       let lat = noCoord ? null : parseCoordPart(get('lat'));
@@ -3696,6 +3758,7 @@
         province: get('province'),
         sampleDate: normalizeDateText(get('sampleDate')),
         section: get('section'),
+        gps: get('gps') || (lat !== null && !isNaN(lat) ? toDMS(lat, lng) : ''),
         lat, lng,
         customs,
         status: evalStatus(customs)
@@ -3842,7 +3905,7 @@
       const td = 'px-2 py-1.5 border border-slate-300 whitespace-nowrap';
       const colLetters = n => { let s = ''; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
 
-      const headers = ['📅 ວັນທີ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng',
+      const headers = ['📅 ວັນທີ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', '🧭 ພິກັດ (ອົງສາ)', 'Lat', 'Lng',
         ...valueInds().map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
 
       // ຈັດລຽງຕາມວັນທີ (ເກົ່າ→ໃໝ່) ແລະ ກອງຕາມວັນທີທີ່ເລືອກ — ເກັບ index ເດີມໄວ້ສຳລັບປຸ່ມແກ້ໄຂ/ລົບ
@@ -3877,6 +3940,7 @@
             <td class="${td} !whitespace-normal break-words min-w-[70px] max-w-[180px] font-mono font-bold text-indigo-700">${st.code || '-'}</td>
             <td class="${td} !whitespace-normal break-words min-w-[90px] max-w-[220px] font-medium text-slate-800">${st.name || '-'}</td>
             <td class="${td}">${st.province || '-'}</td>
+            <td class="${td} font-mono text-[10.5px] text-slate-600">${escAttr(gpsTextOf(st)) || '<span class="text-amber-500">—</span>'}</td>
             <td class="${td} text-right tabular-nums text-slate-500" ${st.lat === null || st.lat === undefined ? 'title="ບໍ່ມີພິກັດ — ກົດ ✏️ ເພື່ອເພີ່ມ"' : ''}>${st.lat ?? '<span class="text-amber-500">—</span>'}</td>
             <td class="${td} text-right tabular-nums text-slate-500">${st.lng ?? '<span class="text-amber-500">—</span>'}</td>
             ${indCells}
@@ -3905,7 +3969,7 @@
         const hasVal = (i) => sec.list.some(x => { const v = x.st.customs ? x.st.customs[i.key] : undefined; return v !== undefined && v !== '-' && v !== '' && v !== null; });
         const inds = showAllCols[item.fbKey] ? valueInds() : valueInds().filter(hasVal);
         const hiddenCols = valueInds().length - inds.length;
-        const headers = ['📅 ວັນທີ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng',
+        const headers = ['📅 ວັນທີ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', '🧭 ພິກັດ (ອົງສາ)', 'Lat', 'Lng',
           ...inds.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
         return `
           ${multiSec ? `<div class="flex flex-wrap items-center gap-2 mt-2 px-2 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-[12px]">
@@ -3974,12 +4038,12 @@
       if (!item) return;
       const stations = item.stations || [item];
       const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-      const head = ['No.', 'ໂຄງການ/ກຸ່ມ', 'ວັນທີເກັບຕົວຢ່າງ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng', ...valueInds().map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
+      const head = ['No.', 'ໂຄງການ/ກຸ່ມ', 'ວັນທີເກັບຕົວຢ່າງ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'ພິກັດ (ອົງສາ)', 'Lat', 'Lng', ...valueInds().map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
       let csv = '\uFEFF' + [q('ບໍລິສັດ: ' + (item.companyName || item.name || '')), q('ວັນທີ: ' + (item.date || '')), q('ຜູ້ບັນທຶກ: ' + (item.recordedBy || ''))].join(',') + '\n';
       if (item.projectLocation) csv += q('ທີ່ຕັ້ງ: ' + item.projectLocation) + '\n';
       csv += '\n' + head.map(q).join(',') + '\n';
       stations.forEach((st, k) => {
-        const row = [k + 1, st.section || '', st.sampleDate || '', st.code, st.name, st.province, st.lat ?? '', st.lng ?? '',
+        const row = [k + 1, st.section || '', st.sampleDate || '', st.code, st.name, st.province, gpsTextOf(st), st.lat ?? '', st.lng ?? '',
           ...valueInds().map(i => st.customs ? (st.customs[i.key] ?? '-') : '-'),
           st.status ? st.status.text.replace(/[^\w\s]/g, '').trim() : 'Normal'];
         csv += row.map(q).join(',') + '\n';
@@ -4660,6 +4724,7 @@
       btn.disabled = false;
     }
 
+    window.addEventListener('load', () => setTimeout(() => bindGpsFields(document.getElementById('gpsDms'), document.getElementById('lat'), document.getElementById('lng')), 300));
     window.onload = () => {
       initMap();
       updateRBACUI();
