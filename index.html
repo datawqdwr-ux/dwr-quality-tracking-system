@@ -87,6 +87,12 @@
       background: var(--accent); padding: 11px 20px; border-radius: 12px;
     }
 
+    .whoami { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: #fff; border: 1.5px solid #d7e4e7; border-radius: 14px; padding: 12px 16px; font-size: 15px; }
+    .whoami[hidden] { display: none; }
+    .whoami b { color: var(--river); }
+    .whoami .role { font-size: 13px; padding: 2px 10px; border-radius: 999px; background: color-mix(in srgb, var(--current) 14%, #fff); color: var(--channel); font-weight: 600; }
+    .whoami button { margin-left: auto; font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); background: none; border: 1.5px solid #d7e4e7; border-radius: 10px; padding: 6px 12px; cursor: pointer; }
+    .whoami button:hover { color: #b42318; border-color: #f4b8c3; }
     @media (max-width: 900px) {
       .page { grid-template-columns: 1fr; }
       .bank { padding: 36px 26px 150px; min-height: auto; }
@@ -123,6 +129,7 @@
     </section>
 
     <main class="choices">
+      <div id="whoami" class="whoami" hidden></div>
       <h2>ເຂົ້າໃຊ້ລະບົບໃດ?</h2>
 
       <a class="system quality" href="water-quality.html">
@@ -165,5 +172,23 @@
       </a>
     </main>
   </div>
+  <script>
+    // ສະແດງວ່າເຂົ້າລະບົບຢູ່ດ້ວຍບັນຊີໃດ (Session ໃຊ້ຮ່ວມກັນທັງ 2 ລະບົບ)
+    (function () {
+      let s = null;
+      try { s = JSON.parse(localStorage.getItem('waterSession') || sessionStorage.getItem('waterSession') || 'null'); } catch (e) {}
+      const box = document.getElementById('whoami');
+      if (!s || !box) return;
+      const role = { SUPER_ADMIN: '👑 Super Admin', STAFF: '🛠️ Staff', VIEWER: '👁️ ເບິ່ງຢ່າງດຽວ' }[s.role] || s.role;
+      const name = String(s.name || 'ຜູ້ໃຊ້').replace(/[<>&]/g, '');
+      box.innerHTML = `<span>ເຂົ້າລະບົບຢູ່: <b>${name}</b></span><span class="role">${role}</span><button type="button" id="signout">ອອກຈາກລະບົບ</button>`;
+      box.hidden = false;
+      document.getElementById('signout').onclick = () => {
+        localStorage.removeItem('waterSession'); sessionStorage.removeItem('waterSession');
+        localStorage.removeItem('lao_water_current_user_v2'); sessionStorage.removeItem('guestMode');
+        box.hidden = true;
+      };
+    })();
+  </script>
 </body>
 </html>
