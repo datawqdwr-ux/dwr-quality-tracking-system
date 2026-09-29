@@ -438,7 +438,7 @@
         </div>
         <button onclick="addCustomIndicator()" class="w-full bg-emerald-700 text-white font-medium py-2 rounded-lg text-sm shadow">➕ ເພີ່ມ Indicator</button>
         <div class="border-t pt-2">
-          <ul id="customIndicatorsList" class="space-y-1 max-h-32 overflow-y-auto"></ul>
+          <div id="customIndicatorsList" class="text-xs"></div>
         </div>
       </div>
 
@@ -1373,13 +1373,34 @@
     }
 
     // ລົບຖາວອນ: ລົບໂຕຊີ້ວັດ + ຄ່າຂອງມັນໃນທຸກສະຖານີ + ເກນເຕືອນໄພ (ກູ້ຄືນບໍ່ໄດ້)
-    async function deleteIndicatorPermanently(key) {
+    async function deleteIndicatorsPermanently(keys) {
+      if (keys.length === 1) return deleteIndicatorPermanently(keys[0]);
+      if (currentUserRole !== 'SUPER_ADMIN') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
+      const inds = keys.map(k => masterIndicators.find(m => m.key === k)).filter(Boolean);
+      const n = inds.reduce((t, i) => t + countValuesFor(i.key), 0);
+      const { isConfirmed } = await Swal.fire({
+        icon: 'warning',
+        title: `🗑️ ລົບ ${inds.length} ໂຕຊີ້ວັດ ຖາວອນ?`,
+        html: `<div class="text-sm leading-relaxed">${inds.map(i => `<b>${escAttr(i.name)}</b>`).join(', ')}<br><br>
+               ຈະລົບ <b class="text-rose-600">${n} ຄ່າ</b> ໃນທຸກສະຖານີ ແລະ ເກນເຕືອນໄພ. <b class="text-rose-600">ກູ້ຄືນບໍ່ໄດ້.</b><br><br>ພິມ <b>ລົບ</b> ເພື່ອຢືນຢັນ:</div>`,
+        input: 'text', inputPlaceholder: 'ລົບ',
+        showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: '🗑️ ລົບຖາວອນ', cancelButtonText: 'ຍົກເລີກ',
+        inputValidator: v => v.trim() !== 'ລົບ' ? 'ກະລຸນາພິມ "ລົບ"' : undefined
+      });
+      if (!isConfirmed) return;
+      for (const k of keys) await deleteIndicatorPermanently(k, true);
+      indSel.clear();
+      renderSettingsList();
+      Swal.fire({ icon: 'success', title: `ລົບ ${inds.length} ໂຕຊີ້ວັດ ຖາວອນແລ້ວ` });
+    }
+
+    async function deleteIndicatorPermanently(key, skipConfirm = false) {
       if (currentUserRole !== 'SUPER_ADMIN') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!', text: 'ສະເພາະ Super Admin' });
       const ind = masterIndicators.find(m => m.key === key) || customIndicators.find(c => c.key === key);
       if (!ind) return;
       const n = countValuesFor(key);
 
-      const { isConfirmed } = await Swal.fire({
+      const { isConfirmed } = skipConfirm ? { isConfirmed: true } : await Swal.fire({
         icon: 'warning',
         title: `🗑️ ລົບ "${ind.name}" ຖາວອນ?`,
         html: `<div class="text-sm leading-relaxed">
@@ -1421,7 +1442,7 @@
       updates['system_config/master_indicators'] = newMaster;
       updates['system_config/thresholds'] = newThr;
 
-      Swal.fire({ title: 'ກຳລັງລົບ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      if (!skipConfirm) Swal.fire({ title: 'ກຳລັງລົບ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       try {
         await db.ref().update(updates);
         customIndicators = remaining;
@@ -1439,35 +1460,178 @@
         renderFormCustomInputs();
         renderThresholdFields();
         render();
-        Swal.fire({ icon: 'success', title: `ລົບ "${ind.name}" ຖາວອນແລ້ວ`, text: `ລົບ ${n} ຄ່າ ອອກຈາກລະບົບ` });
+        if (!skipConfirm) Swal.fire({ icon: 'success', title: `ລົບ "${ind.name}" ຖາວອນແລ້ວ`, text: `ລົບ ${n} ຄ່າ ອອກຈາກລະບົບ` });
       } catch (err) {
         Swal.fire({ icon: 'error', title: 'ລົບບໍ່ສຳເລັດ', text: err.message });
       }
     }
 
+    /* --- ຈັດການໂຕຊີ້ວັດ (ແບບ Gmail): ເລືອກຫຼາຍໂຕ, ເຊື່ອງກຣາຟ/ຄ່າ ແຍກກັນ, ຫຍໍ້ກຸ່ມໄດ້ --- */
+    const indSel = new Set();       // ໂຕຊີ້ວັດທີ່ເລືອກ (ທັງໃຊ້ຢູ່ ແລະ ເກັບໄວ້)
+    const indCollapsed = { active: false, archived: true };
+    let indSearch = '';
+
+    function archivedInds() { return masterIndicators.filter(m => !customIndicators.some(c => c.key === m.key)); }
+
+    function saveIndicatorConfig() {
+      db.ref('system_config/indicators').set(customIndicators);
+      renderSettingsList();
+      renderFormCustomInputs();
+      renderThresholdFields();
+      render();
+    }
+
+    function toggleIndCollapse(g) { indCollapsed[g] = !indCollapsed[g]; renderSettingsList(); }
+    function setIndSearch(v) { indSearch = v; renderSettingsList(); const el = document.getElementById('indSearchBox'); if (el) { el.focus(); el.setSelectionRange(v.length, v.length); } }
+    function toggleIndSel(key, on) { on ? indSel.add(key) : indSel.delete(key); renderSettingsList(); }
+    function toggleIndSelMenu() { document.getElementById('indSelMenu')?.classList.toggle('hidden'); }
+
+    // ເລືອກຕາມເງື່ອນໄຂ (ຄືເມນູ ☐▾ ຂອງ Gmail)
+    function selectInds(mode) {
+      indSel.clear();
+      const pick = list => list.forEach(i => indSel.add(i.key));
+      if (mode === 'all') pick([...customIndicators, ...archivedInds()]);
+      if (mode === 'active') pick(customIndicators);
+      if (mode === 'chartOn') pick(customIndicators.filter(i => !i.noChart));
+      if (mode === 'chartOff') pick(customIndicators.filter(i => i.noChart));
+      if (mode === 'tableOff') pick(customIndicators.filter(i => i.noTable));
+      if (mode === 'formOff') pick(customIndicators.filter(i => i.noForm));
+      if (mode === 'empty') pick(customIndicators.filter(i => countValuesFor(i.key) === 0));
+      if (mode === 'archived') pick(archivedInds());
+      renderSettingsList();
+    }
+    function toggleSelectAllInds() {
+      const all = [...customIndicators, ...archivedInds()];
+      if (indSel.size && indSel.size === all.length) indSel.clear(); else all.forEach(i => indSel.add(i.key));
+      renderSettingsList();
+    }
+
+    function setIndFlag(key, flag, value) {
+      if (currentUserRole !== 'SUPER_ADMIN') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
+      const ind = customIndicators.find(i => i.key === key);
+      if (!ind) return;
+      ind[flag] = value;
+      saveIndicatorConfig();
+    }
+
+    // ຄຳສັ່ງກັບໂຕທີ່ເລືອກທັງໝົດ
+    async function bulkIndAction(action) {
+      if (currentUserRole !== 'SUPER_ADMIN') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
+      const keys = [...indSel];
+      if (!keys.length) return;
+      const act = customIndicators.filter(i => keys.includes(i.key));
+      const arc = archivedInds().filter(i => keys.includes(i.key));
+
+      if (action === 'chartOff' || action === 'chartOn') act.forEach(i => i.noChart = action === 'chartOff');
+      else if (action === 'tableOff' || action === 'tableOn') act.forEach(i => i.noTable = action === 'tableOff');
+      else if (action === 'formOff' || action === 'formOn') act.forEach(i => i.noForm = action === 'formOff');
+      else if (action === 'archive') {
+        if (!act.length) return;
+        const n = act.reduce((t, i) => t + countValuesFor(i.key), 0);
+        const ok = await Swal.fire({ icon: 'question', title: `🙈 ເກັບ ${act.length} ໂຕຊີ້ວັດ?`, html: `ຈະຫາຍຈາກທຸກບ່ອນ (ກຣາຟ + ຄ່າ).<br><b class="text-emerald-700">✅ ຂໍ້ມູນ ${n} ຄ່າ ບໍ່ຖືກລົບ</b> — ສະແດງຄືນໄດ້ທຸກເວລາ`, showCancelButton: true, confirmButtonText: '🙈 ເກັບໄວ້', cancelButtonText: 'ຍົກເລີກ', confirmButtonColor: '#6366f1' });
+        if (!ok.isConfirmed) return;
+        act.forEach(i => { if (!masterIndicators.some(m => m.key === i.key)) masterIndicators.push(i); });
+        db.ref('system_config/master_indicators').set(masterIndicators);
+        customIndicators = customIndicators.filter(i => !keys.includes(i.key));
+      }
+      else if (action === 'restore') {
+        arc.forEach(i => { if (!customIndicators.some(c => c.key === i.key)) customIndicators.push({ ...i, noChart: false, noTable: false, noForm: false }); });
+      }
+      else if (action === 'delete') {
+        if (!arc.length) return Swal.fire({ icon: 'info', title: 'ລົບຖາວອນໄດ້ສະເພາະໂຕທີ່ເກັບໄວ້', text: 'ກະລຸນາ 🙈 ເກັບໄວ້ກ່ອນ ແລ້ວຈຶ່ງລົບ' });
+        return deleteIndicatorsPermanently(arc.map(i => i.key));
+      }
+      indSel.clear();
+      saveIndicatorConfig();
+    }
+
     function renderSettingsList() {
-      const list = document.getElementById('customIndicatorsList');
-      if (!list) return;
-      const active = customIndicators.map(i => `
-          <li class="flex justify-between items-center bg-slate-50 p-2 rounded border text-xs">
-            <span><strong>${escAttr(i.name)}</strong> (${escAttr(i.unit || '-')})</span>
-            <button onclick="removeCustomIndicator('${i.key}')" class="text-indigo-600 font-bold" title="ເຊື່ອງ (ຂໍ້ມູນບໍ່ຫາຍ)">🙈 ເຊື່ອງ</button>
-          </li>`).join('');
-      const hidden = masterIndicators.filter(m => !customIndicators.some(c => c.key === m.key));
-      const hiddenHtml = hidden.length ? `
-          <li class="pt-2 mt-1 border-t text-[11px] font-bold text-slate-500">🙈 ໂຕຊີ້ວັດທີ່ເຊື່ອງໄວ້ (ຂໍ້ມູນຍັງຢູ່ຄົບ)</li>
-          ${hidden.map(i => {
-            const n = countValuesFor(i.key);
-            return `
-            <li class="flex justify-between items-center bg-white p-2 rounded border border-dashed text-xs text-slate-500">
-              <span><strong>${escAttr(i.name)}</strong> (${escAttr(i.unit || '-')}) · <span class="${n ? 'text-emerald-700' : ''}">${n} ຄ່າ</span></span>
-              <span class="flex gap-3 shrink-0">
-                <button onclick="restoreIndicator('${i.key}')" class="text-emerald-700 font-bold">↩️ ສະແດງຄືນ</button>
-                <button onclick="deleteIndicatorPermanently('${i.key}')" class="text-rose-600 font-bold" title="ລົບໂຕຊີ້ວັດ ແລະ ຄ່າທັງໝົດຂອງມັນ">🗑️ ລົບຖາວອນ</button>
+      const box = document.getElementById('customIndicatorsList');
+      if (!box) return;
+      const q = normHeader(indSearch);
+      const match = i => !q || normHeader(`${i.name} ${i.unit || ''}`).includes(q);
+      const active = customIndicators.filter(match);
+      const archived = archivedInds().filter(match);
+      const allCount = customIndicators.length + archivedInds().length;
+      [...indSel].forEach(k => { if (![...customIndicators, ...archivedInds()].some(i => i.key === k)) indSel.delete(k); });
+      const selN = indSel.size;
+      const selAct = customIndicators.filter(i => indSel.has(i.key)).length;
+      const selArc = archivedInds().filter(i => indSel.has(i.key)).length;
+
+      const pill = (on, onTxt, offTxt, click, title) =>
+        `<button type="button" onclick="${click}" title="${title}" class="px-1.5 py-0.5 rounded-md border text-[10px] font-bold whitespace-nowrap ${on ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-slate-100 border-slate-300 text-slate-400 line-through'}">${on ? onTxt : offTxt}</button>`;
+
+      const row = (i, archivedRow) => {
+        const n = countValuesFor(i.key);
+        return `
+          <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg border ${indSel.has(i.key) ? 'bg-indigo-50 border-indigo-300' : archivedRow ? 'bg-white border-dashed' : 'bg-slate-50'} cursor-pointer">
+            <input type="checkbox" ${indSel.has(i.key) ? 'checked' : ''} onchange="toggleIndSel('${i.key}', this.checked)">
+            <span class="flex-1 min-w-0 truncate ${archivedRow ? 'text-slate-400' : ''}"><b>${escAttr(i.name)}</b> <span class="text-slate-400">(${escAttr(i.unit || '-')})</span></span>
+            <span class="text-[10px] ${n ? 'text-emerald-700' : 'text-slate-300'} shrink-0">${n} ຄ່າ</span>
+            ${archivedRow ? '' : `
+              ${pill(!i.noForm, '✏️ ຟອມ', '✏️ ຟອມ', `event.preventDefault(); setIndFlag('${i.key}', 'noForm', ${!i.noForm})`, i.noForm ? 'ຊ່ອງປ້ອນຄ່າຖືກເຊື່ອງ — ກົດເພື່ອສະແດງ' : 'ມີຊ່ອງປ້ອນຄ່າໃນຟອມ — ກົດເພື່ອເຊື່ອງ')}
+              ${pill(!i.noTable, '📋 ຕາຕະລາງ', '📋 ຕາຕະລາງ', `event.preventDefault(); setIndFlag('${i.key}', 'noTable', ${!i.noTable})`, i.noTable ? 'ເຊື່ອງຈາກຕາຕະລາງ/ແຜນທີ່/Export — ກົດເພື່ອສະແດງ' : 'ສະແດງໃນຕາຕະລາງ — ກົດເພື່ອເຊື່ອງ')}
+              ${pill(!i.noChart, '📈 ກຣາຟ', '📈 ກຣາຟ', `event.preventDefault(); setIndFlag('${i.key}', 'noChart', ${!i.noChart})`, i.noChart ? 'ເຊື່ອງຈາກກຣາຟ — ກົດເພື່ອສະແດງ' : 'ສະແດງໃນກຣາຟ — ກົດເພື່ອເຊື່ອງ')}`}
+          </label>`;
+      };
+
+      const groupHead = (g, label, count) => `
+        <button type="button" onclick="toggleIndCollapse('${g}')" class="w-full flex items-center gap-1.5 text-left font-bold text-slate-700 py-1.5 hover:text-indigo-700">
+          <span class="inline-block w-3 text-slate-400">${indCollapsed[g] ? '▶' : '▼'}</span> ${label} <span class="font-normal text-slate-400">(${count})</span>
+        </button>`;
+
+      box.innerHTML = `
+        <div class="flex flex-wrap items-center gap-2 mb-2">
+          <div class="relative flex items-center border rounded-lg bg-white">
+            <input type="checkbox" class="m-2" title="ເລືອກທັງໝົດ" ${selN && selN === allCount ? 'checked' : ''} onclick="toggleSelectAllInds()" ${selN && selN < allCount ? 'data-partial="1"' : ''}>
+            <button type="button" onclick="toggleIndSelMenu()" class="pr-2 text-slate-500" title="ເລືອກຕາມເງື່ອນໄຂ">▾</button>
+            <div id="indSelMenu" class="hidden absolute left-0 top-full mt-1 z-50 w-48 bg-white border rounded-lg shadow-xl py-1">
+              ${[['all','ທັງໝົດ'],['','ບໍ່ເລືອກ'],['active','ທີ່ໃຊ້ຢູ່'],['chartOn','ທີ່ສະແດງໃນກຣາຟ'],['chartOff','ທີ່ເຊື່ອງຈາກກຣາຟ'],['formOff','ທີ່ເຊື່ອງຈາກຟອມ'],['tableOff','ທີ່ເຊື່ອງຈາກຕາຕະລາງ'],['empty','ທີ່ບໍ່ມີຂໍ້ມູນ (0 ຄ່າ)'],['archived','ທີ່ເກັບໄວ້']]
+                .map(([m, t]) => `<button type="button" onclick="selectInds('${m}')" class="block w-full text-left px-3 py-1.5 hover:bg-indigo-50">${t}</button>`).join('')}
+            </div>
+          </div>
+          <input id="indSearchBox" type="text" value="${escAttr(indSearch)}" oninput="setIndSearch(this.value)" placeholder="🔍 ຄົ້ນຫາໂຕຊີ້ວັດ..." class="flex-1 min-w-[120px] border rounded-lg px-2 py-1.5 outline-none">
+        </div>
+
+        ${selN ? `
+          <div class="flex flex-wrap items-center gap-1.5 mb-2 p-2 rounded-lg bg-indigo-50 border border-indigo-200">
+            <span class="font-bold text-indigo-800 mr-1">ເລືອກ ${selN}</span>
+            ${selAct ? `
+              <span class="inline-flex rounded border bg-white overflow-hidden">
+                <span class="px-1.5 py-1 bg-slate-50 text-slate-500">✏️ ຟອມ</span>
+                <button type="button" onclick="bulkIndAction('formOff')" class="px-2 py-1 border-l font-semibold hover:bg-slate-50">ເຊື່ອງ</button>
+                <button type="button" onclick="bulkIndAction('formOn')" class="px-2 py-1 border-l font-semibold hover:bg-slate-50">ສະແດງ</button>
               </span>
-            </li>`;
-          }).join('')}` : '';
-      list.innerHTML = active + hiddenHtml;
+              <span class="inline-flex rounded border bg-white overflow-hidden">
+                <span class="px-1.5 py-1 bg-slate-50 text-slate-500">📋 ຕາຕະລາງ</span>
+                <button type="button" onclick="bulkIndAction('tableOff')" class="px-2 py-1 border-l font-semibold hover:bg-slate-50">ເຊື່ອງ</button>
+                <button type="button" onclick="bulkIndAction('tableOn')" class="px-2 py-1 border-l font-semibold hover:bg-slate-50">ສະແດງ</button>
+              </span>
+              <span class="inline-flex rounded border bg-white overflow-hidden">
+                <span class="px-1.5 py-1 bg-slate-50 text-slate-500">📈 ກຣາຟ</span>
+                <button type="button" onclick="bulkIndAction('chartOff')" class="px-2 py-1 border-l font-semibold hover:bg-slate-50">ເຊື່ອງ</button>
+                <button type="button" onclick="bulkIndAction('chartOn')" class="px-2 py-1 border-l font-semibold hover:bg-slate-50">ສະແດງ</button>
+              </span>
+              <button type="button" onclick="bulkIndAction('archive')" class="px-2 py-1 rounded bg-white border font-semibold text-indigo-700">🙈 ເກັບໄວ້</button>` : ''}
+            ${selArc ? `
+              <button type="button" onclick="bulkIndAction('restore')" class="px-2 py-1 rounded bg-white border font-semibold text-emerald-700">↩️ ສະແດງຄືນ</button>
+              <button type="button" onclick="bulkIndAction('delete')" class="px-2 py-1 rounded bg-white border font-semibold text-rose-600">🗑️ ລົບຖາວອນ</button>` : ''}
+            <button type="button" onclick="selectInds('')" class="ml-auto text-slate-500 hover:underline">ລ້າງການເລືອກ</button>
+          </div>` : ''}
+
+        ${groupHead('active', '📊 ໂຕຊີ້ວັດທີ່ໃຊ້ຢູ່', customIndicators.length)}
+        ${indCollapsed.active ? '' : `<div class="space-y-1 max-h-60 overflow-y-auto pr-1">${active.map(i => row(i, false)).join('') || '<p class="text-slate-400 text-center py-2">ບໍ່ພົບ</p>'}</div>`}
+
+        ${archivedInds().length ? `
+          <div class="border-t mt-2 pt-1">
+            ${groupHead('archived', '🙈 ເກັບໄວ້ (ຂໍ້ມູນຍັງຢູ່ຄົບ)', archivedInds().length)}
+            ${indCollapsed.archived ? '' : `<div class="space-y-1 max-h-48 overflow-y-auto pr-1">${archived.map(i => row(i, true)).join('') || '<p class="text-slate-400 text-center py-2">ບໍ່ພົບ</p>'}</div>`}
+          </div>` : ''}
+
+        <p class="text-[10px] text-slate-400 mt-2 leading-relaxed">✏️ ຟອມ = ຊ່ອງປ້ອນຄ່າ · 📋 ຕາຕະລາງ = ຕາຕະລາງລາຍລະອຽດ, ແຜນທີ່, Export · 📈 ກຣາຟ = ກຣາຟ ແລະ ຕາຕະລາງຄ່າລຸ່ມກຣາຟ. ແຕ່ລະບ່ອນ ເປີດ/ປິດ ແຍກກັນ ບໍ່ກະທົບກັນ. ການເຊື່ອງບໍ່ລົບຂໍ້ມູນ.</p>`;
+
+      const cb = box.querySelector('[data-partial]');
+      if (cb) cb.indeterminate = true;
     }
 
     function renderFormCustomInputs() {
@@ -1477,12 +1641,12 @@
 
       const isDisabled = (currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'STAFF') ? '' : 'disabled';
 
-      if (customIndicators.length === 0) {
+      if (formInds().length === 0) {
         container.innerHTML = `<p class="text-xs text-slate-400 text-center py-2 bg-slate-50 rounded-lg border border-dashed border-slate-200">ຍັງບໍ່ມີ Indicators (ກົດເພີ່ມປຸ່ມຂ້າງເທິງ)</p>`;
         return;
       }
 
-      customIndicators.forEach(i => {
+      formInds().forEach(i => {
         container.innerHTML += `
           <div>
             <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">${i.name} ${i.unit ? '(' + i.unit + ')' : ''}</label>
@@ -1522,6 +1686,14 @@
       inputEl.focus();
     }
 
+    // ການສະແດງ 3 ບ່ອນ ແຍກກັນເປັນອິດສະຫຼະ (ຂໍ້ມູນຍັງຢູ່ຄົບສະເໝີ):
+    //   noForm  = ເຊື່ອງຊ່ອງປ້ອນຄ່າໃນຟອມ
+    //   noTable = ເຊື່ອງຈາກຕາຕະລາງ / ແຜນທີ່ / Export
+    //   noChart = ເຊື່ອງຈາກກຣາຟ (ລວມຕາຕະລາງຄ່າລຸ່ມກຣາຟ)
+    const formInds = () => customIndicators.filter(i => !i.noForm);
+    const chartInds = () => customIndicators.filter(i => !i.noChart);
+    const valueInds = () => customIndicators.filter(i => !i.noTable);
+
     function evalStatus(customs = {}) {
       let isAlert = false;
       customIndicators.forEach(i => {
@@ -1545,7 +1717,8 @@
       const customValues = {};
       customIndicators.forEach(i => {
         const inputEl = document.getElementById(`input_${i.key}`);
-        const val = inputEl ? inputEl.value : '';
+        if (!inputEl) return; // ໂຕຊີ້ວັດທີ່ເຊື່ອງຄ່າໄວ້ → ບໍ່ມີຊ່ອງໃນຟອມ
+        const val = inputEl.value;
         if (val === 'ND') {
           customValues[i.key] = 'ND';
         } else if (val !== '' && isNaN(parseFloat(val))) {
@@ -2843,7 +3016,7 @@
             const marker = L.marker([st.lat, st.lng], { icon: currentIcon }).addTo(markersGroup);
 
             let customPopupHTML = '';
-            customIndicators.forEach(i => {
+            valueInds().forEach(i => {
               const val = st.customs ? st.customs[i.key] : undefined;
               if (val !== undefined && val !== '-' && val !== '' && val !== null) {
                 customPopupHTML += `<b>${i.name}:</b> ${val} ${i.unit || ''}<br>`;
@@ -2974,7 +3147,7 @@
       const isOpen = editingStation && editingStation.fbKey === fbKey && editingStation.idx === stIdx;
       if (!isOpen) return '';
       const p = `edit_${fbKey}_${stIdx}_`;
-      const indFields = customIndicators.map(i =>
+      const indFields = valueInds().map(i =>
         editInput(`${p}ind_${i.key}`, `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`, st.customs ? (st.customs[i.key] ?? '-') : '-', 'placeholder="ຕົວເລກ, ND, <0.01"')
       ).join('');
 
@@ -2990,7 +3163,7 @@
             ${editInput(p + 'lat', 'Lat', st.lat)}
             ${editInput(p + 'lng', 'Lng', st.lng)}
           </div>
-          ${customIndicators.length ? `
+          ${valueInds().length ? `
             <div>
               <p class="text-[10px] font-bold text-slate-700 mb-1">🧪 ຄ່າໂຕຊີ້ວັດ (ພິມ ND = ບໍ່ພົບ, ປ່ອຍຫວ່າງ = ບໍ່ມີຄ່າ)</p>
               <div class="grid grid-cols-2 md:grid-cols-4 gap-2">${indFields}</div>
@@ -3075,7 +3248,7 @@
 
       const oldStation = item.stations ? item.stations[idx] : item;
       const customs = { ...(oldStation.customs || {}) };
-      customIndicators.forEach(i => { customs[i.key] = parseIndicatorValue(get('ind_' + i.key)); });
+      customIndicators.forEach(i => { if (document.getElementById(p + 'ind_' + i.key)) customs[i.key] = parseIndicatorValue(get('ind_' + i.key)); });
 
       const updated = {
         ...oldStation,
@@ -3230,7 +3403,7 @@
       const colLetters = n => { let s = ''; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
 
       const headers = ['📅 ວັນທີ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng',
-        ...customIndicators.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
+        ...valueInds().map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
 
       // ຈັດລຽງຕາມວັນທີ (ເກົ່າ→ໃໝ່) ແລະ ກອງຕາມວັນທີທີ່ເລືອກ — ເກັບ index ເດີມໄວ້ສຳລັບປຸ່ມແກ້ໄຂ/ລົບ
       const dates = [...new Set(stations.map(s => s.sampleDate || ''))].sort();
@@ -3239,7 +3412,7 @@
         .filter(x => dFilter === 'ALL' || (x.st.sampleDate || '') === dFilter)
         .sort((a, b) => String(a.st.sampleDate || '').localeCompare(String(b.st.sampleDate || '')) || a.i - b.i);
 
-      const rowFn = (list, inds = customIndicators) => list.map(({ st, i: stIdx }, pos) => {
+      const rowFn = (list, inds = valueInds()) => list.map(({ st, i: stIdx }, pos) => {
         // Merge ຊ່ອງວັນທີ ຂອງແຖວຕິດກັນທີ່ວັນທີດຽວກັນ (ຄືໃນ Excel)
         const d = st.sampleDate || '';
         const firstOfGroup = pos === 0 || (list[pos - 1].st.sampleDate || '') !== d;
@@ -3290,8 +3463,8 @@
         const alerts = sec.list.filter(x => x.st.status && x.st.status.isAlert).length;
         // ຖັນໂຕຊີ້ວັດທີ່ບໍ່ມີຄ່າເລີຍໃນຕາຕະລາງນີ້ → ເຊື່ອງ (ກົດ "ສະແດງທຸກຖັນ" ເພື່ອເບິ່ງ)
         const hasVal = (i) => sec.list.some(x => { const v = x.st.customs ? x.st.customs[i.key] : undefined; return v !== undefined && v !== '-' && v !== '' && v !== null; });
-        const inds = showAllCols[item.fbKey] ? customIndicators : customIndicators.filter(hasVal);
-        const hiddenCols = customIndicators.length - inds.length;
+        const inds = showAllCols[item.fbKey] ? valueInds() : valueInds().filter(hasVal);
+        const hiddenCols = valueInds().length - inds.length;
         const headers = ['📅 ວັນທີ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng',
           ...inds.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
         return `
@@ -3361,13 +3534,13 @@
       if (!item) return;
       const stations = item.stations || [item];
       const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-      const head = ['No.', 'ໂຄງການ/ກຸ່ມ', 'ວັນທີເກັບຕົວຢ່າງ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng', ...customIndicators.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
+      const head = ['No.', 'ໂຄງການ/ກຸ່ມ', 'ວັນທີເກັບຕົວຢ່າງ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng', ...valueInds().map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
       let csv = '\uFEFF' + [q('ບໍລິສັດ: ' + (item.companyName || item.name || '')), q('ວັນທີ: ' + (item.date || '')), q('ຜູ້ບັນທຶກ: ' + (item.recordedBy || ''))].join(',') + '\n';
       if (item.projectLocation) csv += q('ທີ່ຕັ້ງ: ' + item.projectLocation) + '\n';
       csv += '\n' + head.map(q).join(',') + '\n';
       stations.forEach((st, k) => {
         const row = [k + 1, st.section || '', st.sampleDate || '', st.code, st.name, st.province, st.lat ?? '', st.lng ?? '',
-          ...customIndicators.map(i => st.customs ? (st.customs[i.key] ?? '-') : '-'),
+          ...valueInds().map(i => st.customs ? (st.customs[i.key] ?? '-') : '-'),
           st.status ? st.status.text.replace(/[^\w\s]/g, '').trim() : 'Normal'];
         csv += row.map(q).join(',') + '\n';
       });
@@ -3525,10 +3698,11 @@
 
     // ຕົວຊີ້ວັດທີ່ເລືອກຕ້ອງມີຢູ່ຈິງ — ຖ້າບໍ່ມີ (ເຊັ່ນ ຄ່າເກົ່າຈາກ localStorage ຫຼື ຖືກລົບ) ໃຫ້ເລືອກໂຕທຳອິດແທນ
     function ensureSelectedIndicator() {
-      if (!customIndicators.length) { currentSelectedIndicator = null; return; }
+      const ci = chartInds();
+      if (!ci.length) { currentSelectedIndicator = null; return; }
       if (currentSelectedIndicator === '__ALL__') return;
-      if (!customIndicators.some(i => i.key === currentSelectedIndicator)) {
-        currentSelectedIndicator = customIndicators[0].key;
+      if (!ci.some(i => i.key === currentSelectedIndicator)) {
+        currentSelectedIndicator = ci[0].key;
       }
     }
 
@@ -3537,13 +3711,13 @@
       if (!container) return;
       ensureSelectedIndicator();
 
-      if (customIndicators.length === 0) {
+      if (chartInds().length === 0) {
         container.innerHTML = '';
         return;
       }
 
       const allActive = currentSelectedIndicator === '__ALL__';
-      container.innerHTML = `<button type="button" onclick="switchChartIndicator('__ALL__')" class="px-2.5 py-1 rounded-lg font-bold ${allActive ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}" title="ສະແດງທຸກໂຕຊີ້ວັດຂອງສະຖານີພ້ອມກັນ">🧪 ທຸກໂຕຊີ້ວັດ</button>` + customIndicators.map(i => {
+      container.innerHTML = `<button type="button" onclick="switchChartIndicator('__ALL__')" class="px-2.5 py-1 rounded-lg font-bold ${allActive ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}" title="ສະແດງທຸກໂຕຊີ້ວັດຂອງສະຖານີພ້ອມກັນ">🧪 ທຸກໂຕຊີ້ວັດ</button>` + chartInds().map(i => {
         const isActive = currentSelectedIndicator === i.key;
         return `<button type="button" onclick="switchChartIndicator('${i.key}')" id="chartBtn-${i.key}" class="px-2.5 py-1 rounded-lg font-bold ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'}">${i.name}</button>`;
       }).join('');
@@ -3656,6 +3830,8 @@
       document.getElementById('chartStationPicker')?.classList.add('hidden');
     }
     document.addEventListener('click', e => {
+      const menu = document.getElementById('indSelMenu');
+      if (menu && !menu.classList.contains('hidden') && !menu.parentElement.contains(e.target)) menu.classList.add('hidden');
       const wrap = document.getElementById('chartStationWrap');
       if (wrap && !wrap.contains(e.target)) closeStationPicker();
     });
@@ -3719,11 +3895,11 @@
     function renderChartSummary(stations) {
       const box = document.getElementById('chartSummary');
       if (!box) return;
-      if (!stations || !stations.length || !customIndicators.length) { box.innerHTML = ''; box.dataset.last = ''; return; }
+      if (!stations || !stations.length || !chartInds().length) { box.innerHTML = ''; box.dataset.last = ''; return; }
 
       const num = v => { const n = parseFloat(v); return (v === undefined || v === null || v === '-' || isNaN(n)) ? null : n; };
       // ສະແດງສະເພາະໂຕຊີ້ວັດທີ່ມີຄ່າຢ່າງນ້ອຍ 1 ສະຖານີ
-      const inds = customIndicators.filter(i => stations.some(st => st.customs && st.customs[i.key] !== undefined && st.customs[i.key] !== '-' && st.customs[i.key] !== ''));
+      const inds = chartInds().filter(i => stations.some(st => st.customs && st.customs[i.key] !== undefined && st.customs[i.key] !== '-' && st.customs[i.key] !== ''));
       if (!inds.length) { box.innerHTML = ''; box.dataset.last = ''; return; }
 
       const th = 'px-2 py-1.5 border border-slate-300 bg-slate-200 text-slate-700 font-bold whitespace-nowrap text-center';
@@ -3803,7 +3979,7 @@
       const MAX_ST = 10;
       const sts = chartData.slice(0, MAX_ST);
       const num = v => { const n = parseFloat(v); return (v === undefined || v === null || v === '-' || isNaN(n)) ? null : n; };
-      const inds = customIndicators.filter(i => sts.some(st => num(st.customs ? st.customs[i.key] : undefined) !== null));
+      const inds = chartInds().filter(i => sts.some(st => num(st.customs ? st.customs[i.key] : undefined) !== null));
       if (!inds.length) return chartMessage('📭 ສະຖານີທີ່ເລືອກ ບໍ່ມີຄ່າໂຕຊີ້ວັດທີ່ເປັນຕົວເລກ');
 
       const capEl = document.getElementById('chartCaption');
@@ -3886,11 +4062,11 @@
 
       ensureSelectedIndicator();
       if (!customIndicators.length || (chartDataset === 'ALL' && !chartStations.length)) renderChartSummary([]);
-      if (!customIndicators.length) return chartMessage('🧪 ຍັງບໍ່ມີໂຕຊີ້ວັດ — ເພີ່ມໄດ້ໃນ ⚙️ ຕັ້ງຄ່າລະບົບ');
+      if (!chartInds().length) return chartMessage(customIndicators.length ? '📈 ທຸກໂຕຊີ້ວັດຖືກເຊື່ອງຈາກກຣາຟ — ເປີດໄດ້ໃນ ⚙️ ຕັ້ງຄ່າລະບົບ' : '🧪 ຍັງບໍ່ມີໂຕຊີ້ວັດ — ເພີ່ມໄດ້ໃນ ⚙️ ຕັ້ງຄ່າລະບົບ');
       if (chartDataset === 'ALL' && !chartStations.length) return chartMessage(waterData.length ? '🔍 ບໍ່ມີຂໍ້ມູນທີ່ກົງກັບການຄົ້ນຫາ' : '⏳ ກຳລັງລໍຖ້າຂໍ້ມູນ...');
       if (el.offsetWidth === 0) { chartTimer = setTimeout(drawChartNow, 300); return; }
 
-      const ind = customIndicators.find(i => i.key === currentSelectedIndicator);
+      const ind = chartInds().find(i => i.key === currentSelectedIndicator);
       const { list: chartData, caption } = getChartSource();
       const capEl = document.getElementById('chartCaption');
       if (capEl) capEl.innerText = caption ? `ສະແດງ: ${caption}` : '';
@@ -3975,7 +4151,7 @@
     function exportCSV() {
       if(waterData.length === 0) return Swal.fire({ icon: 'info', title: 'ບໍ່ມີຂໍ້ມູນ' });
       
-      let customHead = customIndicators.map(i => i.name).join(',');
+      let customHead = valueInds().map(i => i.name).join(',');
       let csv = `\uFEFFNo.,Company,Sampling Date,Station Code,Station Name,Province,Latitude,Longitude,${customHead},Status,Recorded By,Timestamp\n`;
       
       let count = 1;
@@ -3983,7 +4159,7 @@
         const company = r.companyName || r.name || 'ບໍ່ລະບຸ';
         const stations = r.stations || [r];
         stations.forEach(st => {
-          let cVals = customIndicators.map(i => st.customs ? (st.customs[i.key] ?? '-') : '-').join(',');
+          let cVals = valueInds().map(i => st.customs ? (st.customs[i.key] ?? '-') : '-').join(',');
           csv += `${count++},"${company}","${st.sampleDate || ''}","${st.code}","${st.name}","${st.province}",${st.lat},${st.lng},${cVals},"${st.status ? st.status.text : 'Normal'}","${r.recordedBy || 'ບໍ່ລະບຸ'}","${r.date}"\n`;
         });
       });
