@@ -484,6 +484,36 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // Firebase ບໍ່ຮັບຄ່າ undefined / NaN (ເຊັ່ນ ສະຖານີທີ່ບໍ່ມີ Lat) → ປ່ຽນເປັນ null ອັດຕະໂນມັດ ກ່ອນບັນທຶກທຸກຄັ້ງ
+    function fbClean(v) {
+      if (v === undefined) return null;
+      if (typeof v === 'number' && !isFinite(v)) return null;
+      if (Array.isArray(v)) return v.map(fbClean);
+      if (v && typeof v === 'object') {
+        const o = {};
+        Object.keys(v).forEach(k => {
+          if (v[k] === undefined) return;       // ຂ້າມ key ທີ່ບໍ່ມີຄ່າ
+          if (k === 'fbKey' || k === '_healStations') return; // ຂໍ້ມູນໃຊ້ພາຍໃນເວັບເທົ່ານັ້ນ
+          o[k] = fbClean(v[k]);
+        });
+        return o;
+      }
+      return v;
+    }
+    (function patchFirebaseWrites() {
+      const R = firebase.database.Reference.prototype;
+      ['set', 'update', 'push'].forEach(m => {
+        const orig = R[m];
+        R[m] = function (val, ...rest) {
+          return orig.call(this, val === undefined ? val : fbClean(val), ...rest);
+        };
+      });
+      const origTx = R.transaction;
+      R.transaction = function (fn, ...rest) {
+        return origTx.call(this, cur => { const r = fn(cur); return r === undefined ? r : fbClean(r); }, ...rest);
+      };
+    })();
+
     let currentUserRole = 'VIEWER'; 
     let waterData = [];
     // NOTE: localStorage values below are only a fallback for the very first paint.
