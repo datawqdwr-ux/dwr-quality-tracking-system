@@ -194,6 +194,18 @@
           <h2 class="font-bold text-slate-800 flex items-center gap-2">📍 ແຜນທີ່ Google Maps GIS ສະພາບນ້ຳ</h2>
           <span class="text-xs bg-sky-100 text-sky-800 px-2.5 py-1 rounded-full font-semibold" id="stationCount">0 Batch Records</span>
         </div>
+        <div class="flex flex-wrap items-center gap-2 mb-2 text-[11px]">
+          <select id="mapCompanySel" onchange="mapSelectCompany(this.value)" class="flex-1 min-w-[170px] max-w-full border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400">
+            <option value="">🏢 ເລືອກບໍລິສັດ / ຊຸດຂໍ້ມູນ...</option>
+          </select>
+          <select id="mapStationSel" onchange="mapSelectStation(this.value)" disabled class="flex-1 min-w-[170px] max-w-full border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400 disabled:text-slate-300">
+            <option value="">📍 ເລືອກສະຖານີ...</option>
+          </select>
+          <label class="flex items-center gap-1 border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-semibold text-slate-600 cursor-pointer" title="ເຊື່ອງໝຸດຂອງບໍລິສັດອື່ນ">
+            <input type="checkbox" id="mapOnlyChk" onchange="setMapOnly(this.checked)"> ສະເພາະບໍລິສັດນີ້
+          </label>
+          <button type="button" onclick="mapResetView()" class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-bold text-slate-600 hover:bg-slate-50" title="ເບິ່ງທັງໝົດ">🌐 ທັງໝົດ</button>
+        </div>
         <div id="map" class="rounded-xl border border-slate-200 flex-1"></div>
       </div>
 
@@ -2995,6 +3007,97 @@
         </div>`;
     }
 
+    /* --- ເລືອກບໍລິສັດ / ສະຖານີ ເທິງແຜນທີ່ → ຊູມເຂົ້າ ແລະ ເປີດຂໍ້ມູນ --- */
+    let markerIndex = {};
+    let mapCompany = '';
+    let mapOnly = false;
+    const hasLL = st => st && st.lat && st.lng && !isNaN(st.lat) && !isNaN(st.lng);
+
+    function renderMapSelectors() {
+      const cSel = document.getElementById('mapCompanySel');
+      const sSel = document.getElementById('mapStationSel');
+      if (!cSel || !sSel) return;
+      if (mapCompany && !waterData.some(d => d.fbKey === mapCompany)) mapCompany = '';
+
+      const cHtml = `<option value="">🏢 ເລືອກບໍລິສັດ / ຊຸດຂໍ້ມູນ... (${waterData.length})</option>` + waterData.map(d => {
+        const sts = stationsOf(d);
+        const n = sts.filter(hasLL).length;
+        return `<option value="${d.fbKey}" ${n ? '' : 'disabled'}>${escAttr(d.companyName || d.name || 'ບໍ່ລະບຸ')} (${n ? n + ' ຈຸດ' : 'ບໍ່ມີພິກັດ'})</option>`;
+      }).join('');
+      if (cSel.dataset.last !== cHtml) { cSel.innerHTML = cHtml; cSel.dataset.last = cHtml; }
+      cSel.value = mapCompany;
+
+      const ds = waterData.find(d => d.fbKey === mapCompany);
+      sSel.disabled = !ds;
+      let sHtml = `<option value="">📍 ${ds ? 'ເລືອກສະຖານີ...' : 'ເລືອກບໍລິສັດກ່ອນ'}</option>`;
+      if (ds) {
+        const rows = stationsOf(ds).map((st, i) => ({ st, i })).filter(x => hasLL(x.st));
+        const secs = [...new Set(rows.map(x => x.st.section || ''))];
+        const opt = ({ st, i }) => `<option value="${ds.fbKey}:${i}">${escAttr(st.name || '-')} (${escAttr(st.code || '-')})${st.sampleDate ? ' · ' + escAttr(fmtSampleDate(st.sampleDate)) : ''}${st.status && st.status.isAlert ? ' 🚨' : ''}</option>`;
+        sHtml += secs.length > 1
+          ? secs.map(sec => `<optgroup label="📂 ${escAttr(sec || 'ທົ່ວໄປ')}">${rows.filter(x => (x.st.section || '') === sec).map(opt).join('')}</optgroup>`).join('')
+          : rows.map(opt).join('');
+      }
+      const prev = sSel.value;
+      if (sSel.dataset.last !== sHtml) { sSel.innerHTML = sHtml; sSel.dataset.last = sHtml; }
+      if ([...sSel.options].some(o => o.value === prev)) sSel.value = prev;
+      const chk = document.getElementById('mapOnlyChk');
+      if (chk) { chk.checked = mapOnly; chk.disabled = !mapCompany; }
+    }
+
+    function mapSelectCompany(key) {
+      mapCompany = key;
+      const sSel = document.getElementById('mapStationSel');
+      if (sSel) sSel.value = '';
+      map.closePopup();
+      renderMapSelectors();
+      if (mapOnly) render();
+      const ds = waterData.find(d => d.fbKey === key);
+      if (!ds) return;
+      const pts = stationsOf(ds).filter(hasLL).map(st => [st.lat, st.lng]);
+      if (!pts.length) return Swal.fire({ icon: 'info', title: 'ຊຸດນີ້ບໍ່ມີພິກັດ', text: 'ເພີ່ມ Lat/Lng ດ້ວຍປຸ່ມ ✏️ ໃນຕາຕະລາງລາຍລະອຽດ' });
+      setTimeout(() => {
+        if (pts.length === 1) map.flyTo(pts[0], 14, { duration: 0.8 });
+        else map.flyToBounds(pts, { padding: [40, 40], maxZoom: 15, duration: 0.8 });
+      }, mapOnly ? 150 : 0);
+    }
+
+    function mapSelectStation(val) {
+      if (!val) return;
+      const m = markerIndex[val];
+      if (!m) {
+        // ໝຸດອາດຖືກເຊື່ອງດ້ວຍການຄົ້ນຫາ → ລ້າງການຄົ້ນຫາ ແລ້ວລອງໃໝ່
+        const si = document.getElementById('searchInput');
+        if (si && si.value) { si.value = ''; render(); return setTimeout(() => mapSelectStation(val), 200); }
+        return Swal.fire({ icon: 'info', title: 'ສະຖານີນີ້ບໍ່ມີພິກັດໃນແຜນທີ່' });
+      }
+      document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      map.flyTo(m.getLatLng(), Math.max(map.getZoom(), 15), { duration: 0.8 });
+      let opened = false;
+      const open = () => { if (!opened) { opened = true; m.openPopup(); } };
+      map.once('moveend', open);
+      setTimeout(open, 1000); // ກໍລະນີແຜນທີ່ບໍ່ຕ້ອງເລື່ອນ (ຢູ່ບ່ອນນັ້ນແລ້ວ)
+    }
+
+    function setMapOnly(on) {
+      mapOnly = on;
+      render();
+    }
+
+    function mapResetView() {
+      mapCompany = '';
+      mapOnly = false;
+      map.closePopup();
+      renderMapSelectors();
+      render();
+      setTimeout(() => {
+        const b = [];
+        markersGroup.eachLayer(l => { if (l.getLatLng) { const p = l.getLatLng(); if (p.lat >= 13 && p.lat <= 23 && p.lng >= 100 && p.lng <= 108) b.push(p); } });
+        if (b.length) map.flyToBounds(b, { padding: [30, 30], maxZoom: 12, duration: 0.8 });
+        else map.setView([18.5, 103.5], 6);
+      }, 150);
+    }
+
     function showMoreRecords() {
       tableLimit += 50;
       render();
@@ -3003,6 +3106,7 @@
     function renderNow() {
       cleanOrphanedThresholds();
       markersGroup.clearLayers();
+      markerIndex = {};
       const tbody = document.getElementById('dataTable');
       // ເກັບຄ່າທີ່ກຳລັງພິມຢູ່ໃນຊ່ອງແກ້ໄຂ ເພື່ອບໍ່ໃຫ້ຫາຍເມື່ອຕາຕະລາງຖືກ render ໃໝ່
       const draftEditValues = {};
@@ -3061,12 +3165,14 @@
         const stations = item.stations || [item];
         const isExpanded = expandedRows[item.fbKey] || false;
 
-        stations.forEach(st => {
+        stations.forEach((st, stIdx) => {
           if (!st) return;
           flatStationsForChart.push({ ...st, companyName: company });
-          if (st.lat && st.lng && !isNaN(st.lat) && !isNaN(st.lng)) try {
+          const hideOnMap = mapOnly && mapCompany && item.fbKey !== mapCompany;
+          if (!hideOnMap && st.lat && st.lng && !isNaN(st.lat) && !isNaN(st.lng)) try {
             const currentIcon = (st.status && st.status.isAlert) ? alertIcon : normalIcon;
             const marker = L.marker([st.lat, st.lng], { icon: currentIcon }).addTo(markersGroup);
+            markerIndex[`${item.fbKey}:${stIdx}`] = marker;
 
             let customPopupHTML = '';
             valueInds().forEach(i => {
@@ -3079,7 +3185,9 @@
             marker.bindPopup(`
               <div style="font-family: sans-serif; font-size: 12px; line-height: 1.5;">
                 <b style="font-size: 14px; color: #4f46e5;">🏢 ${company}</b><br>
+                ${st.section ? `<span style="color:#6366f1;">📂 ${escAttr(st.section)}</span><br>` : ''}
                 <b style="font-size: 13px; color: #0f172a;">📍 ${st.name} (${st.code})</b><br>
+                ${st.sampleDate ? `<b>📅 ວັນທີ:</b> ${fmtSampleDate(st.sampleDate)}<br>` : ''}
                 <b>ແຂວງ:</b> ${st.province}<br>
                 ${customPopupHTML}
                 <b>ສະຖານະ:</b> <span style="font-weight: bold; color: ${st.status && st.status.isAlert ? '#dc2626' : '#16a34a'};">${st.status ? st.status.text : '✅ Normal'}</span>
@@ -3155,7 +3263,8 @@
         if (el) el.value = draftEditValues[id];
       });
 
-      const boundsKey = `${filterKey}|${validLaosBounds.length}`;
+      renderMapSelectors();
+      const boundsKey = `${filterKey}|${validLaosBounds.length}|${mapOnly ? mapCompany : ''}`;
       if (boundsKey !== lastBoundsKey) {
         lastBoundsKey = boundsKey;
         if (validLaosBounds.length > 0) map.fitBounds(validLaosBounds, { padding: [30, 30], maxZoom: 12 });
