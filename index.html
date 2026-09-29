@@ -236,7 +236,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
       
       <!-- Input Form Layer -->
-      <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 min-w-0">
+      <div id="formCard" class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 min-w-0">
         <h2 class="text-lg font-bold text-slate-800 border-b pb-2 mb-4">📝 ຟອມບັນທຶກຜົນວິເຄາະຄຸນນະພາບນ້ຳ</h2>
         
         <!-- ສ່ວນຂໍ້ມູນ Master: ຊື່ບໍລິສັດ ແລະ ຜູ້ບັນທຶກ -->
@@ -315,14 +315,19 @@
 
           <!-- Dynamic Indicators Container & Quick Add Section -->
           <div class="border-t border-slate-200 pt-3 mt-2">
-            <div class="flex justify-between items-center mb-2">
-              <label class="block text-[11px] font-bold text-slate-700">🧪 ໂຕຊີ້ວັດຄຸນນະພາບນໍ້າ (Indicators)</label>
+            <div class="flex justify-between items-center mb-2 gap-2">
+              <button type="button" onclick="toggleFormIndicators()" class="flex items-center gap-1.5 text-left text-[11px] font-bold text-slate-700 hover:text-indigo-700" title="ຫຍໍ້ / ຂະຫຍາຍ">
+                <span id="formIndArrow" class="inline-block w-3 text-slate-400">▼</span>
+                🧪 ໂຕຊີ້ວັດຄຸນນະພາບນໍ້າ <span id="formIndCount" class="font-normal text-slate-400"></span>
+              </button>
               <button type="button" id="quickAddIndBtn" onclick="quickAddIndicatorPrompt()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[10px] px-2 py-1 rounded-lg font-bold transition flex items-center gap-1 shadow-sm">
                 ➕ ເພີ່ມໂຕຊີ້ວັດສະເພາະຈຸດ
               </button>
             </div>
-            <div id="dynamicFormIndicators" class="grid grid-cols-1 gap-2 pt-1"></div>
+            <div id="dynamicFormIndicators" oninput="updateFormIndCount()" class="grid grid-cols-1 gap-2 pt-1"></div>
           </div>
+
+          <button type="button" onclick="clearStationForm()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-[11px] font-bold py-2 rounded-lg transition mt-2">🧹 ລ້າງຄ່າທີ່ປ້ອນໃນຟອມ</button>
 
           <button type="submit" id="addTempBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2.5 rounded-lg shadow transition flex justify-center items-center gap-1 mt-3">
             ➕ ເພີ່ມສະຖານີເຂົ້າຕາຕະລາງຊົ່ວຄາວ
@@ -1657,6 +1662,7 @@
           </div>
         `;
       });
+      applyFormIndCollapse();
     }
 
     // Toggles an indicator input between normal numeric entry and "ND" (Not Detected).
@@ -1684,6 +1690,7 @@
         btnEl.classList.remove('bg-slate-100', 'text-slate-500', 'border-slate-300');
       }
       inputEl.focus();
+      updateFormIndCount();
     }
 
     // ການສະແດງ 3 ບ່ອນ ແຍກກັນເປັນອິດສະຫຼະ (ຂໍ້ມູນຍັງຢູ່ຄົບສະເໝີ):
@@ -1747,6 +1754,7 @@
       document.getElementById('code').value = '';
       document.getElementById('name').value = '';
       renderFormCustomInputs();
+      scrollToFormTop();
     }
 
     /* --- ວັນທີເກັບຕົວຢ່າງ (ວັນ/ເດືອນ/ປີ ຂອງຂໍ້ມູນແຕ່ລະສະຖານີ) --- */
@@ -2787,6 +2795,49 @@
       }
     }
 
+    /* --- ຫຍໍ້ລາຍການໂຕຊີ້ວັດໃນຟອມ + ເລື່ອນກັບໄປບ່ອນປ້ອນຂໍ້ມູນທຳອິດ --- */
+    let formIndCollapsed = false;
+    try { formIndCollapsed = localStorage.getItem('formIndCollapsed') === '1'; } catch (e) {}
+
+    function applyFormIndCollapse() {
+      const box = document.getElementById('dynamicFormIndicators');
+      const arrow = document.getElementById('formIndArrow');
+      if (box) box.classList.toggle('hidden', formIndCollapsed);
+      if (arrow) arrow.innerText = formIndCollapsed ? '▶' : '▼';
+      updateFormIndCount();
+    }
+    function toggleFormIndicators() {
+      formIndCollapsed = !formIndCollapsed;
+      try { localStorage.setItem('formIndCollapsed', formIndCollapsed ? '1' : '0'); } catch (e) {}
+      applyFormIndCollapse();
+    }
+    function updateFormIndCount() {
+      const el = document.getElementById('formIndCount');
+      if (!el) return;
+      const inputs = [...document.querySelectorAll('#dynamicFormIndicators input[id^="input_"]')];
+      const filled = inputs.filter(x => x.value.trim() !== '').length;
+      el.innerHTML = `(${inputs.length})${filled ? ` · <span class="text-emerald-600 font-bold">ປ້ອນແລ້ວ ${filled}</span>` : ''}`;
+    }
+
+    // ເລື່ອນຂຶ້ນເທິງສຸດຂອງຟອມ ແລະ ເອົາເຄີເຊີໄປຊ່ອງທຳອິດທີ່ຍັງຫວ່າງ
+    function scrollToFormTop() {
+      const card = document.getElementById('formCard');
+      if (!card) return;
+      const header = document.querySelector('nav, header');
+      const offset = (header ? header.offsetHeight : 0) + 12;
+      window.scrollTo({ top: card.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' });
+      const company = document.getElementById('companyName');
+      const target = company && !company.value.trim() ? company : document.getElementById('code');
+      setTimeout(() => target && target.focus({ preventScroll: true }), 450);
+    }
+
+    function clearStationForm() {
+      ['code', 'name'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      document.querySelectorAll('#dynamicFormIndicators input[id^="input_"]').forEach(x => x.value = '');
+      updateFormIndCount();
+      scrollToFormTop();
+    }
+
     function removeTempStation(index) {
       tempStations.splice(index, 1);
       renderTempList();
@@ -2818,8 +2869,10 @@
         document.getElementById('waterForm').reset();
         renderTempList();
         applyRecorderLock();
-        Swal.fire({ icon: 'success', title: 'ບັນທຶກຂໍ້ມູນສຳເລັດ!', html: mergeResultText([res]), confirmButtonText: '👁️ ເບິ່ງຂໍ້ມູນ' })
-          .then(() => setTimeout(() => jumpToRecords([res.fbKey]), 300));
+        Swal.fire({
+          icon: 'success', title: 'ບັນທຶກຂໍ້ມູນສຳເລັດ!', html: mergeResultText([res]),
+          confirmButtonText: '✏️ ປ້ອນຂໍ້ມູນຕໍ່', showDenyButton: true, denyButtonText: '👁️ ເບິ່ງຂໍ້ມູນທີ່ບັນທຶກ', denyButtonColor: '#059669'
+        }).then(r => setTimeout(() => r.isDenied ? jumpToRecords([res.fbKey]) : scrollToFormTop(), 300));
       } catch (err) {
         Swal.fire({ icon: 'error', title: 'ບັນທຶກບໍ່ສຳເລັດ', text: err.message });
       }
