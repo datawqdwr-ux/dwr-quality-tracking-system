@@ -215,7 +215,15 @@
       <div id="chartCard" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col min-w-0">
         <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
           <h2 class="font-bold text-slate-800">📈 ກຣາຟແຍກສະເພາະຕົວຊີ້ວັດ</h2>
-          <div id="chartIndicatorTabs" class="flex flex-wrap gap-1 text-[11px]"></div>
+          <span id="chartIndCurrent" class="text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-full px-2.5 py-0.5"></span>
+        </div>
+        <!-- ປຸ່ມໂຕຊີ້ວັດ ລວມຢູ່ໃນກ່ອງດຽວ ເລື່ອນພາຍໃນ + ຄົ້ນຫາ -->
+        <div id="chartIndBox" class="border border-slate-300 rounded-xl bg-slate-50/60 overflow-hidden mb-2">
+          <div class="p-2 border-b border-slate-200 bg-white">
+            <input type="text" id="chartIndSearch" oninput="filterChartInds(this.value)" autocomplete="off" placeholder="🔍 ຄົ້ນຫາໂຕຊີ້ວັດ... (ເຊັ່ນ pH, BOD)" class="w-full border border-slate-200 px-2 py-1.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50">
+          </div>
+          <div id="chartIndicatorTabs" class="flex flex-wrap gap-1 text-[11px] p-2 max-h-[112px] overflow-y-auto"></div>
+          <p id="chartIndNoMatch" class="hidden text-center text-[11px] text-slate-400 pb-2">ບໍ່ພົບໂຕຊີ້ວັດທີ່ຄົ້ນຫາ</p>
         </div>
         <div class="flex flex-wrap items-center gap-2 mb-1 text-[11px]">
           <select id="chartDatasetSel" onchange="setChartDataset(this.value)" class="flex-1 min-w-[180px] max-w-full border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400">
@@ -323,8 +331,8 @@
           </div>
 
           <div class="grid grid-cols-2 gap-2">
-            <input type="number" step="any" id="lat" required autocomplete="off" class="w-full border p-2 rounded text-xs outline-none" placeholder="Lat" value="17.9757">
-            <input type="number" step="any" id="lng" required autocomplete="off" class="w-full border p-2 rounded text-xs outline-none" placeholder="Lng" value="102.6331">
+            <input type="text" inputmode="decimal" id="lat" required autocomplete="off" class="w-full border p-2 rounded text-xs outline-none" placeholder="Lat ຫຼື ວາງ 17°58'13&quot;N 102°35'48&quot;E" value="17.9757" title="ໃສ່ທົດສະນິຍົມ ຫຼື ວາງພິກັດອົງສາ ທັງຄູ່ ລະບົບຈະແປງໃຫ້">
+            <input type="text" inputmode="decimal" id="lng" required autocomplete="off" class="w-full border p-2 rounded text-xs outline-none" placeholder="Lng" value="102.6331">
           </div>
 
           <!-- Dynamic Indicators Container & Quick Add Section -->
@@ -372,6 +380,9 @@
         <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
           <h2 class="text-lg font-bold text-slate-800">📋 ຖານຂໍ້ມູນຜົນການກວດວັດ (ລາຍບໍລິສັດ)</h2>
           <div class="flex gap-2">
+          <button id="coordFixBtn" onclick="convertDegreeCoords()" class="bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs px-3 py-1.5 rounded-lg border border-sky-200 hidden" title="ສະຖານີທີ່ບໍ່ມີ Lat/Lng ແຕ່ມີພິກັດອົງສາ → ແປງໃຫ້ສະແດງໃນແຜນທີ່">
+            🧭 ແປງພິກັດອົງສາ
+          </button>
           <button id="mergeDupBtn" onclick="mergeDuplicateDatasets()" class="bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs px-3 py-1.5 rounded-lg border border-teal-200 hidden">
             🔗 ລວມຊຸດຂອງບໍລິສັດດຽວກັນ
           </button>
@@ -1264,6 +1275,7 @@
       if (box) box.classList.toggle('hidden', currentUserRole === 'VIEWER');
       const mergeBtn = document.getElementById('mergeDupBtn');
       if (mergeBtn) mergeBtn.classList.toggle('hidden', currentUserRole === 'VIEWER');
+      document.getElementById('coordFixBtn')?.classList.toggle('hidden', currentUserRole === 'VIEWER');
       const tip = document.getElementById('dragTip');
       if (tip) tip.classList.toggle('hidden', currentUserRole === 'VIEWER');
     }
@@ -1860,8 +1872,8 @@
         code: document.getElementById('code').value,
         name: document.getElementById('name').value,
         province: document.getElementById('province').value,
-        lat: parseFloat(document.getElementById('lat').value),
-        lng: parseFloat(document.getElementById('lng').value),
+        lat: parseCoordPart(document.getElementById('lat').value),
+        lng: parseCoordPart(document.getElementById('lng').value),
         sampleDate: document.getElementById('sampleDate').value || '',
         customs: customValues,
         status: evalStatus(customValues)
@@ -2295,6 +2307,115 @@
         </div>`;
     }
 
+    /* --- ອ່ານພິກັດແບບອົງສາ (DMS) ເຊັ່ນ 17°58'13.0"N 102°35'48.1"E --- */
+    // ແປງຄ່າດຽວ: "17°58'13.0\"N", "17 58 13 N", "N17°58.2'", "17.9703" → ທົດສະນິຍົມ
+    function parseCoordPart(txt) {
+      if (txt === null || txt === undefined) return NaN;
+      if (typeof txt === 'number') return txt;
+      let t = String(txt).trim().replace(/[′’‘`´]/g, "'").replace(/[″”“]/g, '"').replace(/''/g, '"').replace(/,/g, '.');
+      if (!t) return NaN;
+      const hemi = (t.match(/[NSEW]|ເໜືອ|ໃຕ້|ຕາເວັນອອກ|ຕາເວັນຕົກ/i) || [''])[0].toUpperCase();
+      const nums = t.match(/-?\d+(?:\.\d+)?/g);
+      if (!nums) return NaN;
+      let [d, m = 0, s = 0] = nums.map(Number);
+      if (nums.length === 1 && !/[°º˚d']/.test(t)) {
+        // ທົດສະນິຍົມທຳມະດາ (ອາດມີ N/E)
+        const v = Number(nums[0]);
+        return /^[SW]|ໃຕ້|ຕາເວັນຕົກ/.test(hemi) ? -Math.abs(v) : v;
+      }
+      if (m >= 60 || s >= 60) return NaN;
+      let v = Math.abs(d) + m / 60 + s / 3600;
+      if (d < 0 || /^[SW]|ໃຕ້|ຕາເວັນຕົກ/.test(hemi)) v = -v;
+      return Math.round(v * 1e6) / 1e6;
+    }
+
+    // ຫາຄູ່ພິກັດໃນຂໍ້ຄວາມ: "17°58'13.0"N 102°35'48.1"E" ຫຼື "17.9703, 102.5967" → { lat, lng }
+    function parseCoordPair(txt) {
+      if (txt === null || txt === undefined) return null;
+      const t = String(txt).trim().replace(/[′’‘`´]/g, "'").replace(/[″”“]/g, '"');
+      if (!t) return null;
+      let a, b;
+      // ມີ N/S ແລະ E/W → ແຍກຕາມຕົວອັກສອນທິດ
+      const dms = t.match(/([-\d.,\s°º˚'"d]+?\s*[NS])[\s,;/]*([-\d.,\s°º˚'"d]+?\s*[EW])/i) || t.match(/([NS]\s*[-\d.,\s°º˚'"]+?)[\s,;/]+([EW]\s*[-\d.,\s°º˚'"]+)/i);
+      if (dms) { a = parseCoordPart(dms[1]); b = parseCoordPart(dms[2]); }
+      else {
+        const nums = t.match(/-?\d+(?:\.\d+)?/g);
+        if (!nums) return null;
+        if (nums.length === 2) { a = Number(nums[0]); b = Number(nums[1]); }                              // 17.97, 102.59
+        else if (nums.length === 6) { a = parseCoordPart(nums.slice(0, 3).join(' ') + '°'); b = parseCoordPart(nums.slice(3).join(' ') + '°'); } // 17 58 13 102 35 48
+        else if (nums.length === 4) { a = parseCoordPart(nums.slice(0, 2).join(' ') + '°'); b = parseCoordPart(nums.slice(2).join(' ') + '°'); }
+        else return null;
+      }
+      if (isNaN(a) || isNaN(b)) return null;
+      // ລາວ: lat 13–23, lng 100–108 → ຖ້າໃສ່ສະລັບກັນ ໃຫ້ສະລັບຄືນ
+      if (Math.abs(a) > 90 && Math.abs(b) <= 90) [a, b] = [b, a];
+      if (Math.abs(a) > 90 || Math.abs(b) > 180) return null;
+      return { lat: a, lng: b };
+    }
+    function withDerivedCoord(st) {
+      if (!st || (st.lat && st.lng && !isNaN(st.lat) && !isNaN(st.lng))) return st;
+      const v = Object.values(st.customs || {}).find(x => looksLikeCoordText(x) && parseCoordPair(x));
+      if (!v) return st;
+      const pr = parseCoordPair(v);
+      return { ...st, lat: pr.lat, lng: pr.lng, _derivedCoord: true };
+    }
+    const looksLikeCoordText = v => typeof v === 'string' && /\d+\s*[°º˚]\s*\d|\d+\s*[°º˚].*[NSEW]|^\s*-?\d{1,2}\.\d{3,}\s*[,;\s]\s*-?\d{2,3}\.\d{3,}\s*$/i.test(v);
+
+    // ເຄື່ອງມື: ສະຖານີທີ່ບໍ່ມີ Lat/Lng ແຕ່ມີພິກັດອົງສາຢູ່ໃນຖັນໃດໜຶ່ງ (ເຊັ່ນ "location") → ແປງ ແລະ ບັນທຶກ
+    async function convertDegreeCoords() {
+      if (currentUserRole === 'VIEWER') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
+      const fixes = [];
+      waterData.forEach(rec => {
+        if (!Array.isArray(rec.stations)) return;
+        rec.stations.forEach((st, i) => {
+          if (!st || (hasCoord(st) && !(Number(st.lat) === 0 && Number(st.lng) === 0))) return;
+          const src = Object.entries(st.customs || {}).find(([, v]) => looksLikeCoordText(v) && parseCoordPair(v));
+          if (src) fixes.push({ rec, i, st, pair: parseCoordPair(src[1]), from: src[1] });
+        });
+      });
+      if (!fixes.length) return Swal.fire({ icon: 'info', title: 'ບໍ່ພົບສະຖານີທີ່ຕ້ອງແປງ', text: 'ທຸກສະຖານີມີ Lat/Lng ແລ້ວ ຫຼື ບໍ່ມີພິກັດແບບອົງສາໃນຂໍ້ມູນ' });
+
+      const rows = fixes.slice(0, 20).map(f => `<tr><td class="px-2 py-1 border">${escAttr(f.st.name || f.st.code)}</td><td class="px-2 py-1 border font-mono">${escAttr(f.from)}</td><td class="px-2 py-1 border font-mono text-emerald-700">${f.pair.lat}, ${f.pair.lng}</td></tr>`).join('');
+      const ok = await Swal.fire({
+        icon: 'question',
+        title: `🧭 ແປງພິກັດອົງສາ ${fixes.length} ສະຖານີ?`,
+        html: `<div class="text-left text-xs"><table class="w-full border-collapse"><thead><tr class="bg-slate-100"><th class="px-2 py-1 border">ສະຖານີ</th><th class="px-2 py-1 border">ພິກັດອົງສາ</th><th class="px-2 py-1 border">Lat, Lng</th></tr></thead><tbody>${rows}</tbody></table>
+               ${fixes.length > 20 ? `<p class="mt-1 text-slate-400">... ແລະ ອີກ ${fixes.length - 20}</p>` : ''}
+               <p class="mt-2 text-slate-500">ຈະບັນທຶກເປັນ Lat/Lng ໃຫ້ຈຸດສະແດງໃນແຜນທີ່. ຄ່າອົງສາເດີມຍັງຢູ່ຄືເກົ່າ.</p></div>`,
+        width: 720, showCancelButton: true, confirmButtonText: '🧭 ແປງເລີຍ', cancelButtonText: 'ຍົກເລີກ', confirmButtonColor: '#059669'
+      });
+      if (!ok.isConfirmed) return;
+      const updates = {};
+      fixes.forEach(f => {
+        updates[`water_records/${f.rec.fbKey}/stations/${f.i}/lat`] = f.pair.lat;
+        updates[`water_records/${f.rec.fbKey}/stations/${f.i}/lng`] = f.pair.lng;
+      });
+      await db.ref().update(updates);
+      db.ref('activity_logs').push({ action: 'EDIT_STATION', itemCode: `🧭 ແປງພິກັດອົງສາ → Lat/Lng (${fixes.length} ສະຖານີ)`, performedBy: currentUserName || 'ບໍ່ລະບຸ', timestamp: new Date().toLocaleString('lo-LA'), userRole: currentUserRole });
+      Swal.fire({ icon: 'success', title: `ແປງພິກັດແລ້ວ ${fixes.length} ສະຖານີ`, text: 'ຈຸດສະແດງໃນແຜນທີ່ແລ້ວ', timer: 2000, showConfirmButton: false });
+    }
+
+    // ຊ່ອງ Lat/Lng: ວາງພິກັດອົງສາ (ຫຼື ຄູ່ Lat, Lng) → ແປງ ແລະ ແຍກໃສ່ 2 ຊ່ອງໃຫ້ເອງ
+    function smartCoordInput(latEl, lngEl) {
+      if (!latEl || !lngEl || latEl.dataset.smart) return;
+      latEl.dataset.smart = lngEl.dataset.smart = '1';
+      const handle = (el) => {
+        const v = el.value;
+        if (!v || /^-?\d+(\.\d+)?$/.test(v.trim())) return;
+        const pair = parseCoordPair(v);
+        if (pair && (/[NSEW]/i.test(v) || /[,;\s]/.test(v.trim()))) {
+          latEl.value = pair.lat; lngEl.value = pair.lng;
+        } else {
+          const n = parseCoordPart(v);
+          if (!isNaN(n)) el.value = n;
+        }
+      };
+      [latEl, lngEl].forEach(el => {
+        el.addEventListener('change', () => handle(el));
+        el.addEventListener('paste', () => setTimeout(() => handle(el), 0));
+      });
+    }
+
     /* --- ນຳເຂົ້າຂໍ້ມູນຈາກ EXCEL (ຮອງຮັບຫຼາຍຕາຕະລາງໃນ Sheet ດຽວ) --- */
     const EXCEL_FIELDS = {
       no:       ['no', 'no.', 'ລຳດັບ', 'ລ/ດ', 'ລ.ດ', 'ລດ', '#', 'n°'],
@@ -2388,8 +2509,7 @@
 
     function toCoord(v) {
       if (typeof v === 'number') return v;
-      const n = parseFloat(String(v ?? '').replace(',', '.'));
-      return isNaN(n) ? NaN : n;
+      return parseCoordPart(v); // ຮອງຮັບທັງ ທົດສະນິຍົມ ແລະ ອົງສາ (17°58'13"N)
     }
 
     const cellText = v => String(v ?? '').trim();
@@ -2495,6 +2615,16 @@
         let lat = toCoord(m.lat !== undefined ? row[m.lat] : '');
         let lng = toCoord(m.lng !== undefined ? row[m.lng] : '');
         // ບໍ່ມີພິກັດ ຫຼື ບໍ່ຖືກຕ້ອງ → ຍັງນຳເຂົ້າໄດ້ ແຕ່ບໍ່ສະແດງໃນແຜນທີ່ (ເພີ່ມພິກັດພາຍຫຼັງໄດ້)
+        // ຖັນ Lat ມີທັງຄູ່ ເຊັ່ນ "17°58'13"N 102°35'48"E" → ແຍກເປັນ 2 ຄ່າ
+        if (m.lat !== undefined && (isNaN(lng) || m.lng === undefined)) {
+          const pr = parseCoordPair(row[m.lat]);
+          if (pr) { lat = pr.lat; lng = pr.lng; }
+        }
+        // ບໍ່ມີ Lat/Lng → ຫາພິກັດອົງສາໃນຖັນອື່ນຂອງແຖວ (ເຊັ່ນ ຖັນ location / GPS / ຈຸດທີ່ຕັ້ງ)
+        if (isNaN(lat) || isNaN(lng)) {
+          const cell = row.find(c => looksLikeCoordText(String(c ?? '')) && parseCoordPair(c));
+          if (cell) { const pr = parseCoordPair(cell); lat = pr.lat; lng = pr.lng; }
+        }
         if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || (lat === 0 && lng === 0)) { lat = null; lng = null; }
 
         cur.parsed.push({
@@ -3134,7 +3264,7 @@
     let markerIndex = {};
     let mapCompany = '';
     let mapOnly = false;
-    const hasLL = st => st && st.lat && st.lng && !isNaN(st.lat) && !isNaN(st.lng);
+    const hasLL = st => { const d = withDerivedCoord(st); return !!(d && d.lat && d.lng && !isNaN(d.lat) && !isNaN(d.lng)); };
 
     function renderMapSelectors() {
       const cSel = document.getElementById('mapCompanySel');
@@ -3177,7 +3307,7 @@
       if (mapOnly) render();
       const ds = waterData.find(d => d.fbKey === key);
       if (!ds) return;
-      const pts = stationsOf(ds).filter(hasLL).map(st => [st.lat, st.lng]);
+      const pts = stationsOf(ds).filter(hasLL).map(withDerivedCoord).map(st => [st.lat, st.lng]);
       if (!pts.length) return Swal.fire({ icon: 'info', title: 'ຊຸດນີ້ບໍ່ມີພິກັດ', text: 'ເພີ່ມ Lat/Lng ດ້ວຍປຸ່ມ ✏️ ໃນຕາຕະລາງລາຍລະອຽດ' });
       setTimeout(() => {
         if (pts.length === 1) map.flyTo(pts[0], 14, { duration: 0.8 });
@@ -3288,8 +3418,9 @@
         const stations = item.stations || [item];
         const isExpanded = expandedRows[item.fbKey] || false;
 
-        stations.forEach((st, stIdx) => {
-          if (!st) return;
+        stations.forEach((st0, stIdx) => {
+          if (!st0) return;
+          const st = withDerivedCoord(st0); // ບໍ່ມີ Lat/Lng ແຕ່ມີອົງສາ → ສະແດງໃນແຜນທີ່ໄດ້ເລີຍ
           flatStationsForChart.push({ ...st, companyName: company });
           const hideOnMap = mapOnly && mapCompany && item.fbKey !== mapCompany;
           if (!hideOnMap && st.lat && st.lng && !isNaN(st.lat) && !isNaN(st.lng)) try {
@@ -3428,6 +3559,13 @@
       return editInput(p + 'editor', '👤 ຊື່ຜູ້ແກ້ໄຂ (ຈຳເປັນ)', '', 'placeholder="ພິມຊື່ຜູ້ແກ້ໄຂ..."');
     }
 
+    document.addEventListener('focusin', e => {
+      const id = e.target && e.target.id || '';
+      if (id === 'lat' || id === 'lng') smartCoordInput(document.getElementById('lat'), document.getElementById('lng'));
+      const m = id.match(/^(edit_.+_)(lat|lng)$/);
+      if (m) smartCoordInput(document.getElementById(m[1] + 'lat'), document.getElementById(m[1] + 'lng'));
+    });
+
     function renderStationEditSection(fbKey, stIdx, st) {
       const isOpen = editingStation && editingStation.fbKey === fbKey && editingStation.idx === stIdx;
       if (!isOpen) return '';
@@ -3524,8 +3662,11 @@
       const code = get('code');
       const name = get('name');
       const noCoord = get('lat') === '' && get('lng') === '';
-      const lat = noCoord ? null : parseFloat(get('lat'));
-      const lng = noCoord ? null : parseFloat(get('lng'));
+      // ບໍ່ມີ Lat/Lng ແຕ່ມີພິກັດອົງສາໃນຊ່ອງໂຕຊີ້ວັດ (ເຊັ່ນ location) → ໃຊ້ອັນນັ້ນ
+      let lat = noCoord ? null : parseCoordPart(get('lat'));
+      let lng = noCoord ? null : parseCoordPart(get('lng'));
+      const pr = !noCoord && parseCoordPair(get('lat'));
+      if (pr && (isNaN(lng) || get('lng') === '')) { lat = pr.lat; lng = pr.lng; }
 
       if (!editor) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາປ້ອນຊື່ຜູ້ແກ້ໄຂ!' });
       if (!code || !name) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາລະບຸລະຫັດ ແລະ ຊື່ສະຖານີ!' });
@@ -4002,10 +4143,30 @@
       }
 
       const allActive = currentSelectedIndicator === '__ALL__';
-      container.innerHTML = `<button type="button" onclick="switchChartIndicator('__ALL__')" class="px-2.5 py-1 rounded-lg font-bold ${allActive ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}" title="ສະແດງທຸກໂຕຊີ້ວັດຂອງສະຖານີພ້ອມກັນ">🧪 ທຸກໂຕຊີ້ວັດ</button>` + chartInds().map(i => {
+      const keepScroll = container.scrollTop;
+      container.innerHTML = `<button type="button" data-indname="all ທຸກໂຕຊີ້ວັດ" onclick="switchChartIndicator('__ALL__')" class="px-2.5 py-1 rounded-lg font-bold ${allActive ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}" title="ສະແດງທຸກໂຕຊີ້ວັດຂອງສະຖານີພ້ອມກັນ">🧪 ທຸກໂຕຊີ້ວັດ</button>` + chartInds().map(i => {
         const isActive = currentSelectedIndicator === i.key;
-        return `<button type="button" onclick="switchChartIndicator('${i.key}')" id="chartBtn-${i.key}" class="px-2.5 py-1 rounded-lg font-bold ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'}">${i.name}</button>`;
+        return `<button type="button" data-indname="${escAttr(normHeader(i.name + ' ' + (i.unit || '')))}" onclick="switchChartIndicator('${i.key}')" id="chartBtn-${i.key}" class="px-2.5 py-1 rounded-lg font-bold ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}">${escAttr(i.name)}</button>`;
       }).join('');
+      container.scrollTop = keepScroll;
+      const q = document.getElementById('chartIndSearch');
+      if (q && q.value) filterChartInds(q.value);
+      const cur = document.getElementById('chartIndCurrent');
+      if (cur) {
+        const ind = chartInds().find(i => i.key === currentSelectedIndicator);
+        cur.textContent = allActive ? '🧪 ທຸກໂຕຊີ້ວັດ' : ind ? `ກຳລັງເບິ່ງ: ${ind.name}${ind.unit ? ' (' + ind.unit + ')' : ''}` : '';
+      }
+    }
+
+    function filterChartInds(q) {
+      const nq = normHeader(q);
+      let shown = 0;
+      document.querySelectorAll('#chartIndicatorTabs [data-indname]').forEach(el => {
+        const ok = !nq || el.dataset.indname.includes(nq);
+        el.style.display = ok ? '' : 'none';
+        if (ok) shown++;
+      });
+      document.getElementById('chartIndNoMatch')?.classList.toggle('hidden', shown > 0);
     }
 
     function switchChartIndicator(indKey) {
