@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ກົມຊັບພະຍາກອນນ້ຳ — ເລືອກລະບົບ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;600;700&family=Noto+Serif+Lao:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --river: #0b3a53;     /* ນ້ຳເລິກ */
+      --channel: #13667a;   /* ຮ່ອງນ້ຳ */
+      --current: #2aa3a8;   /* ກະແສນ້ຳ — ລະບົບຄຸນນະພາບນ້ຳ */
+      --silt: #b8934a;      /* ຕະກອນດິນ — ລະບົບການນຳໃຊ້ນ້ຳ */
+      --mist: #eef4f5;
+      --ink: #12303f;
+      --muted: #587584;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      font-family: 'Noto Sans Lao', system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--mist);
+      line-height: 1.6;
+    }
+    .page { min-height: 100%; display: grid; grid-template-columns: minmax(320px, 42%) 1fr; }
+
+    /* ---- ຝັ່ງຊ້າຍ: ແມ່ນ້ຳ ---- */
+    .bank {
+      position: relative; overflow: hidden;
+      background: var(--river); color: #fff;
+      padding: 56px 48px; display: flex; flex-direction: column; justify-content: space-between; gap: 28px;
+    }
+    .bank .org { font-size: 15px; font-weight: 600; opacity: .85; display: flex; align-items: center; gap: 10px; }
+    .bank .org svg { flex: none; }
+    .bank h1 {
+      font-family: 'Noto Serif Lao', serif; font-weight: 700;
+      font-size: clamp(30px, 3.4vw, 46px); line-height: 1.35; margin: 0 0 16px; max-width: 14em; text-wrap: balance;
+      position: relative; z-index: 1;
+    }
+    .bank p.lead { margin: 0; max-width: 30em; font-size: 16px; opacity: .8; position: relative; z-index: 1; }
+    .bank .foot { font-size: 12.5px; opacity: .55; position: relative; z-index: 1; }
+    .river { position: absolute; inset: auto -10% 12% -10%; width: 120%; height: 46%; pointer-events: none; }
+    .river path { fill: none; stroke-linecap: round; }
+    .river .p1 { stroke: var(--current); stroke-width: 3; opacity: .9; }
+    .river .p2 { stroke: #5fc4c7; stroke-width: 1.5; opacity: .45; }
+    .river .p3 { stroke: var(--silt); stroke-width: 1.5; opacity: .55; }
+    @media (prefers-reduced-motion: no-preference) {
+      .river path { stroke-dasharray: 1600; stroke-dashoffset: 1600; animation: flow 2.6s ease-out forwards; }
+      .river .p2 { animation-delay: .25s; }
+      .river .p3 { animation-delay: .5s; }
+    }
+    @keyframes flow { to { stroke-dashoffset: 0; } }
+
+    /* ---- ຝັ່ງຂວາ: ເລືອກລະບົບ ---- */
+    .choices { padding: 56px clamp(24px, 5vw, 72px); display: flex; flex-direction: column; justify-content: center; gap: 22px; }
+    .choices h2 { margin: 0 0 4px; font-size: 18px; font-weight: 600; color: var(--muted); }
+
+    .system {
+      --accent: var(--current);
+      display: grid; grid-template-columns: 76px 1fr auto; gap: 22px; align-items: center;
+      background: #fff; color: inherit; text-decoration: none;
+      padding: 26px 28px; border-radius: 18px;
+      border: 1.5px solid #d7e4e7; border-left: 6px solid var(--accent);
+      transition: border-color .15s, transform .15s;
+    }
+    .system.usage { --accent: var(--silt); }
+    .system:hover { border-color: var(--accent); transform: translateX(4px); }
+    .system:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .system .icon {
+      width: 76px; height: 76px; border-radius: 50%;
+      display: grid; place-items: center;
+      background: color-mix(in srgb, var(--accent) 14%, #fff);
+    }
+    .system h3 { margin: 0 0 4px; font-size: 21px; line-height: 1.45; color: var(--river); }
+    .system .what { margin: 0 0 10px; color: var(--muted); font-size: 15px; }
+    .system ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px 8px; }
+    .system li {
+      font-size: 13px; padding: 3px 10px; border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 10%, #fff);
+      color: color-mix(in srgb, var(--accent) 70%, #0b3a53);
+    }
+    .system .go {
+      font-weight: 700; font-size: 15px; white-space: nowrap; color: #fff;
+      background: var(--accent); padding: 11px 20px; border-radius: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .page { grid-template-columns: 1fr; }
+      .bank { padding: 36px 26px 150px; min-height: auto; }
+      .bank .foot { display: none; }
+      .river { height: 150px; inset: auto -10% 0 -10%; }
+      .choices { padding: 28px 18px 40px; }
+      .system { grid-template-columns: 56px 1fr; padding: 20px; gap: 16px; align-items: start; }
+      .system .icon { width: 56px; height: 56px; }
+      .system .icon svg { width: 30px; height: 30px; }
+      .system .go { grid-column: 1 / -1; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="bank">
+      <div class="org">
+        <svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c3.6 4.3 6.5 8 6.5 11.3A6.5 6.5 0 0 1 5.5 13.8C5.5 10.5 8.4 6.8 12 2.5Z" fill="#2aa3a8"/><path d="M8.5 14.5c.4 1.7 1.8 3 3.5 3.2" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+        ກົມຊັບພະຍາກອນນ້ຳ
+      </div>
+
+      <div>
+        <h1>ລະບົບຂໍ້ມູນຊັບພະຍາກອນນ້ຳ</h1>
+        <p class="lead">ເລືອກລະບົບທີ່ຕ້ອງການເຮັດວຽກ. ທັງສອງລະບົບໃຊ້ບັນຊີຜູ້ໃຊ້ ແລະ ຖານຂໍ້ມູນດຽວກັນ.</p>
+      </div>
+
+      <div class="foot">Department of Water Resources</div>
+
+      <svg class="river" viewBox="0 0 800 300" preserveAspectRatio="none" aria-hidden="true">
+        <path class="p1" d="M-20 210 C 120 120, 220 280, 360 190 S 580 90, 820 170"/>
+        <path class="p2" d="M-20 240 C 140 160, 240 300, 380 220 S 600 130, 820 205"/>
+        <path class="p3" d="M-20 270 C 160 205, 260 310, 400 255 S 610 175, 820 240"/>
+      </svg>
+    </section>
+
+    <main class="choices">
+      <h2>ເຂົ້າໃຊ້ລະບົບໃດ?</h2>
+
+      <a class="system quality" href="water-quality.html">
+        <span class="icon" aria-hidden="true">
+          <!-- ຫຼອດທົດລອງ + ຢົດນ້ຳ -->
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#13667a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 3h6"/><path d="M10 3v11.5a4 4 0 0 1-2.3 3.6L7 18.5A2.5 2.5 0 0 0 8.1 21h7.8a2.5 2.5 0 0 0 1.1-4.7l-.7-.4A4 4 0 0 1 14 14.5V3"/>
+            <path d="M10 12h4"/>
+          </svg>
+        </span>
+        <span>
+          <h3>ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ</h3>
+          <p class="what">ບັນທຶກ ແລະ ວິເຄາະຜົນກວດຄຸນນະພາບນ້ຳ ຂອງແຕ່ລະສະຖານີ ແລະ ບໍລິສັດ</p>
+          <ul>
+            <li>ນຳເຂົ້າຜົນວິເຄາະຈາກ Excel</li>
+            <li>ແຜນທີ່ຈຸດເກັບຕົວຢ່າງ</li>
+            <li>ກຣາຟ ແລະ ແຈ້ງເຕືອນເກີນເກນ</li>
+          </ul>
+        </span>
+        <span class="go">ເຂົ້າລະບົບ</span>
+      </a>
+
+      <a class="system usage" href="water-usage.html">
+        <span class="icon" aria-hidden="true">
+          <!-- ມາດວັດນ້ຳ -->
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#8a6a2c" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="13" r="8"/><path d="M12 13l3.5-3.5"/><path d="M8 17h8"/><path d="M12 3V1.8M7.5 6.3l-.8-.8M16.5 6.3l.8-.8"/>
+          </svg>
+        </span>
+        <span>
+          <h3>ລະບົບຕິດຕາມຂໍ້ມູນການນຳໃຊ້ນ້ຳ ຂອງໂຄງການ ຫຼື ກິດຈະການ</h3>
+          <p class="what">ທະບຽນໂຄງການທີ່ນຳໃຊ້ນ້ຳ, ປະລິມານນ້ຳທີ່ໃຊ້ ແລະ ໃບອະນຸຍາດ</p>
+          <ul>
+            <li>ຂໍ້ມູນໂຄງການ ແລະ ປະລິມານນ້ຳ</li>
+            <li>ໃບອະນຸຍາດ ແລະ ວັນໝົດອາຍຸ</li>
+            <li>ແຜນທີ່ GIS ແລະ ບົດລາຍງານ</li>
+          </ul>
+        </span>
+        <span class="go">ເຂົ້າລະບົບ</span>
+      </a>
+    </main>
+  </div>
+</body>
+</html>
