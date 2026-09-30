@@ -2517,6 +2517,7 @@
       const h = normHeader(header), c = compactHeader(header);
       if (!h) return null;
       if (isCoordHeader(header) && !/^(lat|latitude|lng|lon|long|longitude)$/i.test(c)) return 'coord';
+      if (/ວ\s*\.?\s*ດ\s*\.?\s*ປ|ວັນທີ|ວັນ\s*\/\s*ເດືອນ|sampling\s*date|date\s*of/i.test(String(header))) return 'date';
       for (const [field, aliases] of Object.entries(EXCEL_FIELDS)) {
         if (aliases.some(a => normHeader(a) === h || compactHeader(a) === c)) return field;
       }
@@ -2868,6 +2869,13 @@
       // ຖັນທີ່ບໍ່ຮູ້ຈັກ (ລວມທຸກຕາຕະລາງ, ບໍ່ຊ້ຳ)
       const unknownMap = new Map();
       good.forEach(b => b.unknownCols.forEach(u => { const c = canonParam(u.header); if (!unknownMap.has(c)) unknownMap.set(c, u.header); }));
+      // ຖັນທີ່ຄ່າສ່ວນໃຫຍ່ເປັນຕົວເລກ → ແນະນຳເປັນໂຕຊີ້ວັດ; ຖັນຂໍ້ຄວາມ (ຊື່ຄົນ, ຄຳອະທິບາຍ...) → ເກັບເປັນ "ຂໍ້ມູນເພີ່ມເຕີມ"
+      const numericRatio = canon => {
+        const vals = good.flatMap(b => b.parsed.map(st => st.extra[canon])).filter(v => v !== undefined && v !== '-' && v !== '');
+        if (!vals.length) return 0;
+        return vals.filter(v => typeof v === 'number' || /^\s*[<>≤≥]?\s*-?\d+(\.\d+)?\s*$/.test(String(v)) || String(v).toUpperCase() === 'ND').length / vals.length;
+      };
+      const unknownInfo = [...unknownMap.entries()].map(([canon, header]) => ({ canon, header, numeric: numericRatio(canon) >= 0.6 }));
 
       const blockCards = good.map((b, bi) => {
         const cols = [...b.indCols.map(x => ({ label: x.ind.name, get: st => st.customs[x.ind.key], isNew: false })),
@@ -2932,11 +2940,15 @@
 
           ${unknownMap.size ? `
             <div class="border border-amber-300 bg-amber-50 rounded-lg p-2">
-              <label class="flex items-start gap-1.5 cursor-pointer">
-                <input type="checkbox" id="excelAddUnknown" checked class="mt-0.5">
-                <span>🆕 ເພີ່ມເປັນ <b>ໂຕຊີ້ວັດໃໝ່</b>: ${[...unknownMap.values()].map(h => { const n = newIndicatorFromHeader(h); return `<b>${escAttr(n.name)}</b>${n.unit ? ` (${escAttr(n.unit)})` : ''}`; }).join(', ')}</span>
-              </label>
-              <p class="text-[10px] text-slate-500 mt-1">ຫົວໜ່ວຍທີ່ສະແດງແມ່ນຄ່າມາດຕະຖານ — ແກ້ໄດ້ພາຍຫຼັງໃນ ⚙️ ຕັ້ງຄ່າລະບົບ. ຖ້າບໍ່ຕິກ ຖັນເຫຼົ່ານີ້ຈະຖືກຂ້າມ</p>
+              <p class="font-bold text-slate-700 mb-1">🆕 ຖັນທີ່ລະບົບຍັງບໍ່ຮູ້ຈັກ — ຕິກອັນທີ່ຈະເພີ່ມເປັນ <b>ໂຕຊີ້ວັດ</b> (ໃສ່ຕາຕະລາງຄ່າ ແລະ ກຣາຟ)</p>
+              <div class="flex flex-wrap gap-x-3 gap-y-1 max-h-32 overflow-auto">
+                ${unknownInfo.map((u, k) => { const n = newIndicatorFromHeader(u.header); return `
+                  <label class="flex items-center gap-1 cursor-pointer ${u.numeric ? '' : 'text-slate-500'}">
+                    <input type="checkbox" class="excelUnkChk" data-canon="${escAttr(u.canon)}" ${u.numeric ? 'checked' : ''}>
+                    <b>${escAttr(n.name)}</b>${n.unit ? ` (${escAttr(n.unit)})` : ''}${u.numeric ? '' : ' <span class="text-[10px]">📝 ຂໍ້ຄວາມ</span>'}
+                  </label>`; }).join('')}
+              </div>
+              <p class="text-[10px] text-slate-500 mt-1">ຖັນທີ່ <b>ບໍ່ຕິກ</b> ຈະບໍ່ເປັນໂຕຊີ້ວັດ ແຕ່ຍັງເກັບເປັນ <b>📝 ຂໍ້ມູນເພີ່ມເຕີມ</b> ຂອງສະຖານີ (ເບິ່ງໄດ້ໃນແຜນທີ່ ແລະ Excel). ຖັນ 📝 ຂໍ້ຄວາມ ເຊັ່ນ ຊື່ຄົນ, ຄຳອະທິບາຍ ບໍ່ຕິກໄວ້ໃຫ້ເປັນຄ່າເລີ່ມຕົ້ນ.</p>
             </div>` : ''}
 
           <div class="space-y-2 max-h-[45vh] overflow-auto pr-1">${blockCards}</div>
@@ -2979,7 +2991,8 @@
             return false;
           }
           window.__excelOverwriteOk = false;
-          return { chosen, addUnknown: !!document.getElementById('excelAddUnknown')?.checked, recorder };
+          const addCanons = [...document.querySelectorAll('.excelUnkChk')].filter(c => c.checked).map(c => c.dataset.canon);
+          return { chosen, addCanons, recorder };
         }
       }).then(result => {
         if (!result.isConfirmed) return;
@@ -2987,7 +3000,9 @@
       });
     }
 
-    function applyExcelImport({ chosen, addUnknown, recorder }, unknownMap) {
+    const safeInfoKey = k => String(k).replace(/[.#$\[\]\/]/g, '_').slice(0, 120);
+    function applyExcelImport({ chosen, addCanons = [], recorder }, unknownMap) {
+      const addUnknown = addCanons.length > 0;
       let configChanged = false;
 
       // ໂຕຊີ້ວັດທີ່ມີໃນ master ແຕ່ບໍ່ໄດ້ເປີດໃຊ້ → ເປີດໃຊ້
@@ -3000,6 +3015,7 @@
       if (addUnknown) {
         let n = 0;
         unknownMap.forEach((header, canon) => {
+          if (!addCanons.includes(canon)) return;
           const usedInChosen = chosen.some(({ block }) => block.unknownCols.some(u => canonParam(u.header) === canon));
           if (!usedInChosen) return;
           const { name, unit } = newIndicatorFromHeader(header);
@@ -3023,7 +3039,14 @@
       const toStations = (block, blockDate = '') => block.parsed.map(st => {
         const customs = { ...st.customs };
         Object.entries(newKeyByCanon).forEach(([canon, key]) => { if (canon in st.extra) customs[key] = st.extra[canon]; });
-        return { id: idSeed++, code: st.code, name: st.name, province: st.province, lat: st.lat, lng: st.lng, sampleDate: st.sampleDate || blockDate || '', section: st.section || block.section || '', locationNote: st.locationNote || '', gps: st.gps || (st.lat !== null ? toDMS(st.lat, st.lng) : ''), customs, status: evalStatus(customs) };
+        // ຖັນທີ່ບໍ່ໄດ້ເພີ່ມເປັນໂຕຊີ້ວັດ → ຂໍ້ມູນເພີ່ມເຕີມ (ບໍ່ເຂົ້າກຣາຟ/ຕາຕະລາງຄ່າ)
+        const info = {};
+        unknownMap.forEach((header, canon) => {
+          if (newKeyByCanon[canon] || !(canon in st.extra)) return;
+          const v = st.extra[canon];
+          if (v !== '-' && v !== '' && v !== undefined) info[safeInfoKey(header)] = v;
+        });
+        return { id: idSeed++, code: st.code, name: st.name, province: st.province, lat: st.lat, lng: st.lng, sampleDate: st.sampleDate || blockDate || '', section: st.section || block.section || '', locationNote: st.locationNote || '', gps: st.gps || (st.lat !== null ? toDMS(st.lat, st.lng) : ''), info, customs, status: evalStatus(customs) };
       });
 
       // ຕາຕະລາງທີ່ຫົວຂໍ້ຄືກັນ (ໃນໄຟລ໌ດຽວກັນ) → ລວມເປັນກຸ່ມດຽວກ່ອນບັນທຶກ
@@ -3506,6 +3529,7 @@
                 ${st.sampleDate ? `<b>📅 ວັນທີ:</b> ${fmtSampleDate(st.sampleDate)}<br>` : ''}
                 ${st.locationNote ? `<b>📌 ທີ່ຕັ້ງ:</b> ${escAttr(st.locationNote)}<br>` : ''}
                 <b>🧭 ພິກັດ:</b> <span style="font-family:monospace">${escAttr(gpsTextOf(st))}</span><br>
+                ${st.info && Object.keys(st.info).length ? `<div style="margin-top:4px;padding-top:4px;border-top:1px dashed #cbd5e1;font-size:11px;color:#475569;">${Object.entries(st.info).map(([k, v]) => `<b>📝 ${escAttr(k)}:</b> ${escAttr(v)}`).join('<br>')}</div>` : ''}
                 <b>ແຂວງ:</b> ${st.province}<br>
                 ${customPopupHTML}
                 <b>ສະຖານະ:</b> <span style="font-weight: bold; color: ${st.status && st.status.isAlert ? '#dc2626' : '#16a34a'};">${st.status ? st.status.text : '✅ Normal'}</span>
@@ -4038,14 +4062,15 @@
       if (!item) return;
       const stations = item.stations || [item];
       const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-      const head = ['No.', 'ໂຄງການ/ກຸ່ມ', 'ວັນທີເກັບຕົວຢ່າງ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'ພິກັດ (ອົງສາ)', 'Lat', 'Lng', ...valueInds().map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
+      const head = ['No.', 'ໂຄງການ/ກຸ່ມ', 'ວັນທີເກັບຕົວຢ່າງ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'ພິກັດ (ອົງສາ)', 'Lat', 'Lng', ...valueInds().map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ', 'ຂໍ້ມູນເພີ່ມເຕີມ'];
       let csv = '\uFEFF' + [q('ບໍລິສັດ: ' + (item.companyName || item.name || '')), q('ວັນທີ: ' + (item.date || '')), q('ຜູ້ບັນທຶກ: ' + (item.recordedBy || ''))].join(',') + '\n';
       if (item.projectLocation) csv += q('ທີ່ຕັ້ງ: ' + item.projectLocation) + '\n';
       csv += '\n' + head.map(q).join(',') + '\n';
       stations.forEach((st, k) => {
         const row = [k + 1, st.section || '', st.sampleDate || '', st.code, st.name, st.province, gpsTextOf(st), st.lat ?? '', st.lng ?? '',
           ...valueInds().map(i => st.customs ? (st.customs[i.key] ?? '-') : '-'),
-          st.status ? st.status.text.replace(/[^\w\s]/g, '').trim() : 'Normal'];
+          st.status ? st.status.text.replace(/[^\w\s]/g, '').trim() : 'Normal',
+          st.info ? Object.entries(st.info).map(([k, v]) => `${k}: ${v}`).join('; ') : ''];
         csv += row.map(q).join(',') + '\n';
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
