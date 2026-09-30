@@ -777,6 +777,93 @@ function volumePerDay(p) {
 var calcMonthVolume = (p) => Math.round(volumePerDay(p) * 30 * 100) / 100;
 var calcYearVolume = (p) => Math.round(volumePerDay(p) * 365 * 100) / 100;
 var fmtVol = (v) => v === undefined || v === null || v === "" ? "" : Number(v).toLocaleString();
+// ---- ພິກັດອົງສາ ↔ ທົດສະນິຍົມ ----
+    function parseCoordPart(txt) {
+  if (txt === null || txt === undefined) return NaN;
+  if (typeof txt === 'number') return txt;
+  let t = String(txt).trim().replace(/[′’‘`´]/g, "'").replace(/[″”“]/g, '"').replace(/''/g, '"').replace(/,/g, '.');
+  if (!t) return NaN;
+  const hemi = (t.match(/[NSEW]|ເໜືອ|ໃຕ້|ຕາເວັນອອກ|ຕາເວັນຕົກ/i) || [''])[0].toUpperCase();
+  const nums = t.match(/-?\d+(?:\.\d+)?/g);
+  if (!nums) return NaN;
+  let [d, m = 0, s = 0] = nums.map(Number);
+  if (nums.length === 1 && !/[°º˚d']/.test(t)) {
+    // ທົດສະນິຍົມທຳມະດາ (ອາດມີ N/E)
+    const v = Number(nums[0]);
+    return /^[SW]|ໃຕ້|ຕາເວັນຕົກ/.test(hemi) ? -Math.abs(v) : v;
+  }
+  if (m >= 60 || s >= 60) return NaN;
+  let v = Math.abs(d) + m / 60 + s / 3600;
+  if (d < 0 || /^[SW]|ໃຕ້|ຕາເວັນຕົກ/.test(hemi)) v = -v;
+  return Math.round(v * 1e6) / 1e6;
+}
+
+// ຫາຄູ່ພິກັດໃນຂໍ້ຄວາມ: "17°58'13.0"N 102°35'48.1"E" ຫຼື "17.9703, 102.5967" → { lat, lng }
+function parseCoordPair(txt) {
+  if (txt === null || txt === undefined) return null;
+  const t = String(txt).trim().replace(/[′’‘`´]/g, "'").replace(/[″”“]/g, '"');
+  if (!t) return null;
+  let a, b;
+  // ມີ N/S ແລະ E/W → ແຍກຕາມຕົວອັກສອນທິດ
+  const dms = t.match(/([-\d.,\s°º˚'"d]+?\s*[NS])[\s,;/]*([-\d.,\s°º˚'"d]+?\s*[EW])/i) || t.match(/([NS]\s*[-\d.,\s°º˚'"]+?)[\s,;/]+([EW]\s*[-\d.,\s°º˚'"]+)/i);
+  if (dms) { a = parseCoordPart(dms[1]); b = parseCoordPart(dms[2]); }
+  else {
+    const nums = t.match(/-?\d+(?:\.\d+)?/g);
+    if (!nums) return null;
+    if (nums.length === 2) { a = Number(nums[0]); b = Number(nums[1]); }                              // 17.97, 102.59
+    else if (nums.length === 6) { a = parseCoordPart(nums.slice(0, 3).join(' ') + '°'); b = parseCoordPart(nums.slice(3).join(' ') + '°'); } // 17 58 13 102 35 48
+    else if (nums.length === 4) { a = parseCoordPart(nums.slice(0, 2).join(' ') + '°'); b = parseCoordPart(nums.slice(2).join(' ') + '°'); }
+    else return null;
+  }
+  if (isNaN(a) || isNaN(b)) return null;
+  // ລາວ: lat 13–23, lng 100–108 → ຖ້າໃສ່ສະລັບກັນ ໃຫ້ສະລັບຄືນ
+  if (Math.abs(a) > 90 && Math.abs(b) <= 90) [a, b] = [b, a];
+  if (Math.abs(a) > 90 || Math.abs(b) > 180) return null;
+  return { lat: a, lng: b };
+}
+function withDerivedCoord(st) {
+  if (!st || (st.lat && st.lng && !isNaN(st.lat) && !isNaN(st.lng))) return st;
+  const v = Object.values(st.customs || {}).find(x => looksLikeCoordText(x) && parseCoordPair(x));
+  if (!v) return st;
+  const pr = parseCoordPair(v);
+  return { ...st, lat: pr.lat, lng: pr.lng, _derivedCoord: true };
+}
+function toDMSPart(v, pos, neg) {
+  if (v === null || v === undefined || v === '' || isNaN(v)) return '';
+  const a = Math.abs(Number(v));
+  let d = Math.floor(a), m = Math.floor((a - d) * 60), sec = Math.round(((a - d) * 60 - m) * 600) / 10;
+  if (sec >= 60) { sec = 0; m++; }
+  if (m >= 60) { m = 0; d++; }
+  return `${d}°${String(m).padStart(2, '0')}'${sec.toFixed(1).padStart(4, '0')}"${Number(v) < 0 ? neg : pos}`;
+}
+function toDMS(lat, lng) {
+  const a = toDMSPart(lat, 'N', 'S'), b = toDMSPart(lng, 'E', 'W');
+  return a && b ? `${a} ${b}` : '';
+}
+
+// ຊ່ອງພິກັດອົງສາ (ແບບດຽວກັບ ລະບົບຄຸນນະພາບນ້ຳ): ວາງ/ພິມ 17°58'13.0"N 102°35'48.1"E → ແປງເປັນ Lat/Lng ໃຫ້ເອງ
+var DmsCoordField = ({ lat, lng, onChange, ring = "focus:ring-green-500", label = "🧭 ພິກັດແບບອົງສາ (GPS) — ໃສ່ແບບນີ້ ຫຼື ໃສ່ Lat/Lng ຂ້າງລຸ່ມກໍ່ໄດ້" }) => {
+  const shown = lat && lng ? toDMS(lat, lng) : "";
+  const apply = (el) => {
+    const v = el.value.trim();
+    if (!v) return;
+    const pr = parseCoordPair(v);
+    el.style.borderColor = pr ? "" : "#fb7185";
+    if (pr) onChange(pr.lat, pr.lng);
+  };
+  return /* @__PURE__ */ jsxs8("div", { className: "md:col-span-3", children: [
+    /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: label }),
+    /* @__PURE__ */ jsx8("input", {
+      type: "text",
+      defaultValue: shown,
+      onBlur: (e) => apply(e.target),
+      onPaste: (e) => { const el = e.target; setTimeout(() => apply(el), 0); },
+      onKeyDown: (e) => { if (e.key === "Enter") { e.preventDefault(); apply(e.target); } },
+      placeholder: `ຕົວຢ່າງ: 17°58'13.0"N 102°35'48.1"E  ຫຼື  17.9703, 102.5967`,
+      className: `w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 ${ring} font-mono bg-slate-50`
+    }, shown)
+  ] });
+};
 // src/lib/exportUtils.ts
 import * as XLSX from "xlsx";
 function exportProjectsToExcel(projects, filename = "Water_Projects_Lao") {
@@ -1878,6 +1965,8 @@ var WaterMap = ({
   const [isFullscreen, setIsFullscreen] = useState2(false);
   const [filterProvince, setFilterProvince] = useState2("all");
   const [filterStatus, setFilterStatus] = useState2("all");
+  const [focusProjectId, setFocusProjectId] = useState2("");   // ເລືອກໂຄງການ (ຄືລະບົບຄຸນນະພາບນ້ຳ)
+  const [focusOnly, setFocusOnly] = useState2(false);          // ສະແດງສະເພາະໂຄງການນີ້
   const [showConnections, setShowConnections] = useState2(true);
   const [showProjects, setShowProjects] = useState2(true);
   const [showIntakes, setShowIntakes] = useState2(true);
@@ -1896,8 +1985,8 @@ var WaterMap = ({
     const getTileLayer = (type) => {
       if (type === "satellite") {
         return L.tileLayer(
-          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-          { attribution: "Esri World Imagery", maxZoom: 18 }
+          "https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}",
+          { attribution: "&copy; Google Maps Satellite", maxZoom: 20, subdomains: ["mt0", "mt1", "mt2", "mt3"] }
         );
       } else if (type === "terrain") {
         return L.tileLayer(
@@ -1906,8 +1995,8 @@ var WaterMap = ({
         );
       } else {
         return L.tileLayer(
-          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-          { attribution: "OpenStreetMap Streets", maxZoom: 19 }
+          "https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+          { attribution: "&copy; Google Maps", maxZoom: 20, subdomains: ["mt0", "mt1", "mt2", "mt3"] }
         );
       }
     };
@@ -1943,8 +2032,8 @@ var WaterMap = ({
     let newLayer;
     if (type === "satellite") {
       newLayer = L.tileLayer(
-        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        { attribution: "Esri World Imagery", maxZoom: 18 }
+        "https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}",
+        { attribution: "&copy; Google Maps Satellite", maxZoom: 20, subdomains: ["mt0", "mt1", "mt2", "mt3"] }
       );
     } else if (type === "terrain") {
       newLayer = L.tileLayer(
@@ -1953,8 +2042,8 @@ var WaterMap = ({
       );
     } else {
       newLayer = L.tileLayer(
-        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        { attribution: "OpenStreetMap Streets", maxZoom: 19 }
+        "https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
+        { attribution: "&copy; Google Maps", maxZoom: 20, subdomains: ["mt0", "mt1", "mt2", "mt3"] }
       );
     }
     newLayer.addTo(mapRef.current);
@@ -1994,7 +2083,8 @@ var WaterMap = ({
     const filtered = projects.filter((p) => {
       const matchProv = filterProvince === "all" || p.projectLocation.province === filterProvince;
       const matchStatus = filterStatus === "all" || p.status === filterStatus;
-      return matchProv && matchStatus;
+      const matchFocus = !focusOnly || !focusProjectId || p.id === focusProjectId;
+      return matchProv && matchStatus && matchFocus;
     });
     const createProjectIcon = (isSelected, isExpired) => {
       const size = isSelected ? 38 : 30;
@@ -2137,7 +2227,24 @@ var WaterMap = ({
         mapRef.current.setView([sel.projectLocation.latitude, sel.projectLocation.longitude], 12, { animate: true });
       }
     }
-  }, [projects, selectedProjectId, previewProject, filterProvince, filterStatus, showConnections, showProjects, showIntakes]);
+  }, [projects, selectedProjectId, previewProject, filterProvince, filterStatus, showConnections, showProjects, showIntakes, focusOnly, focusProjectId]);
+  // ບິນໄປຫາຈຸດ ແລະ ເປີດຂໍ້ມູນໂຄງການ
+  const flyToPoint = (p, kind) => {
+    if (!p || !mapRef.current) return;
+    const loc = kind === "intake" ? p.intakeLocation : p.projectLocation;
+    const other = kind === "intake" ? p.projectLocation : p.intakeLocation;
+    setPreviewProject(p);
+    if (kind === "both" && p.projectLocation?.latitude && p.intakeLocation?.latitude) {
+      mapRef.current.flyToBounds([[p.projectLocation.latitude, p.projectLocation.longitude], [p.intakeLocation.latitude, p.intakeLocation.longitude]], { padding: [80, 80], maxZoom: 15, duration: 0.8 });
+      return;
+    }
+    const target = loc && loc.latitude && loc.longitude ? loc : other;
+    if (target && target.latitude && target.longitude) mapRef.current.flyTo([target.latitude, target.longitude], 15, { duration: 0.8 });
+  };
+  const resetMapView = () => {
+    setFocusProjectId(""); setFocusOnly(false); setPreviewProject(null);
+    mapRef.current && mapRef.current.flyTo([18.2, 103], 7, { duration: 0.8 });
+  };
   const copyGps = (text) => {
     navigator.clipboard.writeText(text);
     setCopiedText(text);
@@ -2211,7 +2318,41 @@ var WaterMap = ({
               /* @__PURE__ */ jsx2("option", { value: "suspended", children: "ຢຸດຊົ່ວຄາວ" })
             ]
           }
-        )
+        ),
+        /* ເລືອກໂຄງການ / ຈຸດ → ຊູມເຂົ້າ (ແບບດຽວກັບ ລະບົບຄຸນນະພາບນ້ຳ) */
+        /* @__PURE__ */ jsx2("div", { className: "h-6 w-[1px] bg-slate-700 hidden sm:block" }),
+        /* @__PURE__ */ jsxs2(
+          "select",
+          {
+            value: focusProjectId,
+            onChange: (e) => { const id = e.target.value; setFocusProjectId(id); const p = projects.find((x) => x.id === id); if (p) flyToPoint(p, "both"); else resetMapView(); },
+            className: "text-xs bg-slate-800 border border-sky-700 text-sky-100 rounded-xl px-3 py-1.5 font-semibold outline-hidden max-w-[220px]",
+            title: "ເລືອກໂຄງການ ເພື່ອຊູມເຂົ້າ",
+            children: [
+              /* @__PURE__ */ jsxs2("option", { value: "", children: ["🏢 ເລືອກໂຄງການ... (", projects.length, ")"] }),
+              projects.slice().sort((a, b) => String(a.projectName).localeCompare(String(b.projectName))).map((p) => /* @__PURE__ */ jsx2("option", { value: p.id, disabled: !(p.projectLocation?.latitude || p.intakeLocation?.latitude), children: `${p.projectName}${p.projectLocation?.province ? " · " + p.projectLocation.province : ""}` }, p.id))
+            ]
+          }
+        ),
+        focusProjectId && /* @__PURE__ */ jsxs2(
+          "select",
+          {
+            value: "",
+            onChange: (e) => { const p = projects.find((x) => x.id === focusProjectId); if (p && e.target.value) flyToPoint(p, e.target.value); },
+            className: "text-xs bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-3 py-1.5 font-medium outline-hidden",
+            children: [
+              /* @__PURE__ */ jsx2("option", { value: "", children: "📍 ເລືອກຈຸດ..." }),
+              /* @__PURE__ */ jsx2("option", { value: "project", children: "🟢 ທີ່ຕັ້ງໂຄງການ" }),
+              /* @__PURE__ */ jsx2("option", { value: "intake", children: "💧 ບ່ອນດູດນໍ້າ" }),
+              /* @__PURE__ */ jsx2("option", { value: "both", children: "↔️ ທັງສອງຈຸດ" })
+            ]
+          }
+        ),
+        focusProjectId && /* @__PURE__ */ jsxs2("label", { className: "flex items-center gap-1.5 text-xs text-slate-200 bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1.5 cursor-pointer", children: [
+          /* @__PURE__ */ jsx2("input", { type: "checkbox", checked: focusOnly, onChange: (e) => setFocusOnly(e.target.checked) }),
+          "ສະເພາະໂຄງການນີ້"
+        ] }),
+        /* @__PURE__ */ jsx2("button", { type: "button", onClick: resetMapView, className: "text-xs bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-2.5 py-1.5 font-semibold hover:bg-slate-700", title: "ເບິ່ງທັງໝົດ", children: "🌐 ທັງໝົດ" })
       ] }),
       /* @__PURE__ */ jsxs2("div", { className: "flex items-center gap-2 pointer-events-auto", children: [
         pickingMode && /* @__PURE__ */ jsx2("div", { className: "bg-amber-500 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-2xl shadow-xl animate-pulse flex items-center gap-2", children: /* @__PURE__ */ jsxs2("span", { children: [
@@ -5641,6 +5782,11 @@ var ProjectFormModal = ({
               }
             )
           ] }),
+          /* @__PURE__ */ jsx8(DmsCoordField, {
+            lat: formData.projectLocation?.latitude,
+            lng: formData.projectLocation?.longitude,
+            onChange: (la, lo) => setFormData({ ...formData, projectLocation: { ...formData.projectLocation, latitude: la, longitude: lo } })
+          }),
           /* @__PURE__ */ jsxs8("div", { children: [
             /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ຈຸດພິກັດ Latitude (ເສັ້ນຂະໜານ) *" }),
             /* @__PURE__ */ jsx8(
@@ -5759,6 +5905,13 @@ var ProjectFormModal = ({
               }
             )
           ] }),
+          /* @__PURE__ */ jsx8(DmsCoordField, {
+            lat: formData.intakeLocation?.latitude,
+            lng: formData.intakeLocation?.longitude,
+            ring: "focus:ring-sky-500",
+            label: "🧭 ພິກັດບ່ອນດູດນໍ້າ ແບບອົງສາ (GPS) — ໃສ່ແບບນີ້ ຫຼື ໃສ່ Lat/Lng ຂ້າງລຸ່ມກໍ່ໄດ້",
+            onChange: (la, lo) => setFormData({ ...formData, intakeLocation: { ...formData.intakeLocation, latitude: la, longitude: lo } })
+          }),
           /* @__PURE__ */ jsxs8("div", { children: [
             /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ຈຸດພິກັດ Latitude ບ່ອນດູດນໍ້າ *" }),
             /* @__PURE__ */ jsx8(
