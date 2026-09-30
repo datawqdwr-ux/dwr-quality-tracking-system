@@ -2076,33 +2076,16 @@ var WaterMap = ({
     newLayer.addTo(mapRef.current);
     activeTileLayerRef.current = newLayer;
   };
-  const toggleFullscreen = () => {
-    const elem = mapContainerRef.current?.parentElement;
-    if (!elem) return;
-    if (!document.fullscreenElement) {
-      if (elem.requestFullscreen) {
-        elem.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => setIsFullscreen(true));
-      } else {
-        setIsFullscreen(true);
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => setIsFullscreen(false));
-      } else {
-        setIsFullscreen(false);
-      }
-    }
-  };
+  // ເຕັມຈໍແບບ CSS (ບໍ່ໃຊ້ Fullscreen ຂອງ Browser) → ກ່ອງ "ລາຍລະອຽດເຕັມ", ແກ້ໄຂ ແລະ ຂໍ້ຄວາມ ຍັງເປີດຂຶ້ນເທິງແຜນທີ່ໄດ້
+  const toggleFullscreen = () => setIsFullscreen((v) => !v);
   useEffect2(() => {
-    const handleFsChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-      setTimeout(() => {
-        mapRef.current?.invalidateSize();
-      }, 200);
-    };
-    document.addEventListener("fullscreenchange", handleFsChange);
-    return () => document.removeEventListener("fullscreenchange", handleFsChange);
-  }, []);
+    document.body.classList.toggle("map-fs", isFullscreen);
+    document.body.style.overflow = isFullscreen ? "hidden" : "";
+    const t = setTimeout(() => mapRef.current?.invalidateSize(), 250);
+    const onKey = (e) => { if (e.key === "Escape" && isFullscreen && !document.querySelector(".fixed.inset-0.z-\\[1100\\]")) setIsFullscreen(false); };
+    document.addEventListener("keydown", onKey);
+    return () => { clearTimeout(t); document.removeEventListener("keydown", onKey); };
+  }, [isFullscreen]);
   useEffect2(() => {
     if (!mapRef.current || !markersLayerRef.current || !linesLayerRef.current) return;
     markersLayerRef.current.clearLayers();
@@ -2280,7 +2263,7 @@ var WaterMap = ({
     setCopiedText(text);
     setTimeout(() => setCopiedText(null), 2e3);
   };
-  return /* @__PURE__ */ jsxs2("div", { className: `relative w-full rounded-3xl overflow-hidden border border-slate-200/80 shadow-md bg-slate-900 transition-all ${isFullscreen ? "fixed inset-0 z-50 rounded-none h-screen w-screen" : "h-[670px]"}`, children: [
+  return /* @__PURE__ */ jsxs2("div", { className: `relative w-full rounded-3xl overflow-hidden border border-slate-200/80 shadow-md bg-slate-900 transition-all ${isFullscreen ? "fixed inset-0 z-[1050] rounded-none h-screen w-screen" : "h-[670px]"}`, children: [
     /* @__PURE__ */ jsxs2("div", { className: "absolute top-4 left-4 right-4 z-[1000] flex flex-wrap items-center justify-between gap-2.5 pointer-events-none", children: [
       /* @__PURE__ */ jsxs2("div", { className: "flex flex-wrap items-center gap-2 pointer-events-auto bg-slate-900/90 backdrop-blur-xl p-1.5 rounded-2xl border border-slate-700/80 shadow-xl", children: [
         /* @__PURE__ */ jsxs2("div", { className: "flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl", children: [
@@ -7995,7 +7978,8 @@ window.sharedLogout = sharedLogout;
  */
 
   </script>
-<div style="position:fixed;left:14px;bottom:14px;z-index:9000;display:flex;gap:8px;font:600 13px 'Noto Sans Lao',sans-serif">
+<style>body.map-fs #navPills{display:none!important}</style>
+<div id="navPills" style="position:fixed;left:14px;bottom:14px;z-index:9000;display:flex;gap:8px;font:600 13px 'Noto Sans Lao',sans-serif">
   <a href="index.html" title="ກັບໄປໜ້າເລືອກລະບົບ" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#0b3a53;color:#fff;text-decoration:none;box-shadow:0 4px 14px rgba(11,58,83,.35)">🏠 ໜ້າຫຼັກ</a>
   <a href="water-quality.html" title="ໄປລະບົບຄຸນນະພາບນ້ຳ (ບໍ່ຕ້ອງ Login ໃໝ່)" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#13667a;color:#fff;text-decoration:none;box-shadow:0 4px 14px rgba(19,102,122,.35)">🧪 ໄປລະບົບຄຸນນະພາບນ້ຳ</a>
 </div>
