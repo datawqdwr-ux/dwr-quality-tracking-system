@@ -891,27 +891,48 @@ var DmsCoordField = ({ lat, lng, onChange, ring = "focus:ring-green-500", label 
 };
 // 📅 ບັນທຶກຂໍ້ມູນການນຳໃຊ້ນ້ຳ ລາຍປີ: ເລືອກປີ → ປ້ອນຄ່າ → ເພີ່ມເຂົ້າລາຍການ (ຮ່າງ) → ກົດ "ບັນທຶກຂໍ້ມູນໂຄງການ" ບັນທຶກພ້ອມກັນ
 // (ແບບດຽວກັບ ລາຍການລໍຖ້າບັນທຶກ ຂອງລະບົບຄຸນນະພາບນ້ຳ)
+var LAO_MONTHS_SHORT = ["ມັງກອນ", "ກຸມພາ", "ມີນາ", "ເມສາ", "ພຶດສະພາ", "ມິຖຸນາ", "ກໍລະກົດ", "ສິງຫາ", "ກັນຍາ", "ຕຸລາ", "ພະຈິກ", "ທັນວາ"];
+var daysInMonth = (y, m) => new Date(y, m, 0).getDate();
+// 📅 ຂໍ້ມູນການນຳໃຊ້ນ້ຳ ລາຍປີ + ລາຍເດືອນ (ເດືອນ 1–12): ເລືອກປີ → ປ້ອນ → ເພີ່ມເຂົ້າລາຍການ (ຮ່າງ) → "ບັນທຶກຂໍ້ມູນໂຄງການ" ບັນທຶກພ້ອມກັນ
 var YearlyRecordsEditor = ({ formData, setFormData }) => {
   const thisYear = new Date().getFullYear();
-  const empty = { year: thisYear, daily: "", monthly: "", yearly: "", sourceType: formData.waterSourceType || WATER_SOURCE_TYPES[0], note: "" };
+  const blankMonths = () => Object.fromEntries(Array.from({ length: 12 }, (_, i) => [i + 1, ""]));
+  const empty = { year: thisYear, daily: "", monthly: "", yearly: "", months: blankMonths(), sourceType: formData.waterSourceType || WATER_SOURCE_TYPES[0], note: "" };
   const [row, setRow] = useState8(empty);
   const [editYear, setEditYear] = useState8(null);
+  const [openYear, setOpenYear] = useState8(null);
   const list = (formData.yearlyRecords || []).slice().sort((a, b) => b.year - a.year);
   const years = Array.from({ length: 16 }, (_, i) => thisYear + 1 - i);
   const perDayFrom = () => Number(row.daily) || volumePerDay(formData);
-  const set = (k, v) => setRow({ ...row, [k]: v });
+  const set = (k2, v) => setRow({ ...row, [k2]: v });
+  const setMonth = (m, v) => setRow({ ...row, months: { ...row.months, [m]: v } });
+  const monthNums = Object.entries(row.months || {}).filter(([, v]) => v !== "" && v !== null && isFinite(Number(v)));
+  const monthSum = monthNums.reduce((t, [, v]) => t + Number(v), 0);
   const inp = "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500";
   const lab = "block text-xs font-semibold text-slate-700 mb-1";
+  const fillMonthsFromDaily = () => {
+    const d = perDayFrom();
+    if (!d) return alert("ກະລຸນາປ້ອນ ປະລິມານ / ວັນ ກ່ອນ");
+    setRow({ ...row, months: Object.fromEntries(Array.from({ length: 12 }, (_, i) => [i + 1, Math.round(d * daysInMonth(row.year, i + 1) * 100) / 100])) });
+  };
+  const splitYearly = () => {
+    const y = Number(row.yearly);
+    if (!y) return alert("ກະລຸນາປ້ອນ ປະລິມານ / ປີ ກ່ອນ");
+    setRow({ ...row, months: Object.fromEntries(Array.from({ length: 12 }, (_, i) => [i + 1, Math.round(y / 12 * 100) / 100])) });
+  };
   const addRow = () => {
     const y = Number(row.year);
     if (!y) return alert("ກະລຸນາເລືອກປີ");
+    const months = Object.fromEntries(Object.entries(row.months || {}).filter(([, v]) => v !== "" && v !== null && isFinite(Number(v))).map(([m, v]) => ["m" + m, Number(v)]));
+    const hasMonths = Object.keys(months).length > 0;
+    const sum = Object.values(months).reduce((t, v) => t + v, 0);
     const daily = row.daily === "" ? null : Number(row.daily);
-    const monthly = row.monthly === "" ? (daily !== null ? Math.round(daily * 30 * 100) / 100 : null) : Number(row.monthly);
-    const yearly = row.yearly === "" ? (daily !== null ? Math.round(daily * 365 * 100) / 100 : null) : Number(row.yearly);
-    if (daily === null && monthly === null && yearly === null) return alert("ກະລຸນາປ້ອນປະລິມານນໍ້າຢ່າງນ້ອຍ 1 ຊ່ອງ");
+    const yearly = row.yearly !== "" ? Number(row.yearly) : hasMonths ? Math.round(sum * 100) / 100 : daily !== null ? Math.round(daily * 365 * 100) / 100 : null;
+    const monthly = row.monthly !== "" ? Number(row.monthly) : hasMonths ? Math.round(sum / Object.keys(months).length * 100) / 100 : daily !== null ? Math.round(daily * 30 * 100) / 100 : null;
+    if (daily === null && monthly === null && yearly === null) return alert("ກະລຸນາປ້ອນປະລິມານນໍ້າຢ່າງນ້ອຍ 1 ຊ່ອງ (ຕໍ່ວັນ, ລາຍເດືອນ ຫຼື ຕໍ່ປີ)");
     const exists = (formData.yearlyRecords || []).some((r) => r.year === y);
     if (exists && editYear !== y && !confirm(`ມີຂໍ້ມູນປີ ${y} ແລ້ວ — ຂຽນທັບບໍ່?`)) return;
-    const rec = { year: y, daily, monthly, yearly, sourceType: row.sourceType, note: row.note.trim(), draft: true, updatedAt: new Date().toISOString() };
+    const rec = { year: y, daily, monthly, yearly, months: hasMonths ? months : null, sourceType: row.sourceType, note: row.note.trim(), draft: true, updatedAt: new Date().toISOString() };
     const others = (formData.yearlyRecords || []).filter((r) => r.year !== y && r.year !== editYear);
     setFormData({ ...formData, yearlyRecords: [...others, rec] });
     setRow({ ...empty, year: y + 1 <= thisYear + 1 ? y + 1 : y });
@@ -919,16 +940,18 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
   };
   const editRow = (r) => {
     setEditYear(r.year);
-    setRow({ year: r.year, daily: r.daily ?? "", monthly: r.monthly ?? "", yearly: r.yearly ?? "", sourceType: r.sourceType || empty.sourceType, note: r.note || "" });
+    const months = blankMonths();
+    Object.entries(r.months || {}).forEach(([m, v]) => { const n = String(m).replace(/^m/, ""); if (months[n] !== undefined) months[n] = v ?? ""; });
+    setRow({ year: r.year, daily: r.daily ?? "", monthly: r.monthly ?? "", yearly: r.yearly ?? "", months, sourceType: r.sourceType || empty.sourceType, note: r.note || "" });
   };
   const delRow = (y) => {
     if (!confirm(`ລົບຂໍ້ມູນປີ ${y} ອອກຈາກລາຍການ?`)) return;
     setFormData({ ...formData, yearlyRecords: (formData.yearlyRecords || []).filter((r) => r.year !== y) });
   };
   const drafts = list.filter((r) => r.draft).length;
-  return /* @__PURE__ */ jsxs8("div", { className: "md:col-span-3 rounded-2xl border border-indigo-200 bg-indigo-50/40 p-4 space-y-3", children: [
+  return /* @__PURE__ */ jsxs8("div", { className: "rounded-2xl border border-indigo-200 bg-indigo-50/40 p-4 space-y-3", children: [
     /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
-      /* @__PURE__ */ jsx8("h4", { className: "text-sm font-bold text-indigo-900", children: "📅 ຂໍ້ມູນການນໍາໃຊ້ນໍ້າ ລາຍປີ" }),
+      /* @__PURE__ */ jsx8("h4", { className: "text-sm font-bold text-indigo-900", children: "📅 ແຜນການ / ຂໍ້ມູນການນໍາໃຊ້ນໍ້າ ລາຍປີ ແລະ ລາຍເດືອນ" }),
       drafts > 0 && /* @__PURE__ */ jsx8("span", { className: "text-[11px] font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded-full px-2.5 py-0.5", children: `📝 ຮ່າງ ${drafts} ປີ — ກົດ "ບັນທຶກຂໍ້ມູນໂຄງການ" ເພື່ອບັນທຶກພ້ອມກັນ` })
     ] }),
     /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-2 md:grid-cols-4 gap-3", children: [
@@ -941,24 +964,36 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
         /* @__PURE__ */ jsx8("input", { type: "number", min: "0", step: "any", value: row.daily, onChange: (e) => set("daily", e.target.value), placeholder: fmtVol(volumePerDay(formData)) || "0", className: inp })
       ] }),
       /* @__PURE__ */ jsxs8("div", { children: [
-        /* @__PURE__ */ jsxs8("label", { className: "flex justify-between text-xs font-semibold text-slate-700 mb-1", children: [
-          "ປະລິມານ / ເດືອນ (m³)",
-          /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => set("monthly", Math.round(perDayFrom() * 30 * 100) / 100), className: "text-[10px] font-bold text-blue-600 hover:underline", children: "🔄 ×30" })
-        ] }),
-        /* @__PURE__ */ jsx8("input", { type: "number", min: "0", step: "any", value: row.monthly, onChange: (e) => set("monthly", e.target.value), placeholder: `ອັດຕະໂນມັດ: ${fmtVol(Math.round(perDayFrom() * 30))}`, className: inp })
+        /* @__PURE__ */ jsx8("label", { className: lab, children: "ສະເລ່ຍ / ເດືອນ (m³)" }),
+        /* @__PURE__ */ jsx8("input", { type: "number", min: "0", step: "any", value: row.monthly, onChange: (e) => set("monthly", e.target.value), placeholder: monthNums.length ? `ຈາກລາຍເດືອນ: ${fmtVol(Math.round(monthSum / monthNums.length))}` : `ອັດຕະໂນມັດ: ${fmtVol(Math.round(perDayFrom() * 30))}`, className: inp })
       ] }),
       /* @__PURE__ */ jsxs8("div", { children: [
-        /* @__PURE__ */ jsxs8("label", { className: "flex justify-between text-xs font-semibold text-slate-700 mb-1", children: [
-          "ປະລິມານ / ປີ (m³)",
-          /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => set("yearly", Math.round(perDayFrom() * 365 * 100) / 100), className: "text-[10px] font-bold text-blue-600 hover:underline", children: "🔄 ×365" })
-        ] }),
-        /* @__PURE__ */ jsx8("input", { type: "number", min: "0", step: "any", value: row.yearly, onChange: (e) => set("yearly", e.target.value), placeholder: `ອັດຕະໂນມັດ: ${fmtVol(Math.round(perDayFrom() * 365))}`, className: inp })
+        /* @__PURE__ */ jsx8("label", { className: lab, children: "ລວມ / ປີ (m³)" }),
+        /* @__PURE__ */ jsx8("input", { type: "number", min: "0", step: "any", value: row.yearly, onChange: (e) => set("yearly", e.target.value), placeholder: monthNums.length ? `ລວມລາຍເດືອນ: ${fmtVol(Math.round(monthSum))}` : `ອັດຕະໂນມັດ: ${fmtVol(Math.round(perDayFrom() * 365))}`, className: inp })
+      ] })
+    ] }),
+    /* ລາຍເດືອນ 1–12 */
+    /* @__PURE__ */ jsxs8("div", { className: "bg-white border border-slate-200 rounded-xl p-3", children: [
+      /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center justify-between gap-2 mb-2", children: [
+        /* @__PURE__ */ jsx8("span", { className: "text-xs font-bold text-slate-700", children: `🗓️ ປະລິມານລາຍເດືອນ ປີ ${row.year} (m³)` }),
+        /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap gap-2 text-[11px] font-bold", children: [
+          /* @__PURE__ */ jsx8("button", { type: "button", onClick: fillMonthsFromDaily, className: "text-blue-600 hover:underline", children: "🔄 ຕໍ່ວັນ × ມື້ຂອງເດືອນ" }),
+          /* @__PURE__ */ jsx8("button", { type: "button", onClick: splitYearly, className: "text-blue-600 hover:underline", children: "➗ ແບ່ງຈາກລວມ/ປີ" }),
+          /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => set("months", blankMonths()), className: "text-slate-500 hover:underline", children: "ລ້າງ" })
+        ] })
       ] }),
-      /* @__PURE__ */ jsxs8("div", { className: "col-span-2", children: [
+      /* @__PURE__ */ jsx8("div", { className: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2", children: LAO_MONTHS_SHORT.map((mn, i) => /* @__PURE__ */ jsxs8("div", { children: [
+        /* @__PURE__ */ jsx8("label", { className: "block text-[10px] font-semibold text-slate-500 mb-0.5", children: `${i + 1}. ${mn}` }),
+        /* @__PURE__ */ jsx8("input", { type: "number", min: "0", step: "any", value: row.months?.[i + 1] ?? "", onChange: (e) => setMonth(i + 1, e.target.value), className: "w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-right" })
+      ] }, i)) }),
+      /* @__PURE__ */ jsx8("p", { className: "text-[11px] text-slate-500 mt-2 text-right", children: monthNums.length ? `ປ້ອນແລ້ວ ${monthNums.length}/12 ເດືອນ · ລວມ ${fmtVol(Math.round(monthSum * 100) / 100)} m³` : "ບໍ່ບັງຄັບ — ປ້ອນສະເພາະເດືອນທີ່ມີຂໍ້ມູນກໍ່ໄດ້" })
+    ] }),
+    /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-3", children: [
+      /* @__PURE__ */ jsxs8("div", { children: [
         /* @__PURE__ */ jsx8("label", { className: lab, children: "ປະເພດແຫຼ່ງນໍ້າ" }),
         /* @__PURE__ */ jsx8("select", { value: row.sourceType, onChange: (e) => set("sourceType", e.target.value), className: inp, children: WATER_SOURCE_TYPES.map((st) => /* @__PURE__ */ jsx8("option", { value: st, children: st }, st)) })
       ] }),
-      /* @__PURE__ */ jsxs8("div", { className: "col-span-2", children: [
+      /* @__PURE__ */ jsxs8("div", { children: [
         /* @__PURE__ */ jsx8("label", { className: lab, children: "ໝາຍເຫດ" }),
         /* @__PURE__ */ jsx8("input", { type: "text", value: row.note, onChange: (e) => set("note", e.target.value), placeholder: "ເຊັ່ນ: ອີງຕາມບົດລາຍງານປະຈຳປີ", className: inp })
       ] })
@@ -968,23 +1003,31 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
       editYear && /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => { setEditYear(null); setRow(empty); }, className: "px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded-xl", children: "ຍົກເລີກ" })
     ] }),
     list.length > 0 && /* @__PURE__ */ jsx8("div", { className: "overflow-auto border border-slate-300 rounded-xl bg-white", children: /* @__PURE__ */ jsxs8("table", { className: "w-full text-xs border-collapse", children: [
-      /* @__PURE__ */ jsx8("thead", { children: /* @__PURE__ */ jsx8("tr", { className: "bg-slate-100 text-slate-600", children: ["ປີ", "m³/ວັນ", "m³/ເດືອນ", "m³/ປີ", "ແຫຼ່ງນໍ້າ", "ໝາຍເຫດ", ""].map((h, i) => /* @__PURE__ */ jsx8("th", { className: "px-2 py-1.5 border-b text-left whitespace-nowrap", children: h }, i)) }) }),
-      /* @__PURE__ */ jsx8("tbody", { children: list.map((r) => /* @__PURE__ */ jsxs8("tr", { className: r.draft ? "bg-amber-50" : "", children: [
-        /* @__PURE__ */ jsxs8("td", { className: "px-2 py-1.5 border-b font-bold whitespace-nowrap", children: [r.year, r.draft && /* @__PURE__ */ jsx8("span", { className: "ml-1 text-[9px] font-bold text-amber-700", children: "📝 ຮ່າງ" })] }),
-        /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-right", children: fmtVol(r.daily) || "-" }),
-        /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-right", children: fmtVol(r.monthly) || "-" }),
-        /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-right font-semibold", children: fmtVol(r.yearly) || "-" }),
-        /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b", children: r.sourceType || "-" }),
-        /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-slate-500", children: r.note || "" }),
-        /* @__PURE__ */ jsxs8("td", { className: "px-2 py-1.5 border-b whitespace-nowrap text-right", children: [
-          /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => editRow(r), className: "text-blue-600 font-bold mr-2", children: "✏️" }),
-          /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => delRow(r.year), className: "text-rose-600 font-bold", children: "🗑️" })
-        ] })
-      ] }, r.year)) })
+      /* @__PURE__ */ jsx8("thead", { children: /* @__PURE__ */ jsx8("tr", { className: "bg-slate-100 text-slate-600", children: ["ປີ", "m³/ວັນ", "ສະເລ່ຍ/ເດືອນ", "ລວມ/ປີ", "ລາຍເດືອນ", "ແຫຼ່ງນໍ້າ", "ໝາຍເຫດ", ""].map((h, i2) => /* @__PURE__ */ jsx8("th", { className: "px-2 py-1.5 border-b text-left whitespace-nowrap", children: h }, i2)) }) }),
+      /* @__PURE__ */ jsx8("tbody", { children: list.flatMap((r) => {
+        const mcount = Object.entries(r.months || {}).filter(([k2, v]) => /^m\d+$/.test(k2) && v !== null && v !== "").length;
+        const main = /* @__PURE__ */ jsxs8("tr", { className: r.draft ? "bg-amber-50" : "", children: [
+          /* @__PURE__ */ jsxs8("td", { className: "px-2 py-1.5 border-b font-bold whitespace-nowrap", children: [r.year, r.draft && /* @__PURE__ */ jsx8("span", { className: "ml-1 text-[9px] font-bold text-amber-700", children: "📝 ຮ່າງ" })] }),
+          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-right", children: fmtVol(r.daily) || "-" }),
+          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-right", children: fmtVol(r.monthly) || "-" }),
+          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-right font-semibold", children: fmtVol(r.yearly) || "-" }),
+          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b", children: mcount ? /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => setOpenYear(openYear === r.year ? null : r.year), className: "text-indigo-600 font-bold hover:underline", children: `${openYear === r.year ? "▼" : "▶"} ${mcount}/12 ເດືອນ` }) : "-" }),
+          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b", children: r.sourceType || "-" }),
+          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-slate-500", children: r.note || "" }),
+          /* @__PURE__ */ jsxs8("td", { className: "px-2 py-1.5 border-b whitespace-nowrap text-right", children: [
+            /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => editRow(r), className: "text-blue-600 font-bold mr-2", children: "✏️" }),
+            /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => delRow(r.year), className: "text-rose-600 font-bold", children: "🗑️" })
+          ] })
+        ] }, r.year);
+        if (openYear !== r.year || !mcount) return [main];
+        return [main, /* @__PURE__ */ jsx8("tr", { children: /* @__PURE__ */ jsx8("td", { colSpan: 8, className: "px-2 py-2 border-b bg-indigo-50/40", children: /* @__PURE__ */ jsx8("div", { className: "grid grid-cols-3 sm:grid-cols-6 gap-1.5", children: LAO_MONTHS_SHORT.map((mn, i2) => /* @__PURE__ */ jsxs8("div", { className: "bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px]", children: [
+          /* @__PURE__ */ jsx8("div", { className: "text-slate-400", children: `${i2 + 1}. ${mn}` }),
+          /* @__PURE__ */ jsx8("div", { className: "font-bold text-right", children: fmtVol(r.months?.["m" + (i2 + 1)]) || "-" })
+        ] }, i2)) }) }) }, r.year + "-m")];
+      }) })
     ] }) })
   ] });
 };
-// 📊 ຕາຕະລາງຈາກ Excel ຂອງໂຄງການ (ແບບດຽວກັບຕາຕະລາງລາຍລະອຽດຂອງ ລະບົບຄຸນນະພາບນ້ຳ)
 var xlColName = (n) => { let s = ""; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
 function readExcelTables(file) {
   return new Promise((resolve, reject) => {
@@ -6278,7 +6321,6 @@ var ProjectFormModal = ({
               }
             )
           ] }),
-          /* @__PURE__ */ jsx8(YearlyRecordsEditor, { formData, setFormData }),
           /* @__PURE__ */ jsxs8("div", { className: "md:col-span-3", children: [
             /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ຊື່ແຫຼ່ງນໍ້າ (River / Source Name)" }),
             /* @__PURE__ */ jsx8(
@@ -6557,8 +6599,9 @@ var ProjectFormModal = ({
           /* @__PURE__ */ jsx8(FileText3, { size: 16, className: "text-blue-600" }),
           "ແຜນການນໍາໃຊ້ນໍ້າ ແລະ ໝາຍເຫດ"
         ] }),
+        /* @__PURE__ */ jsx8(YearlyRecordsEditor, { formData, setFormData }),
         /* @__PURE__ */ jsxs8("div", { children: [
-          /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ແຜນການນໍາໃຊ້ນໍ້າ (Water Usage Plan Details) *" }),
+          /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "📝 ລາຍລະອຽດແຜນການນໍາໃຊ້ນໍ້າ (ຂໍ້ຄວາມ)" }),
           /* @__PURE__ */ jsx8(
             "textarea",
             {
