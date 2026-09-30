@@ -2647,15 +2647,20 @@
         const get = f => m[f] !== undefined ? cellText(row[m[f]]) : '';
         const no = get('no'), village = get('village'), river = get('river'), district = get('district'), province = get('province');
         // ຖັນ GPS/Location (ອາດມີຫຼາຍຖັນ): ເອົາຖັນທີ່ເປັນພິກັດກ່ອນ, ບໍ່ດັ່ງນັ້ນເອົາຂໍ້ຄວາມທຳອິດ
-        const coordVals = (m.coordCols || []).map(c => cellText(row[c])).filter(Boolean);
+        let coordVals = (m.coordCols || []).map(c => cellText(row[c])).filter(Boolean);
+        const grpNow = get('group') || cur.lastGroup || '';
+        if (coordVals.length) { cur.lastCoordVals = coordVals; cur.lastCoordGroup = grpNow; }
+        else if (cur.lastCoordVals && cur.lastCoordGroup === grpNow && (m.group !== undefined)) coordVals = cur.lastCoordVals;
         const coordText = coordVals.find(v => parseCoordPair(v)) || coordVals[0] || '';
         let code = get('code'), name = get('name');
         if (!code && !name && !village && !river && !district && !coordText) return; // ແຖວໝາຍເຫດ
         // ຊ່ອງ ວັນທີ / ຊື່ໂຄງການ ທີ່ປ່ອຍຫວ່າງ (ຂຽນໄວ້ແຕ່ແຖວທຳອິດຂອງກຸ່ມ) → ໃຊ້ຄ່າຂອງແຖວກ່ອນໜ້າ
+        const rawGroup = get('group');
+        // ເລີ່ມກຸ່ມໃໝ່ (ຫົວຂໍ້ໃໝ່) → ບໍ່ເອົາວັນທີຂອງກຸ່ມກ່ອນມາໃຊ້
+        if (rawGroup && rawGroup !== cur.lastGroup) cur.lastDate = '';
+        if (rawGroup) cur.lastGroup = rawGroup;
         const rawDate = m.date !== undefined ? normalizeDateText(row[m.date]) : '';
         if (rawDate) cur.lastDate = rawDate;
-        const rawGroup = get('group');
-        if (rawGroup) cur.lastGroup = rawGroup;
 
         const customs = {};
         cur.indCols.forEach(({ col, ind }) => customs[ind.key] = cleanExcelValue(row[col]));
@@ -2818,6 +2823,16 @@
 
     // ສະແດງວ່າຕາຕະລາງນີ້ຈະ ລວມເຂົ້າຊຸດເດີມ ຫຼື ສ້າງຊຸດໃໝ່ (ອັບເດດເມື່ອແກ້ຊື່)
     let excelPreviewBlocks = [];
+    function toggleExcelMergeAll(n) {
+      const on = document.getElementById('excelMergeAll')?.checked;
+      document.getElementById('excelUnifiedWrap')?.classList.toggle('hidden', !on);
+      for (let k = 0; k < n; k++) {
+        const t = document.getElementById(`excelBlockTitle_${k}`);
+        if (t) t.classList.toggle('hidden', !!on);
+        document.getElementById(`excelBlockSec_${k}`)?.classList.toggle('hidden', !on);
+        updateExcelBlockTarget(k);
+      }
+    }
     function copyBlockDateToAll(bi, n) {
       const v = document.getElementById(`excelBlockDate_${bi}`)?.value || '';
       for (let k = 0; k < n; k++) {
@@ -2831,7 +2846,8 @@
       const input = document.getElementById(`excelBlockTitle_${bi}`);
       if (!box || !input) return;
       const prev = document.getElementById(`excelBlockMode_${bi}`)?.value;
-      const target = findDatasetByTitle(input.value);
+      const merged = document.getElementById('excelMergeAll')?.checked;
+      const target = findDatasetByTitle(merged ? (document.getElementById('excelUnifiedTitle')?.value || input.value) : input.value);
       if (target) {
         // ຄາດຄະເນຜົນ: ຈະເພີ່ມໃໝ່ຈັກແຖວ / ອັບເດດ (ຂຽນທັບ) ຈັກແຖວ
         const blk = excelPreviewBlocks[bi];
@@ -2859,6 +2875,13 @@
 
     function showExcelPreview(fileName, sheetName, blocks, targetTitle) {
       excelPreviewBlocks = blocks.filter(b => b.parsed.length);
+      // ໄຟລ໌ດຽວ = ຊຸດຂໍ້ມູນດຽວ: ຊື່ຊຸດ = ບໍລິສັດທີ່ທຸກຕາຕະລາງມີຮ່ວມກັນ / ຊື່ Sheet (ຖ້າມີ Sheet ດຽວ) / ຊື່ໄຟລ໌
+      const gb = excelPreviewBlocks;
+      const keys = [...new Set(gb.map(b => datasetKey(b.title)))];
+      const sheets = [...new Set(gb.map(b => b.sheet).filter(Boolean))];
+      const fileBase = fileName.replace(/\.(xlsx|xls|csv)$/i, '').replace(/_/g, ' ').trim();
+      const unifiedTitle = targetTitle || (keys.length === 1 && gb[0].title ? gb[0].title : sheets.length === 1 && sheets[0] && !/^sheet\s*\d*$/i.test(sheets[0]) ? sheets[0] : fileBase);
+      window.__excelUnified = unifiedTitle;
       const th = 'px-2 py-1 border border-slate-300 bg-slate-200 font-bold whitespace-nowrap';
       const td = 'px-2 py-1 border border-slate-300 whitespace-nowrap';
       const good = blocks.filter(b => b.parsed.length);
@@ -2897,6 +2920,7 @@
               <div class="flex-1">
                 <label class="text-[10px] font-bold text-slate-500">🏢 ຊື່ຊຸດຂໍ້ມູນ / ບໍລິສັດ (ຕາຕະລາງທີ ${bi + 1} · ແຖວ ${b.headerRow})</label>
                 ${b.section ? `<div class="text-[11px] text-indigo-700 font-semibold mb-0.5">📂 ຕາຕະລາງຍ່ອຍ: ${escAttr(b.section)}</div>` : ''}
+                <div id="excelBlockSec_${bi}" class="hidden text-[11px] font-bold text-indigo-700 mb-0.5">📂 ຫົວຂໍ້ຍ່ອຍ: ${escAttr(b.section || b.title || b.sheet || ('ຕາຕະລາງ ' + (bi + 1)))}</div>
                 <input type="text" id="excelBlockTitle_${bi}" value="${escAttr(targetTitle || b.title || fileName.replace(/\.(xlsx|xls|csv)$/i, ''))}" oninput="updateExcelBlockTarget(${bi})" class="w-full border rounded px-2 py-1 text-xs">
                 <div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] ${b.missingDate ? 'bg-amber-50 border border-amber-300 rounded px-2 py-1' : ''}">
                   ${b.missingDate ? `<span class="font-bold text-amber-800">📅 ${b.missingDate === b.parsed.length ? 'ບໍ່ພົບວັນທີໃນຕາຕະລາງນີ້' : `${b.missingDate} ແຖວບໍ່ມີວັນທີ`} — ຂໍ້ມູນນີ້ເປັນເດືອນໃດ?</span>` : '<span class="text-slate-500">📅 ມີວັນທີໃນໄຟລ໌ແລ້ວ</span>'}
@@ -2938,6 +2962,19 @@
             <br><span class="text-indigo-700">ຕາຕະລາງທີ່ <b>ຫົວຂໍ້ຄືກັບຊຸດທີ່ມີຢູ່ແລ້ວ</b> ຈະຖືກລວມເຂົ້າຊຸດເດີມ · ຕາຕະລາງທີ່ຫົວຂໍ້ຊ້ຳກັນໃນໄຟລ໌ຈະລວມເປັນຊຸດດຽວ</span>
           </div>
 
+          ${good.length > 1 ? `
+            <div class="border border-indigo-300 bg-indigo-50 rounded-lg p-2 space-y-1.5">
+              <label class="flex items-center gap-2 cursor-pointer font-bold text-indigo-900">
+                <input type="checkbox" id="excelMergeAll" checked onchange="toggleExcelMergeAll(${good.length})">
+                📦 ລວມທຸກຕາຕະລາງໃນໄຟລ໌ນີ້ ເປັນ <u>ຊຸດຂໍ້ມູນດຽວ</u> (ແຍກເປັນຫົວຂໍ້ຍ່ອຍພາຍໃນ)
+              </label>
+              <div id="excelUnifiedWrap" class="flex items-center gap-2">
+                <span class="text-[11px] text-slate-600 shrink-0">🏢 ຊື່ຊຸດຂໍ້ມູນ:</span>
+                <input type="text" id="excelUnifiedTitle" value="${escAttr(unifiedTitle)}" oninput="for (let k = 0; k < ${good.length}; k++) updateExcelBlockTarget(k)" class="flex-1 border rounded px-2 py-1 text-xs bg-white">
+              </div>
+              <p class="text-[10px] text-slate-500">ຫົວຂໍ້ຂອງແຕ່ລະຕາຕະລາງ (ເຊັ່ນ ຊື່ຫ້ອງທົດລອງ, ໂຄງການ) ຈະກາຍເປັນ <b>📂 ຫົວຂໍ້ຍ່ອຍ</b> ໃນຊຸດນີ້. ບໍ່ຕິກ = ແຍກເປັນຫຼາຍຊຸດ.</p>
+            </div>` : ''}
+
           ${unknownMap.size ? `
             <div class="border border-amber-300 bg-amber-50 rounded-lg p-2">
               <p class="font-bold text-slate-700 mb-1">🆕 ຖັນທີ່ລະບົບຍັງບໍ່ຮູ້ຈັກ — ຕິກອັນທີ່ຈະເພີ່ມເປັນ <b>ໂຕຊີ້ວັດ</b> (ໃສ່ຕາຕະລາງຄ່າ ແລະ ກຣາຟ)</p>
@@ -2971,7 +3008,7 @@
         cancelButtonText: 'ຍົກເລີກ',
         confirmButtonColor: '#059669',
         cancelButtonColor: '#64748b',
-        didOpen: () => { window.__excelOverwriteOk = false; good.forEach((_, bi) => updateExcelBlockTarget(bi)); },
+        didOpen: () => { window.__excelOverwriteOk = false; if (good.length > 1) toggleExcelMergeAll(good.length); good.forEach((_, bi) => updateExcelBlockTarget(bi)); },
         preConfirm: () => {
           const chosen = good.map((b, bi) => ({
             block: b,
@@ -2981,6 +3018,16 @@
             blockDate: document.getElementById(`excelBlockDate_${bi}`)?.value || ''
           })).filter(x => x.use);
           if (!chosen.length) { Swal.showValidationMessage('ກະລຸນາເລືອກຢ່າງນ້ອຍ 1 ຕາຕະລາງ'); return false; }
+          if (document.getElementById('excelMergeAll')?.checked) {
+            const uni = document.getElementById('excelUnifiedTitle').value.trim();
+            if (!uni) { Swal.showValidationMessage('ກະລຸນາລະບຸຊື່ຊຸດຂໍ້ມູນ'); return false; }
+            chosen.forEach(x => {
+              // ຫົວຂໍ້ຂອງຕາຕະລາງ → ຫົວຂໍ້ຍ່ອຍ (ຖ້າບໍ່ແມ່ນຊື່ດຽວກັບຊຸດ)
+              const own = x.block.section || (datasetKey(x.block.title) !== datasetKey(uni) ? x.block.title : '') || (x.block.sheet && datasetKey(x.block.sheet) !== datasetKey(uni) ? x.block.sheet : '');
+              x.section = own;
+              x.title = uni;
+            });
+          }
           if (chosen.some(x => !x.title)) { Swal.showValidationMessage('ກະລຸນາລະບຸຊື່ຊຸດຂໍ້ມູນໃຫ້ຄົບ'); return false; }
           const recorder = currentUserName || document.getElementById('recorderName').value.trim();
           if (!recorder) { Swal.showValidationMessage('ກະລຸນາພິມຊື່ຜູ້ບັນທຶກໃນຟອມກ່ອນ'); return false; }
@@ -3036,7 +3083,7 @@
       }
 
       let idSeed = Date.now();
-      const toStations = (block, blockDate = '') => block.parsed.map(st => {
+      const toStations = (block, blockDate = '', secOverride = '') => block.parsed.map(st => {
         const customs = { ...st.customs };
         Object.entries(newKeyByCanon).forEach(([canon, key]) => { if (canon in st.extra) customs[key] = st.extra[canon]; });
         // ຖັນທີ່ບໍ່ໄດ້ເພີ່ມເປັນໂຕຊີ້ວັດ → ຂໍ້ມູນເພີ່ມເຕີມ (ບໍ່ເຂົ້າກຣາຟ/ຕາຕະລາງຄ່າ)
@@ -3046,15 +3093,15 @@
           const v = st.extra[canon];
           if (v !== '-' && v !== '' && v !== undefined) info[safeInfoKey(header)] = v;
         });
-        return { id: idSeed++, code: st.code, name: st.name, province: st.province, lat: st.lat, lng: st.lng, sampleDate: st.sampleDate || blockDate || '', section: st.section || block.section || '', locationNote: st.locationNote || '', gps: st.gps || (st.lat !== null ? toDMS(st.lat, st.lng) : ''), info, customs, status: evalStatus(customs) };
+        return { id: idSeed++, code: st.code, name: st.name, province: st.province, lat: st.lat, lng: st.lng, sampleDate: st.sampleDate || blockDate || '', section: st.section || secOverride || block.section || '', locationNote: st.locationNote || '', gps: st.gps || (st.lat !== null ? toDMS(st.lat, st.lng) : ''), info, customs, status: evalStatus(customs) };
       });
 
       // ຕາຕະລາງທີ່ຫົວຂໍ້ຄືກັນ (ໃນໄຟລ໌ດຽວກັນ) → ລວມເປັນກຸ່ມດຽວກ່ອນບັນທຶກ
       const groups = [];
-      chosen.forEach(({ block, title, mode, blockDate }) => {
+      chosen.forEach(({ block, title, mode, blockDate, section }) => {
         const g = groups.find(x => datasetKey(x.title) === datasetKey(title));
         const year = (title.match(/\b(?:19|20)\d{2}(?:\s*[-–]\s*(?:19|20)\d{2})?\b/) || [])[0];
-        const sts = toStations(block, blockDate);
+        const sts = toStations(block, blockDate, section || '');
         if (g) g.stations = mergeStations(g.stations, sts).stations;
         else groups.push({ title, mode, stations: sts, date: year ? `ປີ ${year.replace(/\s+/g, '')}` : undefined });
       });
