@@ -2077,14 +2077,44 @@ var WaterMap = ({
     activeTileLayerRef.current = newLayer;
   };
   // ເຕັມຈໍແບບ CSS (ບໍ່ໃຊ້ Fullscreen ຂອງ Browser) → ກ່ອງ "ລາຍລະອຽດເຕັມ", ແກ້ໄຂ ແລະ ຂໍ້ຄວາມ ຍັງເປີດຂຶ້ນເທິງແຜນທີ່ໄດ້
-  const toggleFullscreen = () => setIsFullscreen((v) => !v);
+  const fsViewRef = useRef2(null);
+  const toggleFullscreen = () => {
+    if (mapRef.current) fsViewRef.current = { c: mapRef.current.getCenter(), z: mapRef.current.getZoom() };
+    setIsFullscreen((v) => !v);
+  };
   useEffect2(() => {
+    const wrap = mapContainerRef.current?.parentElement;
+    // ກ່ອງແມ່ທີ່ມີ transform / filter / z-index ເຮັດໃຫ້ position:fixed ບໍ່ເຕັມຈໍ → ປິດຊົ່ວຄາວ ຕອນເຕັມຈໍ
+    const saved = [];
+    if (isFullscreen && wrap) {
+      let el = wrap.parentElement;
+      while (el && el !== document.body) {
+        const cs = getComputedStyle(el);
+        if (cs.transform !== "none" || cs.filter !== "none" || cs.backdropFilter !== "none" || cs.perspective !== "none" || cs.contain !== "none" || cs.willChange !== "auto" || (cs.zIndex !== "auto" && cs.position !== "static")) {
+          saved.push([el, el.getAttribute("style") || ""]);
+          el.style.transform = "none"; el.style.filter = "none"; el.style.backdropFilter = "none";
+          el.style.perspective = "none"; el.style.contain = "none"; el.style.willChange = "auto";
+          el.style.zIndex = "auto"; el.style.animation = "none";
+        }
+        el = el.parentElement;
+      }
+    }
     document.body.classList.toggle("map-fs", isFullscreen);
     document.body.style.overflow = isFullscreen ? "hidden" : "";
-    const t = setTimeout(() => mapRef.current?.invalidateSize(), 250);
-    const onKey = (e) => { if (e.key === "Escape" && isFullscreen && !document.querySelector(".fixed.inset-0.z-\\[1100\\]")) setIsFullscreen(false); };
+    const t = setTimeout(() => {
+      const m = mapRef.current;
+      if (!m) return;
+      m.invalidateSize();
+      const v = fsViewRef.current;
+      if (v) m.setView(v.c, v.z, { animate: false }); // ຮັກສາຈຸດ ແລະ ລະດັບຊູມເດີມ
+    }, 120);
+    const onKey = (e) => { if (e.key === "Escape" && isFullscreen && !document.querySelector(".fixed.inset-0.z-\\[1100\\], .fixed.inset-0.z-\\[1200\\], .fixed.inset-0.z-\\[1250\\], .fixed.inset-0.z-\\[1300\\]")) toggleFullscreen(); };
     document.addEventListener("keydown", onKey);
-    return () => { clearTimeout(t); document.removeEventListener("keydown", onKey); };
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener("keydown", onKey);
+      saved.forEach(([el, st]) => el.setAttribute("style", st));
+    };
   }, [isFullscreen]);
   useEffect2(() => {
     if (!mapRef.current || !markersLayerRef.current || !linesLayerRef.current) return;
