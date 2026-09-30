@@ -778,6 +778,21 @@ var calcMonthVolume = (p) => Math.round(volumePerDay(p) * 30 * 100) / 100;
 var calcYearVolume = (p) => Math.round(volumePerDay(p) * 365 * 100) / 100;
 var fmtVol = (v) => v === undefined || v === null || v === "" ? "" : Number(v).toLocaleString();
 // ---- ພິກັດອົງສາ ↔ ທົດສະນິຍົມ ----
+// ພິກັດທີ່ໃຊ້ໄດ້: Lat -90..90, Lng -180..180 (ບໍ່ແມ່ນ 0,0)
+var validLL = (lat, lng) => {
+  const a = Number(lat), b = Number(lng);
+  return isFinite(a) && isFinite(b) && Math.abs(a) <= 90 && Math.abs(b) <= 180 && !(a === 0 && b === 0);
+};
+// ຕົວເລກອົງສາທີ່ພິມຕິດກັນ ເຊັ່ນ 1061149.3 (= 106°11'49.3") → ທົດສະນິຍົມ
+function unpackDMSNumber(v, max) {
+  const n = Number(v);
+  if (!isFinite(n) || Math.abs(n) <= max) return n;
+  const [ip, dp = ""] = String(Math.abs(n)).split(".");
+  if (ip.length < 5 || ip.length > 7) return n;
+  const sec = Number(ip.slice(-2) + (dp ? "." + dp : "")), min = Number(ip.slice(-4, -2)), deg = Number(ip.slice(0, -4));
+  if (min >= 60 || sec >= 60 || deg > max) return n;
+  return Math.round((deg + min / 60 + sec / 3600) * 1e6) / 1e6 * Math.sign(n);
+}
     function parseCoordPart(txt) {
   if (txt === null || txt === undefined) return NaN;
   if (typeof txt === 'number') return txt;
@@ -1979,6 +1994,9 @@ var WaterMap = ({
     const map = L.map(mapContainerRef.current, {
       center: [18.2, 103],
       zoom: 7,
+      minZoom: 4,
+      maxBounds: [[-60, 60], [60, 160]],
+      maxBoundsViscosity: 0.8,
       zoomControl: false
     });
     mapRef.current = map;
@@ -2182,7 +2200,7 @@ var WaterMap = ({
       const projLng = p.projectLocation.longitude;
       const intLat = p.intakeLocation.latitude;
       const intLng = p.intakeLocation.longitude;
-      if (projLat && projLng && showProjects) {
+      if (projLat && projLng && validLL(projLat, projLng) && showProjects) {
         const projectMarker = L.marker([projLat, projLng], {
           icon: createProjectIcon(isSelected, expired),
           title: `ໂຄງການ: ${p.projectName}`
@@ -2193,7 +2211,7 @@ var WaterMap = ({
         });
         markersLayerRef.current?.addLayer(projectMarker);
       }
-      if (intLat && intLng && showIntakes) {
+      if (intLat && intLng && validLL(intLat, intLng) && showIntakes) {
         const intakeMarker = L.marker([intLat, intLng], {
           icon: createIntakeIcon(isSelected),
           title: `ບ່ອນດູດນໍ້າ: ${p.projectName}`
@@ -2204,7 +2222,7 @@ var WaterMap = ({
         });
         markersLayerRef.current?.addLayer(intakeMarker);
       }
-      if (showConnections && projLat && projLng && intLat && intLng) {
+      if (showConnections && validLL(projLat, projLng) && validLL(intLat, intLng)) {
         const polyline = L.polyline(
           [
             [projLat, projLng],
@@ -2224,7 +2242,8 @@ var WaterMap = ({
       const sel = projects.find((p) => p.id === selectedProjectId);
       if (sel) {
         setPreviewProject(sel);
-        mapRef.current.setView([sel.projectLocation.latitude, sel.projectLocation.longitude], 12, { animate: true });
+        const ok = validLL(sel.projectLocation.latitude, sel.projectLocation.longitude) ? sel.projectLocation : validLL(sel.intakeLocation?.latitude, sel.intakeLocation?.longitude) ? sel.intakeLocation : null;
+        if (ok) mapRef.current.setView([ok.latitude, ok.longitude], 12, { animate: true });
       }
     }
   }, [projects, selectedProjectId, previewProject, filterProvince, filterStatus, showConnections, showProjects, showIntakes, focusOnly, focusProjectId]);
@@ -2234,12 +2253,14 @@ var WaterMap = ({
     const loc = kind === "intake" ? p.intakeLocation : p.projectLocation;
     const other = kind === "intake" ? p.projectLocation : p.intakeLocation;
     setPreviewProject(p);
-    if (kind === "both" && p.projectLocation?.latitude && p.intakeLocation?.latitude) {
+    const pOk = validLL(p.projectLocation?.latitude, p.projectLocation?.longitude), iOk = validLL(p.intakeLocation?.latitude, p.intakeLocation?.longitude);
+    if (!pOk && !iOk) { alert("ໂຄງການນີ້ ພິກັດບໍ່ຖືກຕ້ອງ — ກະລຸນາແກ້ໄຂພິກັດໃນຟອມໂຄງການ (Latitude -90 ຫາ 90, Longitude -180 ຫາ 180)"); return; }
+    if (kind === "both" && pOk && iOk) {
       mapRef.current.flyToBounds([[p.projectLocation.latitude, p.projectLocation.longitude], [p.intakeLocation.latitude, p.intakeLocation.longitude]], { padding: [80, 80], maxZoom: 15, duration: 0.8 });
       return;
     }
-    const target = loc && loc.latitude && loc.longitude ? loc : other;
-    if (target && target.latitude && target.longitude) mapRef.current.flyTo([target.latitude, target.longitude], 15, { duration: 0.8 });
+    const target = loc && validLL(loc.latitude, loc.longitude) ? loc : other;
+    if (target && validLL(target.latitude, target.longitude)) mapRef.current.flyTo([target.latitude, target.longitude], 15, { duration: 0.8 });
   };
   const resetMapView = () => {
     setFocusProjectId(""); setFocusOnly(false); setPreviewProject(null);
@@ -5345,6 +5366,14 @@ var ProjectFormModal = ({
   if (!isOpen) return null;
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const bad = [];
+    const pl = formData.projectLocation || {}, il = formData.intakeLocation || {};
+    if ((pl.latitude || pl.longitude) && !validLL(pl.latitude, pl.longitude)) bad.push(`ທີ່ຕັ້ງໂຄງການ (${pl.latitude}, ${pl.longitude})`);
+    if ((il.latitude || il.longitude) && !validLL(il.latitude, il.longitude)) bad.push(`ບ່ອນດູດນໍ້າ (${il.latitude}, ${il.longitude})`);
+    if (bad.length) {
+      alert(`⚠️ ພິກັດບໍ່ຖືກຕ້ອງ:\n${bad.join("\n")}\n\nLatitude ຕ້ອງຢູ່ລະຫວ່າງ -90 ຫາ 90, Longitude -180 ຫາ 180.\nຖ້າມີພິກັດແບບອົງສາ ໃຫ້ວາງໃສ່ຊ່ອງ 🧭 ພິກັດແບບອົງສາ ໃນແຖບສະຖານທີ່.`);
+      return;
+    }
     if (!formData.projectName || !formData.permitNumber) {
       alert("ກະລຸນາປ້ອນຊື່ໂຄງການ ແລະ ເລກທີໃບອະນຸຍາດນໍາໃຊ້ນໍ້າ");
       return;
@@ -5800,7 +5829,7 @@ var ProjectFormModal = ({
                   ...formData,
                   projectLocation: {
                     ...formData.projectLocation,
-                    latitude: parseFloat(e.target.value) || 0
+                    latitude: unpackDMSNumber(parseFloat(e.target.value) || 0, 90)
                   }
                 }),
                 placeholder: "ຕົວຢ່າງ: 18.0652",
@@ -5821,7 +5850,7 @@ var ProjectFormModal = ({
                   ...formData,
                   projectLocation: {
                     ...formData.projectLocation,
-                    longitude: parseFloat(e.target.value) || 0
+                    longitude: unpackDMSNumber(parseFloat(e.target.value) || 0, 180)
                   }
                 }),
                 placeholder: "ຕົວຢ່າງ: 102.6841",
@@ -5925,7 +5954,7 @@ var ProjectFormModal = ({
                   ...formData,
                   intakeLocation: {
                     ...formData.intakeLocation,
-                    latitude: parseFloat(e.target.value) || 0
+                    latitude: unpackDMSNumber(parseFloat(e.target.value) || 0, 90)
                   }
                 }),
                 placeholder: "ຕົວຢ່າງ: 18.1025",
@@ -5946,7 +5975,7 @@ var ProjectFormModal = ({
                   ...formData,
                   intakeLocation: {
                     ...formData.intakeLocation,
-                    longitude: parseFloat(e.target.value) || 0
+                    longitude: unpackDMSNumber(parseFloat(e.target.value) || 0, 180)
                   }
                 }),
                 placeholder: "ຕົວຢ່າງ: 102.7350",
