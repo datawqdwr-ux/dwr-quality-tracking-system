@@ -852,31 +852,40 @@ function toDMSPart(v, pos, neg) {
   return `${d}°${String(m).padStart(2, '0')}'${sec.toFixed(1).padStart(4, '0')}"${Number(v) < 0 ? neg : pos}`;
 }
 function toDMS(lat, lng) {
+  if (!validLL(lat, lng)) return '';
   const a = toDMSPart(lat, 'N', 'S'), b = toDMSPart(lng, 'E', 'W');
   return a && b ? `${a} ${b}` : '';
 }
 
 // ຊ່ອງພິກັດອົງສາ (ແບບດຽວກັບ ລະບົບຄຸນນະພາບນ້ຳ): ວາງ/ພິມ 17°58'13.0"N 102°35'48.1"E → ແປງເປັນ Lat/Lng ໃຫ້ເອງ
-var DmsCoordField = ({ lat, lng, onChange, ring = "focus:ring-green-500", label = "🧭 ພິກັດແບບອົງສາ (GPS) — ໃສ່ແບບນີ້ ຫຼື ໃສ່ Lat/Lng ຂ້າງລຸ່ມກໍ່ໄດ້" }) => {
-  const shown = lat && lng ? toDMS(lat, lng) : "";
-  const apply = (el) => {
-    const v = el.value.trim();
-    if (!v) return;
+var DmsCoordField = ({ lat, lng, onChange, ring = "focus:ring-green-500", label = "🧭 ພິກັດ — ໃສ່ແບບອົງສາ ຫຼື Lat/Lng ຂ້າງລຸ່ມ (ແບບໃດແບບໜຶ່ງກໍ່ພໍ)" }) => {
+  const fromProps = validLL(lat, lng) ? toDMS(lat, lng) : "";
+  const [text, setText] = useState8(fromProps);
+  const [focused, setFocused] = useState8(false);
+  const [status, setStatus] = useState8("");  // "", "ok", "bad"
+  // Lat/Lng ຖືກແກ້ຢູ່ຂ້າງລຸ່ມ → ອັບເດດຊ່ອງອົງສາ (ຍົກເວັ້ນຕອນກຳລັງພິມຢູ່ຊ່ອງນີ້)
+  useEffect3(() => { if (!focused) { setText(fromProps); setStatus(""); } }, [fromProps]);
+  const handle = (v) => {
+    setText(v);
+    if (!v.trim()) { setStatus(""); return; }
     const pr = parseCoordPair(v);
-    el.style.borderColor = pr ? "" : "#fb7185";
-    if (pr) onChange(pr.lat, pr.lng);
+    if (pr && validLL(pr.lat, pr.lng)) { setStatus("ok"); onChange(pr.lat, pr.lng); }   // ອັບເດດທັນທີ ບໍ່ຕ້ອງລໍກົດອອກ
+    else setStatus("bad");
   };
   return /* @__PURE__ */ jsxs8("div", { className: "md:col-span-3", children: [
     /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: label }),
     /* @__PURE__ */ jsx8("input", {
       type: "text",
-      defaultValue: shown,
-      onBlur: (e) => apply(e.target),
-      onPaste: (e) => { const el = e.target; setTimeout(() => apply(el), 0); },
-      onKeyDown: (e) => { if (e.key === "Enter") { e.preventDefault(); apply(e.target); } },
+      value: text,
+      onChange: (e) => handle(e.target.value),
+      onFocus: () => setFocused(true),
+      onBlur: () => { setFocused(false); if (status === "ok") setText(fromProps); },
+      onKeyDown: (e) => { if (e.key === "Enter") e.preventDefault(); },
       placeholder: `ຕົວຢ່າງ: 17°58'13.0"N 102°35'48.1"E  ຫຼື  17.9703, 102.5967`,
-      className: `w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 ${ring} font-mono bg-slate-50`
-    }, shown)
+      className: `w-full px-3 py-2 text-sm border rounded-xl focus:ring-2 ${ring} font-mono bg-slate-50 ${status === "bad" ? "border-rose-400 bg-rose-50" : status === "ok" ? "border-emerald-400" : "border-slate-300"}`
+    }),
+    status === "bad" && /* @__PURE__ */ jsx8("p", { className: "text-[11px] text-rose-600 mt-1", children: "ຍັງອ່ານພິກັດບໍ່ໄດ້ — ຕົວຢ່າງ: 16°04'00.1\"N 106°11'49.3\"E ຫຼື 16.0667, 106.1970" }),
+    status === "ok" && /* @__PURE__ */ jsx8("p", { className: "text-[11px] text-emerald-600 mt-1", children: `✓ Lat ${lat}, Lng ${lng}` })
   ] });
 };
 // src/lib/exportUtils.ts
@@ -5823,7 +5832,6 @@ var ProjectFormModal = ({
               {
                 type: "number",
                 step: "any",
-                required: true,
                 value: formData.projectLocation?.latitude ?? 0,
                 onChange: (e) => setFormData({
                   ...formData,
@@ -5844,7 +5852,6 @@ var ProjectFormModal = ({
               {
                 type: "number",
                 step: "any",
-                required: true,
                 value: formData.projectLocation?.longitude ?? 0,
                 onChange: (e) => setFormData({
                   ...formData,
@@ -5948,7 +5955,6 @@ var ProjectFormModal = ({
               {
                 type: "number",
                 step: "any",
-                required: true,
                 value: formData.intakeLocation?.latitude ?? 0,
                 onChange: (e) => setFormData({
                   ...formData,
@@ -5969,7 +5975,6 @@ var ProjectFormModal = ({
               {
                 type: "number",
                 step: "any",
-                required: true,
                 value: formData.intakeLocation?.longitude ?? 0,
                 onChange: (e) => setFormData({
                   ...formData,
