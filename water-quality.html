@@ -1633,6 +1633,8 @@
       if (mode === 'chartOff') pick(customIndicators.filter(i => i.noChart));
       if (mode === 'tableOff') pick(customIndicators.filter(i => i.noTable));
       if (mode === 'formOff') pick(customIndicators.filter(i => i.noForm));
+      if (mode === 'formOn') pick(customIndicators.filter(i => !i.noForm));
+      if (mode === 'excel') pick(customIndicators.filter(i => i.source === 'excel'));
       if (mode === 'empty') pick(customIndicators.filter(i => countValuesFor(i.key) === 0));
       if (mode === 'archived') pick(archivedInds());
       renderSettingsList();
@@ -1723,7 +1725,7 @@
             <input type="checkbox" class="m-2" title="ເລືອກທັງໝົດ" ${selN && selN === allCount ? 'checked' : ''} onclick="toggleSelectAllInds()" ${selN && selN < allCount ? 'data-partial="1"' : ''}>
             <button type="button" onclick="toggleIndSelMenu()" class="pr-2 text-slate-500" title="ເລືອກຕາມເງື່ອນໄຂ">▾</button>
             <div id="indSelMenu" class="hidden absolute left-0 top-full mt-1 z-50 w-48 bg-white border rounded-lg shadow-xl py-1">
-              ${[['all','ທັງໝົດ'],['','ບໍ່ເລືອກ'],['active','ທີ່ໃຊ້ຢູ່'],['chartOn','ທີ່ສະແດງໃນກຣາຟ'],['chartOff','ທີ່ເຊື່ອງຈາກກຣາຟ'],['formOff','ທີ່ເຊື່ອງຈາກຟອມ'],['tableOff','ທີ່ເຊື່ອງຈາກຕາຕະລາງ'],['empty','ທີ່ບໍ່ມີຂໍ້ມູນ (0 ຄ່າ)'],['archived','ທີ່ເກັບໄວ້']]
+              ${[['all','ທັງໝົດ'],['','ບໍ່ເລືອກ'],['active','ທີ່ໃຊ້ຢູ່'],['chartOn','ທີ່ສະແດງໃນກຣາຟ'],['chartOff','ທີ່ເຊື່ອງຈາກກຣາຟ'],['formOff','ທີ່ເຊື່ອງຈາກຟອມ'],['formOn','ທີ່ມີຊ່ອງໃນຟອມ'],['excel','ທີ່ເພີ່ມຈາກ Excel'],['tableOff','ທີ່ເຊື່ອງຈາກຕາຕະລາງ'],['empty','ທີ່ບໍ່ມີຂໍ້ມູນ (0 ຄ່າ)'],['archived','ທີ່ເກັບໄວ້']]
                 .map(([m, t]) => `<button type="button" onclick="selectInds('${m}')" class="block w-full text-left px-3 py-1.5 hover:bg-indigo-50">${t}</button>`).join('')}
             </div>
           </div>
@@ -2985,7 +2987,7 @@
                     <b>${escAttr(n.name)}</b>${n.unit ? ` (${escAttr(n.unit)})` : ''}${u.numeric ? '' : ' <span class="text-[10px]">📝 ຂໍ້ຄວາມ</span>'}
                   </label>`; }).join('')}
               </div>
-              <p class="text-[10px] text-slate-500 mt-1">ຖັນທີ່ <b>ບໍ່ຕິກ</b> ຈະບໍ່ເປັນໂຕຊີ້ວັດ ແຕ່ຍັງເກັບເປັນ <b>📝 ຂໍ້ມູນເພີ່ມເຕີມ</b> ຂອງສະຖານີ (ເບິ່ງໄດ້ໃນແຜນທີ່ ແລະ Excel). ຖັນ 📝 ຂໍ້ຄວາມ ເຊັ່ນ ຊື່ຄົນ, ຄຳອະທິບາຍ ບໍ່ຕິກໄວ້ໃຫ້ເປັນຄ່າເລີ່ມຕົ້ນ.</p>
+              <p class="text-[10px] text-slate-500 mt-1">ໂຕຊີ້ວັດໃໝ່ຈາກໄຟລ໌ ຈະສະແດງໃນຕາຕະລາງ, ແຜນທີ່ ແລະ ກຣາຟ ແຕ່ <b>ບໍ່ເພີ່ມຊ່ອງປ້ອນໃນຟອມ</b>. ຖັນທີ່ <b>ບໍ່ຕິກ</b> ຈະບໍ່ເປັນໂຕຊີ້ວັດ ແຕ່ຍັງເກັບເປັນ <b>📝 ຂໍ້ມູນເພີ່ມເຕີມ</b> ຂອງສະຖານີ (ເບິ່ງໄດ້ໃນແຜນທີ່ ແລະ Excel). ຖັນ 📝 ຂໍ້ຄວາມ ເຊັ່ນ ຊື່ຄົນ, ຄຳອະທິບາຍ ບໍ່ຕິກໄວ້ໃຫ້ເປັນຄ່າເລີ່ມຕົ້ນ.</p>
             </div>` : ''}
 
           <div class="space-y-2 max-h-[45vh] overflow-auto pr-1">${blockCards}</div>
@@ -3053,8 +3055,9 @@
       let configChanged = false;
 
       // ໂຕຊີ້ວັດທີ່ມີໃນ master ແຕ່ບໍ່ໄດ້ເປີດໃຊ້ → ເປີດໃຊ້
+      // ໂຕຊີ້ວັດທີ່ມາຈາກ Excel → ສະແດງໃນຕາຕະລາງ/ແຜນທີ່/ກຣາຟ ແຕ່ບໍ່ເພີ່ມຊ່ອງປ້ອນໃນຟອມ (ເປີດເອງໄດ້ໃນ ⚙️ ຕັ້ງຄ່າ)
       chosen.forEach(({ block }) => block.indCols.forEach(({ ind }) => {
-        if (!customIndicators.some(c => c.key === ind.key)) { customIndicators.push(ind); configChanged = true; }
+        if (!customIndicators.some(c => c.key === ind.key)) { customIndicators.push({ ...ind, noForm: true, source: 'excel' }); configChanged = true; }
       }));
 
       // ຖັນໃໝ່ → ສ້າງໂຕຊີ້ວັດໃໝ່ (1 ໂຕຕໍ່ 1 ຊື່, ເຖິງຈະຢູ່ຫຼາຍຕາຕະລາງ)
@@ -3066,7 +3069,7 @@
           const usedInChosen = chosen.some(({ block }) => block.unknownCols.some(u => canonParam(u.header) === canon));
           if (!usedInChosen) return;
           const { name, unit } = newIndicatorFromHeader(header);
-          const newInd = { key: 'custom_' + (Date.now() + n++), name, unit };
+          const newInd = { key: 'custom_' + (Date.now() + n++), name, unit, noForm: true, source: 'excel' };
           customIndicators.push(newInd);
           masterIndicators.push(newInd);
           newKeyByCanon[canon] = newInd.key;
