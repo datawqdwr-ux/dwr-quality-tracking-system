@@ -18,6 +18,7 @@
 
   <!-- Tailwind CSS v4 (ແປງ class ໃນ browser) -->
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style type="text/tailwindcss">
 
 @layer base {
@@ -983,6 +984,433 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
     ] }) })
   ] });
 };
+// 📊 ຕາຕະລາງຈາກ Excel ຂອງໂຄງການ (ແບບດຽວກັບຕາຕະລາງລາຍລະອຽດຂອງ ລະບົບຄຸນນະພາບນ້ຳ)
+var xlColName = (n) => { let s = ""; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+function readExcelTables(file) {
+  return new Promise((resolve, reject) => {
+    if (typeof XLSX === "undefined") return reject(new Error("ໂຫລດຕົວອ່ານ Excel ບໍ່ສຳເລັດ — ກວດອິນເຕີເນັດ ແລ້ວ Refresh"));
+    const fr = new FileReader();
+    fr.onerror = () => reject(new Error("ອ່ານໄຟລ໌ບໍ່ໄດ້"));
+    fr.onload = () => {
+      try {
+        const wb = XLSX.read(new Uint8Array(fr.result), { type: "array", cellDates: false });
+        const base = file.name.replace(/\.(xlsx|xls|csv)$/i, "");
+        const tables = [];
+        wb.SheetNames.forEach((sn) => {
+          const ws = wb.Sheets[sn];
+          // Cell ທີ່ Merge ລົງລຸ່ມ → ຕື່ມຄ່າ
+          (ws["!merges"] || []).forEach((rg) => {
+            if (rg.e.r <= rg.s.r) return;
+            const tl = ws[XLSX.utils.encode_cell({ r: rg.s.r, c: rg.s.c })];
+            if (!tl) return;
+            for (let r = rg.s.r + 1; r <= rg.e.r; r++) ws[XLSX.utils.encode_cell({ r, c: rg.s.c })] = { ...tl };
+          });
+          let rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: "", blankrows: false });
+          rows = rows.map((r) => r.map((v) => String(v ?? "").trim()));
+          rows = rows.filter((r) => r.some((v) => v !== ""));
+          if (!rows.length) return;
+          let width = Math.max(...rows.map((r) => { let k = r.length; while (k > 0 && r[k - 1] === "") k--; return k; }));
+          width = Math.min(width, 80);
+          rows = rows.map((r) => Array.from({ length: width }, (_, i) => r[i] ?? ""));
+          const [header, ...body] = rows;
+          tables.push({ id: `tbl-${Date.now()}-${tables.length}`, title: wb.SheetNames.length > 1 ? `${base} · ${sn}` : base, header, rows: body.slice(0, 3000), truncated: body.length > 3000, source: file.name, importedAt: new Date().toISOString() });
+        });
+        resolve(tables);
+      } catch (e) { reject(e); }
+    };
+    fr.readAsArrayBuffer(file);
+  });
+}
+function downloadTableXlsx(t) {
+  if (typeof XLSX === "undefined") return alert("ໂຫລດຕົວສ້າງ Excel ບໍ່ສຳເລັດ");
+  const ws = XLSX.utils.aoa_to_sheet([t.header || [], ...(t.rows || [])]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+  XLSX.writeFile(wb, `${String(t.title || "table").replace(/[\\/:*?"<>|]/g, "_")}.xlsx`);
+}
+var ExcelLikeTable = ({ table }) => {
+  const header = table.header || [];
+  const rows = table.rows || [];
+  const th = "px-2 py-1.5 border border-slate-300 bg-slate-200 text-slate-700 font-bold whitespace-nowrap text-center";
+  const td = "px-2 py-1.5 border border-slate-300 whitespace-nowrap";
+  const isNum = (v) => /^\s*[<>≤≥]?\s*-?[\d,]+(\.\d+)?\s*$/.test(v);
+  return /* @__PURE__ */ jsx8("div", { className: "overflow-auto max-h-[380px] border border-slate-400 rounded-md shadow-inner bg-white", children: /* @__PURE__ */ jsxs8("table", { className: "text-[11px] border-collapse min-w-full", children: [
+    /* @__PURE__ */ jsxs8("thead", { className: "sticky top-0 z-10", children: [
+      /* @__PURE__ */ jsxs8("tr", { children: [
+        /* @__PURE__ */ jsx8("th", { className: "px-2 py-0.5 border border-slate-300 bg-slate-300 sticky left-0 z-20 w-8" }),
+        header.map((_, k) => /* @__PURE__ */ jsx8("th", { className: "px-2 py-0.5 border border-slate-300 bg-slate-100 text-slate-400 font-normal text-[10px]", children: xlColName(k) }, k))
+      ] }),
+      /* @__PURE__ */ jsxs8("tr", { children: [
+        /* @__PURE__ */ jsx8("th", { className: th + " bg-slate-300 sticky left-0 z-20", children: "#" }),
+        header.map((h, k) => /* @__PURE__ */ jsx8("th", { className: th, children: h }, k))
+      ] })
+    ] }),
+    /* @__PURE__ */ jsx8("tbody", { children: rows.map((r, i) => /* @__PURE__ */ jsxs8("tr", { className: i % 2 ? "bg-slate-50 hover:bg-sky-50" : "bg-white hover:bg-sky-50", children: [
+      /* @__PURE__ */ jsx8("td", { className: td + " bg-slate-200 text-slate-500 font-bold text-center sticky left-0", children: i + 1 }),
+      r.map((v, k) => /* @__PURE__ */ jsx8("td", { className: td + (isNum(v) ? " text-right tabular-nums" : "") + (v === "" ? " text-slate-300" : ""), children: v === "" ? "" : v }, k))
+    ] }, i)) })
+  ] }) });
+};
+var ExcelTablesEditor = ({ formData, setFormData, readOnly = false }) => {
+  const tables = formData.planTables || [];
+  const [busy, setBusy] = useState8(false);
+  const [open, setOpen] = useState8({});
+  const add = async (files) => {
+    if (!files || !files.length) return;
+    setBusy(true);
+    try {
+      let all = [];
+      for (const f of files) {
+        if (!/\.(xlsx|xls|csv)$/i.test(f.name)) { alert(`${f.name}: ຮອງຮັບສະເພາະ .xlsx, .xls, .csv`); continue; }
+        all = all.concat(await readExcelTables(f));
+      }
+      if (!all.length) return alert("ບໍ່ພົບຂໍ້ມູນໃນໄຟລ໌");
+      const big = all.filter((t) => t.truncated);
+      if (big.length) alert(`ບາງ Sheet ມີຫຼາຍກວ່າ 3,000 ແຖວ — ເກັບໄວ້ 3,000 ແຖວທຳອິດ`);
+      setFormData({ ...formData, planTables: [...tables, ...all.map((t) => ({ ...t, draft: true }))] });
+      const o = { ...open }; all.forEach((t) => o[t.id] = true); setOpen(o);
+    } catch (e) { alert(e.message || e); } finally { setBusy(false); }
+  };
+  const update = (id, patch) => setFormData({ ...formData, planTables: tables.map((t) => t.id === id ? { ...t, ...patch } : t) });
+  const remove = (id) => { if (confirm("ລົບຕາຕະລາງນີ້?")) setFormData({ ...formData, planTables: tables.filter((t) => t.id !== id) }); };
+  const drafts = tables.filter((t) => t.draft).length;
+  return /* @__PURE__ */ jsxs8("div", { className: "space-y-3", children: [
+    !readOnly && /* @__PURE__ */ jsxs8("label", {
+      onDragOver: (e) => { e.preventDefault(); e.currentTarget.classList.add("bg-emerald-50"); },
+      onDragLeave: (e) => e.currentTarget.classList.remove("bg-emerald-50"),
+      onDrop: (e) => { e.preventDefault(); e.currentTarget.classList.remove("bg-emerald-50"); add([...e.dataTransfer.files]); },
+      className: "block cursor-pointer border-2 border-dashed border-emerald-300 bg-emerald-50/40 hover:bg-emerald-50 rounded-xl p-3 text-center transition",
+      children: [
+        /* @__PURE__ */ jsx8("p", { className: "text-sm font-bold text-emerald-700", children: busy ? "⏳ ກຳລັງອ່ານໄຟລ໌..." : "📂 ນຳເຂົ້າຕາຕະລາງຈາກ Excel" }),
+        /* @__PURE__ */ jsx8("p", { className: "text-[11px] text-slate-500 mt-0.5", children: "ກົດເພື່ອເລືອກໄຟລ໌ ຫຼື ລາກມາວາງ (.xlsx, .xls, .csv) — ທຸກ Sheet ຈະກາຍເປັນຕາຕະລາງ" }),
+        /* @__PURE__ */ jsx8("input", { type: "file", multiple: true, accept: ".xlsx,.xls,.csv", className: "hidden", onChange: (e) => { add([...e.target.files]); e.target.value = ""; } })
+      ]
+    }),
+    drafts > 0 && !readOnly && /* @__PURE__ */ jsx8("p", { className: "text-[11px] font-bold text-amber-800 bg-amber-100 border border-amber-300 rounded-lg px-3 py-1.5", children: `📝 ຕາຕະລາງໃໝ່ ${drafts} ອັນ ລໍຖ້າບັນທຶກ — ກົດ "ບັນທຶກຂໍ້ມູນໂຄງການ" ເພື່ອບັນທຶກພ້ອມກັນ` }),
+    tables.map((t) => /* @__PURE__ */ jsxs8("div", { className: `border rounded-xl ${t.draft ? "border-amber-300 bg-amber-50/40" : "border-slate-200 bg-white"} p-2 space-y-2`, children: [
+      /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center gap-2", children: [
+        /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => setOpen({ ...open, [t.id]: !open[t.id] }), className: "text-slate-500 w-4", children: open[t.id] ? "▼" : "▶" }),
+        readOnly ? /* @__PURE__ */ jsx8("span", { className: "flex-1 font-bold text-sm text-slate-800", children: `📊 ${t.title}` }) : /* @__PURE__ */ jsx8("input", { value: t.title, onChange: (e) => update(t.id, { title: e.target.value }), className: "flex-1 min-w-[160px] border border-slate-200 rounded-lg px-2 py-1 text-sm font-bold bg-white", title: "ຊື່ຕາຕະລາງ" }),
+        /* @__PURE__ */ jsx8("span", { className: "text-[11px] text-slate-500", children: `${(t.rows || []).length} ແຖວ × ${(t.header || []).length} ຖັນ` }),
+        t.draft && /* @__PURE__ */ jsx8("span", { className: "text-[10px] font-bold text-amber-700", children: "📝 ຮ່າງ" }),
+        /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => downloadTableXlsx(t), className: "text-[11px] font-bold text-emerald-700 border border-emerald-300 rounded-lg px-2 py-1 hover:bg-emerald-50", children: "📥 Excel" }),
+        !readOnly && /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => remove(t.id), className: "text-[11px] font-bold text-rose-600 border border-rose-200 rounded-lg px-2 py-1 hover:bg-rose-50", children: "🗑️" })
+      ] }),
+      open[t.id] && /* @__PURE__ */ jsx8(ExcelLikeTable, { table: t })
+    ] }, t.id))
+  ] });
+};
+/* ================================================================
+   📂 ນຳເຂົ້າໂຄງການຈາກ Excel (ແບບດຽວກັບ ລະບົບຄຸນນະພາບນ້ຳ)
+   ໄຟລ໌ → ກວດສອບ (ເພີ່ມໃໝ່ / ອັບເດດ) → ບັນທຶກພ້ອມກັນ
+   ================================================================ */
+var _nLao = (v) => String(v ?? "").replace(/\u0ECD\u0EC9\u0EB2/g, "\u0EC9\u0EB3").replace(/\u0ECD\u0EB2/g, "\u0EB3").toLowerCase().replace(/\s+/g, " ").trim();
+var _cLao = (v) => _nLao(v).replace(/\(.*?\)|\[.*?\]/g, "").replace(/[\s_\-.:,/*]/g, "");
+// ກົດຈັບຄູ່ຫົວຖັນ → field (ກວດຕາມລຳດັບ; ຂອງ "ບ່ອນດູດນ້ຳ" ກ່ອນ ເພື່ອບໍ່ໃຫ້ປົນກັບທີ່ຕັ້ງໂຄງການ)
+var PROJ_RULES = [
+  ["intake.village", (h) => /ດູດ|intake/.test(h) && /ບ້ານ|village/.test(h)],
+  ["intake.district", (h) => /ດູດ|intake/.test(h) && /ເມືອງ|district/.test(h)],
+  ["intake.province", (h) => /ດູດ|intake/.test(h) && /ແຂວງ|province/.test(h)],
+  ["intake.lat", (h) => /ດູດ|intake/.test(h) && /lat|ຂະໜານ/.test(h)],
+  ["intake.lng", (h) => /ດູດ|intake/.test(h) && /lng|lon|ແວງ/.test(h)],
+  ["intake.gps", (h) => /ດູດ|intake/.test(h) && /gps|ພິກັດ|location|coordinat/.test(h)],
+  ["pumpCapacity", (h) => /ຈັກສູບ|ຈັກດູດ|pump/.test(h)],
+  ["volumeMonth", (h) => /ປະລິມານ|volume/.test(h) && /ເດືອນ|month/.test(h)],
+  ["volumeYear", (h) => /ປະລິມານ|volume/.test(h) && /\/\s*ປີ|ຕໍ່ປີ|ປະຈຳປີ|ລາຍປີ|ປີ\s*\(|ປີ$|year|annual/.test(h)],
+  ["waterVolume", (h) => /ປະລິມານ|volume|m3|m³/.test(h)],
+  ["waterSourceName", (h) => /ຊື່ແຫຼ່ງນ້ຳ|ຊື່ແມ່ນ້ຳ|river|source name/.test(h)],
+  ["waterSourceType", (h) => /ແຫຼ່ງນ້ຳ|source/.test(h)],
+  ["permitIssueDate", (h) => /ອອກ|issue/.test(h) && /ວັນ|date/.test(h)],
+  ["permitExpiryDate", (h) => /ໝົດອາຍຸ|expir/.test(h)],
+  ["permitNumber", (h) => /ໃບອະນຸຍາດ|permit|license|licence|ເລກທີ/.test(h)],
+  ["startDate", (h) => /ເລີ່ມ|start/.test(h)],
+  ["projectCategory", (h) => /ປະເພດ|ຂະແໜງ|category|sector|type/.test(h)],
+  ["projectName", (h) => /ຊື່ໂຄງການ|ຊື່ກິດຈະການ|^ໂຄງການ|^ກິດຈະການ|project|^ຊື່$|^name$/.test(h)],
+  ["ownerName", (h) => /ເຈົ້າຂອງ|ບໍລິສັດ|owner|company|ຜູ້ລົງທຶນ|ຜູ້ຮັບຜິດຊອບ/.test(h)],
+  ["contactPhone", (h) => /ເບີໂທ|ໂທລະສັບ|phone|tel/.test(h)],
+  ["contactEmail", (h) => /email|ອີເມວ|e-mail/.test(h)],
+  ["status", (h) => /ສະຖານະ|status/.test(h)],
+  ["project.village", (h) => /ບ້ານ|village/.test(h)],
+  ["project.district", (h) => /ເມືອງ|district/.test(h)],
+  ["project.province", (h) => /ແຂວງ|province/.test(h)],
+  ["project.lat", (h) => /^lat|latitude|ຂະໜານ/.test(h)],
+  ["project.lng", (h) => /^lng|^lon|longitude|ແວງ/.test(h)],
+  ["project.gps", (h) => /gps|ພິກັດ|location|coordinat/.test(h)],
+  ["waterUsagePlan", (h) => /ແຜນ|plan/.test(h)],
+  ["notes", (h) => /ໝາຍເຫດ|note|remark/.test(h)],
+  ["no", (h) => /^(no|ລຳດັບ|ລດ|ລ\/ດ|#)$/.test(h)]
+];
+function projFieldOf(header) {
+  const h = _nLao(header);
+  if (!h) return null;
+  const hit = PROJ_RULES.find(([, t]) => t(h));
+  return hit ? hit[0] : null;
+}
+var toISODate = (v) => {
+  if (v === null || v === undefined || v === "") return "";
+  if (v instanceof Date && !isNaN(v)) return `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, "0")}-${String(v.getDate()).padStart(2, "0")}`;
+  const t = String(v).trim();
+  let m;
+  if ((m = t.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/))) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+  if ((m = t.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/))) return `${m[3].length === 2 ? "20" + m[3] : m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  return t;
+};
+var mapStatus = (v) => { const t = _nLao(v); return /ໝົດ|expir/.test(t) ? "expired" : /ຢຸດ|suspend|stop/.test(t) ? "suspended" : "active"; };
+var mapSourceType = (v) => {
+  const t = _nLao(v);
+  if (!t) return "";
+  if (/ບາດານ|ໃຕ້ດິນ|ground|well|ບໍ່/.test(t)) return WATER_SOURCE_TYPES[2];
+  if (/ອ່າງ|ໜອງ|reservoir|lake|dam|ເຂື່ອນ/.test(t)) return WATER_SOURCE_TYPES[3];
+  if (/ຫ້ວຍ|ຮ່ອງ|ສາຂາ|stream|creek/.test(t)) return WATER_SOURCE_TYPES[1];
+  if (/ຝົນ|rain/.test(t)) return WATER_SOURCE_TYPES[4];
+  if (/ແມ່ນ້ຳ|ນ້ຳ|river|mekong/.test(t)) return WATER_SOURCE_TYPES[0];
+  return String(v).trim();
+};
+var mapCategory = (v) => {
+  const t = _nLao(v);
+  if (!t) return "";
+  const hit = PROJECT_CATEGORIES.find((c) => _cLao(c).includes(_cLao(t)) || _cLao(t).includes(_cLao(c).slice(0, 6)));
+  if (hit) return hit;
+  if (/ປະປາ|ນ້ຳສະອາດ|water supply/.test(t)) return PROJECT_CATEGORIES[0];
+  if (/ໂຮງງານ|ອຸດສາ|ຜະລິດ|factory|industr/.test(t)) return PROJECT_CATEGORIES[1];
+  if (/ໄຟຟ້າ|hydro|power|ເຂື່ອນ/.test(t)) return PROJECT_CATEGORIES[2];
+  if (/ກະສິ|ຊົນລະປະທານ|ນາ|ສວນ|irrig|agri/.test(t)) return PROJECT_CATEGORIES[3];
+  if (/ບໍ່ແຮ່|ແຮ່|mining|mine/.test(t)) return PROJECT_CATEGORIES[4];
+  if (/ທ່ອງທ່ຽວ|ໂຮງແຮມ|ຣີສອດ|hotel|resort|tour/.test(t)) return PROJECT_CATEGORIES[5];
+  if (/ລ້ຽງ|ປະມົງ|ສັດ|fish|farm|livestock/.test(t)) return PROJECT_CATEGORIES[6];
+  return PROJECT_CATEGORIES[7];
+};
+var mapProvince = (v) => { const t = _cLao(v); if (!t) return ""; return LAO_PROVINCES.find((p) => _cLao(p).includes(t) || t.includes(_cLao(p).replace(/^ແຂວງ/, ""))) || String(v).trim(); };
+var unitFromHeader = (h) => { const t = _nLao(h); return /\/\s*ເດືອນ|month/.test(t) ? "m3/month" : /\/\s*ປີ|year/.test(t) ? "m3/year" : /\/\s*s\b|ວິນາທີ|sec/.test(t) ? "m3/s" : "m3/day"; };
+var numOf = (v) => { if (typeof v === "number") return v; const n = parseFloat(String(v ?? "").replace(/,/g, "")); return isFinite(n) ? n : null; };
+
+function parseProjectSheets(wb) {
+  const out = [];
+  wb.SheetNames.forEach((sn) => {
+    const ws = wb.Sheets[sn];
+    (ws["!merges"] || []).forEach((rg) => {
+      if (rg.e.r <= rg.s.r) return;
+      const tl = ws[XLSX.utils.encode_cell({ r: rg.s.r, c: rg.s.c })];
+      if (!tl) return;
+      for (let r = rg.s.r + 1; r <= rg.e.r; r++) ws[XLSX.utils.encode_cell({ r, c: rg.s.c })] = { ...tl };
+    });
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "", blankrows: false });
+    // ຫາແຖວຫົວຕາຕະລາງ: ມີຊື່ໂຄງການ ຫຼື ເຈົ້າຂອງ + ຖັນອື່ນອີກ
+    let hi = -1, best = 0;
+    for (let r = 0; r < Math.min(rows.length, 20); r++) {
+      const f = rows[r].map(projFieldOf).filter(Boolean);
+      const ok = f.includes("projectName") || f.includes("ownerName");
+      if (ok && f.length > best) { best = f.length; hi = r; }
+    }
+    if (hi < 0 || best < 2) return;
+    const headers = rows[hi];
+    const map = {}, extra = [];
+    headers.forEach((h, c) => {
+      if (String(h ?? "").trim() === "") return;
+      const f = projFieldOf(h);
+      if (f && f !== "no" && map[f] === undefined) map[f] = c;
+      else if (!f) extra.push({ c, h: String(h).trim() });
+    });
+    rows.slice(hi + 1).forEach((row, k) => {
+      const g = (f) => map[f] !== undefined ? row[map[f]] : "";
+      const gs = (f) => String(g(f) ?? "").trim();
+      const name = gs("projectName") || gs("ownerName");
+      if (!name) return;
+      const coord = (latF, lngF, gpsF) => {
+        let la = numOf(g(latF)), lo = numOf(g(lngF));
+        if (!validLL(la, lo)) {
+          const pr = parseCoordPair(gs(gpsF)) || parseCoordPair(`${gs(latF)} ${gs(lngF)}`);
+          if (pr) { la = pr.lat; lo = pr.lng; } else { la = unpackDMSNumber(la, 90); lo = unpackDMSNumber(lo, 180); }
+        }
+        return validLL(la, lo) ? { latitude: la, longitude: lo } : { latitude: 0, longitude: 0 };
+      };
+      const info = {};
+      extra.forEach(({ c, h }) => { const v = String(row[c] ?? "").trim(); if (v) info[h.replace(/[.#$\[\]\/]/g, "_").slice(0, 100)] = v; });
+      const p = {
+        projectName: gs("projectName") || gs("ownerName"),
+        ownerName: gs("ownerName"),
+        projectCategory: mapCategory(gs("projectCategory")),
+        contactPhone: gs("contactPhone"),
+        contactEmail: gs("contactEmail"),
+        startDate: toISODate(g("startDate")),
+        permitNumber: gs("permitNumber"),
+        permitIssueDate: toISODate(g("permitIssueDate")),
+        permitExpiryDate: toISODate(g("permitExpiryDate")),
+        status: map.status !== undefined ? mapStatus(gs("status")) : "",
+        waterVolume: numOf(g("waterVolume")),
+        waterVolumeUnit: map.waterVolume !== undefined ? unitFromHeader(headers[map.waterVolume]) : "",
+        waterVolumeMonth: numOf(g("volumeMonth")),
+        waterVolumeYear: numOf(g("volumeYear")),
+        waterSourceType: mapSourceType(gs("waterSourceType")),
+        waterSourceName: gs("waterSourceName"),
+        projectLocation: { village: gs("project.village"), district: gs("project.district"), province: mapProvince(gs("project.province")), ...coord("project.lat", "project.lng", "project.gps") },
+        intakeLocation: { village: gs("intake.village"), district: gs("intake.district"), province: mapProvince(gs("intake.province")), ...coord("intake.lat", "intake.lng", "intake.gps"), pumpCapacity: gs("pumpCapacity") },
+        waterUsagePlan: gs("waterUsagePlan"),
+        notes: gs("notes"),
+        extraInfo: info,
+        _sheet: sn, _row: hi + 2 + k
+      };
+      // ມີແຕ່ປະລິມານ/ປີ ຫຼື /ເດືອນ → ໃຊ້ເປັນປະລິມານຫຼັກນຳ
+      if (p.waterVolume === null && p.waterVolumeYear !== null) { p.waterVolume = p.waterVolumeYear; p.waterVolumeUnit = "m3/year"; }
+      else if (p.waterVolume === null && p.waterVolumeMonth !== null) { p.waterVolume = p.waterVolumeMonth; p.waterVolumeUnit = "m3/month"; }
+      out.push(p);
+    });
+  });
+  return out;
+}
+
+// ລວມຂໍ້ມູນ: ຄ່າໃໝ່ທີ່ບໍ່ຫວ່າງ ທັບຄ່າເກົ່າ
+function mergeProjectData(base, inc) {
+  const o = { ...base };
+  Object.entries(inc).forEach(([k, v]) => {
+    if (k.startsWith("_")) return;
+    if (v && typeof v === "object" && !Array.isArray(v)) {
+      const cur = { ...(o[k] || {}) };
+      Object.entries(v).forEach(([kk, vv]) => { if (vv !== "" && vv !== null && vv !== undefined && !(kk.match(/latitude|longitude/) && !vv)) cur[kk] = vv; });
+      o[k] = cur;
+    } else if (v !== "" && v !== null && v !== undefined) o[k] = v;
+  });
+  return o;
+}
+var projKey = (p) => _cLao(p.projectName);
+
+async function openProjectExcelImport(projects, onDone) {
+  const cu = (() => { try { return JSON.parse(localStorage.getItem("lao_water_current_user_v2") || "null"); } catch (e) { return null; } })();
+  if (!cu || cu.role === "viewer") return alert("ກະລຸນາເຂົ້າສູ່ລະບົບດ້ວຍສິດ Staff ຫຼື Super Admin ກ່ອນນຳເຂົ້າ");
+  if (typeof XLSX === "undefined") return alert("ໂຫລດຕົວອ່ານ Excel ບໍ່ສຳເລັດ — ກວດອິນເຕີເນັດ ແລ້ວ Refresh");
+  const pick = document.createElement("input");
+  pick.type = "file"; pick.accept = ".xlsx,.xls,.csv";
+  pick.onchange = async () => {
+    const file = pick.files[0];
+    if (!file) return;
+    let wb;
+    try { wb = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true }); } catch (e) { return alert("ອ່ານໄຟລ໌ບໍ່ໄດ້"); }
+    const rows = parseProjectSheets(wb);
+    if (!rows.length) return alert("ບໍ່ພົບຕາຕະລາງໂຄງການ — ແຖວຫົວຕາຕະລາງຕ້ອງມີຖັນ \"ຊື່ໂຄງການ\" ຫຼື \"ເຈົ້າຂອງ/ບໍລິສັດ\"\n\nກົດ \"📄 ແບບຟອມ\" ເພື່ອດາວໂຫລດແບບຟອມ Excel");
+    // ແຖວຊື່ດຽວກັນໃນໄຟລ໌ → ໂຄງການດຽວ
+    const byKey = new Map();
+    rows.forEach((r) => { const k = projKey(r); byKey.set(k, byKey.has(k) ? mergeProjectData(byKey.get(k), r) : r); });
+    const items = [...byKey.values()].map((r) => {
+      const ex = projects.find((p) => projKey(p) === projKey(r) || (r.permitNumber && p.permitNumber && _cLao(p.permitNumber) === _cLao(r.permitNumber)));
+      return { r, ex };
+    });
+    showProjectImportPreview(file.name, items, rows.length, cu, onDone);
+  };
+  pick.click();
+}
+
+function showProjectImportPreview(fileName, items, rowCount, cu, onDone) {
+  const esc = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const extraKeys = [...new Set(items.flatMap((x) => Object.keys(x.r.extraInfo || {})))];
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "position:fixed;inset:0;z-index:10060;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:12px";
+  const td = "padding:6px 8px;border:1px solid #cbd5e1;white-space:nowrap;font-size:12px";
+  const th = td + ";background:#e2e8f0;font-weight:700;color:#334155;position:sticky;top:0";
+  const nNew = items.filter((x) => !x.ex).length, nUpd = items.length - nNew;
+  wrap.innerHTML = `
+    <div style="background:#fff;border-radius:20px;max-width:1100px;width:100%;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;font-family:inherit;color:#0f172a;box-shadow:0 25px 50px rgba(0,0,0,.35)">
+      <div style="padding:16px 20px;background:linear-gradient(90deg,#1d4ed8,#0369a1,#0f766e);color:#fff;display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:18px;font-weight:800">📊 ກວດສອບຂໍ້ມູນກ່ອນນຳເຂົ້າ</div>
+        <div style="font-size:12px;opacity:.85">📄 ${esc(fileName)} · ${rowCount} ແຖວ → ${items.length} ໂຄງການ · <b>➕ ໃໝ່ ${nNew}</b> · <b>✏️ ອັບເດດ ${nUpd}</b></div></div>
+        <button data-x style="background:rgba(255,255,255,.15);border:0;color:#fff;width:34px;height:34px;border-radius:999px;font-size:18px;cursor:pointer">×</button>
+      </div>
+      <div style="padding:14px 20px;overflow:auto;flex:1">
+        <p style="margin:0 0 8px;font-size:12px;color:#475569">ໂຄງການທີ່ <b>ຊື່ ຫຼື ເລກທີໃບອະນຸຍາດ ຄືກັບທີ່ມີຢູ່ແລ້ວ</b> ຈະຖືກ <b>ອັບເດດ</b> (ຊ່ອງທີ່ວ່າງໃນ Excel ຈະບໍ່ລຶບຄ່າເກົ່າ). ຊື່ດຽວກັນຫຼາຍແຖວໃນໄຟລ໌ → ລວມເປັນໂຄງການດຽວ.</p>
+        ${extraKeys.length ? `<p style="margin:0 0 8px;font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:6px 10px">📝 ຖັນທີ່ລະບົບບໍ່ຮູ້ຈັກ ຈະເກັບເປັນ <b>ຂໍ້ມູນເພີ່ມເຕີມ</b>: ${extraKeys.map(esc).join(", ")}</p>` : ""}
+        <div style="overflow:auto;max-height:52vh;border:1px solid #94a3b8;border-radius:8px">
+          <table style="border-collapse:collapse;min-width:100%">
+            <thead><tr>
+              <th style="${th}"><input type="checkbox" data-all checked></th><th style="${th}">ສະຖານະ</th><th style="${th}">ຊື່ໂຄງການ / ກິດຈະການ</th><th style="${th}">ເຈົ້າຂອງ</th><th style="${th}">ປະເພດ</th><th style="${th}">ໃບອະນຸຍາດ</th><th style="${th}">ໝົດອາຍຸ</th><th style="${th}">ແຂວງ</th><th style="${th}">ປະລິມານນ້ຳ</th><th style="${th}">ແຫຼ່ງນ້ຳ</th><th style="${th}">📍 ທີ່ຕັ້ງ</th><th style="${th}">💧 ບ່ອນດູດ</th>
+            </tr></thead>
+            <tbody>${items.map((x, i) => { const r = x.r; const okP = validLL(r.projectLocation.latitude, r.projectLocation.longitude); const okI = validLL(r.intakeLocation.latitude, r.intakeLocation.longitude); return `
+              <tr style="background:${i % 2 ? "#f8fafc" : "#fff"}">
+                <td style="${td};text-align:center"><input type="checkbox" data-i="${i}" checked></td>
+                <td style="${td}">${x.ex ? '<span style="color:#b45309;font-weight:700">✏️ ອັບເດດ</span>' : '<span style="color:#047857;font-weight:700">➕ ໃໝ່</span>'}</td>
+                <td style="${td};font-weight:700;white-space:normal;min-width:180px">${esc(r.projectName)}</td>
+                <td style="${td};white-space:normal;min-width:140px">${esc(r.ownerName) || "-"}</td>
+                <td style="${td}">${esc(r.projectCategory) || "-"}</td>
+                <td style="${td};font-family:monospace">${esc(r.permitNumber) || "-"}</td>
+                <td style="${td}">${esc(r.permitExpiryDate) || "-"}</td>
+                <td style="${td}">${esc(r.projectLocation.province) || "-"}</td>
+                <td style="${td};text-align:right">${r.waterVolume !== null ? Number(r.waterVolume).toLocaleString() + " " + esc(r.waterVolumeUnit) : "-"}</td>
+                <td style="${td}">${esc(r.waterSourceType) || "-"}</td>
+                <td style="${td};text-align:center">${okP ? "✅" : '<span title="ບໍ່ມີ ຫຼື ພິກັດບໍ່ຖືກຕ້ອງ">⚠️</span>'}</td>
+                <td style="${td};text-align:center">${okI ? "✅" : '<span title="ບໍ່ມີ ຫຼື ພິກັດບໍ່ຖືກຕ້ອງ">⚠️</span>'}</td>
+              </tr>`; }).join("")}</tbody>
+          </table>
+        </div>
+        <p style="margin:8px 0 0;font-size:11px;color:#64748b">⚠️ = ບໍ່ມີພິກັດ ຫຼື ພິກັດຜິດ — ນຳເຂົ້າໄດ້ ແຕ່ຈະບໍ່ສະແດງໃນແຜນທີ່ (ເພີ່ມພາຍຫຼັງດ້ວຍການແກ້ໄຂໂຄງການ)</p>
+      </div>
+      <div style="padding:12px 20px;border-top:1px solid #e2e8f0;display:flex;gap:10px;justify-content:flex-end;align-items:center">
+        <span data-msg style="margin-right:auto;font-size:13px;font-weight:700"></span>
+        <button data-x style="background:#e2e8f0;color:#334155;border:0;border-radius:12px;padding:10px 18px;font-weight:700;cursor:pointer;font-family:inherit">ຍົກເລີກ</button>
+        <button data-go style="background:#059669;color:#fff;border:0;border-radius:12px;padding:10px 20px;font-weight:800;cursor:pointer;font-family:inherit">✅ ບັນທຶກ ${items.length} ໂຄງການ</button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+  const close = () => wrap.remove();
+  wrap.querySelectorAll("[data-x]").forEach((b) => b.onclick = close);
+  const boxes = () => [...wrap.querySelectorAll("[data-i]")];
+  const goBtn = wrap.querySelector("[data-go]");
+  const refresh = () => { goBtn.textContent = `✅ ບັນທຶກ ${boxes().filter((b) => b.checked).length} ໂຄງການ`; };
+  wrap.querySelector("[data-all]").onchange = (e) => { boxes().forEach((b) => b.checked = e.target.checked); refresh(); };
+  boxes().forEach((b) => b.onchange = refresh);
+  goBtn.onclick = async () => {
+    const chosen = boxes().filter((b) => b.checked).map((b) => items[Number(b.dataset.i)]);
+    if (!chosen.length) return;
+    goBtn.disabled = true; goBtn.textContent = "⏳ ກຳລັງບັນທຶກ...";
+    const now = new Date().toISOString();
+    let nA = 0, nU = 0;
+    try {
+      for (const { r, ex } of chosen) {
+        const { _sheet, _row, ...data } = r;
+        if (ex) {
+          const merged = mergeProjectData(ex, data);
+          merged.extraInfo = { ...(ex.extraInfo || {}), ...(data.extraInfo || {}) };
+          await saveProject({ ...merged, updatedAt: now });
+          nU++;
+        } else {
+          await saveProject({
+            ...data,
+            id: `proj-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            projectCategory: data.projectCategory || PROJECT_CATEGORIES[7],
+            status: data.status || "active",
+            waterVolume: data.waterVolume ?? 0,
+            waterVolumeUnit: data.waterVolumeUnit || "m3/day",
+            waterSourceType: data.waterSourceType || WATER_SOURCE_TYPES[0],
+            createdAt: now, updatedAt: now
+          });
+          nA++;
+        }
+      }
+      await addAuditLog("create", "ນຳເຂົ້າຈາກ Excel", `${fileName}: ເພີ່ມໃໝ່ ${nA}, ອັບເດດ ${nU} ໂຄງການ`, `${cu.fullName} (@${cu.username})`);
+      wrap.querySelector("[data-msg]").innerHTML = `<span style="color:#047857">✅ ສຳເລັດ: ເພີ່ມໃໝ່ ${nA} · ອັບເດດ ${nU}</span>`;
+      goBtn.style.display = "none";
+      wrap.querySelectorAll("[data-x]")[1].textContent = "ປິດ";
+      if (onDone) onDone();
+    } catch (e) {
+      goBtn.disabled = false; refresh();
+      wrap.querySelector("[data-msg]").innerHTML = `<span style="color:#be123c">⚠️ ບັນທຶກບໍ່ສຳເລັດ: ${esc(e.message || e)}</span>`;
+    }
+  };
+}
+
+function downloadProjectTemplate() {
+  if (typeof XLSX === "undefined") return alert("ໂຫລດຕົວສ້າງ Excel ບໍ່ສຳເລັດ");
+  const head = ["ຊື່ໂຄງການ / ກິດຈະການ", "ເຈົ້າຂອງ / ບໍລິສັດ", "ປະເພດໂຄງການ", "ເບີໂທ", "ອີເມວ", "ເລກທີໃບອະນຸຍາດ", "ວັນອອກໃບອະນຸຍາດ", "ວັນໝົດອາຍຸ", "ສະຖານະ",
+    "ປະລິມານນ້ຳທີ່ໃຊ້ (m3/day)", "ປະລິມານ / ເດືອນ (m3)", "ປະລິມານ / ປີ (m3)", "ປະເພດແຫຼ່ງນ້ຳ", "ຊື່ແຫຼ່ງນ້ຳ",
+    "ບ້ານ", "ເມືອງ", "ແຂວງ", "ພິກັດ GPS (ອົງສາ ຫຼື Lat, Lng)", "ບ້ານບ່ອນດູດນ້ຳ", "ເມືອງບ່ອນດູດນ້ຳ", "ແຂວງບ່ອນດູດນ້ຳ", "ພິກັດບ່ອນດູດນ້ຳ", "ກຳລັງຈັກສູບ", "ແຜນການນຳໃຊ້ນ້ຳ", "ໝາຍເຫດ"];
+  const ex = ["ໂຮງງານຜະລິດນ້ຳດື່ມ ABC", "ບໍລິສັດ ABC ຈຳກັດ", "ອຸດສາຫະກຳ ແລະ ປຸງແຕ່ງ", "020 5555 5555", "abc@example.com", "WTR-VTE-2025/001", "2025-01-15", "2030-01-14", "ດຳເນີນງານ",
+    2500, "", "", "ແມ່ນ້ຳ", "ແມ່ນ້ຳຂອງ", "ດົງໂດກ", "ໄຊທານີ", "ນະຄອນຫຼວງວຽງຈັນ", "17°58'13.0\"N 102°35'48.1\"E", "ທ່າງອນ", "ໄຊທານີ", "ນະຄອນຫຼວງວຽງຈັນ", "18.0652, 102.6841", "350 m³/ຊົ່ວໂມງ", "ດູດນ້ຳດິບເພື່ອຜະລິດ...", ""];
+  const ws = XLSX.utils.aoa_to_sheet([head, ex]);
+  ws["!cols"] = head.map((h) => ({ wch: Math.max(14, h.length + 2) }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "ໂຄງການ");
+  XLSX.writeFile(wb, "ແບບຟອມ_ໂຄງການນຳໃຊ້ນ້ຳ.xlsx");
+}
+window.openProjectExcelImport = openProjectExcelImport;
+window.downloadProjectTemplate = downloadProjectTemplate;
+
 // src/lib/exportUtils.ts
 import * as XLSX from "xlsx";
 function exportProjectsToExcel(projects, filename = "Water_Projects_Lao") {
@@ -2768,6 +3196,8 @@ var ProjectTable = ({
           )
         ] }),
         /* @__PURE__ */ jsxs3("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsx3("button", { onClick: () => downloadProjectTemplate(), className: "px-3 py-2.5 rounded-2xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-bold transition-colors", title: "ດາວໂຫລດແບບຟອມ Excel ສຳລັບກອກຂໍ້ມູນໂຄງການ", children: "📄 ແບບຟອມ" }),
+          /* @__PURE__ */ jsx3("button", { onClick: () => openProjectExcelImport(projects), className: "px-3.5 py-2.5 rounded-2xl border-2 border-dashed border-emerald-400 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition-colors", title: "ນຳເຂົ້າຫຼາຍໂຄງການຈາກ Excel ເທື່ອດຽວ", children: "📂 ນຳເຂົ້າ Excel" }),
           /* @__PURE__ */ jsxs3(
             "button",
             {
@@ -5502,6 +5932,7 @@ var ProjectFormModal = ({
       const projectToSave = {
         ...formData,
         yearlyRecords: (formData.yearlyRecords || []).map(({ draft, ...r }) => r).sort((a, b) => a.year - b.year),
+        planTables: (formData.planTables || []).map(({ draft, ...t }) => t),
         id: formData.id || `proj-${Date.now()}`,
         createdAt: formData.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
         updatedAt: (/* @__PURE__ */ new Date()).toISOString()
@@ -6152,6 +6583,10 @@ var ProjectFormModal = ({
               className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500"
             }
           )
+        ] }),
+        /* @__PURE__ */ jsxs8("div", { className: "pt-2", children: [
+          /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "📊 ຕາຕະລາງຂໍ້ມູນ (ຈາກ Excel)" }),
+          /* @__PURE__ */ jsx8(ExcelTablesEditor, { formData, setFormData })
         ] })
       ] }),
       /* @__PURE__ */ jsxs8("div", { className: "pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3", children: [
@@ -6414,6 +6849,14 @@ var ProjectDetailModal = ({
           "ແຜນການນໍາໃຊ້ນໍ້າ (Water Usage Plan)"
         ] }),
         /* @__PURE__ */ jsx9("p", { className: "text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-white p-3 rounded-xl border border-slate-100", children: project.waterUsagePlan || "ບໍ່ມີຂໍ້ມູນແຜນການນໍາໃຊ້ນໍ້າ" })
+      ] }),
+      project.extraInfo && Object.keys(project.extraInfo).length > 0 && /* @__PURE__ */ jsxs9("div", { className: "bg-amber-50/50 border border-amber-200 p-4 rounded-2xl", children: [
+        /* @__PURE__ */ jsx9("h4", { className: "text-xs font-bold text-slate-800 mb-2", children: "📝 ຂໍ້ມູນເພີ່ມເຕີມ (ຈາກ Excel)" }),
+        /* @__PURE__ */ jsx9("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs", children: Object.entries(project.extraInfo).map(([k, v]) => /* @__PURE__ */ jsxs9("div", { children: [/* @__PURE__ */ jsx9("span", { className: "text-slate-500", children: k + ": " }), /* @__PURE__ */ jsx9("b", { className: "text-slate-800", children: String(v) })] }, k)) })
+      ] }),
+      (project.planTables || []).length > 0 && /* @__PURE__ */ jsxs9("div", { className: "bg-slate-50 border border-slate-200 p-4 rounded-2xl", children: [
+        /* @__PURE__ */ jsx9("h4", { className: "text-xs font-bold text-slate-800 uppercase tracking-wider mb-2", children: `📊 ຕາຕະລາງຂໍ້ມູນ (${project.planTables.length})` }),
+        /* @__PURE__ */ jsx9(ExcelTablesEditor, { formData: project, setFormData: () => {}, readOnly: true })
       ] }),
       /* @__PURE__ */ jsx9("div", { className: "bg-slate-50 border border-slate-200 p-4 rounded-2xl", children: /* @__PURE__ */ jsxs9("div", { className: "flex flex-col sm:flex-row sm:items-center justify-between gap-3", children: [
         /* @__PURE__ */ jsxs9("div", { children: [
