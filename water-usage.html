@@ -2293,7 +2293,8 @@ var WaterMap = ({
     setCopiedText(text);
     setTimeout(() => setCopiedText(null), 2e3);
   };
-  return /* @__PURE__ */ jsxs2("div", { className: `relative w-full rounded-3xl overflow-hidden border border-slate-200/80 shadow-md bg-slate-900 transition-all ${isFullscreen ? "fixed inset-0 z-[1050] rounded-none h-screen w-screen" : "h-[670px]"}`, children: [
+  return /* @__PURE__ */ jsxs2("div", { className: `w-full overflow-hidden bg-slate-900 ${isFullscreen ? "rounded-none" : "relative h-[670px] rounded-3xl border border-slate-200/80 shadow-md transition-all"}`,
+    style: isFullscreen ? { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, width: "100vw", height: "100vh", zIndex: 1050, margin: 0 } : void 0, children: [
     /* @__PURE__ */ jsxs2("div", { className: "absolute top-4 left-4 right-4 z-[1000] flex flex-wrap items-center justify-between gap-2.5 pointer-events-none", children: [
       /* @__PURE__ */ jsxs2("div", { className: "flex flex-wrap items-center gap-2 pointer-events-auto bg-slate-900/90 backdrop-blur-xl p-1.5 rounded-2xl border border-slate-700/80 shadow-xl", children: [
         /* @__PURE__ */ jsxs2("div", { className: "flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl", children: [
