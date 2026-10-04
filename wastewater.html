@@ -10661,6 +10661,7 @@ function App() {
 
 // src/main.tsx
 import { ref as dbRef2, get as get2 } from "firebase/database";
+import { update as dbUpdate } from "firebase/database";
 import { jsx as jsx16 } from "react/jsx-runtime";
 var SHARED_SESSION_KEY = "waterSession", CURRENT_USER_KEY = "lao_wastewater_current_user_v2", SHARED_DEFAULTS = [
   { username: "admin", password: "9999", role: "SUPER_ADMIN", name: "Admin (ບັນຊີເລີ່ມຕົ້ນ)", uid: "default-admin" },
@@ -10763,6 +10764,76 @@ window.sharedLogout = sharedLogout;
     }
   localStorage.removeItem(CURRENT_USER_KEY), mountApp(), guest ? hideSharedLogin() : showSharedLogin();
 })();
+async function offerOldDataImport() {
+  let cu = null;
+  try {
+    cu = JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || "null");
+  } catch {
+  }
+  if (!cu || cu.role !== "admin" && cu.role !== "officer") return;
+  let empty = !1;
+  try {
+    empty = !(await get2(dbRef2(rtdb, PATHS.projects))).exists();
+  } catch {
+    return;
+  }
+  if (!empty || document.getElementById("oldDataBanner")) return;
+  let local = (() => {
+    try {
+      let a = JSON.parse(localStorage.getItem("lao_wastewater_projects_v2") || "null");
+      return Array.isArray(a) ? a : [];
+    } catch {
+      return [];
+    }
+  })(), box = document.createElement("div");
+  box.id = "oldDataBanner", box.style.cssText = 'position:fixed;left:50%;top:84px;transform:translateX(-50%);z-index:9500;max-width:640px;width:calc(100% - 24px);background:#fff;border:2px solid #f59e0b;border-radius:18px;box-shadow:0 20px 40px rgba(0,0,0,.25);padding:16px 18px;font-family:"Noto Sans Lao",sans-serif;color:#0f172a', box.innerHTML = `
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+      <div>
+        <div style="font-weight:800;font-size:15px">📦 ຖານຂໍ້ມູນໃໝ່ຍັງບໍ່ມີໂຄງການ — ເອົາຂໍ້ມູນເກົ່າມາບໍ່?</div>
+        <div style="font-size:12px;color:#475569;margin-top:4px;line-height:1.6">ລະບົບເກົ່າເກັບຂໍ້ມູນໄວ້ໃນ Browser ຂອງເຄື່ອງທີ່ໃຊ້. ເລືອກວິທີເອົາຂໍ້ມູນເກົ່າເຂົ້າ Firebase ໃໝ່:</div>
+      </div>
+      <button data-x style="border:0;background:#f1f5f9;border-radius:999px;width:30px;height:30px;cursor:pointer;font-size:16px">×</button>
+    </div>
+    <div style="display:grid;gap:8px;margin-top:12px">
+      <button data-file style="text-align:left;border:1px solid #cbd5e1;background:#f8fafc;border-radius:12px;padding:10px 12px;cursor:pointer;font:inherit">
+        <b>📂 ຈາກໄຟລ໌ Backup (.json)</b><br><span style="font-size:11px;color:#64748b">ເປີດລະບົບເກົ່າ → ເມນູ ສຳຮອງຂໍ້ມູນ (Backup) → ດາວໂຫລດໄຟລ໌ JSON → ເລືອກໄຟລ໌ນັ້ນຢູ່ນີ້</span>
+      </button>
+      ${local.length ? `<button data-local style="text-align:left;border:1px solid #cbd5e1;background:#f8fafc;border-radius:12px;padding:10px 12px;cursor:pointer;font:inherit">
+        <b>💻 ຈາກເຄື່ອງນີ້ (${local.length} ໂຄງການ)</b><br><span style="font-size:11px;color:#64748b">ພົບຂໍ້ມູນເກົ່າທີ່ເກັບໄວ້ໃນ Browser ຂອງເຄື່ອງນີ້</span>
+      </button>` : ""}
+      <button data-sample style="text-align:left;border:1px solid #cbd5e1;background:#f8fafc;border-radius:12px;padding:10px 12px;cursor:pointer;font:inherit">
+        <b>📋 ຂໍ້ມູນ ${INITIAL_PROJECTS.length} ໂຄງການ ທີ່ມາກັບລະບົບເກົ່າ</b><br><span style="font-size:11px;color:#64748b">${INITIAL_PROJECTS.slice(0, 3).map((p) => p.projectName).join(", ")} …</span>
+      </button>
+    </div>
+    <p data-msg style="margin:10px 0 0;font-size:13px;font-weight:700"></p>`, document.body.appendChild(box);
+  let msg = (t, ok) => {
+    let p = box.querySelector("[data-msg]");
+    p.textContent = t, p.style.color = ok ? "#047857" : "#be123c";
+  }, done = async (n, how) => {
+    await addAuditLog("restore", "ຂໍ້ມູນເກົ່າ", `ນຳເຂົ້າຂໍ້ມູນເກົ່າ ${n} ໂຄງການ (${how})`, `${cu.fullName} (@${cu.username})`), msg(`✅ ນຳເຂົ້າສຳເລັດ ${n} ໂຄງການ`, !0), setTimeout(() => box.remove(), 1800);
+  }, writeAll = async (list, how) => {
+    let updates = {};
+    list.forEach((p) => {
+      p && p.id && (updates[`${PATHS.projects}/${String(p.id).replace(/[.#$\[\]\/]/g, "_")}`] = JSON.parse(JSON.stringify({ ...normalizeProject(p), migratedAt: (/* @__PURE__ */ new Date()).toISOString() })));
+    }), await dbUpdate(dbRef2(rtdb), updates), await done(Object.keys(updates).length, how);
+  };
+  box.querySelector("[data-x]").onclick = () => box.remove(), box.querySelector("[data-sample]").onclick = () => writeAll(INITIAL_PROJECTS, "ຂໍ້ມູນທີ່ມາກັບລະບົບເກົ່າ").catch((e) => msg("⚠️ " + e.message));
+  let lb = box.querySelector("[data-local]");
+  lb && (lb.onclick = () => writeAll(local, "ຈາກ Browser").catch((e) => msg("⚠️ " + e.message))), box.querySelector("[data-file]").onclick = () => {
+    let f = document.createElement("input");
+    f.type = "file", f.accept = ".json,application/json", f.onchange = async () => {
+      let file = f.files[0];
+      if (file)
+        try {
+          let r = await restoreSystemBackup(await file.text(), "merge");
+          await done(r.count, "ຈາກໄຟລ໌ Backup");
+        } catch (e) {
+          msg("⚠️ " + (e.message || e));
+        }
+    }, f.click();
+  };
+}
+setTimeout(() => offerOldDataImport(), 2500);
 
   </script>
   <style>body.map-fs #navPills{display:none!important}</style>
