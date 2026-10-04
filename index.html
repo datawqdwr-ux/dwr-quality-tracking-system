@@ -13,6 +13,7 @@
       --channel: #13667a;   /* ຮ່ອງນ້ຳ */
       --current: #2aa3a8;   /* ກະແສນ້ຳ — ລະບົບຄຸນນະພາບນ້ຳ */
       --silt: #b8934a;      /* ຕະກອນດິນ — ລະບົບການນຳໃຊ້ນ້ຳ */
+      --rust: #a04a3a;      /* ທໍ່ປ່ອຍ — ລະບົບນ້ຳເປື້ອນ */
       --mist: #eef4f5;
       --ink: #12303f;
       --muted: #587584;
@@ -55,7 +56,7 @@
     @keyframes flow { to { stroke-dashoffset: 0; } }
 
     /* ---- ຝັ່ງຂວາ: ເລືອກລະບົບ ---- */
-    .choices { padding: 56px clamp(24px, 5vw, 72px); display: flex; flex-direction: column; justify-content: center; gap: 22px; }
+    .choices { padding: 40px clamp(24px, 5vw, 72px); display: flex; flex-direction: column; justify-content: center; gap: 18px; }
     .choices h2 { margin: 0 0 4px; font-size: 18px; font-weight: 600; color: var(--muted); }
 
     .system {
@@ -67,6 +68,7 @@
       transition: border-color .15s, transform .15s;
     }
     .system.usage { --accent: var(--silt); }
+    .system.waste { --accent: var(--rust); }
     .system:hover { border-color: var(--accent); transform: translateX(4px); }
     .system:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
     .system .icon {
@@ -116,7 +118,7 @@
 
       <div>
         <h1>ລະບົບຂໍ້ມູນຊັບພະຍາກອນນ້ຳ</h1>
-        <p class="lead">ເລືອກລະບົບທີ່ຕ້ອງການເຮັດວຽກ. ທັງສອງລະບົບໃຊ້ບັນຊີຜູ້ໃຊ້ ແລະ ຖານຂໍ້ມູນດຽວກັນ.</p>
+        <p class="lead">ເລືອກລະບົບທີ່ຕ້ອງການເຮັດວຽກ. ທຸກລະບົບໃຊ້ບັນຊີຜູ້ໃຊ້ ແລະ ຖານຂໍ້ມູນດຽວກັນ.</p>
       </div>
 
       <div class="foot">Department of Water Resources</div>
@@ -170,6 +172,25 @@
         </span>
         <span class="go">ເຂົ້າລະບົບ</span>
       </a>
+
+      <a class="system waste" href="wastewater.html">
+        <span class="icon" aria-hidden="true">
+          <!-- ທໍ່ປ່ອຍນ້ຳ -->
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#8a3b2d" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7h9a3 3 0 0 1 3 3v2"/><path d="M3 4v6"/><path d="M15 12h2v3h-4v-3h2"/><path d="M15 15c0 1.5-1 2.5-1 4a1.5 1.5 0 0 0 3 0c0-1.5-1-2.5-1-4"/>
+          </svg>
+        </span>
+        <span>
+          <h3>ລະບົບຕິດຕາມໂຄງການປ່ອຍນ້ຳເປື້ອນ</h3>
+          <p class="what">ຂໍ້ມູນໂຄງການ ຫຼື ກິດຈະການ ທີ່ປ່ອຍນ້ຳເປື້ອນ, ຈຸດປ່ອຍ ແລະ ຜົນກວດ</p>
+          <ul>
+            <li>ໃບອະນຸຍາດ ແລະ ການຕໍ່ອາຍຸ</li>
+            <li>ຈຸດປ່ອຍນ້ຳເປື້ອນໃນແຜນທີ່</li>
+            <li>ປະຫວັດການກວດກາ ແລະ ກຣາຟ</li>
+          </ul>
+        </span>
+        <span class="go">ເຂົ້າລະບົບ</span>
+      </a>
     </main>
   </div>
   <script>
@@ -185,7 +206,7 @@
       box.hidden = false;
       document.getElementById('signout').onclick = () => {
         localStorage.removeItem('waterSession'); sessionStorage.removeItem('waterSession');
-        localStorage.removeItem('lao_water_current_user_v2'); sessionStorage.removeItem('guestMode');
+        localStorage.removeItem('lao_water_current_user_v2'); localStorage.removeItem('lao_wastewater_current_user_v2'); sessionStorage.removeItem('guestMode');
         box.hidden = true;
       };
     })();
