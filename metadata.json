@@ -1,0 +1,8 @@
+{
+  "name": "ກົມຊັບພະຍາກອນນ້ຳ — ລະບົບຂໍ້ມູນຊັບພະຍາກອນນ້ຳ",
+  "description": "ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ, ຂໍ້ມູນການນຳໃຊ້ນ້ຳ ແລະ ໂຄງການປ່ອຍນ້ຳເປື້ອນ - Department of Water Resources",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

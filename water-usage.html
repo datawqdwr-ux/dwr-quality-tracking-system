@@ -897,13 +897,12 @@ var daysInMonth = (y, m) => new Date(y, m, 0).getDate();
 var YearlyRecordsEditor = ({ formData, setFormData }) => {
   const thisYear = new Date().getFullYear();
   const blankMonths = () => Object.fromEntries(Array.from({ length: 12 }, (_, i) => [i + 1, ""]));
-  const empty = { year: thisYear, daily: "", monthly: "", yearly: "", months: blankMonths(), sourceType: formData.waterSourceType || WATER_SOURCE_TYPES[0], note: "" };
+  const empty = { year: thisYear, daily: "", monthly: "", yearly: "", waterFee: "", months: blankMonths(), sourceType: formData.waterSourceType || WATER_SOURCE_TYPES[0], sourceName: "", note: "" };
   const [row, setRow] = useState8(empty);
   const [editYear, setEditYear] = useState8(null);
   const [openYear, setOpenYear] = useState8(null);
   const list = (formData.yearlyRecords || []).slice().sort((a, b) => b.year - a.year);
-  // ເລືອກ ຫຼື ພິມປີໄດ້ ທັງອະດີດ ແລະ ອະນາຄົດ (1950–2100)
-  const years = Array.from({ length: 41 }, (_, i) => thisYear + 20 - i);
+  const years = Array.from({ length: Math.max(1, thisYear + 10 - 1990 + 1) }, (_, i) => thisYear + 10 - i).filter((y) => y >= 1990);
   const perDayFrom = () => Number(row.daily) || volumePerDay(formData);
   const set = (k2, v) => setRow({ ...row, [k2]: v });
   const setMonth = (m, v) => setRow({ ...row, months: { ...row.months, [m]: v } });
@@ -923,7 +922,7 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
   };
   const addRow = () => {
     const y = Number(row.year);
-    if (!y || y < 1950 || y > 2100) return alert("ກະລຸນາລະບຸປີໃຫ້ຖືກຕ້ອງ (1950–2100)");
+    if (!y) return alert("ກະລຸນາເລືອກປີ");
     const months = Object.fromEntries(Object.entries(row.months || {}).filter(([, v]) => v !== "" && v !== null && isFinite(Number(v))).map(([m, v]) => ["m" + m, Number(v)]));
     const hasMonths = Object.keys(months).length > 0;
     const sum = Object.values(months).reduce((t, v) => t + v, 0);
@@ -933,17 +932,17 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
     if (daily === null && monthly === null && yearly === null) return alert("ກະລຸນາປ້ອນປະລິມານນໍ້າຢ່າງນ້ອຍ 1 ຊ່ອງ (ຕໍ່ວັນ, ລາຍເດືອນ ຫຼື ຕໍ່ປີ)");
     const exists = (formData.yearlyRecords || []).some((r) => r.year === y);
     if (exists && editYear !== y && !confirm(`ມີຂໍ້ມູນປີ ${y} ແລ້ວ — ຂຽນທັບບໍ່?`)) return;
-    const rec = { year: y, daily, monthly, yearly, months: hasMonths ? months : null, sourceType: row.sourceType, note: row.note.trim(), draft: true, updatedAt: new Date().toISOString() };
+    const rec = { year: y, daily, monthly, yearly, waterFee: row.waterFee === "" || row.waterFee == null ? null : Number(row.waterFee), months: hasMonths ? months : null, sourceType: row.sourceType, sourceName: (row.sourceName || "").trim(), note: row.note.trim(), draft: true, updatedAt: new Date().toISOString() };
     const others = (formData.yearlyRecords || []).filter((r) => r.year !== y && r.year !== editYear);
     setFormData({ ...formData, yearlyRecords: [...others, rec] });
-    setRow({ ...empty, year: Math.min(2100, y + 1) });
+    setRow({ ...empty, year: y + 1 <= thisYear + 1 ? y + 1 : y });
     setEditYear(null);
   };
   const editRow = (r) => {
     setEditYear(r.year);
     const months = blankMonths();
     Object.entries(r.months || {}).forEach(([m, v]) => { const n = String(m).replace(/^m/, ""); if (months[n] !== undefined) months[n] = v ?? ""; });
-    setRow({ year: r.year, daily: r.daily ?? "", monthly: r.monthly ?? "", yearly: r.yearly ?? "", months, sourceType: r.sourceType || empty.sourceType, note: r.note || "" });
+    setRow({ year: r.year, daily: r.daily ?? "", monthly: r.monthly ?? "", yearly: r.yearly ?? "", waterFee: r.waterFee ?? "", months, sourceType: r.sourceType || empty.sourceType, sourceName: r.sourceName || "", note: r.note || "" });
   };
   const delRow = (y) => {
     if (!confirm(`ລົບຂໍ້ມູນປີ ${y} ອອກຈາກລາຍການ?`)) return;
@@ -958,19 +957,7 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
     /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-2 md:grid-cols-4 gap-3", children: [
       /* @__PURE__ */ jsxs8("div", { children: [
         /* @__PURE__ */ jsx8("label", { className: lab, children: "ປີ" }),
-        /* @__PURE__ */ jsxs8("div", { className: "flex items-stretch gap-1", children: [
-          /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => set("year", Math.max(1950, (Number(row.year) || thisYear) - 1)), className: "px-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 font-bold text-slate-600", title: "ປີກ່ອນ", children: "◀" }),
-          /* @__PURE__ */ jsx8("input", {
-            type: "number", min: 1950, max: 2100, step: 1, list: "yearlyYearOptions",
-            value: row.year,
-            onChange: (e) => set("year", e.target.value === "" ? "" : Math.trunc(Number(e.target.value))),
-            onBlur: (e) => { const v = Math.trunc(Number(e.target.value)); set("year", v >= 1950 && v <= 2100 ? v : thisYear); },
-            className: inp + " font-bold text-center",
-            title: "ພິມປີ ຫຼື ເລືອກຈາກລາຍການ"
-          }),
-          /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => set("year", Math.min(2100, (Number(row.year) || thisYear) + 1)), className: "px-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 font-bold text-slate-600", title: "ປີຖັດໄປ", children: "▶" }),
-          /* @__PURE__ */ jsx8("datalist", { id: "yearlyYearOptions", children: years.map((y) => /* @__PURE__ */ jsx8("option", { value: y, children: (formData.yearlyRecords || []).some((r) => r.year === y) ? "✓ ມີຂໍ້ມູນແລ້ວ" : "" }, y)) })
-        ] })
+        /* @__PURE__ */ jsx8("select", { value: row.year, onChange: (e) => set("year", Number(e.target.value)), className: inp + " font-bold", children: years.map((y) => /* @__PURE__ */ jsx8("option", { value: y, children: `ປີ ${y}${(formData.yearlyRecords || []).some((r) => r.year === y) ? " ✓" : ""}` }, y)) })
       ] }),
       /* @__PURE__ */ jsxs8("div", { children: [
         /* @__PURE__ */ jsx8("label", { className: lab, children: "ປະລິມານ / ວັນ (m³)" }),
@@ -984,6 +971,12 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
         /* @__PURE__ */ jsx8("label", { className: lab, children: "ລວມ / ປີ (m³)" }),
         /* @__PURE__ */ jsx8("input", { type: "number", min: "0", step: "any", value: row.yearly, onChange: (e) => set("yearly", e.target.value), placeholder: monthNums.length ? `ລວມລາຍເດືອນ: ${fmtVol(Math.round(monthSum))}` : `ອັດຕະໂນມັດ: ${fmtVol(Math.round(perDayFrom() * 365))}`, className: inp })
       ] })
+    ] }),
+    /* ຄ່ານໍາໃຊ້ນໍ້າລາຍປີ */
+    /* @__PURE__ */ jsxs8("div", { className: "rounded-xl border border-emerald-200 bg-emerald-50/60 p-3", children: [
+      /* @__PURE__ */ jsx8("label", { className: lab, children: "💰 ຄ່ານໍາໃຊ້ນໍ້າ (ກີບ) — ປີ " + row.year }),
+      /* @__PURE__ */ jsx8("input", { type: "number", min: "0", step: "1", value: row.waterFee ?? "", onChange: (e) => set("waterFee", e.target.value), placeholder: "ປ້ອນຈໍານວນເງິນຄ່ານໍາໃຊ້ນໍ້າຂອງປີ " + row.year, className: inp + " font-semibold" }),
+      /* @__PURE__ */ jsx8("p", { className: "text-[11px] text-slate-500 mt-1", children: "ສາມາດປ້ອນຄ່າແຍກແຕ່ລະປີ ແລ້ວກົດເພີ່ມປີເຂົ້າລາຍການ" })
     ] }),
     /* ລາຍເດືອນ 1–12 */
     /* @__PURE__ */ jsxs8("div", { className: "bg-white border border-slate-200 rounded-xl p-3", children: [
@@ -1004,7 +997,9 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
     /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-3", children: [
       /* @__PURE__ */ jsxs8("div", { children: [
         /* @__PURE__ */ jsx8("label", { className: lab, children: "ປະເພດແຫຼ່ງນໍ້າ" }),
-        /* @__PURE__ */ jsx8("select", { value: row.sourceType, onChange: (e) => set("sourceType", e.target.value), className: inp, children: WATER_SOURCE_TYPES.map((st) => /* @__PURE__ */ jsx8("option", { value: st, children: st }, st)) })
+        /* @__PURE__ */ jsx8("select", { value: row.sourceType, onChange: (e) => set("sourceType", e.target.value), className: inp, children: WATER_SOURCE_TYPES.map((st) => /* @__PURE__ */ jsx8("option", { value: st, children: st }, st)) }),
+        /* @__PURE__ */ jsx8("label", { className: lab + " mt-2", children: "ຊື່ແມ່ນໍ້າ / ແຫຼ່ງນໍ້າ" }),
+        /* @__PURE__ */ jsx8("input", { type: "text", value: row.sourceName || "", onChange: (e) => set("sourceName", e.target.value), placeholder: formData.waterSourceName ? `ເຊັ່ນ: ${formData.waterSourceName}` : "ເຊັ່ນ: ແມ່ນໍ້າງື່ມ, ນໍ້າຊອງ, ຫ້ວຍຫຼວງ", className: inp })
       ] }),
       /* @__PURE__ */ jsxs8("div", { children: [
         /* @__PURE__ */ jsx8("label", { className: lab, children: "ໝາຍເຫດ" }),
@@ -1016,7 +1011,7 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
       editYear && /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => { setEditYear(null); setRow(empty); }, className: "px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded-xl", children: "ຍົກເລີກ" })
     ] }),
     list.length > 0 && /* @__PURE__ */ jsx8("div", { className: "overflow-auto border border-slate-300 rounded-xl bg-white", children: /* @__PURE__ */ jsxs8("table", { className: "w-full text-xs border-collapse", children: [
-      /* @__PURE__ */ jsx8("thead", { children: /* @__PURE__ */ jsx8("tr", { className: "bg-slate-100 text-slate-600", children: ["ປີ", "m³/ວັນ", "ສະເລ່ຍ/ເດືອນ", "ລວມ/ປີ", "ລາຍເດືອນ", "ແຫຼ່ງນໍ້າ", "ໝາຍເຫດ", ""].map((h, i2) => /* @__PURE__ */ jsx8("th", { className: "px-2 py-1.5 border-b text-left whitespace-nowrap", children: h }, i2)) }) }),
+      /* @__PURE__ */ jsx8("thead", { children: /* @__PURE__ */ jsx8("tr", { className: "bg-slate-100 text-slate-600", children: ["ປີ", "m³/ວັນ", "ສະເລ່ຍ/ເດືອນ", "ລວມ/ປີ", "ຄ່ານໍາໃຊ້ນໍ້າ (ກີບ)", "ລາຍເດືອນ", "ແຫຼ່ງນໍ້າ", "ໝາຍເຫດ", ""].map((h, i2) => /* @__PURE__ */ jsx8("th", { className: "px-2 py-1.5 border-b text-left whitespace-nowrap", children: h }, i2)) }) }),
       /* @__PURE__ */ jsx8("tbody", { children: list.flatMap((r) => {
         const mcount = Object.entries(r.months || {}).filter(([k2, v]) => /^m\d+$/.test(k2) && v !== null && v !== "").length;
         const main = /* @__PURE__ */ jsxs8("tr", { className: r.draft ? "bg-amber-50" : "", children: [
@@ -1024,8 +1019,9 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
           /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-right", children: fmtVol(r.daily) || "-" }),
           /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-right", children: fmtVol(r.monthly) || "-" }),
           /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-right font-semibold", children: fmtVol(r.yearly) || "-" }),
+          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-right font-semibold text-emerald-700 whitespace-nowrap", children: r.waterFee == null || r.waterFee === "" ? "-" : Number(r.waterFee).toLocaleString("lo-LA") + " ກີບ" }),
           /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b", children: mcount ? /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => setOpenYear(openYear === r.year ? null : r.year), className: "text-indigo-600 font-bold hover:underline", children: `${openYear === r.year ? "▼" : "▶"} ${mcount}/12 ເດືອນ` }) : "-" }),
-          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b", children: r.sourceType || "-" }),
+          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b", children: r.sourceName ? [r.sourceType, /* @__PURE__ */ jsx8("div", { className: "font-bold text-sky-700", children: "💧 " + r.sourceName }, "sn")] : (r.sourceType || "-") }),
           /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-slate-500", children: r.note || "" }),
           /* @__PURE__ */ jsxs8("td", { className: "px-2 py-1.5 border-b whitespace-nowrap text-right", children: [
             /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => editRow(r), className: "text-blue-600 font-bold mr-2", children: "✏️" }),
@@ -1033,7 +1029,7 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
           ] })
         ] }, r.year);
         if (openYear !== r.year || !mcount) return [main];
-        return [main, /* @__PURE__ */ jsx8("tr", { children: /* @__PURE__ */ jsx8("td", { colSpan: 8, className: "px-2 py-2 border-b bg-indigo-50/40", children: /* @__PURE__ */ jsx8("div", { className: "grid grid-cols-3 sm:grid-cols-6 gap-1.5", children: LAO_MONTHS_SHORT.map((mn, i2) => /* @__PURE__ */ jsxs8("div", { className: "bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px]", children: [
+        return [main, /* @__PURE__ */ jsx8("tr", { children: /* @__PURE__ */ jsx8("td", { colSpan: 9, className: "px-2 py-2 border-b bg-indigo-50/40", children: /* @__PURE__ */ jsx8("div", { className: "grid grid-cols-3 sm:grid-cols-6 gap-1.5", children: LAO_MONTHS_SHORT.map((mn, i2) => /* @__PURE__ */ jsxs8("div", { className: "bg-white border border-slate-200 rounded-lg px-2 py-1 text-[11px]", children: [
           /* @__PURE__ */ jsx8("div", { className: "text-slate-400", children: `${i2 + 1}. ${mn}` }),
           /* @__PURE__ */ jsx8("div", { className: "font-bold text-right", children: fmtVol(r.months?.["m" + (i2 + 1)]) || "-" })
         ] }, i2)) }) }) }, r.year + "-m")];
@@ -1467,79 +1463,6 @@ function downloadProjectTemplate() {
 window.openProjectExcelImport = openProjectExcelImport;
 window.downloadProjectTemplate = downloadProjectTemplate;
 
-// 🔄 ຈຳນວນຄັ້ງຕໍ່ໃບອະນຸຍາດ + ປະຫວັດການຕໍ່ (ແບບດຽວກັບ ລະບົບປ່ອຍນ້ຳເປື້ອນ)
-var PermitRenewalEditor = ({ formData, setFormData }) => {
-  const history = Array.isArray(formData.renewalHistory) ? formData.renewalHistory : formData.renewalHistory && typeof formData.renewalHistory === "object" ? Object.values(formData.renewalHistory) : [];
-  const count = typeof formData.renewalCount === "number" ? formData.renewalCount : history.length;
-  const today = new Date().toISOString().split("T")[0];
-  const plusYears = (d, n) => { const x = d ? new Date(d) : new Date(); if (isNaN(x)) return ""; x.setFullYear(x.getFullYear() + n); x.setDate(x.getDate() - 1); return x.toISOString().split("T")[0]; };
-  const blank = () => ({ renewalDate: today, previousExpiryDate: formData.permitExpiryDate || "", newExpiryDate: plusYears(formData.permitExpiryDate || today, 5), referenceDocNumber: "", approvedBy: "", feePaid: "", notes: "" });
-  const [open, setOpen] = useState8(false);
-  const [rec, setRec] = useState8(blank());
-  const [showHist, setShowHist] = useState8(false);
-  const set = (k, v) => setRec({ ...rec, [k]: v });
-  const inp = "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white";
-  const lab = "block text-[11px] font-semibold text-slate-600 mb-1";
-  const save = () => {
-    if (!rec.newExpiryDate) return alert("ກະລຸນາລະບຸ ວັນໝົດອາຍຸໃໝ່");
-    const r = { ...rec, id: `rn-${Date.now()}`, renewalNumber: history.length + 1, feePaid: rec.feePaid === "" ? null : Number(rec.feePaid), draft: true };
-    const newHist = [...history, r];
-    setFormData({ ...formData, renewalHistory: newHist, renewalCount: newHist.length, permitExpiryDate: rec.newExpiryDate, status: formData.status === "expired" ? "active" : formData.status });
-    setOpen(false);
-    setShowHist(true);
-  };
-  const removeRec = (id) => {
-    if (!confirm("ລົບການຕໍ່ໃບອະນຸຍາດຄັ້ງນີ້?")) return;
-    const left = history.filter((r) => r.id !== id).map((r, i) => ({ ...r, renewalNumber: i + 1 }));
-    setFormData({ ...formData, renewalHistory: left, renewalCount: left.length });
-  };
-  return /* @__PURE__ */ jsxs8("div", { className: "md:col-span-3 space-y-2", children: [
-    /* @__PURE__ */ jsxs8("div", { className: "flex items-center justify-between", children: [
-      /* @__PURE__ */ jsx8("label", { className: "text-xs font-semibold text-blue-700", children: "🔄 ຈຳນວນຄັ້ງໃນການຕໍ່ໃບອະນຸຍາດ (Renewal Count) *" }),
-      /* @__PURE__ */ jsx8("span", { className: "text-[11px] text-slate-500", children: count === 0 ? "ຍັງບໍ່ເຄີຍຕໍ່" : `ຕໍ່ແລ້ວ ${count} ຄັ້ງ` })
-    ] }),
-    /* @__PURE__ */ jsxs8("div", { className: "flex gap-2", children: [
-      /* @__PURE__ */ jsx8("input", { type: "number", min: "0", value: count, onChange: (e) => setFormData({ ...formData, renewalCount: Math.max(0, parseInt(e.target.value) || 0) }), className: inp + " font-bold" }),
-      /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => { setRec(blank()); setOpen(!open); }, className: "shrink-0 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold shadow-sm whitespace-nowrap", children: "+ ຕໍ່ໃບອະນຸຍາດ" })
-    ] }),
-    /* @__PURE__ */ jsx8("p", { className: "text-[11px] text-slate-500", children: '* 0 = ໃບອະນຸຍາດສະບັບທຳອິດ; ກົດ "+ ຕໍ່ໃບອະນຸຍາດ" ເພື່ອບັນທຶກປະຫວັດ ແລະ ຂະຫຍາຍອາຍຸ' }),
-    open && /* @__PURE__ */ jsxs8("div", { className: "rounded-2xl border border-blue-200 bg-blue-50/50 p-4 space-y-3", children: [
-      /* @__PURE__ */ jsx8("p", { className: "text-sm font-bold text-blue-900", children: `📜 ບັນທຶກການຕໍ່ໃບອະນຸຍາດ (ຄັ້ງທີ ${history.length + 1})` }),
-      /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-3", children: [
-        /* @__PURE__ */ jsxs8("div", { children: [/* @__PURE__ */ jsx8("label", { className: lab, children: "ວັນທີຕໍ່ໃບອະນຸຍາດ" }), /* @__PURE__ */ jsx8("input", { type: "date", value: rec.renewalDate, onChange: (e) => set("renewalDate", e.target.value), className: inp })] }),
-        /* @__PURE__ */ jsxs8("div", { children: [/* @__PURE__ */ jsx8("label", { className: lab, children: "ວັນໝົດອາຍຸເດີມ" }), /* @__PURE__ */ jsx8("input", { type: "date", value: rec.previousExpiryDate, onChange: (e) => set("previousExpiryDate", e.target.value), className: inp })] }),
-        /* @__PURE__ */ jsxs8("div", { children: [
-          /* @__PURE__ */ jsxs8("label", { className: "flex justify-between text-[11px] font-semibold text-slate-600 mb-1", children: ["ວັນໝົດອາຍຸໃໝ່ *", /* @__PURE__ */ jsxs8("span", { className: "space-x-1", children: [1, 3, 5].map((n) => /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => set("newExpiryDate", plusYears(rec.previousExpiryDate || today, n)), className: "text-blue-600 font-bold hover:underline", children: `+${n}ປີ` }, n)) })] }),
-          /* @__PURE__ */ jsx8("input", { type: "date", value: rec.newExpiryDate, onChange: (e) => set("newExpiryDate", e.target.value), className: inp + " font-bold text-emerald-700" })
-        ] }),
-        /* @__PURE__ */ jsxs8("div", { children: [/* @__PURE__ */ jsx8("label", { className: lab, children: "ເລກທີໜັງສື / ຂໍ້ຕົກລົງ" }), /* @__PURE__ */ jsx8("input", { type: "text", value: rec.referenceDocNumber, onChange: (e) => set("referenceDocNumber", e.target.value), placeholder: "ເຊັ່ນ: 123/ກຊນ", className: inp })] }),
-        /* @__PURE__ */ jsxs8("div", { children: [/* @__PURE__ */ jsx8("label", { className: lab, children: "ຜູ້ອະນຸມັດ" }), /* @__PURE__ */ jsx8("input", { type: "text", value: rec.approvedBy, onChange: (e) => set("approvedBy", e.target.value), className: inp })] }),
-        /* @__PURE__ */ jsxs8("div", { children: [/* @__PURE__ */ jsx8("label", { className: lab, children: "ຄ່າທຳນຽມ (ກີບ)" }), /* @__PURE__ */ jsx8("input", { type: "number", min: "0", value: rec.feePaid, onChange: (e) => set("feePaid", e.target.value), className: inp })] }),
-        /* @__PURE__ */ jsxs8("div", { className: "md:col-span-3", children: [/* @__PURE__ */ jsx8("label", { className: lab, children: "ໝາຍເຫດ" }), /* @__PURE__ */ jsx8("input", { type: "text", value: rec.notes, onChange: (e) => set("notes", e.target.value), className: inp })] })
-      ] }),
-      /* @__PURE__ */ jsxs8("div", { className: "flex gap-2", children: [
-        /* @__PURE__ */ jsx8("button", { type: "button", onClick: save, className: "flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold py-2.5 rounded-xl", children: "✅ ບັນທຶກການຕໍ່ (ຮ່າງ) — ວັນໝົດອາຍຸຈະອັບເດດໃຫ້" }),
-        /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => setOpen(false), className: "px-4 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded-xl", children: "ຍົກເລີກ" })
-      ] })
-    ] }),
-    history.length > 0 && /* @__PURE__ */ jsxs8("div", { className: "rounded-xl border border-slate-200 bg-white", children: [
-      /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => setShowHist(!showHist), className: "w-full text-left px-3 py-2 text-xs font-bold text-slate-700", children: `${showHist ? "▼" : "▶"} ປະຫວັດການຕໍ່ໃບອະນຸຍາດ (${history.length} ຄັ້ງ)` }),
-      showHist && /* @__PURE__ */ jsx8("div", { className: "overflow-auto", children: /* @__PURE__ */ jsxs8("table", { className: "w-full text-xs border-collapse", children: [
-        /* @__PURE__ */ jsx8("thead", { children: /* @__PURE__ */ jsx8("tr", { className: "bg-slate-100 text-slate-600", children: ["ຄັ້ງທີ", "ວັນທີຕໍ່", "ໝົດອາຍຸເດີມ", "ໝົດອາຍຸໃໝ່", "ເລກທີໜັງສື", "ຜູ້ອະນຸມັດ", "ຄ່າທຳນຽມ", ""].map((h, i) => /* @__PURE__ */ jsx8("th", { className: "px-2 py-1.5 border-b text-left whitespace-nowrap", children: h }, i)) }) }),
-        /* @__PURE__ */ jsx8("tbody", { children: history.map((r) => /* @__PURE__ */ jsxs8("tr", { className: r.draft ? "bg-amber-50" : "", children: [
-          /* @__PURE__ */ jsxs8("td", { className: "px-2 py-1.5 border-b font-bold", children: [r.renewalNumber, r.draft && /* @__PURE__ */ jsx8("span", { className: "ml-1 text-[9px] text-amber-700", children: "📝 ຮ່າງ" })] }),
-          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b", children: r.renewalDate || "-" }),
-          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b", children: r.previousExpiryDate || "-" }),
-          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b font-bold text-emerald-700", children: r.newExpiryDate || "-" }),
-          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b", children: r.referenceDocNumber || "-" }),
-          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b", children: r.approvedBy || "-" }),
-          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-right", children: r.feePaid ? Number(r.feePaid).toLocaleString() : "-" }),
-          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-right", children: /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => removeRec(r.id), className: "text-rose-600 font-bold", children: "🗑️" }) })
-        ] }, r.id)) })
-      ] }) })
-    ] })
-  ] });
-};
 // src/lib/exportUtils.ts
 import * as XLSX from "xlsx";
 function exportProjectsToExcel(projects, filename = "Water_Projects_Lao") {
@@ -1563,8 +1486,7 @@ function exportProjectsToExcel(projects, filename = "Water_Projects_Lao") {
     "ປະເພດແຫຼ່ງນໍ້າ (ເດືອນ)": p.waterSourceTypeMonth || p.waterSourceType,
     "ປະລິມານນໍ້າ / ປີ (m³)": p.waterVolumeYear ?? calcYearVolume(p),
     "ປະເພດແຫຼ່ງນໍ້າ (ປີ)": p.waterSourceTypeYear || p.waterSourceType,
-    "ຈຳນວນຄັ້ງຕໍ່ໃບອະນຸຍາດ": typeof p.renewalCount === "number" ? p.renewalCount : (p.renewalHistory || []).length,
-    "ຂໍ້ມູນລາຍປີ": (p.yearlyRecords || []).map((r) => `${r.year}: ${fmtVol(r.yearly)} m³/ປີ${r.sourceType ? " (" + r.sourceType + ")" : ""}`).join("; "),
+    "ຂໍ້ມູນລາຍປີ": (p.yearlyRecords || []).map((r) => `${r.year}: ${fmtVol(r.yearly)} m³/ປີ${r.sourceType ? " (" + r.sourceType + (r.sourceName ? " · " + r.sourceName : "") + ")" : ""}`).join("; "),
     "ທີ່ຕັ້ງໂຄງການ (ບ້ານ)": p.projectLocation.village,
     "ທີ່ຕັ້ງໂຄງການ (ເມືອງ)": p.projectLocation.district,
     "ທີ່ຕັ້ງໂຄງການ (ແຂວງ)": p.projectLocation.province,
@@ -2887,31 +2809,44 @@ var WaterMap = ({
         });
         markersLayerRef.current?.addLayer(projectMarker);
       }
-      if (intLat && intLng && validLL(intLat, intLng) && showIntakes) {
-        const intakeMarker = L.marker([intLat, intLng], {
-          icon: createIntakeIcon(isSelected),
-          title: `ບ່ອນດູດນໍ້າ: ${p.projectName}`
-        });
-        intakeMarker.on("click", () => {
-          setPreviewProject(p);
-          mapRef.current?.setView([intLat, intLng], 12, { animate: true });
-        });
-        markersLayerRef.current?.addLayer(intakeMarker);
-      }
-      if (showConnections && validLL(projLat, projLng) && validLL(intLat, intLng)) {
-        const polyline = L.polyline(
-          [
-            [projLat, projLng],
-            [intLat, intLng]
-          ],
-          {
-            color: isSelected ? "#0284c7" : "#10b981",
-            weight: isSelected ? 3.5 : 2,
-            dashArray: "6, 8",
-            opacity: isSelected ? 0.95 : 0.6
+      const allIntakePoints = (Array.isArray(p.intakeLocation?.points) && p.intakeLocation.points.length > 0)
+        ? p.intakeLocation.points
+        : (Array.isArray(p.intakeLocation?.intakePoints) && p.intakeLocation.intakePoints.length > 0)
+        ? p.intakeLocation.intakePoints
+        : (validLL(intLat, intLng) ? [{ name: "ບ່ອນດູດນໍ້າ", latitude: intLat, longitude: intLng }] : []);
+
+      if (showIntakes) {
+        allIntakePoints.forEach((ipt, ptIdx) => {
+          const ptLat = ipt.latitude;
+          const ptLng = ipt.longitude;
+          if (ptLat && ptLng && validLL(ptLat, ptLng)) {
+            const intakeMarker = L.marker([ptLat, ptLng], {
+              icon: createIntakeIcon(isSelected),
+              title: `${ipt.name || 'ບ່ອນດູດນໍ້າ ' + (ptIdx + 1)}: ${p.projectName}`
+            });
+            intakeMarker.on("click", () => {
+              setPreviewProject(p);
+              mapRef.current?.setView([ptLat, ptLng], 12, { animate: true });
+            });
+            markersLayerRef.current?.addLayer(intakeMarker);
+
+            if (showConnections && validLL(projLat, projLng)) {
+              const polyline = L.polyline(
+                [
+                  [projLat, projLng],
+                  [ptLat, ptLng]
+                ],
+                {
+                  color: isSelected ? "#0284c7" : "#10b981",
+                  weight: isSelected ? 3.5 : 2,
+                  dashArray: "6, 8",
+                  opacity: isSelected ? 0.95 : 0.6
+                }
+              );
+              linesLayerRef.current?.addLayer(polyline);
+            }
           }
-        );
-        linesLayerRef.current?.addLayer(polyline);
+        });
       }
     });
     if (selectedProjectId) {
@@ -3055,7 +2990,7 @@ var WaterMap = ({
       /* @__PURE__ */ jsxs2("div", { className: "flex items-center gap-2 pointer-events-auto", children: [
         pickingMode && /* @__PURE__ */ jsx2("div", { className: "bg-amber-500 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-2xl shadow-xl animate-pulse flex items-center gap-2", children: /* @__PURE__ */ jsxs2("span", { children: [
           "🎯 ກະລຸນາກົດໃສ່ແຜນທີ່ເພື່ອຕັ້ງຈຸດພິກັດ (",
-          pickingMode === "project" ? "ທີ່ຕັ້ງໂຄງການ" : "ບ່ອນດູດນໍ້າ",
+          pickingMode === "project" ? "ທີ່ຕັ້ງໂຄງການ" : (pickingMode.startsWith("intake") ? `ບ່ອນດູດນໍ້າ ${pickingMode.includes(":") ? "ຈຸດທີ " + (Number(pickingMode.split(":")[1]) + 1) : ""}` : "ບ່ອນດູດນໍ້າ"),
           ")"
         ] }) }),
         /* @__PURE__ */ jsxs2("div", { className: "flex items-center bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-slate-700/80 shadow-xl overflow-hidden p-1", children: [
@@ -3139,24 +3074,38 @@ var WaterMap = ({
               }
             )
           ] }),
-          /* @__PURE__ */ jsxs2("div", { className: "flex items-center justify-between p-2 rounded-xl bg-sky-50/70 border border-sky-200/60", children: [
-            /* @__PURE__ */ jsxs2("div", { className: "flex items-center gap-1.5", children: [
-              /* @__PURE__ */ jsx2("span", { className: "w-2.5 h-2.5 rounded-full bg-sky-600" }),
-              /* @__PURE__ */ jsx2("span", { className: "font-semibold text-sky-900 text-[11px]", children: "ບ່ອນດູດນໍ້າ (ສີຟ້າ)" })
-            ] }),
-            /* @__PURE__ */ jsxs2(
-              "button",
-              {
-                onClick: () => copyGps(`${previewProject.intakeLocation.latitude}, ${previewProject.intakeLocation.longitude}`),
-                className: "font-mono text-[10px] text-sky-700 hover:text-sky-950 flex items-center gap-1 font-semibold",
-                title: "ຄັດລອກພິກັດ",
-                children: [
-                  /* @__PURE__ */ jsx2(Copy, { size: 11 }),
-                  copiedText?.includes(String(previewProject.intakeLocation.latitude)) ? "ຄັດລອກແລ້ວ" : `${previewProject.intakeLocation.latitude.toFixed(4)}, ${previewProject.intakeLocation.longitude.toFixed(4)}`
-                ]
-              }
-            )
-          ] })
+          (() => {
+            const previewIntakePts = (Array.isArray(previewProject.intakeLocation?.points) && previewProject.intakeLocation.points.length > 0)
+              ? previewProject.intakeLocation.points
+              : (Array.isArray(previewProject.intakeLocation?.intakePoints) && previewProject.intakeLocation.intakePoints.length > 0)
+              ? previewProject.intakeLocation.intakePoints
+              : [{ name: "ບ່ອນດູດນໍ້າ", latitude: previewProject.intakeLocation.latitude, longitude: previewProject.intakeLocation.longitude }];
+            return /* @__PURE__ */ jsxs2("div", { className: "space-y-1.5", children: [
+              /* @__PURE__ */ jsxs2("div", { className: "flex items-center justify-between px-1", children: [
+                /* @__PURE__ */ jsxs2("span", { className: "font-semibold text-sky-900 text-[11px] flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ jsx2("span", { className: "w-2.5 h-2.5 rounded-full bg-sky-600" }),
+                  "ບ່ອນດູດນໍ້າ (ສີຟ້າ 💧)"
+                ] }),
+                previewIntakePts.length > 1 && /* @__PURE__ */ jsxs2("span", { className: "bg-sky-100 text-sky-800 text-[10px] font-bold px-1.5 py-0.2 rounded-full", children: [previewIntakePts.length, " ຈຸດ"] })
+              ] }),
+              previewIntakePts.map((ipt, iIdx) => /* @__PURE__ */ jsxs2("div", { className: "flex items-center justify-between p-1.5 rounded-xl bg-sky-50/70 border border-sky-200/60 text-[11px]", children: [
+                /* @__PURE__ */ jsxs2("div", { className: "flex items-center gap-1.5 truncate max-w-[170px]", children: [
+                  /* @__PURE__ */ jsxs2("span", { className: `text-[10px] ${iIdx === 0 ? "bg-sky-600 text-white font-bold" : "bg-sky-200 text-sky-800"} px-1.5 py-0.2 rounded`, children: [iIdx + 1] }),
+                  /* @__PURE__ */ jsx2("span", { className: "truncate text-slate-700 font-medium", children: ipt.name || `ຈຸດທີ ${iIdx + 1}` })
+                ] }),
+                /* @__PURE__ */ jsxs2("button", {
+                  type: "button",
+                  onClick: () => copyGps(`${ipt.latitude}, ${ipt.longitude}`),
+                  className: "font-mono text-[10px] text-sky-700 hover:text-sky-950 flex items-center gap-1 font-semibold",
+                  title: "ຄັດລອກພິກັດ",
+                  children: [
+                    /* @__PURE__ */ jsx2(Copy, { size: 11 }),
+                    copiedText?.includes(String(ipt.latitude)) ? "ຄັດລອກແລ້ວ" : `${Number(ipt.latitude).toFixed(4)}, ${Number(ipt.longitude).toFixed(4)}`
+                  ]
+                })
+              ] }, ipt.id || iIdx))
+            ] });
+          })()
         ] }),
         /* @__PURE__ */ jsxs2("div", { className: "text-[11px] flex items-center justify-between pt-1", children: [
           /* @__PURE__ */ jsxs2("span", { children: [
@@ -3504,15 +3453,19 @@ var ProjectTable = ({
               /* @__PURE__ */ jsxs3("td", { className: "py-3.5 px-4", children: [
                 /* @__PURE__ */ jsxs3("div", { className: "flex items-center gap-1.5 text-slate-900 font-semibold", children: [
                   /* @__PURE__ */ jsx3("span", { className: "w-2.5 h-2.5 rounded-full bg-sky-500 shrink-0" }),
-                  /* @__PURE__ */ jsx3("span", { children: p.waterSourceName })
+                  /* @__PURE__ */ jsx3("span", { children: p.waterSourceName }),
+                  ((Array.isArray(p.intakeLocation?.points) && p.intakeLocation.points.length > 1) || (Array.isArray(p.intakeLocation?.intakePoints) && p.intakeLocation.intakePoints.length > 1)) && /* @__PURE__ */ jsxs3("span", { className: "text-[10px] bg-sky-100 text-sky-800 font-bold px-1.5 py-0.2 rounded-full border border-sky-300", children: [
+                    (p.intakeLocation.points || p.intakeLocation.intakePoints).length,
+                    " ຈຸດດູດ"
+                  ] })
                 ] }),
                 /* @__PURE__ */ jsxs3("div", { className: "text-[11px] text-slate-500 ml-4 font-mono", children: [
                   "ບ້ານ ",
                   p.intakeLocation.village,
                   " (",
-                  p.intakeLocation.latitude.toFixed(4),
+                  typeof p.intakeLocation.latitude === "number" ? p.intakeLocation.latitude.toFixed(4) : Number(p.intakeLocation.latitude || 0).toFixed(4),
                   ", ",
-                  p.intakeLocation.longitude.toFixed(4),
+                  typeof p.intakeLocation.longitude === "number" ? p.intakeLocation.longitude.toFixed(4) : Number(p.intakeLocation.longitude || 0).toFixed(4),
                   ")"
                 ] })
               ] }),
@@ -5932,9 +5885,245 @@ var SecurityAndSettings = ({
 };
 
 // src/components/ProjectFormModal.tsx
-import { useState as useState8, useEffect as useEffect3 } from "react";
-import { X as X3, Save as Save3, MapPin as MapPin3, Droplets as Droplets3, Building2 as Building22, FileText as FileText3 } from "lucide-react";
+import { useState as useState8, useEffect as useEffect3, useRef as useRef8 } from "react";
+import { X as X3, Save as Save3, MapPin as MapPin3, Droplets as Droplets3, Building2 as Building22, FileText as FileText3, Plus as PlusF, Trash2 as TrashF, Navigation as NavigationF, Copy as CopyF, Check as CheckF, Compass as CompassF, Layers as LayersF, ExternalLink as ExternalLinkF } from "lucide-react";
 import { jsx as jsx8, jsxs as jsxs8 } from "react/jsx-runtime";
+
+// ຄິດໄລ່ໄລຍະຫ່າງລະຫວ່າງ 2 ຈຸດພິກັດ (ກິໂລແມັດ)
+function calcDistanceKm(lat1, lon1, lat2, lon2) {
+  if (lat1 === undefined || lat1 === null || lon1 === undefined || lon1 === null ||
+      lat2 === undefined || lat2 === null || lon2 === undefined || lon2 === null) return null;
+  const nlat1 = Number(lat1), nlon1 = Number(lon1), nlat2 = Number(lat2), nlon2 = Number(lon2);
+  if (!validLL(nlat1, nlon1) || !validLL(nlat2, nlon2)) return null;
+  const R = 6371;
+  const dLat = (nlat2 - nlat1) * Math.PI / 180;
+  const dLon = (nlon2 - nlon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(nlat1 * Math.PI / 180) * Math.cos(nlat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Number((R * c).toFixed(2));
+}
+
+// 🗺️ Modal ສຳລັບເລືອກຈຸດພິກັດບ່ອນດູດນໍ້າເທິງແຜນທີ່ ໂດຍບໍ່ຕ້ອງປິດໜ້າຕ່າງຟອມ (In-Modal Map Picker)
+var IntakeMapPickerModal = ({
+  isOpen,
+  onClose,
+  pointName,
+  pointNumber,
+  initialLat,
+  initialLng,
+  projectLat,
+  projectLng,
+  onConfirm
+}) => {
+  const mapContainerRef = useRef8(null);
+  const mapInstanceRef = useRef8(null);
+  const markerRef = useRef8(null);
+  const lineRef = useRef8(null);
+  const [currentLat, setCurrentLat] = useState8(initialLat || 17.962);
+  const [currentLng, setCurrentLng] = useState8(initialLng || 102.615);
+
+  useEffect3(() => {
+    if (!isOpen) return;
+    const startLat = validLL(initialLat, initialLng) ? Number(initialLat) : (validLL(projectLat, projectLng) ? Number(projectLat) : 17.962);
+    const startLng = validLL(initialLat, initialLng) ? Number(initialLng) : (validLL(projectLat, projectLng) ? Number(projectLng) : 102.615);
+    setCurrentLat(startLat);
+    setCurrentLng(startLng);
+
+    const timer = setTimeout(() => {
+      if (!mapContainerRef.current) return;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+      const map = L.map(mapContainerRef.current, {
+        center: [startLat, startLng],
+        zoom: 14,
+        zoomControl: true
+      });
+      mapInstanceRef.current = map;
+
+      L.tileLayer("https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}", {
+        subdomains: ["mt0", "mt1", "mt2", "mt3"],
+        maxZoom: 20,
+        attribution: "Google Maps Satellite"
+      }).addTo(map);
+
+      const intakeIcon = L.divIcon({
+        className: "picker-intake-icon",
+        html: `
+          <div style="transform:translate(-50%,-50%);width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0284c7,#0369a1);border:3px solid #fff;box-shadow:0 6px 14px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:bold;">
+            💧
+          </div>
+        `,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+      });
+
+      const intakeMarker = L.marker([startLat, startLng], {
+        icon: intakeIcon,
+        draggable: true
+      }).addTo(map);
+      markerRef.current = intakeMarker;
+
+      const updatePos = (lat, lng) => {
+        const roundedLat = Number(Number(lat).toFixed(6));
+        const roundedLng = Number(Number(lng).toFixed(6));
+        setCurrentLat(roundedLat);
+        setCurrentLng(roundedLng);
+        intakeMarker.setLatLng([roundedLat, roundedLng]);
+
+        if (lineRef.current && validLL(projectLat, projectLng)) {
+          lineRef.current.setLatLngs([[projectLat, projectLng], [roundedLat, roundedLng]]);
+        }
+      };
+
+      intakeMarker.on("dragend", (e) => {
+        const pos = e.target.getLatLng();
+        updatePos(pos.lat, pos.lng);
+      });
+
+      map.on("click", (e) => {
+        updatePos(e.latlng.lat, e.latlng.lng);
+      });
+
+      if (validLL(projectLat, projectLng)) {
+        const projIcon = L.divIcon({
+          className: "picker-proj-icon",
+          html: `
+            <div style="transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#16a34a,#15803d);border:3px solid #fff;box-shadow:0 6px 12px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:bold;">
+              🏢
+            </div>
+          `,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        });
+        L.marker([projectLat, projectLng], { icon: projIcon, title: "ທີ່ຕັ້ງໂຄງການ" })
+          .addTo(map)
+          .bindTooltip("🏢 ທີ່ຕັ້ງໂຄງການ (ສີຂຽວ)", { permanent: true, direction: "top", offset: [0, -18] });
+
+        const polyline = L.polyline([[projectLat, projectLng], [startLat, startLng]], {
+          color: "#0284c7",
+          weight: 3,
+          dashArray: "6, 8",
+          opacity: 0.9
+        }).addTo(map);
+        lineRef.current = polyline;
+      }
+    }, 150);
+
+    return () => {
+      clearTimeout(timer);
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [isOpen, initialLat, initialLng]);
+
+  if (!isOpen) return null;
+  const dist = calcDistanceKm(projectLat, projectLng, currentLat, currentLng);
+
+  return /* @__PURE__ */ jsx8("div", {
+    className: "fixed inset-0 z-[1250] flex items-center justify-center p-3 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-150",
+    children: /* @__PURE__ */ jsxs8("div", {
+      className: "bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-3xl overflow-hidden flex flex-col max-h-[92vh]",
+      children: [
+        /* Header */
+        /* @__PURE__ */ jsxs8("div", {
+          className: "px-5 py-3.5 bg-gradient-to-r from-sky-700 to-blue-800 text-white flex items-center justify-between",
+          children: [
+            /* @__PURE__ */ jsxs8("div", {
+              className: "flex items-center gap-2.5",
+              children: [
+                /* @__PURE__ */ jsx8("span", { className: "w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-lg", children: "💧" }),
+                /* @__PURE__ */ jsxs8("div", {
+                  children: [
+                    /* @__PURE__ */ jsxs8("h3", {
+                      className: "text-sm font-bold flex items-center gap-2",
+                      children: [
+                        "ເລືອກຈຸດພິກັດບ່ອນດູດນໍ້າ: ",
+                        /* @__PURE__ */ jsx8("span", { className: "text-sky-200", children: pointName || `ຈຸດທີ ${pointNumber}` })
+                      ]
+                    }),
+                    /* @__PURE__ */ jsx8("p", { className: "text-[11px] text-sky-100", children: "ກົດໃສ່ແຜນທີ່ ຫຼື ລາກໝຸດສີຟ້າ 💧 ໄປໃສ່ຈຸດດູດນໍ້າແຄມແມ່ນໍ້າ/ແຫຼ່ງນໍ້າ" })
+                  ]
+                })
+              ]
+            }),
+            /* @__PURE__ */ jsx8("button", {
+              type: "button",
+              onClick: onClose,
+              className: "p-1 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition cursor-pointer",
+              children: /* @__PURE__ */ jsx8(X3, { size: 18 })
+            })
+          ]
+        }),
+
+        /* Map Container */
+        /* @__PURE__ */ jsxs8("div", {
+          className: "relative w-full h-[380px] bg-slate-100",
+          children: [
+            /* @__PURE__ */ jsx8("div", { ref: mapContainerRef, className: "w-full h-full" }),
+            /* @__PURE__ */ jsx8("div", {
+              className: "absolute top-3 right-3 z-[500] bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-md border border-slate-200 flex items-center gap-2 text-xs font-semibold text-slate-700",
+              children: /* @__PURE__ */ jsx8("span", { children: "🗺️ ແຜນທີ່ດາວທຽມ Google Maps" })
+            })
+          ]
+        }),
+
+        /* Footer */
+        /* @__PURE__ */ jsxs8("div", {
+          className: "p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3",
+          children: [
+            /* @__PURE__ */ jsxs8("div", {
+              className: "flex flex-wrap items-center gap-2 text-xs",
+              children: [
+                /* @__PURE__ */ jsxs8("div", {
+                  className: "bg-sky-100 text-sky-900 px-3 py-1.5 rounded-xl font-mono font-bold flex items-center gap-1.5 border border-sky-300",
+                  children: [
+                    /* @__PURE__ */ jsxs8("span", { children: ["💧 Lat: ", /* @__PURE__ */ jsx8("b", { children: Number(currentLat).toFixed(6) })] }),
+                    /* @__PURE__ */ jsx8("span", { className: "text-sky-400", children: "|" }),
+                    /* @__PURE__ */ jsxs8("span", { children: ["Long: ", /* @__PURE__ */ jsx8("b", { children: Number(currentLng).toFixed(6) })] })
+                  ]
+                }),
+                dist !== null && /* @__PURE__ */ jsxs8("span", {
+                  className: "bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-1.5 rounded-xl font-semibold",
+                  children: ["📏 ຫ່າງຈາກໂຄງການ: ", dist, " ກມ"]
+                })
+              ]
+            }),
+            /* @__PURE__ */ jsxs8("div", {
+              className: "flex items-center gap-2",
+              children: [
+                /* @__PURE__ */ jsx8("button", {
+                  type: "button",
+                  onClick: onClose,
+                  className: "px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition cursor-pointer",
+                  children: "ຍົກເລີກ"
+                }),
+                /* @__PURE__ */ jsxs8("button", {
+                  type: "button",
+                  onClick: () => {
+                    onConfirm(Number(currentLat), Number(currentLng));
+                    onClose();
+                  },
+                  className: "px-5 py-2 text-xs font-bold text-white bg-sky-600 hover:bg-sky-500 rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer",
+                  children: [
+                    /* @__PURE__ */ jsx8(Save3, { size: 14 }),
+                    "✅ ຢືນຢັນຈຸດພິກັດນີ້"
+                  ]
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    })
+  });
+};
+
 var ProjectFormModal = ({
   isOpen,
   onClose,
@@ -5971,17 +6160,192 @@ var ProjectFormModal = ({
       province: "ນະຄອນຫຼວງວຽງຈັນ",
       latitude: 17.962,
       longitude: 102.615,
-      pumpCapacity: ""
+      pumpCapacity: "",
+      points: [
+        {
+          id: 1,
+          name: "ຈຸດດູດນໍ້າ 1 (ຫຼັກ)",
+          latitude: 17.962,
+          longitude: 102.615,
+          pumpCapacity: ""
+        }
+      ]
     },
     waterUsagePlan: "",
     notes: ""
   });
   const [isSubmitting, setIsSubmitting] = useState8(false);
   const [activeTab, setActiveTab] = useState8("general");
-  useEffect3(() => {
-    if (initialData) {
-      setFormData(initialData);
+  const [pickerPointIdx, setPickerPointIdx] = useState8(null);
+  const [isBulkOpen, setIsBulkOpen] = useState8(false);
+  const [bulkText, setBulkText] = useState8("");
+  const [bulkError, setBulkError] = useState8("");
+  const lastInitialDataRef = useRef8(null);
+
+  const intakePoints = (Array.isArray(formData.intakeLocation?.points) && formData.intakeLocation.points.length > 0)
+    ? formData.intakeLocation.points
+    : (Array.isArray(formData.intakeLocation?.intakePoints) && formData.intakeLocation.intakePoints.length > 0)
+    ? formData.intakeLocation.intakePoints
+    : [{
+        id: 1,
+        name: "ຈຸດດູດນໍ້າ 1 (ຫຼັກ)",
+        latitude: formData.intakeLocation?.latitude ?? 17.962,
+        longitude: formData.intakeLocation?.longitude ?? 102.615,
+        pumpCapacity: formData.intakeLocation?.pumpCapacity || ""
+      }];
+
+  const updateIntakePoints = (newPoints) => {
+    const p0 = newPoints[0] || {};
+    setFormData((prev) => ({
+      ...prev,
+      intakeLocation: {
+        ...prev.intakeLocation,
+        latitude: p0.latitude ?? prev.intakeLocation?.latitude ?? 0,
+        longitude: p0.longitude ?? prev.intakeLocation?.longitude ?? 0,
+        pumpCapacity: p0.pumpCapacity ?? prev.intakeLocation?.pumpCapacity ?? "",
+        points: newPoints,
+        intakePoints: newPoints
+      }
+    }));
+  };
+
+  const handleAddIntakePoint = (customName) => {
+    const nextIdx = intakePoints.length + 1;
+    const lastPt = intakePoints[intakePoints.length - 1] || intakePoints[0];
+    const baseLat = lastPt?.latitude || 17.962;
+    const baseLng = lastPt?.longitude || 102.615;
+    const newPt = {
+      id: Date.now() + Math.random(),
+      name: (typeof customName === "string" && customName.trim()) ? customName.trim() : `ຈຸດດູດນໍ້າ ${nextIdx}`,
+      latitude: Number((Number(baseLat) + 0.0015).toFixed(6)),
+      longitude: Number((Number(baseLng) + 0.0015).toFixed(6)),
+      pumpCapacity: ""
+    };
+    updateIntakePoints([...intakePoints, newPt]);
+  };
+
+  const handleAddMultiplePoints = (count) => {
+    const nextPts = [...intakePoints];
+    for (let c = 0; c < count; c++) {
+      const nextIdx = nextPts.length + 1;
+      const lastPt = nextPts[nextPts.length - 1] || nextPts[0];
+      const baseLat = lastPt?.latitude || 17.962;
+      const baseLng = lastPt?.longitude || 102.615;
+      nextPts.push({
+        id: Date.now() + Math.random() + c,
+        name: `ຈຸດດູດນໍ້າ ${nextIdx}`,
+        latitude: Number((Number(baseLat) + 0.0012).toFixed(6)),
+        longitude: Number((Number(baseLng) + 0.0012).toFixed(6)),
+        pumpCapacity: ""
+      });
+    }
+    updateIntakePoints(nextPts);
+  };
+
+  const handleDuplicateIntakePoint = (idx) => {
+    const source = intakePoints[idx];
+    if (!source) return;
+    const nextIdx = intakePoints.length + 1;
+    const newPt = {
+      id: Date.now() + Math.random(),
+      name: `${source.name || 'ຈຸດດູດນໍ້າ ' + (idx + 1)} (ສຳເນົາ)`,
+      latitude: Number((Number(source.latitude || 17.962) + 0.001).toFixed(6)),
+      longitude: Number((Number(source.longitude || 102.615) + 0.001).toFixed(6)),
+      pumpCapacity: source.pumpCapacity || ""
+    };
+    const nextPts = [...intakePoints];
+    nextPts.splice(idx + 1, 0, newPt);
+    updateIntakePoints(nextPts);
+  };
+
+  const handleRemoveIntakePoint = (idxToRemove) => {
+    if (intakePoints.length <= 1) return;
+    const filtered = intakePoints.filter((_, i) => i !== idxToRemove);
+    updateIntakePoints(filtered);
+  };
+
+  const handleUpdateIntakePoint = (idx, patch) => {
+    const updated = intakePoints.map((pt, i) => i === idx ? { ...pt, ...patch } : pt);
+    updateIntakePoints(updated);
+  };
+
+  const handleBulkImport = () => {
+    if (!bulkText.trim()) return;
+    const lines = bulkText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const parsed = [];
+    let lineErr = 0;
+    lines.forEach((line, idx) => {
+      let name = "";
+      let coordPart = line;
+      if (line.includes(":")) {
+        const parts = line.split(":");
+        name = parts[0].trim();
+        coordPart = parts.slice(1).join(":").trim();
+      }
+      const cp = parseCoordPair(coordPart);
+      if (cp && validLL(cp.lat, cp.lng)) {
+        parsed.push({
+          id: Date.now() + Math.random() + idx,
+          name: name || `ຈຸດດູດນໍ້າ ${intakePoints.length + parsed.length + 1}`,
+          latitude: cp.lat,
+          longitude: cp.lng,
+          pumpCapacity: ""
+        });
+      } else {
+        lineErr++;
+      }
+    });
+
+    if (parsed.length > 0) {
+      updateIntakePoints([...intakePoints, ...parsed]);
+      setBulkText("");
+      setIsBulkOpen(false);
+      setBulkError("");
+      alert(`✅ ນໍາເຂົ້າຈຸດພິກັດສໍາເລັດ ${parsed.length} ຈຸດ!${lineErr > 0 ? ` (ຂ້າມ ${lineErr} ແຖວທີ່ອ່ານພິກັດບໍ່ໄດ້)` : ""}`);
     } else {
+      setBulkError("ບໍ່ສາມາດອ່ານຄູ່ພິກັດໄດ້. ກະລຸນາກວດສອບຮູບແບບ (ຕົວຢ່າງ: 17.9620, 102.6150 ຫຼື 17°58'13.0\"N 102°35'48.1\"E)");
+    }
+  };
+
+  useEffect3(() => {
+    if (!isOpen) {
+      lastInitialDataRef.current = null;
+      return;
+    }
+    if (initialData) {
+      if (lastInitialDataRef.current?.id === initialData.id) return;
+      lastInitialDataRef.current = initialData;
+      const initPoints = (Array.isArray(initialData.intakeLocation?.points) && initialData.intakeLocation.points.length > 0)
+        ? initialData.intakeLocation.points
+        : (Array.isArray(initialData.intakeLocation?.intakePoints) && initialData.intakeLocation.intakePoints.length > 0)
+        ? initialData.intakeLocation.intakePoints
+        : [{
+            id: 1,
+            name: "ຈຸດດູດນໍ້າ 1 (ຫຼັກ)",
+            latitude: initialData.intakeLocation?.latitude ?? 17.962,
+            longitude: initialData.intakeLocation?.longitude ?? 102.615,
+            pumpCapacity: initialData.intakeLocation?.pumpCapacity || ""
+          }];
+      setFormData({
+        ...initialData,
+        intakeLocation: {
+          ...initialData.intakeLocation,
+          latitude: initPoints[0]?.latitude ?? initialData.intakeLocation?.latitude ?? 17.962,
+          longitude: initPoints[0]?.longitude ?? initialData.intakeLocation?.longitude ?? 102.615,
+          points: initPoints,
+          intakePoints: initPoints
+        }
+      });
+    } else {
+      if (lastInitialDataRef.current === "new") return;
+      lastInitialDataRef.current = "new";
+      const defaultPoints = [{
+        id: 1,
+        name: "ຈຸດດູດນໍ້າ 1 (ຫຼັກ)",
+        latitude: 17.962,
+        longitude: 102.615,
+        pumpCapacity: "350 m³/ຊົ່ວໂມງ"
+      }];
       setFormData({
         id: `proj-${Date.now()}`,
         projectName: "",
@@ -6011,7 +6375,9 @@ var ProjectFormModal = ({
           province: "ນະຄອນຫຼວງວຽງຈັນ",
           latitude: 17.962,
           longitude: 102.615,
-          pumpCapacity: "350 m³/ຊົ່ວໂມງ"
+          pumpCapacity: "350 m³/ຊົ່ວໂມງ",
+          points: defaultPoints,
+          intakePoints: defaultPoints
         },
         waterUsagePlan: "",
         notes: "",
@@ -6020,6 +6386,7 @@ var ProjectFormModal = ({
       });
     }
   }, [initialData, isOpen]);
+
   useEffect3(() => {
     if (!pickedCoordinates) return;
     if (pickedCoordinates.type === "project") {
@@ -6031,26 +6398,55 @@ var ProjectFormModal = ({
           longitude: Number(pickedCoordinates.lng.toFixed(6))
         }
       }));
-    } else if (pickedCoordinates.type === "intake") {
-      setFormData((prev) => ({
-        ...prev,
-        intakeLocation: {
-          ...prev.intakeLocation,
+    } else if (pickedCoordinates.type && pickedCoordinates.type.startsWith("intake")) {
+      const idx = pickedCoordinates.type.includes(":") ? parseInt(pickedCoordinates.type.split(":")[1], 10) : 0;
+      setFormData((prev) => {
+        const curPts = (Array.isArray(prev.intakeLocation?.points) && prev.intakeLocation.points.length > 0)
+          ? [...prev.intakeLocation.points]
+          : [{
+              id: 1,
+              name: "ຈຸດດູດນໍ້າ 1 (ຫຼັກ)",
+              latitude: prev.intakeLocation?.latitude || 0,
+              longitude: prev.intakeLocation?.longitude || 0,
+              pumpCapacity: prev.intakeLocation?.pumpCapacity || ""
+            }];
+        const targetIdx = (!isNaN(idx) && idx >= 0 && idx < curPts.length) ? idx : 0;
+        curPts[targetIdx] = {
+          ...curPts[targetIdx],
           latitude: Number(pickedCoordinates.lat.toFixed(6)),
           longitude: Number(pickedCoordinates.lng.toFixed(6))
-        }
-      }));
+        };
+        const p0 = curPts[0] || {};
+        return {
+          ...prev,
+          intakeLocation: {
+            ...prev.intakeLocation,
+            latitude: p0.latitude ?? Number(pickedCoordinates.lat.toFixed(6)),
+            longitude: p0.longitude ?? Number(pickedCoordinates.lng.toFixed(6)),
+            points: curPts,
+            intakePoints: curPts
+          }
+        };
+      });
     }
   }, [pickedCoordinates]);
+
   if (!isOpen) return null;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const bad = [];
     const pl = formData.projectLocation || {}, il = formData.intakeLocation || {};
     if ((pl.latitude || pl.longitude) && !validLL(pl.latitude, pl.longitude)) bad.push(`ທີ່ຕັ້ງໂຄງການ (${pl.latitude}, ${pl.longitude})`);
-    if ((il.latitude || il.longitude) && !validLL(il.latitude, il.longitude)) bad.push(`ບ່ອນດູດນໍ້າ (${il.latitude}, ${il.longitude})`);
+    
+    intakePoints.forEach((pt, idx) => {
+      if ((pt.latitude || pt.longitude) && !validLL(pt.latitude, pt.longitude)) {
+        bad.push(`${pt.name || 'ຈຸດດູດນໍ້າ ' + (idx + 1)} (${pt.latitude}, ${pt.longitude})`);
+      }
+    });
+
     if (bad.length) {
-      alert(`⚠️ ພິກັດບໍ່ຖືກຕ້ອງ:\n${bad.join("\n")}\n\nLatitude ຕ້ອງຢູ່ລະຫວ່າງ -90 ຫາ 90, Longitude -180 ຫາ 180.\nຖ້າມີພິກັດແບບອົງສາ ໃຫ້ວາງໃສ່ຊ່ອງ 🧭 ພິກັດແບບອົງສາ ໃນແຖບສະຖານທີ່.`);
+      alert(`⚠️ ພິກັດບໍ່ຖືກຕ້ອງ:\n${bad.join("\n")}\n\nLatitude ຕ້ອງຢູ່ລະຫວ່າງ -90 ຫາ 90, Longitude -180 ຫາ 180.\nຖ້າມີພິກັດແບບອົງສາ ໃຫ້ວາງໃສ່ຊ່ອງ 🧭 ພິກັດແບບອົງສາ.`);
       return;
     }
     if (!formData.projectName || !formData.permitNumber) {
@@ -6061,10 +6457,15 @@ var ProjectFormModal = ({
       setIsSubmitting(true);
       const projectToSave = {
         ...formData,
+        intakeLocation: {
+          ...formData.intakeLocation,
+          latitude: intakePoints[0]?.latitude ?? formData.intakeLocation?.latitude ?? 0,
+          longitude: intakePoints[0]?.longitude ?? formData.intakeLocation?.longitude ?? 0,
+          points: intakePoints,
+          intakePoints: intakePoints
+        },
         yearlyRecords: (formData.yearlyRecords || []).map(({ draft, ...r }) => r).sort((a, b) => a.year - b.year),
         planTables: (formData.planTables || []).map(({ draft, ...t }) => t),
-        renewalHistory: (Array.isArray(formData.renewalHistory) ? formData.renewalHistory : []).map(({ draft, ...r }) => r),
-        renewalCount: typeof formData.renewalCount === "number" ? formData.renewalCount : (formData.renewalHistory || []).length,
         id: formData.id || `proj-${Date.now()}`,
         createdAt: formData.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
         updatedAt: (/* @__PURE__ */ new Date()).toISOString()
@@ -6124,13 +6525,19 @@ var ProjectFormModal = ({
           children: "🟢 3. ທີ່ຕັ້ງໂຄງການ (ສີຂຽວ)"
         }
       ),
-      /* @__PURE__ */ jsx8(
+      /* @__PURE__ */ jsxs8(
         "button",
         {
           type: "button",
           onClick: () => setActiveTab("intake"),
-          className: `py-3 px-3 border-b-2 transition-all whitespace-nowrap ${activeTab === "intake" ? "border-sky-600 text-sky-700 font-bold" : "border-transparent text-slate-600 hover:text-slate-900"}`,
-          children: "💧 4. ບ່ອນດູດນໍ້າ (ສີຟ້າ)"
+          className: `py-3 px-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 ${activeTab === "intake" ? "border-sky-600 text-sky-700 font-bold" : "border-transparent text-slate-600 hover:text-slate-900"}`,
+          children: [
+            /* @__PURE__ */ jsx8("span", { children: "💧 4. ບ່ອນດູດນໍ້າ (ສີຟ້າ)" }),
+            intakePoints.length > 0 && /* @__PURE__ */ jsxs8("span", {
+              className: `text-[10px] px-1.5 py-0.2 rounded-full font-bold ${activeTab === "intake" ? "bg-sky-600 text-white" : "bg-sky-100 text-sky-800 border border-sky-200"}`,
+              children: [intakePoints.length, " ຈຸດ"]
+            })
+          ]
         }
       ),
       /* @__PURE__ */ jsx8(
@@ -6294,8 +6701,7 @@ var ProjectFormModal = ({
                 className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-bold text-red-700"
               }
             )
-          ] }),
-          /* @__PURE__ */ jsx8(PermitRenewalEditor, { formData, setFormData })
+          ] })
         ] }),
         /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-4 pt-2", children: [
           /* @__PURE__ */ jsxs8("div", { children: [
@@ -6547,140 +6953,402 @@ var ProjectFormModal = ({
           ] }) })
         ] })
       ] }),
-      activeTab === "intake" && /* @__PURE__ */ jsxs8("div", { className: "space-y-4", children: [
-        /* @__PURE__ */ jsxs8("div", { className: "flex items-center justify-between pb-2 border-b border-sky-100", children: [
-          /* @__PURE__ */ jsxs8("h4", { className: "text-sm font-bold text-sky-800 flex items-center gap-2", children: [
-            /* @__PURE__ */ jsx8("span", { className: "w-3 h-3 rounded-full bg-sky-600 inline-block" }),
-            "ສະຖານທີ່ຕັ້ງບ່ອນດູດນໍ້າ (ສະແດງໃນແຜນທີ່ເປັນ ສີຟ້າ 💧)"
+      activeTab === "intake" && /* @__PURE__ */ jsxs8("div", { className: "space-y-5", children: [
+        /* Header of intake section */
+        /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center justify-between gap-3 p-4 bg-gradient-to-r from-sky-50 via-blue-50 to-indigo-50 border border-sky-200/80 rounded-2xl shadow-xs", children: [
+          /* @__PURE__ */ jsxs8("div", { children: [
+            /* @__PURE__ */ jsxs8("h4", { className: "text-sm font-bold text-sky-900 flex items-center gap-2", children: [
+              /* @__PURE__ */ jsx8("span", { className: "w-3.5 h-3.5 rounded-full bg-sky-600 inline-block shadow-xs" }),
+              "ສະຖານທີ່ຕັ້ງບ່ອນດູດນໍ້າ (ສະແດງໃນແຜນທີ່ເປັນ ສີຟ້າ 💧)",
+              /* @__PURE__ */ jsxs8("span", { className: "bg-sky-600 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-xs", children: [intakePoints.length, " ຈຸດພິກັດ"] })
+            ] }),
+            /* @__PURE__ */ jsx8("p", { className: "text-xs text-slate-600 mt-1", children: "ກໍານົດທີ່ຕັ້ງພື້ນທີ່, ແຫຼ່ງນ້ຳ ແລະ ສາມາດເພີ່ມຫ້ອງຈຸດພິກັດດູດນໍ້າໄດ້ຫຼາຍຈຸດຕາມຕົວຈິງ (ພ້ອມລະບົບແປງພິກັດ GPS/DMS)" })
           ] }),
-          onOpenMapPicker && /* @__PURE__ */ jsxs8(
-            "button",
-            {
-              type: "button",
-              onClick: () => onOpenMapPicker("intake"),
-              className: "text-xs bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 px-3 py-1.5 rounded-lg flex items-center gap-1 font-medium transition-colors",
-              children: [
-                /* @__PURE__ */ jsx8(Droplets3, { size: 14 }),
-                "ເລືອກພິກັດຈາກແຜນທີ່"
-              ]
-            }
-          )
+          /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center gap-2", children: [
+            /* @__PURE__ */ jsxs8(
+              "button",
+              {
+                type: "button",
+                onClick: () => handleAddIntakePoint(),
+                className: "text-xs bg-sky-600 hover:bg-sky-500 active:scale-98 text-white font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm transition cursor-pointer",
+                title: "ເພີ່ມຫ້ອງຈຸດພິກັດບ່ອນດູດນໍ້າໃໝ່ອີກ 1 ຈຸດ",
+                children: [
+                  /* @__PURE__ */ jsx8(PlusF, { size: 15 }),
+                  "➕ ເພີ່ມຫ້ອງຈຸດພິກັດ"
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxs8(
+              "button",
+              {
+                type: "button",
+                onClick: () => setIsBulkOpen(!isBulkOpen),
+                className: `text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 border transition cursor-pointer ${isBulkOpen ? "bg-sky-100 text-sky-800 border-sky-300" : "bg-white text-slate-700 hover:bg-slate-50 border-slate-300"}`,
+                title: "ວາງພິກັດຫຼາຍຈຸດພ້ອມກັນແບບ Bulk Import",
+                children: [
+                  /* @__PURE__ */ jsx8(LayersF, { size: 14 }),
+                  "📋 ວາງພິກັດຫຼາຍຈຸດ"
+                ]
+              }
+            )
+          ] })
         ] }),
-        /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-4", children: [
-          /* @__PURE__ */ jsxs8("div", { children: [
-            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ບ້ານທີ່ຕັ້ງບ່ອນດູດນໍ້າ *" }),
-            /* @__PURE__ */ jsx8(
-              "input",
-              {
-                type: "text",
-                required: true,
-                value: formData.intakeLocation?.village || "",
-                onChange: (e) => setFormData({
-                  ...formData,
-                  intakeLocation: { ...formData.intakeLocation, village: e.target.value }
-                }),
-                placeholder: "ຕົວຢ່າງ: ບ້ານ ປາກງື່ມ",
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500"
-              }
-            )
+
+        /* Bulk Paste Drawer (Collapsible) */
+        isBulkOpen && /* @__PURE__ */ jsxs8("div", { className: "bg-sky-50 border border-sky-300 p-4 rounded-2xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-150", children: [
+          /* @__PURE__ */ jsxs8("div", { className: "flex items-center justify-between", children: [
+            /* @__PURE__ */ jsxs8("h5", { className: "text-xs font-bold text-sky-900 flex items-center gap-1.5", children: [
+              /* @__PURE__ */ jsx8(LayersF, { size: 14, className: "text-sky-700" }),
+              "📋 ວາງພິກັດຫຼາຍຈຸດພ້ອມກັນ (Bulk Coordinate Import)"
+            ] }),
+            /* @__PURE__ */ jsx8("button", {
+              type: "button",
+              onClick: () => setIsBulkOpen(false),
+              className: "text-[11px] text-slate-500 hover:text-slate-800",
+              children: "✕ ປິດ"
+            })
           ] }),
-          /* @__PURE__ */ jsxs8("div", { children: [
-            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ເມືອງທີ່ຕັ້ງບ່ອນດູດນໍ້າ *" }),
-            /* @__PURE__ */ jsx8(
-              "input",
-              {
-                type: "text",
-                required: true,
-                value: formData.intakeLocation?.district || "",
-                onChange: (e) => setFormData({
-                  ...formData,
-                  intakeLocation: { ...formData.intakeLocation, district: e.target.value }
-                }),
-                placeholder: "ຕົວຢ່າງ: ເມືອງປາກງື່ມ",
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500"
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsxs8("div", { children: [
-            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ແຂວງທີ່ຕັ້ງບ່ອນດູດນໍ້າ *" }),
-            /* @__PURE__ */ jsx8(
-              "select",
-              {
-                value: formData.intakeLocation?.province || "ນະຄອນຫຼວງວຽງຈັນ",
-                onChange: (e) => setFormData({
-                  ...formData,
-                  intakeLocation: { ...formData.intakeLocation, province: e.target.value }
-                }),
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 font-medium",
-                children: LAO_PROVINCES.map((prov) => /* @__PURE__ */ jsx8("option", { value: prov, children: prov }, prov))
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsx8(DmsCoordField, {
-            lat: formData.intakeLocation?.latitude,
-            lng: formData.intakeLocation?.longitude,
-            ring: "focus:ring-sky-500",
-            label: "🧭 ພິກັດບ່ອນດູດນໍ້າ ແບບອົງສາ (GPS) — ໃສ່ແບບນີ້ ຫຼື ໃສ່ Lat/Lng ຂ້າງລຸ່ມກໍ່ໄດ້",
-            onChange: (la, lo) => setFormData({ ...formData, intakeLocation: { ...formData.intakeLocation, latitude: la, longitude: lo } })
+          /* @__PURE__ */ jsx8("p", { className: "text-[11px] text-slate-600", children: "ວາງຄູ່ພິກັດ (Lat, Long) 1 ແຖວຕໍ່ 1 ຈຸດ. ຮອງຮັບທັງເລກທົດສະນິຍົມ ຫຼື ພິກັດອົງສາ (DMS). ຕົວຢ່າງ: 17.9620, 102.6150 ຫຼື ໃສ່ຊື່ເຊັ່ນ: ທໍ່ດູດ 1: 17.9620, 102.6150" }),
+          /* @__PURE__ */ jsx8("textarea", {
+            rows: 3,
+            value: bulkText,
+            onChange: (e) => { setBulkText(e.target.value); setBulkError(""); },
+            placeholder: "ຕົວຢ່າງ:\n17.9620, 102.6150\n17.9655, 102.6190\nຫຼື: ທໍ່ດູດ 3: 17.9710, 102.6240",
+            className: "w-full px-3 py-2 text-xs font-mono border border-sky-300 rounded-xl bg-white focus:ring-2 focus:ring-sky-500 outline-none"
           }),
-          /* @__PURE__ */ jsxs8("div", { children: [
-            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ຈຸດພິກັດ Latitude ບ່ອນດູດນໍ້າ *" }),
-            /* @__PURE__ */ jsx8(
-              "input",
-              {
-                type: "number",
-                step: "any",
-                value: formData.intakeLocation?.latitude ?? 0,
-                onChange: (e) => setFormData({
-                  ...formData,
-                  intakeLocation: {
-                    ...formData.intakeLocation,
-                    latitude: unpackDMSNumber(parseFloat(e.target.value) || 0, 90)
-                  }
-                }),
-                placeholder: "ຕົວຢ່າງ: 18.1025",
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 font-mono"
-              }
-            )
+          bulkError && /* @__PURE__ */ jsx8("p", { className: "text-xs text-rose-600 font-semibold", children: bulkError }),
+          /* @__PURE__ */ jsxs8("div", { className: "flex items-center justify-end gap-2", children: [
+            /* @__PURE__ */ jsx8("button", {
+              type: "button",
+              onClick: () => { setBulkText(""); setIsBulkOpen(false); },
+              className: "px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 bg-white border border-slate-300 rounded-xl",
+              children: "ຍົກເລີກ"
+            }),
+            /* @__PURE__ */ jsx8("button", {
+              type: "button",
+              onClick: handleBulkImport,
+              className: "px-4 py-1.5 text-xs font-bold text-white bg-sky-600 hover:bg-sky-500 rounded-xl shadow-xs transition cursor-pointer",
+              children: "📥 ນໍາເຂົ້າຈຸດພິກັດທັງໝົດ"
+            })
+          ] })
+        ] }),
+
+        /* Area Location: Village, District, Province */
+        /* @__PURE__ */ jsxs8("div", { className: "bg-slate-50/90 p-4 rounded-2xl border border-slate-200/90 space-y-3", children: [
+          /* @__PURE__ */ jsxs8("p", { className: "text-xs font-bold text-slate-700 flex items-center gap-1.5", children: [
+            /* @__PURE__ */ jsx8(MapPin3, { size: 14, className: "text-sky-600" }),
+            "📍 ຂໍ້ມູນພື້ນທີ່ບ່ອນດູດນໍ້າ"
           ] }),
-          /* @__PURE__ */ jsxs8("div", { children: [
-            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ຈຸດພິກັດ Longitude ບ່ອນດູດນໍ້າ *" }),
-            /* @__PURE__ */ jsx8(
-              "input",
-              {
-                type: "number",
-                step: "any",
-                value: formData.intakeLocation?.longitude ?? 0,
-                onChange: (e) => setFormData({
-                  ...formData,
-                  intakeLocation: {
-                    ...formData.intakeLocation,
-                    longitude: unpackDMSNumber(parseFloat(e.target.value) || 0, 180)
-                  }
-                }),
-                placeholder: "ຕົວຢ່າງ: 102.7350",
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 font-mono"
-              }
-            )
+          /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-3", children: [
+            /* @__PURE__ */ jsxs8("div", { children: [
+              /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ບ້ານທີ່ຕັ້ງບ່ອນດູດນໍ້າ *" }),
+              /* @__PURE__ */ jsx8(
+                "input",
+                {
+                  type: "text",
+                  required: true,
+                  value: formData.intakeLocation?.village || "",
+                  onChange: (e) => setFormData({
+                    ...formData,
+                    intakeLocation: { ...formData.intakeLocation, village: e.target.value }
+                  }),
+                  placeholder: "ຕົວຢ່າງ: ບ້ານ ປາກງື່ມ",
+                  className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 bg-white"
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxs8("div", { children: [
+              /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ເມືອງທີ່ຕັ້ງບ່ອນດູດນໍ້າ *" }),
+              /* @__PURE__ */ jsx8(
+                "input",
+                {
+                  type: "text",
+                  required: true,
+                  value: formData.intakeLocation?.district || "",
+                  onChange: (e) => setFormData({
+                    ...formData,
+                    intakeLocation: { ...formData.intakeLocation, district: e.target.value }
+                  }),
+                  placeholder: "ຕົວຢ່າງ: ເມືອງປາກງື່ມ",
+                  className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 bg-white"
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxs8("div", { children: [
+              /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ແຂວງທີ່ຕັ້ງບ່ອນດູດນໍ້າ *" }),
+              /* @__PURE__ */ jsx8(
+                "select",
+                {
+                  value: formData.intakeLocation?.province || "ນະຄອນຫຼວງວຽງຈັນ",
+                  onChange: (e) => setFormData({
+                    ...formData,
+                    intakeLocation: { ...formData.intakeLocation, province: e.target.value }
+                  }),
+                  className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 font-medium bg-white",
+                  children: LAO_PROVINCES.map((prov) => /* @__PURE__ */ jsx8("option", { value: prov, children: prov }, prov))
+                }
+              )
+            ] })
+          ] })
+        ] }),
+
+        /* List of Coordinate Points (ຫ້ອງຈຸດພິກັດບ່ອນດູດນໍ້າ) */
+        /* @__PURE__ */ jsxs8("div", { className: "space-y-4", children: [
+          /* Section Header with Quick Add presets */
+          /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center justify-between gap-2 pb-1", children: [
+            /* @__PURE__ */ jsxs8("div", { className: "flex items-center gap-2", children: [
+              /* @__PURE__ */ jsx8(Droplets3, { size: 16, className: "text-sky-600" }),
+              /* @__PURE__ */ jsxs8("h5", { className: "text-xs font-bold text-slate-800 uppercase tracking-wide", children: [
+                "ຫ້ອງຈຸດພິກັດບ່ອນດູດນໍ້າ (",
+                intakePoints.length,
+                " ຈຸດ)"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxs8("div", { className: "flex items-center gap-1.5 text-xs", children: [
+              /* @__PURE__ */ jsx8("span", { className: "text-[11px] text-slate-500 mr-1 hidden sm:inline", children: "ເພີ່ມດ່ວນ:" }),
+              /* @__PURE__ */ jsx8("button", {
+                type: "button",
+                onClick: () => handleAddMultiplePoints(1),
+                className: "text-[11px] font-semibold bg-sky-50 hover:bg-sky-100 text-sky-700 px-2 py-1 rounded-lg border border-sky-200 transition cursor-pointer",
+                children: "+ 1 ຈຸດ"
+              }),
+              /* @__PURE__ */ jsx8("button", {
+                type: "button",
+                onClick: () => handleAddMultiplePoints(2),
+                className: "text-[11px] font-semibold bg-sky-50 hover:bg-sky-100 text-sky-700 px-2 py-1 rounded-lg border border-sky-200 transition cursor-pointer",
+                children: "+ 2 ຈຸດ"
+              }),
+              /* @__PURE__ */ jsx8("button", {
+                type: "button",
+                onClick: () => handleAddMultiplePoints(3),
+                className: "text-[11px] font-semibold bg-sky-50 hover:bg-sky-100 text-sky-700 px-2 py-1 rounded-lg border border-sky-200 transition cursor-pointer",
+                children: "+ 3 ຈຸດ"
+              })
+            ] })
           ] }),
-          /* @__PURE__ */ jsxs8("div", { children: [
-            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ກໍາລັງຈັກສູບ / ຂະໜາດຈັກດູດນໍ້າ" }),
-            /* @__PURE__ */ jsx8(
-              "input",
+
+          /* Render each Coordinate Point Box / Card */
+          /* @__PURE__ */ jsx8("div", { className: "space-y-3.5", children: intakePoints.map((pt, idx) => {
+            const dist = calcDistanceKm(formData.projectLocation?.latitude, formData.projectLocation?.longitude, pt.latitude, pt.longitude);
+            return /* @__PURE__ */ jsxs8(
+              "div",
               {
-                type: "text",
-                value: formData.intakeLocation?.pumpCapacity || "",
-                onChange: (e) => setFormData({
-                  ...formData,
-                  intakeLocation: {
-                    ...formData.intakeLocation,
-                    pumpCapacity: e.target.value
-                  }
-                }),
-                placeholder: "ຕົວຢ່າງ: 500 m³/ຊົ່ວໂມງ ຫຼື 75 kW",
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500"
+                className: "border-2 border-sky-200/90 hover:border-sky-400/90 bg-gradient-to-br from-sky-50/60 via-white to-slate-50/50 rounded-2xl p-4 space-y-3.5 shadow-xs transition-all",
+                children: [
+                  /* Row 1: Point label & actions */
+                  /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-sky-200/60", children: [
+                    /* @__PURE__ */ jsxs8("div", { className: "flex items-center gap-2 flex-1 min-w-[240px]", children: [
+                      /* @__PURE__ */ jsxs8("span", {
+                        className: `text-[11px] font-bold px-2.5 py-1 rounded-xl border flex items-center gap-1 shrink-0 ${idx === 0 ? "bg-sky-600 text-white border-sky-600 shadow-xs" : "bg-sky-100 text-sky-800 border-sky-300"}`,
+                        children: [
+                          "💧 ຈຸດທີ ",
+                          idx + 1,
+                          idx === 0 ? " (ຫຼັກ)" : ""
+                        ]
+                      }),
+                      /* @__PURE__ */ jsx8(
+                        "input",
+                        {
+                          type: "text",
+                          value: pt.name || "",
+                          onChange: (e) => handleUpdateIntakePoint(idx, { name: e.target.value }),
+                          placeholder: `ຊື່ / ໝາຍເຫດຈຸດດູດນໍ້າ ${idx + 1} (ເຊັ່ນ: ທໍ່ດູດ 1, ຈັກດູດແຄມຂອງ, ສະຖານີສູບສຳຮອງ)`,
+                          className: "flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-sky-500 font-semibold text-slate-800 shadow-2xs"
+                        }
+                      )
+                    ] }),
+                    /* @__PURE__ */ jsxs8("div", { className: "flex items-center gap-1.5 shrink-0", children: [
+                      /* In-Modal Map Picker Button */
+                      /* @__PURE__ */ jsxs8(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => setPickerPointIdx(idx),
+                          className: "text-[11px] bg-white text-sky-700 hover:bg-sky-50 border border-sky-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1 font-bold transition shadow-xs cursor-pointer",
+                          title: `ເປີດແຜນທີ່ເລືອກພິກັດສຳລັບຈຸດທີ ${idx + 1}`,
+                          children: [
+                            /* @__PURE__ */ jsx8(Droplets3, { size: 13, className: "text-sky-600" }),
+                            "🗺️ ເລືອກຈາກແຜນທີ່"
+                          ]
+                        }
+                      ),
+                      /* Duplicate Point Button */
+                      /* @__PURE__ */ jsxs8(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => handleDuplicateIntakePoint(idx),
+                          className: "text-[11px] bg-white text-slate-700 hover:bg-slate-50 border border-slate-300 px-2 py-1.5 rounded-xl flex items-center gap-1 font-semibold transition shadow-2xs cursor-pointer",
+                          title: `ສຳເນົາຈຸດພິກັດທີ ${idx + 1}`,
+                          children: [
+                            /* @__PURE__ */ jsx8(CopyF, { size: 12 }),
+                            "ສຳເນົາ"
+                          ]
+                        }
+                      ),
+                      /* Remove Point Button (only if > 1 point) */
+                      intakePoints.length > 1 && /* @__PURE__ */ jsxs8(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => handleRemoveIntakePoint(idx),
+                          className: "text-[11px] bg-white text-rose-600 hover:bg-rose-50 border border-rose-200 px-2 py-1.5 rounded-xl flex items-center gap-1 font-bold transition shadow-2xs cursor-pointer",
+                          title: `ລຶບຈຸດພິກັດທີ ${idx + 1}`,
+                          children: [
+                            /* @__PURE__ */ jsx8(TrashF, { size: 13 }),
+                            "ລົບ"
+                          ]
+                        }
+                      )
+                    ] })
+                  ] }),
+
+                  /* Coordinates Grid: Latitude, Longitude, Capacity */
+                  /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 sm:grid-cols-3 gap-3", children: [
+                    /* Latitude Input Box */
+                    /* @__PURE__ */ jsxs8("div", { children: [
+                      /* @__PURE__ */ jsxs8("label", { className: "block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between", children: [
+                        /* @__PURE__ */ jsx8("span", { children: "ຈຸດພິກັດ Latitude (ເສັ້ນຂະໜານ) *" }),
+                        /* @__PURE__ */ jsx8("span", { className: "text-[10px] text-slate-400 font-normal", children: "-90 ຫາ 90" })
+                      ] }),
+                      /* @__PURE__ */ jsx8(
+                        "input",
+                        {
+                          type: "number",
+                          step: "any",
+                          value: pt.latitude ?? 0,
+                          onChange: (e) => handleUpdateIntakePoint(idx, {
+                            latitude: unpackDMSNumber(parseFloat(e.target.value) || 0, 90)
+                          }),
+                          placeholder: "17.962000",
+                          className: "w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 font-mono bg-white font-semibold text-slate-900 shadow-2xs"
+                        }
+                      )
+                    ] }),
+                    /* Longitude Input Box */
+                    /* @__PURE__ */ jsxs8("div", { children: [
+                      /* @__PURE__ */ jsxs8("label", { className: "block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between", children: [
+                        /* @__PURE__ */ jsx8("span", { children: "ຈຸດພິກັດ Longitude (ເສັ້ນແວງ) *" }),
+                        /* @__PURE__ */ jsx8("span", { className: "text-[10px] text-slate-400 font-normal", children: "-180 ຫາ 180" })
+                      ] }),
+                      /* @__PURE__ */ jsx8(
+                        "input",
+                        {
+                          type: "number",
+                          step: "any",
+                          value: pt.longitude ?? 0,
+                          onChange: (e) => handleUpdateIntakePoint(idx, {
+                            longitude: unpackDMSNumber(parseFloat(e.target.value) || 0, 180)
+                          }),
+                          placeholder: "102.615000",
+                          className: "w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 font-mono bg-white font-semibold text-slate-900 shadow-2xs"
+                        }
+                      )
+                    ] }),
+                    /* Pump Capacity / Pipe Size Box */
+                    /* @__PURE__ */ jsxs8("div", { children: [
+                      /* @__PURE__ */ jsx8("label", { className: "block text-[11px] font-bold text-slate-700 mb-1", children: "ກໍາລັງຈັກສູບ / ຂະໜາດທໍ່" }),
+                      /* @__PURE__ */ jsx8(
+                        "input",
+                        {
+                          type: "text",
+                          value: pt.pumpCapacity || "",
+                          onChange: (e) => handleUpdateIntakePoint(idx, { pumpCapacity: e.target.value }),
+                          placeholder: "ຕົວຢ່າງ: 350 m³/ຊົ່ວໂມງ ຫຼື ທໍ່ Ø 300mm",
+                          className: "w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 bg-white shadow-2xs"
+                        }
+                      )
+                    ] })
+                  ] }),
+
+                  /* DmsCoordField: Supports Degree DMS, GPS strings, and Google Maps links */
+                  /* @__PURE__ */ jsx8(DmsCoordField, {
+                    lat: pt.latitude,
+                    lng: pt.longitude,
+                    ring: "focus:ring-sky-500",
+                    label: `🧭 ພິກັດອົງສາ (GPS) ຈຸດທີ ${idx + 1} — ວາງພິກັດອົງສາ (DMS) ຫຼື ວາງ Lat/Lng ຫຼື Google Maps link`,
+                    onChange: (la, lo) => handleUpdateIntakePoint(idx, { latitude: la, longitude: lo })
+                  }),
+
+                  /* Validation, Distance & Google Maps Preview footer */
+                  /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center justify-between gap-2 text-[11px] pt-1.5 text-slate-500 border-t border-sky-100", children: [
+                    /* Status and Distance */
+                    /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center gap-2", children: [
+                      validLL(pt.latitude, pt.longitude)
+                        ? /* @__PURE__ */ jsxs8("span", { className: "text-emerald-700 font-semibold flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200", children: [
+                            /* @__PURE__ */ jsx8(CheckF, { size: 12 }),
+                            "ພິກັດຖືກຕ້ອງ: ",
+                            Number(pt.latitude).toFixed(5),
+                            ", ",
+                            Number(pt.longitude).toFixed(5)
+                          ] })
+                        : /* @__PURE__ */ jsx8("span", { className: "text-amber-600 font-semibold bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200", children: "⚠️ ກະລຸນາກວດສອບພິກັດ Lat/Lng ໃຫ້ຖືກຕ້ອງ" }),
+                      dist !== null && /* @__PURE__ */ jsxs8("span", { className: "text-sky-800 font-medium bg-sky-50 px-2 py-0.5 rounded-lg border border-sky-200", children: [
+                        "📏 ຫ່າງຈາກໂຄງການ: ",
+                        /* @__PURE__ */ jsx8("b", { children: dist }),
+                        " ກມ"
+                      ] })
+                    ] }),
+                    /* Google Maps Preview Link */
+                    validLL(pt.latitude, pt.longitude) && /* @__PURE__ */ jsxs8(
+                      "a",
+                      {
+                        href: `https://www.google.com/maps?q=${pt.latitude},${pt.longitude}`,
+                        target: "_blank",
+                        rel: "noreferrer",
+                        className: "text-sky-700 hover:text-sky-950 hover:underline flex items-center gap-1 font-semibold",
+                        children: [
+                          /* @__PURE__ */ jsx8(NavigationF, { size: 12 }),
+                          "ເປີດໃນ Google Maps"
+                        ]
+                      }
+                    )
+                  ] })
+                ]
+              },
+              pt.id || idx
+            );
+          }) }),
+
+          /* Bottom Add Point Slot Button */
+          /* @__PURE__ */ jsxs8("div", { className: "space-y-2 pt-2", children: [
+            /* @__PURE__ */ jsxs8(
+              "button",
+              {
+                type: "button",
+                onClick: () => handleAddIntakePoint(),
+                className: "w-full py-3.5 px-4 border-2 border-dashed border-sky-300 hover:border-sky-500 bg-sky-50/40 hover:bg-sky-50 text-sky-800 font-bold rounded-2xl flex items-center justify-center gap-2 transition cursor-pointer text-xs shadow-2xs group",
+                children: [
+                  /* @__PURE__ */ jsx8("span", { className: "w-6 h-6 rounded-full bg-sky-600 group-hover:bg-sky-500 text-white flex items-center justify-center text-xs transition", children: "+" }),
+                  /* @__PURE__ */ jsx8("span", { children: `ເພີ່ມຫ້ອງຈຸດພິກັດບ່ອນດູດນໍ້າໃໝ່ (ຈຸດທີ ${intakePoints.length + 1})` })
+                ]
               }
-            )
+            ),
+            /* Quick preset buttons */
+            /* @__PURE__ */ jsxs8("div", { className: "flex items-center justify-between text-xs text-slate-500 px-1", children: [
+              /* @__PURE__ */ jsxs8("span", { children: ["💧 ລວມທັງໝົດ: ", /* @__PURE__ */ jsx8("b", { className: "text-sky-800", children: intakePoints.length }), " ຫ້ອງຈຸດພິກັດ"] }),
+              /* @__PURE__ */ jsxs8("div", { className: "flex items-center gap-1.5", children: [
+                /* @__PURE__ */ jsx8("span", { className: "text-[11px] text-slate-400", children: "ເພີ່ມຫຼາຍຈຸດ:" }),
+                /* @__PURE__ */ jsx8("button", {
+                  type: "button",
+                  onClick: () => handleAddMultiplePoints(1),
+                  className: "text-[11px] font-semibold text-sky-700 hover:text-sky-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md hover:bg-slate-50 cursor-pointer",
+                  children: "+1 ຈຸດ"
+                }),
+                /* @__PURE__ */ jsx8("button", {
+                  type: "button",
+                  onClick: () => handleAddMultiplePoints(2),
+                  className: "text-[11px] font-semibold text-sky-700 hover:text-sky-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md hover:bg-slate-50 cursor-pointer",
+                  children: "+2 ຈຸດ"
+                }),
+                /* @__PURE__ */ jsx8("button", {
+                  type: "button",
+                  onClick: () => handleAddMultiplePoints(3),
+                  className: "text-[11px] font-semibold text-sky-700 hover:text-sky-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md hover:bg-slate-50 cursor-pointer",
+                  children: "+3 ຈຸດ"
+                })
+              ] })
+            ] })
           ] })
         ] })
       ] }),
@@ -6787,7 +7455,18 @@ var ProjectFormModal = ({
           )
         ] })
       ] })
-    ] })
+    ] }),
+    pickerPointIdx !== null && /* @__PURE__ */ jsx8(IntakeMapPickerModal, {
+      isOpen: pickerPointIdx !== null,
+      onClose: () => setPickerPointIdx(null),
+      pointName: intakePoints[pickerPointIdx]?.name,
+      pointNumber: (pickerPointIdx ?? 0) + 1,
+      initialLat: intakePoints[pickerPointIdx]?.latitude,
+      initialLng: intakePoints[pickerPointIdx]?.longitude,
+      projectLat: formData.projectLocation?.latitude,
+      projectLng: formData.projectLocation?.longitude,
+      onConfirm: (la, lo) => handleUpdateIntakePoint(pickerPointIdx, { latitude: la, longitude: lo })
+    })
   ] }) });
 };
 
@@ -6825,6 +7504,17 @@ var ProjectDetailModal = ({
   const permitPercent = totalDuration > 0 ? Math.min(100, Math.max(0, Math.round(elapsed / totalDuration * 100))) : 100;
   const cleanPhone = project.contactPhone.replace(/\D/g, "");
   const waLink = cleanPhone ? `https://wa.me/856${cleanPhone.startsWith("0") ? cleanPhone.slice(1) : cleanPhone}` : null;
+  const detailIntakePoints = (Array.isArray(project.intakeLocation?.points) && project.intakeLocation.points.length > 0)
+    ? project.intakeLocation.points
+    : (Array.isArray(project.intakeLocation?.intakePoints) && project.intakeLocation.intakePoints.length > 0)
+    ? project.intakeLocation.intakePoints
+    : [{
+        id: 1,
+        name: "ຈຸດດູດນໍ້າ 1",
+        latitude: project.intakeLocation?.latitude || 0,
+        longitude: project.intakeLocation?.longitude || 0,
+        pumpCapacity: project.intakeLocation?.pumpCapacity || ""
+      }];
   return /* @__PURE__ */ jsx9("div", { className: "fixed inset-0 z-[1250] flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200", children: /* @__PURE__ */ jsxs9("div", { className: "bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden", children: [
     /* @__PURE__ */ jsxs9("div", { className: "px-6 py-5 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between", children: [
       /* @__PURE__ */ jsxs9("div", { className: "flex items-center gap-3.5", children: [
@@ -6937,22 +7627,25 @@ var ProjectDetailModal = ({
             project.projectLocation.longitude.toFixed(6)
           ] })
         ] }),
-        /* @__PURE__ */ jsxs9("div", { className: "bg-sky-50/60 border border-sky-200 p-4 rounded-2xl space-y-2 text-xs", children: [
+        /* @__PURE__ */ jsxs9("div", { className: "bg-sky-50/60 border border-sky-200 p-4 rounded-2xl space-y-3 text-xs", children: [
           /* @__PURE__ */ jsxs9("div", { className: "flex items-center justify-between pb-2 border-b border-sky-200/60", children: [
             /* @__PURE__ */ jsxs9("div", { className: "flex items-center gap-2", children: [
-              /* @__PURE__ */ jsx9("span", { className: "w-3.5 h-3.5 rounded-full bg-sky-600" }),
-              /* @__PURE__ */ jsx9("span", { className: "font-bold text-sky-900 uppercase", children: "2. ບ່ອນດູດນໍ້າ (ສີຟ້າ 💧)" })
+              /* @__PURE__ */ jsx9("span", { className: "w-3.5 h-3.5 rounded-full bg-sky-600 shadow-xs" }),
+              /* @__PURE__ */ jsxs9("span", { className: "font-bold text-sky-900 uppercase flex items-center gap-1.5", children: [
+                "2. ບ່ອນດູດນໍ້າ (ສີຟ້າ 💧)",
+                /* @__PURE__ */ jsxs9("span", { className: "bg-sky-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full", children: [detailIntakePoints.length, " ຈຸດພິກັດ"] })
+              ] })
             ] }),
-            /* @__PURE__ */ jsxs9(
+            detailIntakePoints[0] && validLL(detailIntakePoints[0].latitude, detailIntakePoints[0].longitude) && /* @__PURE__ */ jsxs9(
               "a",
               {
-                href: `https://www.google.com/maps/dir/?api=1&destination=${project.intakeLocation.latitude},${project.intakeLocation.longitude}`,
+                href: `https://www.google.com/maps/dir/?api=1&destination=${detailIntakePoints[0].latitude},${detailIntakePoints[0].longitude}`,
                 target: "_blank",
                 rel: "noreferrer",
                 className: "text-sky-700 hover:text-sky-950 flex items-center gap-1 font-semibold text-[11px]",
                 children: [
                   /* @__PURE__ */ jsx9(Navigation2, { size: 12 }),
-                  "Google Maps"
+                  "Google Maps (ຈຸດຫຼັກ)"
                 ]
               }
             )
@@ -6961,19 +7654,39 @@ var ProjectDetailModal = ({
             /* @__PURE__ */ jsx9("span", { className: "text-slate-500", children: "ບ້ານ/ເມືອງ/ແຂວງ:" }),
             /* @__PURE__ */ jsxs9("p", { className: "font-bold text-slate-900 mt-0.5", children: [
               "ບ້ານ ",
-              project.intakeLocation.village,
+              project.intakeLocation?.village || "-",
               ", ເມືອງ ",
-              project.intakeLocation.district,
+              project.intakeLocation?.district || "-",
               ", ",
-              project.intakeLocation.province
+              project.intakeLocation?.province || "-"
             ] })
           ] }),
-          /* @__PURE__ */ jsxs9("div", { className: "pt-2 font-mono text-[11px] text-sky-800 font-bold bg-white/70 p-2 rounded-xl border border-sky-200/50", children: [
-            "💧 Lat: ",
-            project.intakeLocation.latitude.toFixed(6),
-            ", Long: ",
-            project.intakeLocation.longitude.toFixed(6)
-          ] })
+          /* @__PURE__ */ jsx9("div", { className: "space-y-2 pt-1", children: detailIntakePoints.map((pt, pIdx) => {
+            const dist = calcDistanceKm(project.projectLocation?.latitude, project.projectLocation?.longitude, pt.latitude, pt.longitude);
+            return /* @__PURE__ */ jsxs9("div", { className: "bg-white/80 p-2.5 rounded-xl border border-sky-200/60 flex flex-wrap items-center justify-between gap-2 shadow-2xs", children: [
+              /* @__PURE__ */ jsxs9("div", { className: "space-y-0.5", children: [
+                /* @__PURE__ */ jsxs9("div", { className: "flex items-center gap-1.5 font-bold text-slate-900 text-[11px]", children: [
+                  /* @__PURE__ */ jsxs9("span", { className: `text-[10px] px-1.5 py-0.5 rounded-md ${pIdx === 0 ? "bg-sky-600 text-white font-bold" : "bg-sky-100 text-sky-800"}`, children: ["💧 ຈຸດທີ ", pIdx + 1] }),
+                  pt.name || `ຈຸດດູດນໍ້າ ${pIdx + 1}`,
+                  pt.pumpCapacity ? /* @__PURE__ */ jsxs9("span", { className: "text-[10px] text-slate-500 font-normal", children: [" (", pt.pumpCapacity, ")"] }) : ""
+                ] }),
+                /* @__PURE__ */ jsxs9("div", { className: "font-mono text-[10px] text-sky-800 flex items-center gap-2 flex-wrap", children: [
+                  /* @__PURE__ */ jsxs9("span", { children: ["Lat: ", Number(pt.latitude).toFixed(6), ", Long: ", Number(pt.longitude).toFixed(6)] }),
+                  dist !== null && /* @__PURE__ */ jsxs9("span", { className: "text-emerald-700 font-sans font-semibold", children: ["• ຫ່າງໂຄງການ: ", dist, " ກມ"] })
+                ] })
+              ] }),
+              validLL(pt.latitude, pt.longitude) && /* @__PURE__ */ jsxs9("a", {
+                href: `https://www.google.com/maps?q=${pt.latitude},${pt.longitude}`,
+                target: "_blank",
+                rel: "noreferrer",
+                className: "text-[11px] text-sky-700 hover:text-sky-900 font-semibold flex items-center gap-1 bg-sky-50 px-2 py-1 rounded-lg border border-sky-200 hover:bg-sky-100 transition shadow-2xs",
+                children: [
+                  /* @__PURE__ */ jsx9(Navigation2, { size: 11 }),
+                  "ເບິ່ງພິກັດ"
+                ]
+              })
+            ] }, pt.id || pIdx);
+          }) })
         ] })
       ] }),
       /* @__PURE__ */ jsxs9("div", { className: "bg-slate-50 border border-slate-200 p-4 rounded-2xl", children: [
@@ -6982,10 +7695,6 @@ var ProjectDetailModal = ({
           "ແຜນການນໍາໃຊ້ນໍ້າ (Water Usage Plan)"
         ] }),
         /* @__PURE__ */ jsx9("p", { className: "text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-white p-3 rounded-xl border border-slate-100", children: project.waterUsagePlan || "ບໍ່ມີຂໍ້ມູນແຜນການນໍາໃຊ້ນໍ້າ" })
-      ] }),
-      (project.renewalCount > 0 || (project.renewalHistory && Object.keys(project.renewalHistory).length > 0)) && /* @__PURE__ */ jsxs9("div", { className: "bg-blue-50/50 border border-blue-200 p-4 rounded-2xl", children: [
-        /* @__PURE__ */ jsx9("h4", { className: "text-xs font-bold text-slate-800 mb-2", children: `🔄 ການຕໍ່ໃບອະນຸຍາດ: ${project.renewalCount || Object.keys(project.renewalHistory || {}).length} ຄັ້ງ` }),
-        /* @__PURE__ */ jsx9("div", { className: "space-y-1 text-xs", children: (Array.isArray(project.renewalHistory) ? project.renewalHistory : Object.values(project.renewalHistory || {})).map((r) => /* @__PURE__ */ jsx9("div", { className: "bg-white border border-slate-100 rounded-lg px-3 py-1.5", children: `ຄັ້ງທີ ${r.renewalNumber}: ${r.renewalDate || "-"} · ໝົດອາຍຸ ${r.previousExpiryDate || "-"} → ${r.newExpiryDate || "-"}${r.referenceDocNumber ? " · ເລກທີ " + r.referenceDocNumber : ""}` }, r.id)) })
       ] }),
       project.extraInfo && Object.keys(project.extraInfo).length > 0 && /* @__PURE__ */ jsxs9("div", { className: "bg-amber-50/50 border border-amber-200 p-4 rounded-2xl", children: [
         /* @__PURE__ */ jsx9("h4", { className: "text-xs font-bold text-slate-800 mb-2", children: "📝 ຂໍ້ມູນເພີ່ມເຕີມ (ຈາກ Excel)" }),
@@ -8691,7 +9400,6 @@ window.sharedLogout = sharedLogout;
 <div id="navPills" style="position:fixed;left:14px;bottom:14px;z-index:9000;display:flex;gap:8px;font:600 13px 'Noto Sans Lao',sans-serif">
   <a href="index.html" title="ກັບໄປໜ້າເລືອກລະບົບ" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#0b3a53;color:#fff;text-decoration:none;box-shadow:0 4px 14px rgba(11,58,83,.35)">🏠 ໜ້າຫຼັກ</a>
   <a href="water-quality.html" title="ໄປລະບົບຄຸນນະພາບນ້ຳ (ບໍ່ຕ້ອງ Login ໃໝ່)" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#13667a;color:#fff;text-decoration:none;box-shadow:0 4px 14px rgba(19,102,122,.35)">🧪 ໄປລະບົບຄຸນນະພາບນ້ຳ</a>
-  <a href="wastewater.html" title="ໄປລະບົບປ່ອຍນ້ຳເປື້ອນ (ບໍ່ຕ້ອງ Login ໃໝ່)" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#8a3b2d;color:#fff;text-decoration:none;box-shadow:0 4px 14px rgba(138,59,45,.35)">🏭 ນ້ຳເປື້ອນ</a>
 </div>
 </body>
 </html>
