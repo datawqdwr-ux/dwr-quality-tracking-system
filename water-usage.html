@@ -902,7 +902,8 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
   const [editYear, setEditYear] = useState8(null);
   const [openYear, setOpenYear] = useState8(null);
   const list = (formData.yearlyRecords || []).slice().sort((a, b) => b.year - a.year);
-  const years = Array.from({ length: 16 }, (_, i) => thisYear + 1 - i);
+  // ເລືອກ ຫຼື ພິມປີໄດ້ ທັງອະດີດ ແລະ ອະນາຄົດ (1950–2100)
+  const years = Array.from({ length: 41 }, (_, i) => thisYear + 20 - i);
   const perDayFrom = () => Number(row.daily) || volumePerDay(formData);
   const set = (k2, v) => setRow({ ...row, [k2]: v });
   const setMonth = (m, v) => setRow({ ...row, months: { ...row.months, [m]: v } });
@@ -922,7 +923,7 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
   };
   const addRow = () => {
     const y = Number(row.year);
-    if (!y) return alert("ກະລຸນາເລືອກປີ");
+    if (!y || y < 1950 || y > 2100) return alert("ກະລຸນາລະບຸປີໃຫ້ຖືກຕ້ອງ (1950–2100)");
     const months = Object.fromEntries(Object.entries(row.months || {}).filter(([, v]) => v !== "" && v !== null && isFinite(Number(v))).map(([m, v]) => ["m" + m, Number(v)]));
     const hasMonths = Object.keys(months).length > 0;
     const sum = Object.values(months).reduce((t, v) => t + v, 0);
@@ -935,7 +936,7 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
     const rec = { year: y, daily, monthly, yearly, months: hasMonths ? months : null, sourceType: row.sourceType, note: row.note.trim(), draft: true, updatedAt: new Date().toISOString() };
     const others = (formData.yearlyRecords || []).filter((r) => r.year !== y && r.year !== editYear);
     setFormData({ ...formData, yearlyRecords: [...others, rec] });
-    setRow({ ...empty, year: y + 1 <= thisYear + 1 ? y + 1 : y });
+    setRow({ ...empty, year: Math.min(2100, y + 1) });
     setEditYear(null);
   };
   const editRow = (r) => {
@@ -957,7 +958,19 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
     /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-2 md:grid-cols-4 gap-3", children: [
       /* @__PURE__ */ jsxs8("div", { children: [
         /* @__PURE__ */ jsx8("label", { className: lab, children: "ປີ" }),
-        /* @__PURE__ */ jsx8("select", { value: row.year, onChange: (e) => set("year", Number(e.target.value)), className: inp + " font-bold", children: years.map((y) => /* @__PURE__ */ jsx8("option", { value: y, children: `ປີ ${y}${(formData.yearlyRecords || []).some((r) => r.year === y) ? " ✓" : ""}` }, y)) })
+        /* @__PURE__ */ jsxs8("div", { className: "flex items-stretch gap-1", children: [
+          /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => set("year", Math.max(1950, (Number(row.year) || thisYear) - 1)), className: "px-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 font-bold text-slate-600", title: "ປີກ່ອນ", children: "◀" }),
+          /* @__PURE__ */ jsx8("input", {
+            type: "number", min: 1950, max: 2100, step: 1, list: "yearlyYearOptions",
+            value: row.year,
+            onChange: (e) => set("year", e.target.value === "" ? "" : Math.trunc(Number(e.target.value))),
+            onBlur: (e) => { const v = Math.trunc(Number(e.target.value)); set("year", v >= 1950 && v <= 2100 ? v : thisYear); },
+            className: inp + " font-bold text-center",
+            title: "ພິມປີ ຫຼື ເລືອກຈາກລາຍການ"
+          }),
+          /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => set("year", Math.min(2100, (Number(row.year) || thisYear) + 1)), className: "px-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 font-bold text-slate-600", title: "ປີຖັດໄປ", children: "▶" }),
+          /* @__PURE__ */ jsx8("datalist", { id: "yearlyYearOptions", children: years.map((y) => /* @__PURE__ */ jsx8("option", { value: y, children: (formData.yearlyRecords || []).some((r) => r.year === y) ? "✓ ມີຂໍ້ມູນແລ້ວ" : "" }, y)) })
+        ] })
       ] }),
       /* @__PURE__ */ jsxs8("div", { children: [
         /* @__PURE__ */ jsx8("label", { className: lab, children: "ປະລິມານ / ວັນ (m³)" }),
