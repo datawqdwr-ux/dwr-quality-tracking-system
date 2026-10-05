@@ -140,6 +140,7 @@
         </div>
 
         <a href="index.html" class="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1 shadow" title="ກັບໄປໜ້າເລືອກລະບົບ">🏠 ໜ້າຫຼັກ</a>
+        <a href="wastewater.html" class="bg-rose-800 hover:bg-rose-700 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1 shadow" title="ໄປລະບົບປ່ອຍນ້ຳເປື້ອນ (ບໍ່ຕ້ອງ Login ໃໝ່)">🏭 ນ້ຳເປື້ອນ</a>
         <a href="water-usage.html" class="bg-amber-700 hover:bg-amber-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1 shadow" title="ໄປລະບົບການນຳໃຊ້ນ້ຳ (ບໍ່ຕ້ອງ Login ໃໝ່)">💧 ໄປລະບົບການນຳໃຊ້ນ້ຳ</a>
         <button onclick="toggleLogsModal()" class="bg-indigo-700 hover:bg-indigo-600 text-white text-xs px-3 py-2 rounded-lg font-medium transition flex items-center gap-1 shadow">
           📜 ປະວັດການໃຊ້ງານ (Activity Logs)
@@ -207,6 +208,10 @@
             <input type="checkbox" id="mapOnlyChk" onchange="setMapOnly(this.checked)"> ສະເພາະບໍລິສັດນີ້
           </label>
           <button type="button" onclick="mapResetView()" class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-bold text-slate-600 hover:bg-slate-50" title="ເບິ່ງທັງໝົດ">🌐 ທັງໝົດ</button>
+          <div class="flex w-full gap-1">
+            <input type="text" id="mapGoto" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();mapGotoCoord()}" placeholder="🧭 ໄປຫາພິກັດ: 17°58'13.0&quot;N 102°35'48.1&quot;E ຫຼື 17.9703, 102.5967" class="flex-1 border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-mono outline-none focus:ring-2 focus:ring-sky-400">
+            <button type="button" onclick="mapGotoCoord()" class="border border-sky-300 rounded-lg px-3 py-1.5 bg-sky-50 font-bold text-sky-700 hover:bg-sky-100">ໄປ</button>
+          </div>
         </div>
         <div id="map" class="rounded-xl border border-slate-200 flex-1"></div>
       </div>
@@ -215,7 +220,13 @@
       <div id="chartCard" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col min-w-0">
         <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
           <h2 class="font-bold text-slate-800">📈 ກຣາຟແຍກສະເພາະຕົວຊີ້ວັດ</h2>
-          <span id="chartIndCurrent" class="text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-full px-2.5 py-0.5"></span>
+          <div class="flex items-center gap-2">
+            <div class="flex rounded-lg border border-slate-300 overflow-hidden text-[11px] font-bold">
+              <button type="button" data-chartview="compare" onclick="setChartView('compare')" class="px-2.5 py-1 bg-indigo-600 text-white" title="ປຽບທຽບຄ່າລະຫວ່າງສະຖານີ">📊 ປຽບທຽບສະຖານີ</button>
+              <button type="button" data-chartview="trend" onclick="setChartView('trend')" class="px-2.5 py-1 border-l border-slate-300 bg-white text-slate-600" title="ແນວໂນ້ມຕາມເດືອນ (ແບບລະບົບປ່ອຍນ້ຳເປື້ອນ)">📈 ແນວໂນ້ມລາຍເດືອນ</button>
+            </div>
+            <span id="chartIndCurrent" class="text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-full px-2.5 py-0.5"></span>
+          </div>
         </div>
         <!-- ປຸ່ມໂຕຊີ້ວັດ ລວມຢູ່ໃນກ່ອງດຽວ ເລື່ອນພາຍໃນ + ຄົ້ນຫາ -->
         <div id="chartIndBox" class="border border-slate-300 rounded-xl bg-slate-50/60 overflow-hidden mb-2">
@@ -251,6 +262,7 @@
         <p id="chartCaption" class="text-[11px] text-slate-500 mb-1"></p>
         <div class="relative w-full" style="min-height:260px" id="apexChartContainer"></div>
         <div id="chartSummary" class="mt-3"></div>
+        <div id="trendPanel" class="hidden"></div>
       </div>
     </div>
 
@@ -1332,6 +1344,31 @@
       };
 
       L.control.layers(baseMaps).addTo(map);
+
+      // 🧭 ພິກັດຕາມເມົ້າ (ທົດສະນິຍົມ + ອົງສາ)
+      const coordCtl = L.control({ position: 'bottomleft' });
+      coordCtl.onAdd = function () {
+        const d = L.DomUtil.create('div', 'leaflet-control');
+        d.id = 'mapCursorCoord';
+        d.style.cssText = 'background:rgba(15,23,42,.85);color:#e2e8f0;font:600 11px monospace;padding:5px 9px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none';
+        d.innerHTML = '🧭 ເລື່ອນເມົ້າເທິງແຜນທີ່';
+        return d;
+      };
+      coordCtl.addTo(map);
+      map.on('mousemove', e => {
+        const el = document.getElementById('mapCursorCoord');
+        if (el) el.innerHTML = `🧭 ${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)} &nbsp;·&nbsp; ${toDMS(e.latlng.lat, e.latlng.lng)}`;
+      });
+      // ຄລິກແຜນທີ່ → ສະແດງພິກັດ 2 ແບບ + ປຸ່ມ Copy
+      map.on('click', e => {
+        const dec = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`, dms = toDMS(e.latlng.lat, e.latlng.lng);
+        L.popup().setLatLng(e.latlng).setContent(`
+          <div style="font-size:12px;line-height:1.7">
+            <b>📍 ພິກັດຈຸດນີ້</b><br>
+            <span style="font-family:monospace">${dec}</span> <a href="#" onclick="navigator.clipboard.writeText('${dec}');this.textContent='✓';return false">📋</a><br>
+            <span style="font-family:monospace">${dms.replace(/"/g, '&quot;')}</span> <a href="#" onclick="navigator.clipboard.writeText(this.dataset.v);this.textContent='✓';return false" data-v="${dms.replace(/"/g, '&quot;')}">📋</a>
+          </div>`).openOn(map);
+      });
 
       const fullscreenControl = L.control({ position: 'topleft' });
       fullscreenControl.onAdd = function () {
@@ -3467,6 +3504,19 @@
       setTimeout(open, 1000); // ກໍລະນີແຜນທີ່ບໍ່ຕ້ອງເລື່ອນ (ຢູ່ບ່ອນນັ້ນແລ້ວ)
     }
 
+    let gotoMarker = null;
+    function mapGotoCoord() {
+      const v = document.getElementById('mapGoto')?.value || '';
+      const pr = parseCoordPair(v);
+      if (!pr) return Swal.fire({ icon: 'warning', title: 'ອ່ານພິກັດບໍ່ໄດ້', text: `ຕົວຢ່າງ: 17°58'13.0"N 102°35'48.1"E ຫຼື 17.9703, 102.5967` });
+      if (gotoMarker) map.removeLayer(gotoMarker);
+      gotoMarker = L.marker([pr.lat, pr.lng]).addTo(map)
+        .bindPopup(`<b>🧭 ພິກັດທີ່ຄົ້ນຫາ</b><br><span style="font-family:monospace">${pr.lat}, ${pr.lng}<br>${toDMS(pr.lat, pr.lng).replace(/"/g, '&quot;')}</span>`);
+      document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      map.flyTo([pr.lat, pr.lng], 15, { duration: 0.8 });
+      setTimeout(() => gotoMarker && gotoMarker.openPopup(), 900);
+    }
+
     function setMapOnly(on) {
       mapOnly = on;
       render();
@@ -4359,6 +4409,7 @@
     // ເອີ້ນຈາກ render(): ລວມການເອີ້ນຫຼາຍເທື່ອຕິດກັນ (ຕອນເປີດໜ້າ Firebase ສົ່ງຂໍ້ມູນມາຫຼາຍຊຸດ) ໃຫ້ແຕ້ມເທື່ອດຽວ
     function initApexChart(flatStations) {
       chartStations = flatStations || [];
+      if (chartView === 'trend') { clearTimeout(window.__trendT); window.__trendT = setTimeout(renderTrend, 200); }
       renderChartIndicatorTabs();
       clearTimeout(chartTimer);
       chartTimer = setTimeout(drawChartNow, 150);
@@ -4403,6 +4454,7 @@
 
     function setChartDataset(key) {
       chartDataset = key;
+      if (chartView === 'trend') { setTimeout(renderTrend, 0); }
       chartStationSel = null;
       const ds = waterData.find(d => d.fbKey === key);
       if (ds && stationsOf(ds).length === 1) { currentSelectedIndicator = '__ALL__'; renderChartIndicatorTabs(); }
@@ -4642,6 +4694,212 @@
         console.error('Profile chart error:', e);
         chartMessage('⚠️ ແຕ້ມກຣາຟບໍ່ສຳເລັດ<button onclick="apexChart=null; drawChartNow()" class="bg-indigo-600 text-white font-bold px-3 py-1 rounded-lg">🔄 ລອງໃໝ່</button>');
       }
+    }
+
+    /* ================================================================
+       📈 ແນວໂນ້ມລາຍເດືອນ (ແບບລະບົບປ່ອຍນ້ຳເປື້ອນ):
+       ເລືອກຊຸດ → ເລືອກຈຸດ (ຫຼື ສະເລ່ຍທຸກຈຸດ) → ເລືອກຫຼາຍໂຕຊີ້ວັດ → ກຣາຟເສັ້ນ ຕາມເດືອນ + KPI + ຕາຕະລາງ
+       ================================================================ */
+    let chartView = 'compare';          // 'compare' (ປຽບທຽບສະຖານີ) | 'trend' (ແນວໂນ້ມລາຍເດືອນ)
+    let trendPoint = '__AVG__';         // ລະຫັດຈຸດ ຫຼື __AVG__
+    let trendInds = [];                 // key ໂຕຊີ້ວັດທີ່ເລືອກ
+    let trendRange = 12;                // 12 ເດືອນລ່າສຸດ | 0 = ທັງໝົດ
+    let trendTable = false;
+    let trendChart = null;
+    const TREND_COLORS = ['#2563eb', '#dc2626', '#059669', '#d97706', '#7c3aed', '#db2777', '#0891b2', '#65a30d'];
+
+    function setChartView(v) {
+      chartView = v;
+      document.querySelectorAll('[data-chartview]').forEach(b => {
+        const on = b.dataset.chartview === v;
+        b.classList.toggle('bg-indigo-600', on); b.classList.toggle('text-white', on);
+        b.classList.toggle('bg-white', !on); b.classList.toggle('text-slate-600', !on);
+      });
+      ['chartIndBox', 'apexChartContainer', 'chartSummary', 'chartCaption'].forEach(id => document.getElementById(id)?.classList.toggle('hidden', v === 'trend'));
+      document.getElementById('chartStationWrap')?.classList.toggle('hidden', v === 'trend');
+      document.getElementById('chartTypeWrap')?.classList.toggle('hidden', v === 'trend');
+      document.getElementById('chartLogWrap')?.classList.add('hidden');
+      document.getElementById('trendPanel')?.classList.toggle('hidden', v !== 'trend');
+      if (v === 'trend') renderTrend(); else drawChartNow();
+    }
+
+    const monthKey = d => { const m = String(d || '').match(/^(\d{4})-(\d{2})/); return m ? `${m[1]}-${m[2]}` : (/^\d{4}$/.test(d || '') ? `${d}-12` : ''); };
+    const monthLabel = k => { const [y, m] = k.split('-'); return `${LAO_MONTHS[parseInt(m, 10) - 1] || m} ${y}`; };
+    const numVal = v => { const n = parseFloat(v); return (v === undefined || v === null || v === '-' || v === '' || isNaN(n)) ? null : n; };
+
+    function trendSource() {
+      const ds = waterData.find(d => d.fbKey === chartDataset) || null;
+      const sts = ds ? stationsOf(ds) : waterData.flatMap(d => stationsOf(d));
+      return { ds, sts: sts.filter(s => s && monthKey(s.sampleDate)) };
+    }
+
+    function trendSeriesData() {
+      const { sts } = trendSource();
+      const rows = trendPoint === '__AVG__' ? sts : sts.filter(s => `${s.section || ''}|${s.code || s.name}` === trendPoint);
+      const byMonth = new Map();
+      rows.forEach(s => {
+        const k = monthKey(s.sampleDate);
+        if (!byMonth.has(k)) byMonth.set(k, []);
+        byMonth.get(k).push(s);
+      });
+      let months = [...byMonth.keys()].sort();
+      if (trendRange) months = months.slice(-trendRange);
+      const inds = trendInds.map(k => customIndicators.find(i => i.key === k)).filter(Boolean);
+      const series = inds.map(ind => ({
+        ind,
+        values: months.map(m => {
+          const vals = byMonth.get(m).map(s => numVal(s.customs && s.customs[ind.key])).filter(v => v !== null);
+          return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length * 1000) / 1000 : null;
+        })
+      }));
+      return { months, series, rowCount: rows.length };
+    }
+
+    function renderTrend() {
+      const panel = document.getElementById('trendPanel');
+      if (!panel) return;
+      const { ds, sts } = trendSource();
+      // ຈຸດທີ່ມີຂໍ້ມູນຫຼາຍເດືອນ
+      const pts = new Map();
+      sts.forEach(s => {
+        const id = `${s.section || ''}|${s.code || s.name}`;
+        if (!pts.has(id)) pts.set(id, { id, label: `${s.section ? '[' + s.section.slice(0, 16) + '] ' : ''}${s.name || '-'} (${s.code || '-'})`, months: new Set() });
+        pts.get(id).months.add(monthKey(s.sampleDate));
+      });
+      if (trendPoint !== '__AVG__' && !pts.has(trendPoint)) trendPoint = '__AVG__';
+      // ໂຕຊີ້ວັດທີ່ມີຄ່າ (ຕາມຈຸດທີ່ເລືອກ)
+      const pool = trendPoint === '__AVG__' ? sts : sts.filter(s => `${s.section || ''}|${s.code || s.name}` === trendPoint);
+      const avail = chartInds().filter(i => pool.some(s => numVal(s.customs && s.customs[i.key]) !== null));
+      trendInds = trendInds.filter(k => avail.some(i => i.key === k));
+      if (!trendInds.length) trendInds = avail.slice(0, Math.min(2, avail.length)).map(i => i.key);
+
+      const { months, series } = trendSeriesData();
+      const thr = k => ({ min: sysThresholds[`cfg_${k}_min`], max: sysThresholds[`cfg_${k}_max`] });
+      const has = v => v !== undefined && v !== null && v !== '';
+
+      const kpis = series.map(({ ind, values }, idx) => {
+        const vals = values.filter(v => v !== null);
+        if (!vals.length) return '';
+        const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+        const first = vals[0], last = vals[vals.length - 1];
+        const ch = first ? (last - first) / Math.abs(first) * 100 : 0;
+        const maxV = Math.max(...vals), maxM = months[values.indexOf(maxV)];
+        const t = thr(ind.key);
+        const judged = values.filter(v => v !== null);
+        const pass = judged.filter(v => !((has(t.max) && v > Number(t.max)) || (has(t.min) && v < Number(t.min)))).length;
+        const hasStd = has(t.max) || has(t.min);
+        const rate = judged.length ? Math.round(pass / judged.length * 100) : 0;
+        const color = TREND_COLORS[idx % TREND_COLORS.length];
+        return `
+          <div class="rounded-xl border bg-white p-2.5" style="border-color:${color}55">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] font-bold" style="color:${color}">● ${escAttr(ind.name)}${ind.unit ? ' (' + escAttr(ind.unit) + ')' : ''}</span>
+              ${hasStd ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold ${rate === 100 ? 'bg-emerald-100 text-emerald-700' : rate >= 70 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}">ຜ່ານມາດຕະຖານ ${rate}%</span>` : ''}
+            </div>
+            <div class="grid grid-cols-2 gap-x-3 gap-y-0.5 mt-1 text-[11px]">
+              <span class="text-slate-500">ສະເລ່ຍ ${vals.length} ເດືອນ</span><b class="text-right">${+avg.toFixed(3)}</b>
+              <span class="text-slate-500">ລ່າສຸດ</span><b class="text-right">${last}</b>
+              <span class="text-slate-500">ທ່າອ່ຽງ</span><b class="text-right ${ch > 0 ? 'text-rose-600' : ch < 0 ? 'text-emerald-600' : 'text-slate-500'}">${ch > 0 ? '▲' : ch < 0 ? '▼' : '●'} ${Math.abs(ch).toFixed(1)}%</b>
+              <span class="text-slate-500">ສູງສຸດ</span><b class="text-right">${maxV} <span class="font-normal text-slate-400">(${monthLabel(maxM)})</span></b>
+              ${hasStd ? `<span class="text-slate-500">ມາດຕະຖານ</span><b class="text-right">${has(t.min) ? '≥' + t.min : ''}${has(t.min) && has(t.max) ? ' · ' : ''}${has(t.max) ? '≤' + t.max : ''}</b>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+
+      const tableHtml = months.length ? `
+        <div class="overflow-auto max-h-72 border border-slate-400 rounded-md">
+          <table class="text-[11px] border-collapse min-w-full">
+            <thead class="sticky top-0"><tr>
+              <th class="px-2 py-1.5 border border-slate-300 bg-slate-200 font-bold text-left">ເດືອນ / ປີ</th>
+              ${series.map(({ ind }, i) => `<th class="px-2 py-1.5 border border-slate-300 bg-slate-200 font-bold" style="color:${TREND_COLORS[i % TREND_COLORS.length]}">${escAttr(ind.name)}</th>`).join('')}
+            </tr></thead>
+            <tbody>${months.map((m, r) => `<tr class="${r % 2 ? 'bg-slate-50' : 'bg-white'}">
+              <td class="px-2 py-1 border border-slate-300 font-semibold whitespace-nowrap">${monthLabel(m)}</td>
+              ${series.map(({ ind, values }) => { const v = values[r]; const bad = v !== null && isOutOfThreshold(ind.key, v); return `<td class="px-2 py-1 border border-slate-300 text-right tabular-nums ${bad ? 'bg-rose-100 text-rose-700 font-bold' : ''}">${v ?? '-'}</td>`; }).join('')}
+            </tr>`).join('')}</tbody>
+          </table>
+        </div>` : '';
+
+      panel.innerHTML = `
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-center gap-2 text-[11px]">
+            <select onchange="trendPoint=this.value; renderTrend()" class="flex-1 min-w-[180px] border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-semibold">
+              <option value="__AVG__" ${trendPoint === '__AVG__' ? 'selected' : ''}>📊 ຄ່າສະເລ່ຍທຸກຈຸດ${ds ? ' ໃນຊຸດນີ້' : ' (ທຸກຊຸດ)'}</option>
+              ${[...pts.values()].sort((a, b) => b.months.size - a.months.size).map(p => `<option value="${escAttr(p.id)}" ${p.id === trendPoint ? 'selected' : ''}>📍 ${escAttr(p.label)} · ${p.months.size} ເດືອນ</option>`).join('')}
+            </select>
+            <select onchange="trendRange=Number(this.value); renderTrend()" class="border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-semibold">
+              <option value="12" ${trendRange === 12 ? 'selected' : ''}>12 ເດືອນລ່າສຸດ</option>
+              <option value="24" ${trendRange === 24 ? 'selected' : ''}>24 ເດືອນລ່າສຸດ</option>
+              <option value="0" ${trendRange === 0 ? 'selected' : ''}>ທັງໝົດ</option>
+            </select>
+            <div class="flex rounded-lg border border-slate-300 overflow-hidden font-bold">
+              <button type="button" onclick="trendTable=false; renderTrend()" class="px-2.5 py-1.5 ${!trendTable ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600'}">📈 ກຣາຟ</button>
+              <button type="button" onclick="trendTable=true; renderTrend()" class="px-2.5 py-1.5 border-l border-slate-300 ${trendTable ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600'}">📋 ຕາຕະລາງ</button>
+            </div>
+            <button type="button" onclick="downloadTrendPNG()" class="border border-emerald-300 rounded-lg px-2.5 py-1.5 bg-white font-bold text-emerald-700 hover:bg-emerald-50" title="ດາວໂຫລດຮູບກຣາຟ">📥 PNG</button>
+          </div>
+          <div>
+            <p class="text-[10px] text-slate-500 mb-1">ເລືອກໂຕຊີ້ວັດ (ຄລິກເພື່ອເປີດ/ປິດ, ໄດ້ຫຼາຍໂຕ):</p>
+            <div class="flex flex-wrap gap-1 max-h-[86px] overflow-y-auto border border-slate-200 rounded-lg p-1.5 bg-slate-50/60">
+              ${avail.map(i => { const on = trendInds.includes(i.key); const c = TREND_COLORS[trendInds.indexOf(i.key) % TREND_COLORS.length]; return `<button type="button" onclick="toggleTrendInd('${i.key}')" class="px-2 py-0.5 rounded-full text-[11px] font-bold border ${on ? 'text-white' : 'bg-white text-slate-500 border-slate-300'}" style="${on ? `background:${c};border-color:${c}` : ''}">${escAttr(i.name)}</button>`; }).join('') || '<span class="text-[11px] text-slate-400">ບໍ່ມີໂຕຊີ້ວັດທີ່ມີຄ່າ</span>'}
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-500">${ds ? `📂 ${escAttr(ds.companyName || ds.name)}` : '🌐 ທຸກຊຸດ'} · ${months.length ? `${monthLabel(months[0])} – ${monthLabel(months[months.length - 1])} (${months.length} ເດືອນ)` : 'ບໍ່ມີຂໍ້ມູນທີ່ມີວັນທີ'}</p>
+          ${months.length < 2 ? `<div class="text-center text-xs text-slate-400 py-10 border border-dashed rounded-xl">📭 ຕ້ອງມີຂໍ້ມູນຢ່າງນ້ອຍ 2 ເດືອນ ຈຶ່ງສະແດງແນວໂນ້ມໄດ້<br><span class="text-[11px]">ເລືອກຊຸດທີ່ມີຂໍ້ມູນຫຼາຍເດືອນ ຫຼື ເພີ່ມວັນທີເກັບຕົວຢ່າງໃຫ້ສະຖານີ</span></div>` :
+            trendTable ? tableHtml : `<div id="trendChartBox" style="min-height:280px"></div>`}
+          ${kpis ? `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${kpis}</div>` : ''}
+        </div>`;
+
+      if (!trendTable && months.length >= 2) drawTrendChart(months, series);
+    }
+
+    function toggleTrendInd(k) {
+      trendInds = trendInds.includes(k) ? trendInds.filter(x => x !== k) : [...trendInds, k].slice(-8);
+      renderTrend();
+    }
+
+    function drawTrendChart(months, series) {
+      const el = document.getElementById('trendChartBox');
+      if (!el || !window.ApexCharts) return;
+      if (trendChart) { try { trendChart.destroy(); } catch (e) {} trendChart = null; }
+      const single = series.length === 1;
+      const ann = { yaxis: [] };
+      if (single) {
+        const k = series[0].ind.key, mn = sysThresholds[`cfg_${k}_min`], mx = sysThresholds[`cfg_${k}_max`];
+        if (mx !== undefined && mx !== null && mx !== '') ann.yaxis.push({ y: Number(mx), borderColor: '#dc2626', strokeDashArray: 5, label: { text: `ມາດຕະຖານ ≤ ${mx}`, style: { background: '#dc2626', color: '#fff', fontSize: '10px' } } });
+        if (mn !== undefined && mn !== null && mn !== '') ann.yaxis.push({ y: Number(mn), borderColor: '#f59e0b', strokeDashArray: 5, label: { text: `ມາດຕະຖານ ≥ ${mn}`, style: { background: '#f59e0b', color: '#fff', fontSize: '10px' } } });
+      }
+      // ແຕ່ລະໂຕຊີ້ວັດ ແກນ Y ຂອງຕົນເອງ (ຫົວໜ່ວຍຕ່າງກັນ) — ສະແດງແກນສະເພາະ 2 ໂຕທຳອິດ
+      const yaxis = series.map(({ ind }, i) => ({
+        seriesName: ind.name, opposite: i % 2 === 1, show: i < 2,
+        title: i < 2 ? { text: `${ind.name}${ind.unit ? ' (' + ind.unit + ')' : ''}`, style: { fontSize: '10px', color: TREND_COLORS[i % TREND_COLORS.length] } } : undefined,
+        labels: { style: { colors: TREND_COLORS[i % TREND_COLORS.length], fontSize: '10px' }, formatter: v => v === null || v === undefined ? '' : +Number(v).toPrecision(4) }
+      }));
+      trendChart = new ApexCharts(el, {
+        chart: { type: 'line', height: 290, toolbar: { show: true, tools: { download: false, zoom: true, zoomin: true, zoomout: true, pan: true, reset: true } }, animations: { speed: 400 } },
+        theme: { mode: 'light' },
+        series: series.map(({ ind, values }) => ({ name: ind.name, data: values })),
+        colors: series.map((_, i) => TREND_COLORS[i % TREND_COLORS.length]),
+        stroke: { width: 2.5, curve: 'straight' },
+        markers: { size: 4, hover: { size: 6 } },
+        dataLabels: { enabled: months.length <= 12 && series.length <= 2, style: { fontSize: '9px' }, background: { enabled: true, padding: 2 } },
+        xaxis: { categories: months.map(monthLabel), labels: { rotate: -40, rotateAlways: months.length > 6, style: { fontSize: '10px', colors: '#64748b' } } },
+        yaxis: single ? [{ labels: yaxis[0].labels, title: yaxis[0].title }] : yaxis,
+        annotations: ann,
+        legend: { position: 'top', fontSize: '11px' },
+        grid: { borderColor: '#e2e8f0' },
+        tooltip: { shared: true, intersect: false, y: { formatter: (v, { seriesIndex }) => v === null || v === undefined ? 'ບໍ່ມີຄ່າ' : `${v}${series[seriesIndex].ind.unit ? ' ' + series[seriesIndex].ind.unit : ''}${isOutOfThreshold(series[seriesIndex].ind.key, v) ? ' ⚠️ ເກີນ' : ''}` } }
+      });
+      trendChart.render();
+    }
+
+    async function downloadTrendPNG() {
+      if (!trendChart) return Swal.fire({ icon: 'info', title: 'ເປີດໂໝດ 📈 ກຣາຟ ກ່ອນ' });
+      const { imgURI } = await trendChart.dataURI({ scale: 2 });
+      const a = document.createElement('a');
+      a.href = imgURI;
+      a.download = `ແນວໂນ້ມ_${(waterData.find(d => d.fbKey === chartDataset)?.companyName || 'ທຸກຊຸດ').replace(/[\\/:*?"<>|]/g, '_')}.png`;
+      a.click();
     }
 
     function drawChartNow() {
