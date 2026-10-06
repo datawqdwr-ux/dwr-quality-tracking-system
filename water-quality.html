@@ -6150,6 +6150,16 @@
       `;
     }
 
+    // ໂຕແປຈັດການໂໝດສະແດງຜົນກຣາຟລວມ 12 ເດືອນ
+    let trend12AllChartMode = 'active'; // 'active' (ສະເພາະໂຕມີຂໍ້ມູນ), 'top10', 'all'
+
+    function set12MonthAllChartMode(mode) {
+      trend12AllChartMode = mode;
+      const activeInds = chartInds().length ? chartInds() : (customIndicators || []);
+      const months = get12MonthsList();
+      render12MonthChartAll(activeInds, months);
+    }
+
     // Chart ສຳລັບໂໝດສະແດງທຸກໂຕຊີ້ວັດ (ALL)
     function render12MonthChartAll(activeInds, months) {
       const container = document.getElementById('trend12ChartContainer');
@@ -6157,29 +6167,16 @@
       const legendEl = document.getElementById('trend12ThresholdLegend');
       if (!container) return;
 
-      if (titleEl) {
-        titleEl.innerText = `ກຣາຟປຽບທຽບທ່າອ່ຽງຄ່າສະເລ່ຍທຸກໂຕຊີ້ວັດ (${activeInds.length} ໂຕຊີ້ວັດ) ໃນຮອບ 12 ເດືອນ`;
-      }
-
-      if (legendEl) {
-        legendEl.innerHTML = `<span class="text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">🌐 ສະແດງທຸກພາຣາມິເຕີພ້ອມກັນ</span> <span class="text-slate-400 text-[10px]">(ກົດຊື່ໂຕຊີ້ວັດທີ່ Legend ເພື່ອເປີດ/ປິດເສັ້ນ)</span>`;
-      }
-
-      if (!window.ApexCharts) {
-        container.innerHTML = '<p class="text-center text-slate-400 py-10">⏳ ກຳລັງໂຫລດກຣາຟ...</p>';
-        return;
-      }
-
       const num = v => {
         if (v === undefined || v === null || v === '' || v === '-') return null;
         const n = parseFloat(v);
         return isNaN(n) ? null : n;
       };
 
-      const categories = months.map(ym => formatLaoMonthYear(ym, true));
-      const palette = ['#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#14b8a6', '#6366f1', '#84cc16', '#d97706', '#0ea5e9'];
-
-      const series = activeInds.map(ind => {
+      // 1. ຄຳນວນຄ່າສະເລ່ຍລາຍເດືອນ ແລະ ນັບຈຳນວນຕົວຢ່າງສຳລັບແຕ່ລະໂຕຊີ້ວັດ
+      const indStatsList = activeInds.map(ind => {
+        let totalCount = 0;
+        let sumVals = 0;
         const data = months.map(ym => {
           const vals = [];
           waterData.forEach(rec => {
@@ -6197,33 +6194,111 @@
             });
           });
           if (!vals.length) return null;
+          totalCount += vals.length;
+          sumVals += vals.reduce((a, b) => a + b, 0);
           return +( (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2) );
         });
-        const unit = ind.unit ? ` (${ind.unit})` : '';
+
+        const hasAnyData = data.some(v => v !== null);
+        const grandAvg = totalCount > 0 ? (sumVals / totalCount) : 0;
+        return { ind, data, hasAnyData, totalCount, grandAvg };
+      });
+
+      // 2. ກັ່ນຕອງໂຕຊີ້ວັດຕາມໂໝດການສະແດງຜົນ
+      const withDataInds = indStatsList.filter(s => s.hasAnyData);
+      let selectedStats = [];
+
+      if (trend12AllChartMode === 'top10') {
+        // 10 ໂຕຊີ້ວັດທີ່ມີການທົດສອບຫຼາຍທີ່ສຸດ
+        selectedStats = [...withDataInds].sort((a, b) => b.totalCount - a.totalCount).slice(0, 10);
+      } else if (trend12AllChartMode === 'all') {
+        // ສະແດງທັງໝົດທີ່ມີ
+        selectedStats = withDataInds.length > 0 ? withDataInds : indStatsList.slice(0, 15);
+      } else {
+        // ໂໝດ 'active': ສະແດງໂຕຊີ້ວັດທີ່ມີຂໍ້ມູນຕົວຈິງ (ຈຳກັດບໍ່ໃຫ້ເກີນ 25 ໂຕ ທຳອິດເພື່ອຄວາມຄົມຊັດ ແລະ ໄວ)
+        selectedStats = withDataInds.length > 0 ? withDataInds.slice(0, 25) : indStatsList.slice(0, 10);
+      }
+
+      if (titleEl) {
+        titleEl.innerHTML = `
+          <span>ກຣາຟປຽບທຽບທ່າອ່ຽງຄ່າສະເລ່ຍໂຕຊີ້ວັດໃນຮອບ 12 ເດືອນ</span>
+          <span class="text-[11px] font-normal text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+            ສະແດງ ${selectedStats.length} ຈາກທັງໝົດ ${activeInds.length} ໂຕຊີ້ວັດ (${withDataInds.length} ໂຕມີຂໍ້ມູນ)
+          </span>
+        `;
+      }
+
+      // ປຸ່ມສະຫຼັບໂໝດສະແດງຜົນ
+      if (legendEl) {
+        legendEl.innerHTML = `
+          <div class="inline-flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[10.5px]">
+            <button type="button" onclick="set12MonthAllChartMode('active')" class="px-2 py-0.5 rounded-md font-semibold transition ${trend12AllChartMode === 'active' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}">
+              🎯 ສະເພາະໂຕມີຂໍ້ມູນ (${Math.min(withDataInds.length, 25)})
+            </button>
+            <button type="button" onclick="set12MonthAllChartMode('top10')" class="px-2 py-0.5 rounded-md font-semibold transition ${trend12AllChartMode === 'top10' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}">
+              ⭐ Top 10 ຫຼັກ
+            </button>
+            <button type="button" onclick="set12MonthAllChartMode('all')" class="px-2 py-0.5 rounded-md font-semibold transition ${trend12AllChartMode === 'all' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}">
+              🌐 ທຸກໂຕທີ່ມີຂໍ້ມູນ (${withDataInds.length})
+            </button>
+          </div>
+        `;
+      }
+
+      if (!window.ApexCharts) {
+        container.innerHTML = '<p class="text-center text-slate-400 py-10">⏳ ກຳລັງໂຫລດກຣາຟ...</p>';
+        return;
+      }
+
+      // ຖ້າບໍ່ມີໂຕຊີ້ວັດໃດມີຂໍ້ມູນເລີຍ
+      if (selectedStats.length === 0 || !withDataInds.length) {
+        if (trend12Apex) {
+          try { trend12Apex.destroy(); } catch (e) {}
+          trend12Apex = null;
+        }
+        container.innerHTML = `
+          <div class="py-12 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
+            <span class="text-3xl">📭</span>
+            <span class="text-xs font-medium">ຍັງບໍ່ພົບຂໍ້ມູນການທົດສອບໃນຮອບ 12 ເດືອນ ສຳລັບເງື່ອນໄຂທີ່ເລືອກ</span>
+            <span class="text-[11px] text-slate-400">ກະລຸນາເລືອກບໍລິສັດ ຫຼື ສະຖານີອື່ນ ເພື່ອເບິ່ງຜົນ</span>
+          </div>
+        `;
+        return;
+      }
+
+      const categories = months.map(ym => formatLaoMonthYear(ym, true));
+      const palette = [
+        '#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444',
+        '#14b8a6', '#6366f1', '#84cc16', '#d97706', '#0ea5e9', '#a855f7', '#f97316',
+        '#22c55e', '#3b82f6', '#e11d48', '#059669', '#7c3aed', '#d946ef', '#2563eb'
+      ];
+
+      const series = selectedStats.map(s => {
+        const unit = s.ind.unit ? ` (${s.ind.unit})` : '';
         return {
-          name: `${ind.name}${unit}`,
+          name: `${s.ind.name}${unit}`,
           type: 'line',
-          data
+          data: s.data
         };
       });
 
       const options = {
         chart: {
-          height: 310,
+          height: 320,
           type: 'line',
           toolbar: {
             show: true,
             tools: { download: true, zoom: true, zoomin: true, zoomout: true, pan: true, reset: true }
           },
-          animations: { enabled: true, speed: 400 }
+          animations: { enabled: false }
         },
         stroke: {
-          width: 2.5,
+          width: 2,
           curve: 'smooth'
         },
         colors: palette,
         markers: {
-          size: 4,
+          size: selectedStats.length > 15 ? 2.5 : 4,
           strokeWidth: 1.5,
           hover: { size: 6 }
         },
@@ -6241,18 +6316,22 @@
           },
           labels: {
             style: { colors: '#64748b' },
-            formatter: v => v === null || v === undefined ? '' : +Number(v).toFixed(2)
-          }
+            formatter: v => (v === null || v === undefined || isNaN(v)) ? '' : +Number(v).toFixed(2)
+          },
+          forceNiceScale: true
         },
         grid: {
           borderColor: '#e2e8f0',
           strokeDashArray: 2
         },
         legend: {
-          position: 'top',
-          horizontalAlign: 'left',
+          show: true,
+          position: 'bottom',
+          horizontalAlign: 'center',
           fontSize: '11px',
-          markers: { radius: 12 }
+          markers: { radius: 12 },
+          maxHeight: 90,
+          itemMargin: { horizontal: 6, vertical: 3 }
         },
         tooltip: {
           shared: true,
@@ -6260,9 +6339,10 @@
           theme: 'light',
           y: {
             formatter: (val, { seriesIndex, w }) => {
-              if (val === null || val === undefined) return 'ບໍ່ມີຂໍ້ມູນ';
-              const sName = w.globals.seriesNames[seriesIndex] || '';
-              return `${val} ${sName.match(/\((.*?)\)/)?.[0] || ''}`;
+              if (val === null || val === undefined || isNaN(val)) return 'ບໍ່ມີຂໍ້ມູນ';
+              const sName = w && w.globals && w.globals.seriesNames ? (w.globals.seriesNames[seriesIndex] || '') : '';
+              const match = sName.match(/\((.*?)\)/);
+              return `${val} ${match ? match[0] : ''}`;
             }
           }
         }
@@ -6278,7 +6358,12 @@
         trend12Apex.render();
       } catch (e) {
         console.error('12-Month ApexChart error:', e);
-        container.innerHTML = '<p class="text-center text-rose-500 py-6 text-xs font-semibold">⚠️ ແຕ້ມກຣາຟບໍ່ສຳເລັດ</p>';
+        container.innerHTML = `
+          <div class="py-10 text-center text-rose-500 text-xs font-semibold">
+            <p>⚠️ ບໍ່ສາມາດແຕ້ມກຣາຟໄດ້ (${escAttr(e.message || 'ເກີດຂໍ້ຜິດພາດ')})</p>
+            <p class="text-slate-500 font-normal mt-1">ທ່ານຍັງສາມາດເບິ່ງຂໍ້ມູນຄົບຖ້ວນໄດ້ທີ່ <b>ຕາຕະລາງລາຍເດືອນ</b> ແລະ <b>ຕາຕະລາງ Matrix</b> ດ້ານລຸ່ມ</p>
+          </div>
+        `;
       }
     }
 
