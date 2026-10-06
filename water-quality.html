@@ -169,7 +169,7 @@
   <div class="w-full p-4 md:p-6 space-y-6">
 
     <!-- KPI Metric Dashboard Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
         <div>
           <p class="text-xs text-slate-500 font-medium">ຊຸດຂໍ້ມູນບໍລິສັດ/ຫົວຂໍ້ຫຼັກ</p>
@@ -190,6 +190,16 @@
           <h3 class="text-2xl font-bold text-rose-600" id="kpiAlert">0</h3>
         </div>
         <div class="bg-rose-50 p-3 rounded-lg text-rose-600 text-xl">⚠️</div>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-500 font-medium">ດັດຊະນີ QWI ສະເລ່ຍ</p>
+          <div class="flex flex-wrap items-baseline gap-1.5 mt-1">
+            <h3 class="text-2xl font-bold text-indigo-700" id="kpiQwiAvg">-</h3>
+            <span id="kpiQwiBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">ລໍຖ້າຂໍ້ມູນ</span>
+          </div>
+        </div>
+        <div class="bg-indigo-50 p-3 rounded-lg text-indigo-600 text-xl">🌊</div>
       </div>
     </div>
 
@@ -477,6 +487,34 @@
             <div class="grid grid-cols-2 gap-2">
               <input type="text" inputmode="decimal" id="lat" required autocomplete="off" class="w-full border p-2 rounded text-xs outline-none bg-white" placeholder="Lat (ເຊັ່ນ 17.9757)" value="17.9757" title="Latitude ແບບທົດສະນິຍົມ">
               <input type="text" inputmode="decimal" id="lng" required autocomplete="off" class="w-full border p-2 rounded text-xs outline-none bg-white" placeholder="Lng (ເຊັ່ນ 102.6331)" value="102.6331" title="Longitude ແບບທົດສະນິຍົມ">
+            </div>
+          </div>
+
+          <!-- 🌊 ຫ້ອງ QWI (Water Quality Index) ພ້ອມການແປຄ່າ -->
+          <div class="rounded-xl border border-sky-200 bg-sky-50/70 p-2.5 space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-bold text-sky-950 flex items-center gap-1.5">
+                <span>🌊 ດັດຊະນີຄຸນນະພາບນໍ້າ (QWI / WQI)</span>
+              </label>
+              <button type="button" onclick="autoCalculateQWIForm()" class="bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm transition flex items-center gap-1" title="ຄິດໄລ່ຄ່າ QWI ຈາກຄ່າໂຕຊີ້ວັດ (pH, DO, BOD, COD, Turbidity...) ອັດຕະໂນມັດ">
+                ⚡ ຄິດໄລ່ອັດຕະໂນມັດ
+              </button>
+            </div>
+            <div class="grid grid-cols-2 gap-2 items-center">
+              <div>
+                <input type="text" id="qwi" oninput="updateFormQWIPreview()" placeholder="ຄ່າ QWI (0 - 100)" class="w-full border border-sky-300 p-2 rounded-lg text-xs outline-none bg-white font-mono font-bold text-slate-800 focus:ring-2 focus:ring-sky-500" autocomplete="off">
+              </div>
+              <div id="qwiPreviewBadge" class="text-[11px] px-2 py-1.5 rounded-lg border border-dashed border-slate-300 bg-white text-slate-400 font-semibold text-center whitespace-nowrap overflow-hidden text-ellipsis">
+                ລໍຖ້າປ້ອນຄ່າ QWI...
+              </div>
+            </div>
+            <!-- ການແປຄ່າລະອຽດ (Interpretation Detail) -->
+            <div id="qwiInterpretationBox" class="hidden text-[11px] p-2 rounded-lg bg-white border border-sky-200 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-700">ການແປຜົນຄ່າ QWI:</span>
+                <span id="qwiInterpRating" class="font-bold text-xs"></span>
+              </div>
+              <p id="qwiInterpDesc" class="text-slate-600 text-[10.5px] leading-relaxed"></p>
             </div>
           </div>
 
@@ -2015,6 +2053,213 @@
       return isAlert ? { text: '🚨 Alert', isAlert: true, class: 'bg-rose-100 text-rose-800' } : { text: '✅ Normal', isAlert: false, class: 'bg-emerald-100 text-emerald-800' };
     }
 
+    /* --- QWI (Water Quality Index / ຄ່າດັດຊະນີຄຸນນະພາບນໍ້າ) & ການແປຄ່າ --- */
+    function interpretQWI(val) {
+      if (val === undefined || val === null || val === '' || val === '-') return null;
+      const num = typeof val === 'number' ? val : parseFloat(String(val).replace(/,/g, '.').trim());
+      if (!isNaN(num)) {
+        if (num >= 91) {
+          return {
+            score: num,
+            level: 'EXCELLENT',
+            text: 'ດີຫຼາຍ (Very Good)',
+            label: 'ດີຫຼາຍ',
+            color: '#15803d',
+            dot: '🟢',
+            badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+            desc: 'ຄຸນນະພາບນໍ້າດີຫຼາຍ: ເໝາະສຳລັບການອຸປະໂພກ-ບໍລິໂພກ (ຂ້າເຊື້ອ), ການອະນຸລັກສັດນໍ້າ ແລະ ທຳມະຊາດ'
+          };
+        } else if (num >= 71) {
+          return {
+            score: num,
+            level: 'GOOD',
+            text: 'ດີ (Good)',
+            label: 'ດີ',
+            color: '#0284c7',
+            dot: '🟢',
+            badgeClass: 'bg-sky-100 text-sky-800 border-sky-300',
+            desc: 'ຄຸນນະພາບນໍ້າດີ: ເໝາະສຳລັບການກະສິກຳ, ລ້ຽງສັດນ້ຳ ແລະ ນຳໃຊ້ທົ່ວໄປຫຼັງບຳບັດ'
+          };
+        } else if (num >= 51) {
+          return {
+            score: num,
+            level: 'MODERATE',
+            text: 'ປານກາງ (Moderate)',
+            label: 'ປານກາງ',
+            color: '#b45309',
+            dot: '🟡',
+            badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
+            desc: 'ຄຸນນະພາບນໍ້າປານກາງ: ມີມົນລະພິດປານກາງ ຕ້ອງຜ່ານການບຳບັດມາດຕະຖານກ່ອນນຳໃຊ້'
+          };
+        } else if (num >= 31) {
+          return {
+            score: num,
+            level: 'POOR',
+            text: 'ບໍ່ດີ / ຕ່ຳ (Poor)',
+            label: 'ບໍ່ດີ',
+            color: '#c2410c',
+            dot: '🟠',
+            badgeClass: 'bg-orange-100 text-orange-800 border-orange-300',
+            desc: 'ຄຸນນະພາບນໍ້າຕ່ຳ / ເສື່ອມໂຊມ: ມີມົນລະພິດສູງ ບໍ່ຄວນນຳໃຊ້ໂດຍກົງ'
+          };
+        } else {
+          return {
+            score: num,
+            level: 'VERY_POOR',
+            text: 'ເສື່ອມໂຊມຫຼາຍ (Very Poor)',
+            label: 'ເສື່ອມໂຊມຫຼາຍ',
+            color: '#b91c1c',
+            dot: '🔴',
+            badgeClass: 'bg-rose-100 text-rose-800 border-rose-300',
+            desc: 'ຄຸນນະພາບນໍ້າເສື່ອມໂຊມຮຸນແຮງ: ມີມົນລະພິດສູງຫຼາຍ ເປັນອັນຕະລາຍຕໍ່ສຸຂະພາບ ແລະ ສິ່ງແວດລ້ອມ'
+          };
+        }
+      }
+      const s = String(val).toLowerCase().trim();
+      if (/ດີຫຼາຍ|ດີເລີດ|excellent|very good/i.test(s)) {
+        return { score: '-', level: 'EXCELLENT', text: 'ດີຫຼາຍ (Very Good)', label: 'ດີຫຼາຍ', dot: '🟢', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300', desc: 'ຄຸນນະພາບນໍ້າດີຫຼາຍ' };
+      }
+      if (/ດີ|good/i.test(s)) {
+        return { score: '-', level: 'GOOD', text: 'ດີ (Good)', label: 'ດີ', dot: '🟢', badgeClass: 'bg-sky-100 text-sky-800 border-sky-300', desc: 'ຄຸນນະພາບນໍ້າດີ' };
+      }
+      if (/ປານກາງ|moderate|fair/i.test(s)) {
+        return { score: '-', level: 'MODERATE', text: 'ປານກາງ (Moderate)', label: 'ປານກາງ', dot: '🟡', badgeClass: 'bg-amber-100 text-amber-800 border-amber-300', desc: 'ຄຸນນະພາບນໍ້າປານກາງ' };
+      }
+      if (/ບໍ່ດີ|ເສື່ອມໂຊມ|poor/i.test(s)) {
+        return { score: '-', level: 'POOR', text: 'ບໍ່ດີ / ຕ່ຳ (Poor)', label: 'ບໍ່ດີ', dot: '🟠', badgeClass: 'bg-orange-100 text-orange-800 border-orange-300', desc: 'ຄຸນນະພາບນໍ້າຕ່ຳ' };
+      }
+      return null;
+    }
+
+    // ຄິດໄລ່ຄ່າ QWI ອັດຕະໂນມັດ ຈາກຄ່າໂຕຊີ້ວັດທີ່ມີ (Weighted Sub-Index Calculation)
+    function calculateAutoQWI(customs = {}) {
+      const getVal = (pattern) => {
+        for (const [k, v] of Object.entries(customs)) {
+          if (v === undefined || v === null || v === '' || v === '-' || isNaN(v)) continue;
+          const ind = customIndicators.find(ci => ci.key === k);
+          const name = ind ? ind.name : k;
+          if (pattern.test(k) || pattern.test(name)) return parseFloat(v);
+        }
+        return null;
+      };
+
+      const subs = [];
+      const ph = getVal(/^ph$/i);
+      if (ph !== null) {
+        let q = 100 - Math.abs(ph - 7.2) * 35;
+        subs.push({ q: Math.max(10, Math.min(100, q)), w: 3 });
+      }
+      const doVal = getVal(/^(do|dissolvedoxygen)$/i);
+      if (doVal !== null) {
+        let q = doVal >= 7 ? 100 : (doVal >= 6 ? 90 : (doVal >= 5 ? 75 : (doVal >= 4 ? 55 : (doVal >= 2 ? 35 : 15))));
+        subs.push({ q, w: 4 });
+      }
+      const bod = getVal(/^bod/i);
+      if (bod !== null) {
+        let q = bod <= 1.5 ? 100 : (bod <= 2.5 ? 90 : (bod <= 4 ? 75 : (bod <= 6 ? 55 : (bod <= 10 ? 35 : 15))));
+        subs.push({ q, w: 4 });
+      }
+      const cod = getVal(/^cod/i);
+      if (cod !== null) {
+        let q = cod <= 5 ? 100 : (cod <= 10 ? 90 : (cod <= 20 ? 75 : (cod <= 40 ? 55 : (cod <= 80 ? 35 : 15))));
+        subs.push({ q, w: 3 });
+      }
+      const turb = getVal(/^turb/i);
+      if (turb !== null) {
+        let q = turb <= 5 ? 100 : (turb <= 15 ? 85 : (turb <= 30 ? 70 : (turb <= 50 ? 50 : 25)));
+        subs.push({ q, w: 2 });
+      } else {
+        const tss = getVal(/^tss/i);
+        if (tss !== null) {
+          let q = tss <= 25 ? 100 : (tss <= 50 ? 80 : (tss <= 100 ? 60 : (tss <= 200 ? 40 : 20)));
+          subs.push({ q, w: 2 });
+        }
+      }
+      const ec = getVal(/^(ec|conductivity)/i);
+      if (ec !== null) {
+        let q = ec <= 250 ? 100 : (ec <= 500 ? 90 : (ec <= 1000 ? 75 : (ec <= 1500 ? 55 : 35)));
+        subs.push({ q, w: 1.5 });
+      }
+
+      if (subs.length === 0) return null;
+      const totalW = subs.reduce((sum, s) => sum + s.w, 0);
+      const score = subs.reduce((sum, s) => sum + (s.q * s.w), 0) / totalW;
+      return +(score.toFixed(1));
+    }
+
+    function updateFormQWIPreview() {
+      const el = document.getElementById('qwi');
+      const badge = document.getElementById('qwiPreviewBadge');
+      const box = document.getElementById('qwiInterpretationBox');
+      const rating = document.getElementById('qwiInterpRating');
+      const desc = document.getElementById('qwiInterpDesc');
+      if (!el || !badge) return;
+      const v = el.value.trim();
+      const qi = interpretQWI(v);
+      if (qi) {
+        badge.className = `text-[11px] px-2.5 py-1.5 rounded-lg border font-bold text-center ${qi.badgeClass}`;
+        badge.innerHTML = `${qi.dot} ${qi.label} (${qi.score !== '-' ? qi.score : ''})`;
+        if (box && rating && desc) {
+          box.classList.remove('hidden');
+          rating.className = `font-bold text-xs ${qi.badgeClass} px-2 py-0.5 rounded border`;
+          rating.innerHTML = `${qi.dot} ${qi.text}`;
+          desc.innerHTML = qi.desc;
+        }
+      } else {
+        badge.className = 'text-[11px] px-2 py-1.5 rounded-lg border border-dashed border-slate-300 bg-white text-slate-400 font-semibold text-center whitespace-nowrap overflow-hidden text-ellipsis';
+        badge.innerHTML = v ? '⚠️ ຄ່າບໍ່ຖືກຕ້ອງ (0-100)' : 'ລໍຖ້າປ້ອນຄ່າ QWI...';
+        if (box) box.classList.add('hidden');
+      }
+    }
+
+    function autoCalculateQWIForm() {
+      const customs = {};
+      customIndicators.forEach(i => {
+        const inputEl = document.getElementById(`input_${i.key}`);
+        if (inputEl && inputEl.value !== '' && !isNaN(parseFloat(inputEl.value))) {
+          customs[i.key] = parseFloat(inputEl.value);
+        }
+      });
+      const calc = calculateAutoQWI(customs);
+      if (calc !== null) {
+        const qwiEl = document.getElementById('qwi');
+        if (qwiEl) {
+          qwiEl.value = calc;
+          updateFormQWIPreview();
+          Swal.fire({
+            icon: 'success',
+            title: `ຄິດໄລ່ QWI ສຳເລັດ: ${calc}`,
+            text: interpretQWI(calc)?.text,
+            timer: 1600,
+            showConfirmButton: false
+          });
+        }
+      } else {
+        Swal.fire({
+          icon: 'info',
+          title: 'ຍັງບໍ່ມີຂໍ້ມູນໂຕຊີ້ວັດພຽງພໍ',
+          text: 'ກະລຸນາປ້ອນຄ່າໂຕຊີ້ວັດ (pH, DO, BOD, COD, Turbidity...) ໃນຟອມກ່ອນ ຫຼື ປ້ອນຄ່າ QWI ໂດຍກົງ'
+        });
+      }
+    }
+
+    function updateEditQWIPreview(p) {
+      const qwiInput = document.getElementById(p + 'qwi');
+      const prevBox = document.getElementById(p + 'qwiPreview');
+      if (!qwiInput || !prevBox) return;
+      const qi = interpretQWI(qwiInput.value.trim());
+      if (qi) {
+        prevBox.innerHTML = `
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="font-bold text-slate-700">ແປຄ່າ QWI (${qi.score}):</span>
+            <span class="px-2 py-0.5 rounded text-xs font-bold border ${qi.badgeClass}">${qi.dot} ${qi.text}</span>
+            <span class="text-slate-500 text-[10.5px]">${qi.desc}</span>
+          </div>`;
+      } else {
+        prevBox.innerHTML = `<span class="text-slate-400">🌊 ຍັງບໍ່ມີຄ່າ QWI ຫຼື ປ້ອນຄ່າ 0-100 ເພື່ອແປຜົນ</span>`;
+      }
+    }
+
     /* --- BATCH SAVE & ACCORDION SYSTEM --- */
 
     function addTempStation(e) {
@@ -2036,6 +2281,13 @@
         }
       });
 
+      const qwiRaw = document.getElementById('qwi')?.value.trim() ?? '';
+      let qwi = '';
+      if (qwiRaw !== '') {
+        const qn = parseFloat(qwiRaw.replace(',', '.'));
+        qwi = !isNaN(qn) ? qn : qwiRaw;
+      }
+
       const stationData = {
         id: Date.now(),
         code: document.getElementById('code').value,
@@ -2044,6 +2296,7 @@
         lat: parseCoordPart(document.getElementById('lat').value),
         lng: parseCoordPart(document.getElementById('lng').value),
         sampleDate: document.getElementById('sampleDate').value || '',
+        qwi,
         gps: (document.getElementById('gpsDms')?.value || '').trim() || toDMS(parseCoordPart(document.getElementById('lat').value), parseCoordPart(document.getElementById('lng').value)),
         customs: customValues,
         status: evalStatus(customValues)
@@ -2054,6 +2307,9 @@
 
       document.getElementById('code').value = '';
       document.getElementById('name').value = '';
+      const qwiEl = document.getElementById('qwi');
+      if (qwiEl) qwiEl.value = '';
+      updateFormQWIPreview();
       renderFormCustomInputs();
       scrollToFormTop();
     }
@@ -2171,8 +2427,9 @@
         if (idx >= 0) {
           const customs = { ...out[idx].customs };
           Object.entries(st.customs || {}).forEach(([k, v]) => { if (v !== '-' && v !== '' && v !== undefined) customs[k] = v; });
+          const qwi = (st.qwi !== undefined && st.qwi !== '' && st.qwi !== '-') ? st.qwi : out[idx].qwi;
           out[idx] = { ...out[idx], name: st.name || out[idx].name, province: st.province || out[idx].province,
-                       lat: hasCoord(out[idx]) ? out[idx].lat : st.lat, lng: hasCoord(out[idx]) ? out[idx].lng : st.lng, customs, status: evalStatus(customs) };
+                       lat: hasCoord(out[idx]) ? out[idx].lat : st.lat, lng: hasCoord(out[idx]) ? out[idx].lng : st.lng, customs, qwi, status: evalStatus(customs) };
           updated++;
         } else {
           let code = st.code;
@@ -2195,7 +2452,11 @@
       const target = mode === 'merge' ? findDatasetByTitle(title) : null;
       const parsed = parseCompanyTitle(title);
       // ສະຖານີທີ່ຍັງບໍ່ມີກຸ່ມ → ໃຊ້ຊື່ໂຄງການຈາກຫົວຂໍ້ ເປັນກຸ່ມຕາຕະລາງ
-      stations = stations.map(st => st.section ? st : { ...st, section: parsed.section });
+      stations = stations.map(st => ({
+        ...st,
+        section: st.section || parsed.section || '',
+        qwi: (st.qwi !== undefined && st.qwi !== null) ? st.qwi : ''
+      }));
       if (mode === 'merge' || parsed.section) title = parsed.company || title;
 
       if (!target) {
@@ -2641,7 +2902,8 @@
       district: ['district', 'ເມືອງ'],
       province: ['ແຂວງ/ເມືອງ', 'ແຂວງ', 'province'],
       lat:      ['lat', 'latitude', 'ເສັ້ນຂະໜານ', 'y'],
-      lng:      ['lng', 'lon', 'long', 'longitude', 'ເສັ້ນແວງ', 'x']
+      lng:      ['lng', 'lon', 'long', 'longitude', 'ເສັ້ນແວງ', 'x'],
+      qwi:      ['qwi', 'wqi', 'ດັດຊະນີຄຸນນະພາບນໍ້າ', 'ດັດຊະນີຄຸນນະພາບນ້ຳ', 'ດັດຊະນີ', 'water quality index', 'quality water index', 'qwi score', 'wqi score']
     };
 
     // ຊື່ໂຕຊີ້ວັດມາດຕະຖານ: ໃຊ້ຈັບຄູ່ຊື່ຫຍໍ້ (ເຊັ່ນ T = Temperature) ແລະ ເປັນຫົວໜ່ວຍເລີ່ມຕົ້ນເມື່ອສ້າງໂຕຊີ້ວັດໃໝ່
@@ -2660,7 +2922,8 @@
       no3:         { name: 'NO3',         unit: 'mg/L',  aliases: ['no3', 'nitrate', 'no3n'] },
       no2:         { name: 'NO2',         unit: 'mg/L',  aliases: ['no2', 'nitrite', 'no2n'] },
       as:          { name: 'As',          unit: 'mg/L',  aliases: ['as', 'arsenic'] },
-      salinity:    { name: 'Salinity',    unit: '',      aliases: ['salinity', 'sal'] }
+      salinity:    { name: 'Salinity',    unit: '',      aliases: ['salinity', 'sal'] },
+      qwi:         { name: 'QWI',         unit: 'Index', aliases: ['qwi', 'wqi', 'waterqualityindex', 'qualitywaterindex', 'ດັດຊະນີຄຸນນະພາບນໍ້າ', 'ດັດຊະນີຄຸນນະພາບນ້ຳ'] }
     };
 
     function normHeader(v) {
@@ -2860,6 +3123,17 @@
         }
         if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || (lat === 0 && lng === 0)) { lat = null; lng = null; }
 
+        const qwiCellVal = m.qwi !== undefined ? cellText(row[m.qwi]) : '';
+        let qwi = '';
+        if (qwiCellVal) {
+          const qn = parseFloat(qwiCellVal.replace(',', '.'));
+          qwi = !isNaN(qn) ? qn : qwiCellVal;
+        } else if (extra.qwi !== undefined && extra.qwi !== '-') {
+          qwi = extra.qwi;
+        } else if (customs.qwi !== undefined && customs.qwi !== '-') {
+          qwi = customs.qwi;
+        }
+
         cur.parsed.push({
           code, autoCode: !code, no, name, group: rawGroup || cur.lastGroup || '',
           sampleDate: rawDate || (m.date !== undefined ? cur.lastDate : '') || cur.rowDate || '',
@@ -2867,6 +3141,7 @@
           // ຖັນ Location ທີ່ເປັນຊື່ສະຖານທີ່ (ບໍ່ແມ່ນພິກັດ) → ເກັບເປັນໝາຍເຫດທີ່ຕັ້ງ
           locationNote: coordVals.find(v => !parseCoordPair(v)) || '',
           gps: coordVals.find(v => parseCoordPair(v) && /[°º˚]/.test(v)) || (m.lat !== undefined && /[°º˚]/.test(cellText(row[m.lat])) ? [cellText(row[m.lat]), m.lng !== undefined ? cellText(row[m.lng]) : ''].filter(Boolean).join(' ') : ''),
+          qwi,
           lat, lng, customs, extra, excelRow
         });
       });
@@ -3298,9 +3573,9 @@
         return Swal.fire({ icon: 'error', title: 'ໂຫລດຕົວສ້າງ Excel ບໍ່ສຳເລັດ', text: 'ກະລຸນາກວດອິນເຕີເນັດ ແລ້ວ Refresh ໜ້າເວັບ' });
       }
       const indHeaders = customIndicators.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`);
-      const headers = ['ວັນທີ', 'ລະຫັດສະຖານີ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng', ...indHeaders];
-      const example1 = ['2025-04', 'ST-101', 'ນ້ຳຂອງ ທ່າເດື່ອ', 'ນະຄອນຫຼວງ', 17.8771, 102.7154, ...customIndicators.map(() => '')];
-      const example2 = ['2025-05', 'ST-101', 'ນ້ຳຂອງ ທ່າເດື່ອ', 'ນະຄອນຫຼວງ', 17.8771, 102.7154, ...customIndicators.map(() => 'ND')];
+      const headers = ['ວັນທີ', 'ລະຫັດສະຖານີ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'Lat', 'Lng', ...indHeaders, 'QWI'];
+      const example1 = ['2025-04', 'ST-101', 'ນ້ຳຂອງ ທ່າເດື່ອ', 'ນະຄອນຫຼວງ', 17.8771, 102.7154, ...customIndicators.map(() => ''), 85];
+      const example2 = ['2025-05', 'ST-101', 'ນ້ຳຂອງ ທ່າເດື່ອ', 'ນະຄອນຫຼວງ', 17.8771, 102.7154, ...customIndicators.map(() => 'ND'), ''];
 
       const ws = XLSX.utils.aoa_to_sheet([headers, example1, example2]);
       ws['!cols'] = headers.map(h => ({ wch: Math.max(12, String(h).length + 4) }));
@@ -3313,7 +3588,8 @@
         ['   ຖັນ Lat/Lng: ຄວນມີ (ເຊັ່ນ 17.9757 / 102.6331) — ຖ້າບໍ່ມີ ຈະນຳເຂົ້າໄດ້ ແຕ່ບໍ່ສະແດງໃນແຜນທີ່'],
         ['3. ຄ່າໂຕຊີ້ວັດ: ພິມຕົວເລກ, ND = ກວດບໍ່ພົບ, <0.01 ຫຼື >100 ກໍ່ໄດ້, ປ່ອຍຫວ່າງ = ບໍ່ມີຄ່າ'],
         ['4. ເພີ່ມຖັນໂຕຊີ້ວັດໃໝ່ໄດ້ ເຊັ່ນ "COD (mg/L)" — ລະບົບຈະຖາມວ່າຈະເພີ່ມເປັນໂຕຊີ້ວັດໃໝ່ບໍ່'],
-        ['5. ຢ່າປ່ຽນຊື່ຫົວຖັນ ລະຫັດສະຖານີ, ຊື່ສະຖານີ, ແຂວງ/ເມືອງ, Lat, Lng']
+        ['5. ຖັນ QWI: ດັດຊະນີຄຸນນະພາບນໍ້າ (0-100) — ລະບົບຈະແປຄ່າໃຫ້ອັດຕະໂນມັດ (ດີຫຼາຍ, ດີ, ປານກາງ, ບໍ່ດີ, ເສື່ອມໂຊມ)'],
+        ['6. ຢ່າປ່ຽນຊື່ຫົວຖັນ ລະຫັດສະຖານີ, ຊື່ສະຖານີ, ແຂວງ/ເມືອງ, Lat, Lng']
       ]);
       guide['!cols'] = [{ wch: 90 }];
 
@@ -3331,14 +3607,18 @@
       countEl.innerText = tempStations.length;
       if (tempStations.length > 0) {
         saveBtn.classList.remove('hidden');
-        container.innerHTML = tempStations.map((st, idx) => `
+        container.innerHTML = tempStations.map((st, idx) => {
+          const qi = interpretQWI(st.qwi);
+          return `
           <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
-            <div>
-              <span class="font-mono font-bold text-indigo-600">${st.code}</span> - <span class="font-medium text-slate-800">${st.name}</span>${st.sampleDate ? ` <span class="text-[10px] text-slate-500">📅 ${fmtSampleDate(st.sampleDate)}</span>` : ''}
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="font-mono font-bold text-indigo-600">${st.code}</span> - <span class="font-medium text-slate-800">${st.name}</span>
+              ${st.sampleDate ? `<span class="text-[10px] text-slate-500">📅 ${fmtSampleDate(st.sampleDate)}</span>` : ''}
+              ${qi ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold border ${qi.badgeClass}">🌊 QWI: ${qi.score !== '-' ? qi.score : ''} ${qi.label}</span>` : ''}
             </div>
             <button onclick="removeTempStation(${idx})" class="text-rose-500 font-bold hover:text-rose-700 px-1">✕</button>
           </div>
-        `).join('');
+        `}).join('');
       } else {
         saveBtn.classList.add('hidden');
         container.innerHTML = `<p class="text-slate-400 text-center py-3">ຍັງບໍ່ມີຂໍ້ມູນສະຖານີ</p>`;
@@ -3397,6 +3677,9 @@
 
     function clearStationForm() {
       ['code', 'name'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      const qwiEl = document.getElementById('qwi');
+      if (qwiEl) qwiEl.value = '';
+      updateFormQWIPreview();
       document.querySelectorAll('#dynamicFormIndicators input[id^="input_"]').forEach(x => x.value = '');
       const q = document.getElementById('formIndSearch');
       if (q) { q.value = ''; filterFormInds(''); }
@@ -3453,17 +3736,40 @@
       document.getElementById('kpiTotal').innerText = filteredBatches.length;
       let totalNormal = 0;
       let totalAlert = 0;
+      let qwiValues = [];
 
       filteredBatches.forEach(b => {
         const stations = b.stations || [b];
         stations.forEach(st => {
           if (st.status && st.status.isAlert) totalAlert++;
           else totalNormal++;
+          const qVal = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && !isNaN(parseFloat(st.qwi)))
+            ? parseFloat(st.qwi)
+            : calculateAutoQWI(st.customs || {});
+          if (qVal !== null && !isNaN(qVal)) qwiValues.push(qVal);
         });
       });
 
       document.getElementById('kpiNormal').innerText = totalNormal;
       document.getElementById('kpiAlert').innerText = totalAlert;
+
+      const qwiAvgEl = document.getElementById('kpiQwiAvg');
+      const qwiBadgeEl = document.getElementById('kpiQwiBadge');
+      if (qwiAvgEl && qwiBadgeEl) {
+        if (qwiValues.length > 0) {
+          const avg = +( (qwiValues.reduce((a, b) => a + b, 0) / qwiValues.length).toFixed(1) );
+          const qi = interpretQWI(avg);
+          qwiAvgEl.innerText = avg;
+          if (qi) {
+            qwiBadgeEl.className = `text-[10px] font-bold px-2 py-0.5 rounded-full border ${qi.badgeClass}`;
+            qwiBadgeEl.innerText = `${qi.dot} ${qi.label}`;
+          }
+        } else {
+          qwiAvgEl.innerText = '-';
+          qwiBadgeEl.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500';
+          qwiBadgeEl.innerText = 'ຍັງບໍ່ມີຂໍ້ມູນ';
+        }
+      }
     }
 
     // Assigns a consistent colored badge style per organization/company name,
@@ -3516,6 +3822,11 @@
         arr.forEach(st => {
           ['code', 'name', 'province'].forEach(k => { if (st[k] !== undefined && st[k] !== null && typeof st[k] !== 'string') st[k] = String(st[k]); });
           if (!st.customs || typeof st.customs !== 'object') st.customs = {};
+          if (st.qwi === undefined || st.qwi === null || st.qwi === '') {
+            if (st.customs.qwi !== undefined && st.customs.qwi !== '-') st.qwi = st.customs.qwi;
+            else if (st.customs.wqi !== undefined && st.customs.wqi !== '-') st.qwi = st.customs.wqi;
+            else if (st.extra && st.extra.qwi !== undefined && st.extra.qwi !== '-') st.qwi = st.extra.qwi;
+          }
         });
         rec._healStations = !Array.isArray(rec.stations) || arr.length !== rec.stations.length;
         rec.stations = arr;
@@ -3916,6 +4227,11 @@
                 <b>🧭 ພິກັດ:</b> <span style="font-family:monospace">${escAttr(gpsTextOf(st))}</span><br>
                 ${st.info && Object.keys(st.info).length ? `<div style="margin-top:4px;padding-top:4px;border-top:1px dashed #cbd5e1;font-size:11px;color:#475569;">${Object.entries(st.info).map(([k, v]) => `<b>📝 ${escAttr(k)}:</b> ${escAttr(v)}`).join('<br>')}</div>` : ''}
                 <b>ແຂວງ:</b> ${st.province}<br>
+                ${(() => {
+                  const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '') ? st.qwi : calculateAutoQWI(st.customs || {});
+                  const qi = interpretQWI(qRaw);
+                  return qi ? `<b>🌊 QWI (ດັດຊະນີ):</b> <span style="font-weight:bold; color:${qi.color};">${qi.score !== '-' ? qi.score : ''} ${qi.dot} ${qi.text}</span><br>` : '';
+                })()}
                 ${customPopupHTML}
                 <b>ສະຖານະ:</b> <span style="font-weight: bold; color: ${st.status && st.status.isAlert ? '#dc2626' : '#16a34a'};">${st.status ? st.status.text : '✅ Normal'}</span>
               </div>
@@ -4065,6 +4381,18 @@
             ${editInput(p + 'gps', '🧭 ພິກັດອົງສາ (GPS)', gpsTextOf(st), 'placeholder="17°58\'13.0&quot;N 102°35\'48.1&quot;E"')}
             ${editInput(p + 'lat', 'Lat', st.lat ?? '')}
             ${editInput(p + 'lng', 'Lng', st.lng ?? '')}
+            ${editInput(p + 'qwi', '🌊 QWI (0-100)', st.qwi ?? '', 'placeholder="ເຊັ່ນ 85" oninput="updateEditQWIPreview(\'' + p + '\')"')}
+          </div>
+          <div id="${p}qwiPreview" class="text-[11px] p-2 rounded-lg bg-white border border-amber-200">
+            ${(() => {
+              const qi = interpretQWI(st.qwi);
+              if (!qi) return `<span class="text-slate-400">🌊 ຍັງບໍ່ມີຄ່າ QWI (ປ້ອນຄ່າ 0-100 ຂ້າງເທິງເພື່ອແປຜົນ)</span>`;
+              return `<div class="flex flex-wrap items-center gap-2">
+                <span class="font-bold text-slate-700">ແປຄ່າ QWI (${qi.score}):</span>
+                <span class="px-2 py-0.5 rounded text-xs font-bold border ${qi.badgeClass}">${qi.dot} ${qi.text}</span>
+                <span class="text-slate-500 text-[10.5px]">${qi.desc}</span>
+              </div>`;
+            })()}
           </div>
           ${valueInds().length ? `
             <div>
@@ -4162,12 +4490,16 @@
       const customs = { ...(oldStation.customs || {}) };
       customIndicators.forEach(i => { if (document.getElementById(p + 'ind_' + i.key)) customs[i.key] = parseIndicatorValue(get('ind_' + i.key)); });
 
+      const qwiVal = get('qwi');
+      const qwi = qwiVal !== '' ? (isNaN(parseFloat(qwiVal)) ? qwiVal : parseFloat(qwiVal)) : '';
+
       const updated = {
         ...oldStation,
         code, name,
         province: get('province'),
         sampleDate: normalizeDateText(get('sampleDate')),
         section: get('section'),
+        qwi,
         gps: get('gps') || (lat !== null && !isNaN(lat) ? toDMS(lat, lng) : ''),
         lat, lng,
         customs,
@@ -4181,8 +4513,8 @@
         savePromise = db.ref(`water_records/${fbKey}/stations`).set(newStations);
       } else {
         // ຂໍ້ມູນຮູບແບບເກົ່າ (ບໍ່ມີ stations) → ອັບເດດທີ່ຕົວ record ໂດຍກົງ
-        const { code, name, province, lat, lng, customs, status } = updated;
-        savePromise = db.ref(`water_records/${fbKey}`).update({ code, name, province, lat, lng, customs, status });
+        const { code, name, province, lat, lng, customs, status, qwi } = updated;
+        savePromise = db.ref(`water_records/${fbKey}`).update({ code, name, province, lat, lng, customs, status, qwi });
       }
 
       savePromise.then(() => {
@@ -4316,7 +4648,7 @@
       const colLetters = n => { let s = ''; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
 
       const headers = ['📅 ວັນທີ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', '🧭 ພິກັດ (ອົງສາ)', 'Lat', 'Lng',
-        ...valueInds().map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
+        ...valueInds().map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), '🌊 QWI (ດັດຊະນີ)', 'ສະຖານະ'];
 
       // ຈັດລຽງຕາມວັນທີ (ເກົ່າ→ໃໝ່) ແລະ ກອງຕາມວັນທີທີ່ເລືອກ — ເກັບ index ເດີມໄວ້ສຳລັບປຸ່ມແກ້ໄຂ/ລົບ
       const dates = [...new Set(stations.map(s => s.sampleDate || ''))].sort();
@@ -4343,6 +4675,20 @@
           return `<td class="${td} ${isNum ? 'text-right tabular-nums' : 'text-center'} ${bad ? 'bg-rose-100 text-rose-700 font-bold' : ''}" ${bad ? 'title="ເກີນເກນເຕືອນໄພ"' : ''}>${val}</td>`;
         }).join('');
 
+        const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-')
+          ? st.qwi
+          : calculateAutoQWI(st.customs || {});
+        const qi = interpretQWI(qRaw);
+        const qwiCell = `<td class="${td} text-center">
+          ${qi ? `
+            <div class="inline-flex items-center gap-1">
+              <span class="font-mono font-bold text-slate-800">${qi.score !== '-' ? qi.score : ''}</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border ${qi.badgeClass}" title="${escAttr(qi.desc || qi.text)}">
+                ${qi.dot} ${qi.label}
+              </span>
+            </div>` : `<span class="text-slate-400 font-normal">-</span>`}
+        </td>`;
+
         return `
           <tr class="${isEditing ? 'bg-amber-50' : zebra} hover:bg-sky-50">
             <td class="${td} bg-slate-200 text-slate-500 font-bold text-center sticky left-0">${pos + 1}</td>
@@ -4354,6 +4700,7 @@
             <td class="${td} text-right tabular-nums text-slate-500" ${st.lat === null || st.lat === undefined ? 'title="ບໍ່ມີພິກັດ — ກົດ ✏️ ເພື່ອເພີ່ມ"' : ''}>${st.lat ?? '<span class="text-amber-500">—</span>'}</td>
             <td class="${td} text-right tabular-nums text-slate-500">${st.lng ?? '<span class="text-amber-500">—</span>'}</td>
             ${indCells}
+            ${qwiCell}
             <td class="${td} text-center">
               <span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${st.status ? st.status.class : 'bg-emerald-100 text-emerald-800'}">${st.status ? st.status.text : '✅ Normal'}</span>
             </td>
@@ -4380,7 +4727,7 @@
         const inds = showAllCols[item.fbKey] ? valueInds() : valueInds().filter(hasVal);
         const hiddenCols = valueInds().length - inds.length;
         const headers = ['📅 ວັນທີ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', '🧭 ພິກັດ (ອົງສາ)', 'Lat', 'Lng',
-          ...inds.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ'];
+          ...inds.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), '🌊 QWI (ດັດຊະນີ)', 'ສະຖານະ'];
         return `
           ${multiSec ? `<div class="flex flex-wrap items-center gap-2 mt-2 px-2 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-[12px]">
             <span class="font-bold text-indigo-900">📂 ${escAttr(name || 'ທົ່ວໄປ')}</span>
@@ -4448,13 +4795,17 @@
       if (!item) return;
       const stations = item.stations || [item];
       const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-      const head = ['No.', 'ໂຄງການ/ກຸ່ມ', 'ວັນທີເກັບຕົວຢ່າງ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'ພິກັດ (ອົງສາ)', 'Lat', 'Lng', ...valueInds().map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'ສະຖານະ', 'ຂໍ້ມູນເພີ່ມເຕີມ'];
+      const head = ['No.', 'ໂຄງການ/ກຸ່ມ', 'ວັນທີເກັບຕົວຢ່າງ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'ພິກັດ (ອົງສາ)', 'Lat', 'Lng', ...valueInds().map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'QWI', 'ການແປຄ່າ QWI', 'ສະຖານະ', 'ຂໍ້ມູນເພີ່ມເຕີມ'];
       let csv = '\uFEFF' + [q('ບໍລິສັດ: ' + (item.companyName || item.name || '')), q('ວັນທີ: ' + (item.date || '')), q('ຜູ້ບັນທຶກ: ' + (item.recordedBy || ''))].join(',') + '\n';
       if (item.projectLocation) csv += q('ທີ່ຕັ້ງ: ' + item.projectLocation) + '\n';
       csv += '\n' + head.map(q).join(',') + '\n';
       stations.forEach((st, k) => {
+        const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-') ? st.qwi : calculateAutoQWI(st.customs || {});
+        const qi = interpretQWI(qRaw);
         const row = [k + 1, st.section || '', st.sampleDate || '', st.code, st.name, st.province, gpsTextOf(st), st.lat ?? '', st.lng ?? '',
           ...valueInds().map(i => st.customs ? (st.customs[i.key] ?? '-') : '-'),
+          qi ? (qi.score !== '-' ? qi.score : '') : (st.qwi ?? ''),
+          qi ? `${qi.label} (${qi.text})` : '',
           st.status ? st.status.text.replace(/[^\w\s]/g, '').trim() : 'Normal',
           st.info ? Object.entries(st.info).map(([k, v]) => `${k}: ${v}`).join('; ') : ''];
         csv += row.map(q).join(',') + '\n';
@@ -5479,7 +5830,8 @@
       // 3. Indicator Filter
       const indSel = document.getElementById('trend12IndSel');
       if (indSel) {
-        let iOpts = activeInds.map(i => `<option value="${i.key}" ${i.key === trend12Indicator ? 'selected' : ''}>${escAttr(i.name)}${i.unit ? ' (' + escAttr(i.unit) + ')' : ''}</option>`).join('');
+        let iOpts = `<option value="ALL" ${trend12Indicator === 'ALL' ? 'selected' : ''}>🌐 ສະແດງໂຕຊີ້ວັດທັງໝົດ (All Parameters - ${activeInds.length})</option>`;
+        iOpts += activeInds.map(i => `<option value="${i.key}" ${i.key === trend12Indicator ? 'selected' : ''}>${escAttr(i.name)}${i.unit ? ' (' + escAttr(i.unit) + ')' : ''}</option>`).join('');
         if (indSel.dataset.last !== iOpts) { indSel.innerHTML = iOpts; indSel.dataset.last = iOpts; }
         indSel.value = trend12Indicator;
       }
@@ -5516,10 +5868,12 @@
       if (!activeInds.length) return;
 
       // ກວດສອບ/ກຳນົດ Indicator ທີ່ກຳລັງເລືອກ
-      if (!trend12Indicator || !activeInds.some(i => i.key === trend12Indicator)) {
-        trend12Indicator = activeInds[0].key;
+      if (!trend12Indicator || (trend12Indicator !== 'ALL' && !activeInds.some(i => i.key === trend12Indicator))) {
+        trend12Indicator = 'ALL';
       }
-      const curInd = activeInds.find(i => i.key === trend12Indicator) || activeInds[0];
+      const curInd = trend12Indicator === 'ALL'
+        ? { key: 'ALL', name: 'ທຸກໂຕຊີ້ວັດ (All Parameters)', unit: '' }
+        : (activeInds.find(i => i.key === trend12Indicator) || activeInds[0]);
 
       // 1. ອັບເດດ Dropdown Filters
       update12MonthFilters(activeInds);
@@ -5532,7 +5886,7 @@
         pBadge.innerText = `${formatLaoMonthYear(firstM)} — ${formatLaoMonthYear(lastM)}`;
       }
 
-      // 3. ຄິດໄລ່ຂໍ້ມູນສະຖິຕິ 12 ເດືອນ ຂອງໂຕຊີ້ວັດທີ່ເລືອກ
+      // 3. ຄິດໄລ່ຂໍ້ມູນສະຖິຕິ 12 ເດືອນ
       const num = v => {
         if (v === undefined || v === null || v === '' || v === '-') return null;
         const n = parseFloat(v);
@@ -5544,6 +5898,89 @@
       let grandValues = [];
       let totalAlertsCount = 0;
 
+      if (trend12Indicator === 'ALL') {
+        // --- ໂໝດສະແດງທຸກໂຕຊີ້ວັດ (ALL) ---
+        months.forEach(ym => {
+          let monthSamples = 0;
+          let monthAlerts = 0;
+          let monthTestedInds = 0;
+
+          // ນັບຈຳນວນສະຖານີ/ຕົວຢ່າງທີ່ເກັບໃນເດືອນນີ້
+          waterData.forEach(rec => {
+            if (trend12Company !== 'ALL' && rec.fbKey !== trend12Company) return;
+            const sts = stationsOf(rec);
+            sts.forEach(st => {
+              if (trend12Station !== 'ALL') {
+                const stId = `${st.code || ''}|${st.name || ''}`;
+                if (stId !== trend12Station) return;
+              }
+              const sYM = getStationSampleMonth(st, rec);
+              if (sYM === ym) {
+                monthSamples++;
+                activeInds.forEach(ind => {
+                  const rawVal = st.customs ? st.customs[ind.key] : undefined;
+                  const v = num(rawVal);
+                  if (v !== null) {
+                    monthTestedInds++;
+                    if (isOutOfThreshold(ind.key, v)) monthAlerts++;
+                  }
+                });
+              }
+            });
+          });
+
+          totalSamplesCount += monthSamples;
+          totalAlertsCount += monthAlerts;
+
+          monthlyStats.push({
+            ym,
+            hasData: monthSamples > 0,
+            count: monthSamples,
+            testedInds: monthTestedInds,
+            avg: null,
+            min: null,
+            max: null,
+            alertCount: monthAlerts,
+            alertRate: monthTestedInds > 0 ? (monthAlerts / monthTestedInds) * 100 : 0,
+            isAlert: monthAlerts > 0
+          });
+        });
+
+        // MoM ການເກັບຕົວຢ່າງ
+        for (let i = 0; i < monthlyStats.length; i++) {
+          const cur = monthlyStats[i];
+          let prevWithData = null;
+          for (let j = i - 1; j >= 0; j--) {
+            if (monthlyStats[j].hasData) {
+              prevWithData = monthlyStats[j];
+              break;
+            }
+          }
+          if (cur.hasData && prevWithData && prevWithData.count > 0) {
+            const diff = cur.count - prevWithData.count;
+            const pct = (diff / prevWithData.count) * 100;
+            cur.momDiff = diff;
+            cur.momPct = pct;
+          } else {
+            cur.momDiff = null;
+            cur.momPct = null;
+          }
+        }
+
+        // 4. Render KPI Cards ສຳລັບ ALL
+        render12MonthKpisAll(activeInds, monthlyStats, totalSamplesCount, totalAlertsCount);
+
+        // 5. Render Chart or Matrix ສຳລັບ ALL
+        if (trend12View === 'matrix') {
+          render12MonthMatrix(months);
+        } else {
+          render12MonthChartAll(activeInds, months);
+          render12MonthTableAll(activeInds, monthlyStats, totalSamplesCount, totalAlertsCount);
+        }
+        return;
+      }
+
+      // --- ໂໝດໂຕຊີ້ວັດດ່ຽວ (Single Indicator) ---
       months.forEach(ym => {
         const matched = [];
         waterData.forEach(rec => {
@@ -5636,6 +6073,327 @@
       } else {
         render12MonthChart(curInd, months, monthlyStats);
         render12MonthTable(curInd, monthlyStats, grandValues, totalSamplesCount, totalAlertsCount);
+      }
+    }
+
+    // KPI Cards ສຳລັບໂໝດສະແດງທຸກໂຕຊີ້ວັດ (ALL)
+    function render12MonthKpisAll(activeInds, monthlyStats, totalSamplesCount, totalAlertsCount) {
+      const container = document.getElementById('trend12KpiCards');
+      if (!container) return;
+
+      const activeMonthsCount = monthlyStats.filter(m => m.hasData).length;
+      let totalTests = 0;
+      monthlyStats.forEach(m => { totalTests += (m.testedInds || 0); });
+      const overallAlertRate = totalTests > 0 ? ((totalAlertsCount / totalTests) * 100).toFixed(1) : '0.0';
+
+      container.innerHTML = `
+        <div class="bg-gradient-to-br from-indigo-50/70 to-white p-3.5 rounded-xl border border-indigo-200 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>ໂຕຊີ້ວັດທັງໝົດໃນລະບົບ</span>
+            <span class="text-sm">🌐</span>
+          </div>
+          <div class="my-1 flex items-baseline gap-1.5">
+            <span class="text-xl md:text-2xl font-bold text-indigo-900">${activeInds.length}</span>
+            <span class="text-xs text-slate-500 font-semibold">ໂຕຊີ້ວັດ</span>
+          </div>
+          <div class="text-[10px] text-indigo-700 font-medium">
+            ຕິດຕາມຄົບທຸກພາຣາມິເຕີ
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-slate-50 to-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>ການເກັບຕົວຢ່າງທັງໝົດ</span>
+            <span class="text-sm">📊</span>
+          </div>
+          <div class="my-1 flex items-baseline gap-1.5">
+            <span class="text-xl md:text-2xl font-bold text-slate-800">${totalSamplesCount}</span>
+            <span class="text-xs text-slate-500 font-medium">ຕົວຢ່າງ</span>
+          </div>
+          <div class="text-[10px] text-slate-500 truncate">
+            ທັງໝົດ ${totalTests} ຄ່າທົດສອບ
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-emerald-50/60 to-white p-3.5 rounded-xl border border-emerald-200 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>ເດືອນທີ່ມີຂໍ້ມູນ</span>
+            <span class="text-sm">📅</span>
+          </div>
+          <div class="my-1 flex items-baseline gap-1.5">
+            <span class="text-xl md:text-2xl font-bold text-emerald-800">${activeMonthsCount}</span>
+            <span class="text-xs text-slate-500 font-medium">/ 12 ເດືອນ</span>
+          </div>
+          <div class="text-[10px] text-emerald-700 font-medium">
+            ${activeMonthsCount === 12 ? '✅ ມີຂໍ້ມູນຄົບ 12 ເດືອນ' : `ຄອບຄຸມ ${(activeMonthsCount / 12 * 100).toFixed(0)}% ຂອງຮອບປີ`}
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-amber-50/50 to-white p-3.5 rounded-xl border ${totalAlertsCount > 0 ? 'border-amber-300' : 'border-slate-200'} shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>ການເກີນເກນມາດຕະຖານລວມ</span>
+            <span class="text-sm">🚨</span>
+          </div>
+          <div class="my-1 flex items-baseline justify-between">
+            <div>
+              <span class="text-xl md:text-2xl font-bold ${totalAlertsCount > 0 ? 'text-amber-700' : 'text-emerald-700'}">${totalAlertsCount}</span>
+              <span class="text-xs text-slate-500">ຄັ້ງ (${overallAlertRate}%)</span>
+            </div>
+          </div>
+          <div class="text-[10px] font-bold">
+            ${totalAlertsCount > 0
+              ? `<span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800">⚠️ ມີບາງໂຕຊີ້ວັດເກີນເກນ</span>`
+              : `<span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">✅ ທຸກໂຕຊີ້ວັດປົກກະຕິ</span>`
+            }
+          </div>
+        </div>
+      `;
+    }
+
+    // Chart ສຳລັບໂໝດສະແດງທຸກໂຕຊີ້ວັດ (ALL)
+    function render12MonthChartAll(activeInds, months) {
+      const container = document.getElementById('trend12ChartContainer');
+      const titleEl = document.getElementById('trend12ChartTitle');
+      const legendEl = document.getElementById('trend12ThresholdLegend');
+      if (!container) return;
+
+      if (titleEl) {
+        titleEl.innerText = `ກຣາຟປຽບທຽບທ່າອ່ຽງຄ່າສະເລ່ຍທຸກໂຕຊີ້ວັດ (${activeInds.length} ໂຕຊີ້ວັດ) ໃນຮອບ 12 ເດືອນ`;
+      }
+
+      if (legendEl) {
+        legendEl.innerHTML = `<span class="text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">🌐 ສະແດງທຸກພາຣາມິເຕີພ້ອມກັນ</span> <span class="text-slate-400 text-[10px]">(ກົດຊື່ໂຕຊີ້ວັດທີ່ Legend ເພື່ອເປີດ/ປິດເສັ້ນ)</span>`;
+      }
+
+      if (!window.ApexCharts) {
+        container.innerHTML = '<p class="text-center text-slate-400 py-10">⏳ ກຳລັງໂຫລດກຣາຟ...</p>';
+        return;
+      }
+
+      const num = v => {
+        if (v === undefined || v === null || v === '' || v === '-') return null;
+        const n = parseFloat(v);
+        return isNaN(n) ? null : n;
+      };
+
+      const categories = months.map(ym => formatLaoMonthYear(ym, true));
+      const palette = ['#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#ef4444', '#14b8a6', '#6366f1', '#84cc16', '#d97706', '#0ea5e9'];
+
+      const series = activeInds.map(ind => {
+        const data = months.map(ym => {
+          const vals = [];
+          waterData.forEach(rec => {
+            if (trend12Company !== 'ALL' && rec.fbKey !== trend12Company) return;
+            stationsOf(rec).forEach(st => {
+              if (trend12Station !== 'ALL') {
+                const stId = `${st.code || ''}|${st.name || ''}`;
+                if (stId !== trend12Station) return;
+              }
+              const sYM = getStationSampleMonth(st, rec);
+              if (sYM === ym) {
+                const v = num(st.customs ? st.customs[ind.key] : undefined);
+                if (v !== null) vals.push(v);
+              }
+            });
+          });
+          if (!vals.length) return null;
+          return +( (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2) );
+        });
+        const unit = ind.unit ? ` (${ind.unit})` : '';
+        return {
+          name: `${ind.name}${unit}`,
+          type: 'line',
+          data
+        };
+      });
+
+      const options = {
+        chart: {
+          height: 310,
+          type: 'line',
+          toolbar: {
+            show: true,
+            tools: { download: true, zoom: true, zoomin: true, zoomout: true, pan: true, reset: true }
+          },
+          animations: { enabled: true, speed: 400 }
+        },
+        stroke: {
+          width: 2.5,
+          curve: 'smooth'
+        },
+        colors: palette,
+        markers: {
+          size: 4,
+          strokeWidth: 1.5,
+          hover: { size: 6 }
+        },
+        xaxis: {
+          categories,
+          labels: {
+            style: { colors: '#64748b', fontSize: '10.5px' },
+            rotate: -20
+          }
+        },
+        yaxis: {
+          title: {
+            text: 'ຄ່າສະເລ່ຍຂອງໂຕຊີ້ວັດ',
+            style: { color: '#4f46e5', fontSize: '11px', fontWeight: 600 }
+          },
+          labels: {
+            style: { colors: '#64748b' },
+            formatter: v => v === null || v === undefined ? '' : +Number(v).toFixed(2)
+          }
+        },
+        grid: {
+          borderColor: '#e2e8f0',
+          strokeDashArray: 2
+        },
+        legend: {
+          position: 'top',
+          horizontalAlign: 'left',
+          fontSize: '11px',
+          markers: { radius: 12 }
+        },
+        tooltip: {
+          shared: true,
+          intersect: false,
+          theme: 'light',
+          y: {
+            formatter: (val, { seriesIndex, w }) => {
+              if (val === null || val === undefined) return 'ບໍ່ມີຂໍ້ມູນ';
+              const sName = w.globals.seriesNames[seriesIndex] || '';
+              return `${val} ${sName.match(/\((.*?)\)/)?.[0] || ''}`;
+            }
+          }
+        }
+      };
+
+      if (trend12Apex) {
+        try { trend12Apex.destroy(); } catch (e) {}
+        trend12Apex = null;
+      }
+      container.innerHTML = '';
+      try {
+        trend12Apex = new ApexCharts(container, options);
+        trend12Apex.render();
+      } catch (e) {
+        console.error('12-Month ApexChart error:', e);
+        container.innerHTML = '<p class="text-center text-rose-500 py-6 text-xs font-semibold">⚠️ ແຕ້ມກຣາຟບໍ່ສຳເລັດ</p>';
+      }
+    }
+
+    // ຕາຕະລາງລາຍເດືອນ ສຳລັບໂໝດສະແດງທຸກໂຕຊີ້ວັດ (ALL)
+    function render12MonthTableAll(activeInds, monthlyStats, totalSamplesCount, totalAlertsCount) {
+      const tbody = document.getElementById('trend12TableBody');
+      const tfoot = document.getElementById('trend12TableFoot');
+      if (!tbody) return;
+
+      const num = v => {
+        if (v === undefined || v === null || v === '' || v === '-') return null;
+        const n = parseFloat(v);
+        return isNaN(n) ? null : n;
+      };
+
+      let rowsHtml = '';
+      let grandTotalTests = 0;
+
+      monthlyStats.forEach((m, idx) => {
+        const monthName = formatLaoMonthYear(m.ym);
+        if (!m.hasData) {
+          rowsHtml += `
+            <tr class="hover:bg-slate-50/70 text-slate-400">
+              <td class="p-2.5 text-center font-medium">${idx + 1}</td>
+              <td class="p-2.5 font-medium text-slate-600">${monthName}</td>
+              <td class="p-2.5 text-center font-mono">0</td>
+              <td class="p-2.5 text-center" colspan="3"><span class="text-slate-400 italic">ບໍ່ມີການເກັບຕົວຢ່າງ</span></td>
+              <td class="p-2.5 text-center">-</td>
+              <td class="p-2.5 text-center">-</td>
+              <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-400">⚪ ບໍ່ມີຕົວຢ່າງ</span></td>
+            </tr>
+          `;
+          return;
+        }
+
+        grandTotalTests += (m.testedInds || 0);
+
+        // ຊອກຫາລາຍການໂຕຊີ້ວັດທີ່ເກີນເກນໃນເດືອນນີ້ (ຖ້າມີ)
+        const alertIndNames = [];
+        activeInds.forEach(ind => {
+          waterData.forEach(rec => {
+            if (trend12Company !== 'ALL' && rec.fbKey !== trend12Company) return;
+            stationsOf(rec).forEach(st => {
+              if (trend12Station !== 'ALL') {
+                const stId = `${st.code || ''}|${st.name || ''}`;
+                if (stId !== trend12Station) return;
+              }
+              const sYM = getStationSampleMonth(st, rec);
+              if (sYM === m.ym) {
+                const v = num(st.customs ? st.customs[ind.key] : undefined);
+                if (v !== null && isOutOfThreshold(ind.key, v)) {
+                  if (!alertIndNames.includes(ind.name)) alertIndNames.push(ind.name);
+                }
+              }
+            });
+          });
+        });
+
+        let momBadge = '-';
+        if (m.momDiff !== null) {
+          if (m.momDiff > 0) {
+            momBadge = `<span class="text-indigo-600 font-semibold inline-flex items-center gap-0.5">▲ +${m.momPct.toFixed(1)}%</span>`;
+          } else if (m.momDiff < 0) {
+            momBadge = `<span class="text-slate-500 font-semibold inline-flex items-center gap-0.5">▼ ${m.momPct.toFixed(1)}%</span>`;
+          } else {
+            momBadge = `<span class="text-slate-500 font-semibold">0%</span>`;
+          }
+        }
+
+        const alertBadge = m.isAlert
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">⚠️ ${m.alertCount} (${m.alertRate.toFixed(1)}%)</span>`
+          : `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700">0</span>`;
+
+        const statusBadge = m.isAlert
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200" title="${escAttr('ເກີນເກນ: ' + alertIndNames.join(', '))}">⚠️ ເກີນເກນ (${alertIndNames.length} ໂຕ)</span>`
+          : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">✅ ປົກກະຕິທຸກໂຕ</span>`;
+
+        rowsHtml += `
+          <tr class="hover:bg-indigo-50/40 transition">
+            <td class="p-2.5 text-center font-bold text-slate-500">${idx + 1}</td>
+            <td class="p-2.5 font-bold text-indigo-950">${monthName}</td>
+            <td class="p-2.5 text-center font-mono font-semibold text-slate-700">${m.count}</td>
+            <td class="p-2.5 text-center font-medium text-indigo-700" colspan="3">
+              <span class="inline-flex items-center gap-1.5 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">
+                <span>🧪 ທົດສອບ ${m.testedInds} ຄ່າ</span>
+                <span class="text-slate-400">·</span>
+                <button type="button" class="text-[11px] text-indigo-600 hover:underline font-bold" onclick="set12MonthView('matrix')" title="ເບິ່ງຕາຕະລາງປຽບທຽບທຸກໂຕຊີ້ວັດ">ເບິ່ງ Matrix ↗</button>
+              </span>
+            </td>
+            <td class="p-2.5 text-center">${alertBadge}</td>
+            <td class="p-2.5 text-center font-mono text-[11px]">${momBadge}</td>
+            <td class="p-2.5 text-center">${statusBadge}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = rowsHtml;
+
+      if (tfoot) {
+        const overallRate = grandTotalTests > 0 ? ((totalAlertsCount / grandTotalTests) * 100).toFixed(1) : 0;
+        tfoot.innerHTML = `
+          <tr class="text-slate-800">
+            <td class="p-2.5 text-center" colspan="2">📊 ລວມ 12 ເດືອນ (ທຸກໂຕຊີ້ວັດ)</td>
+            <td class="p-2.5 text-center font-mono font-bold">${totalSamplesCount}</td>
+            <td class="p-2.5 text-center font-bold text-indigo-900" colspan="3">
+              ລວມການທົດສອບ ${grandTotalTests} ຄ່າ ໃນ ${activeInds.length} ໂຕຊີ້ວັດ
+            </td>
+            <td class="p-2.5 text-center font-bold ${totalAlertsCount > 0 ? 'text-rose-600' : 'text-emerald-700'}">${totalAlertsCount} (${overallRate}%)</td>
+            <td class="p-2.5 text-center text-slate-400">-</td>
+            <td class="p-2.5 text-center">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${totalAlertsCount > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'}">
+                ${totalAlertsCount > 0 ? `⚠️ ມີ ${totalAlertsCount} ຄັ້ງເກີນເກນ` : '✅ ທຸກໂຕຊີ້ວັດປົກກະຕິ'}
+              </span>
+            </td>
+          </tr>
+        `;
       }
     }
 
@@ -6145,39 +6903,76 @@
       csv += `ລ/ດ,ເດືອນ,ໂຕຊີ້ວັດ,ຫົວໜ່ວຍ,ຈຳນວນຕົວຢ່າງ,ຄ່າສະເລ່ຍ,ຕ່ຳສຸດ,ສູງສຸດ,ເກີນເກນ (ຄັ້ງ),ອັດຕາເກີນເກນ (%),ສະຖານະ\n`;
 
       let rowNo = 1;
-      const curInd = activeInds.find(i => i.key === trend12Indicator) || activeInds[0];
 
-      months.forEach(ym => {
-        const monthName = formatLaoMonthYear(ym);
-        const matched = [];
-        waterData.forEach(rec => {
-          if (trend12Company !== 'ALL' && rec.fbKey !== trend12Company) return;
-          stationsOf(rec).forEach(st => {
-            if (trend12Station !== 'ALL') {
-              const stId = `${st.code || ''}|${st.name || ''}`;
-              if (stId !== trend12Station) return;
-            }
-            const sYM = getStationSampleMonth(st, rec);
-            if (sYM === ym) {
-              const val = num(st.customs ? st.customs[curInd.key] : undefined);
-              if (val !== null) matched.push({ val });
+      if (trend12Indicator === 'ALL') {
+        // ສົ່ງອອກທຸກໂຕຊີ້ວັດແຍກຕາມແຕ່ລະເດືອນ
+        activeInds.forEach(ind => {
+          months.forEach(ym => {
+            const monthName = formatLaoMonthYear(ym);
+            const matched = [];
+            waterData.forEach(rec => {
+              if (trend12Company !== 'ALL' && rec.fbKey !== trend12Company) return;
+              stationsOf(rec).forEach(st => {
+                if (trend12Station !== 'ALL') {
+                  const stId = `${st.code || ''}|${st.name || ''}`;
+                  if (stId !== trend12Station) return;
+                }
+                const sYM = getStationSampleMonth(st, rec);
+                if (sYM === ym) {
+                  const val = num(st.customs ? st.customs[ind.key] : undefined);
+                  if (val !== null) matched.push({ val });
+                }
+              });
+            });
+
+            if (matched.length > 0) {
+              const vals = matched.map(m => m.val);
+              const avg = (+((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(3)));
+              const min = (+(Math.min(...vals).toFixed(3)));
+              const max = (+(Math.max(...vals).toFixed(3)));
+              const alertCount = matched.filter(m => isOutOfThreshold(ind.key, m.val)).length;
+              const alertRate = ((alertCount / matched.length) * 100).toFixed(1);
+              const status = alertCount > 0 ? 'ເກີນເກນ' : 'ປົກກະຕິ';
+              csv += `${rowNo++},"${monthName}","${ind.name}","${ind.unit || ''}",${matched.length},${avg},${min},${max},${alertCount},${alertRate}%,"${status}"\n`;
+            } else {
+              csv += `${rowNo++},"${monthName}","${ind.name}","${ind.unit || ''}",0,-,-,-,0,0%,"ບໍ່ມີຕົວຢ່າງ"\n`;
             }
           });
         });
+      } else {
+        const curInd = activeInds.find(i => i.key === trend12Indicator) || activeInds[0];
+        months.forEach(ym => {
+          const monthName = formatLaoMonthYear(ym);
+          const matched = [];
+          waterData.forEach(rec => {
+            if (trend12Company !== 'ALL' && rec.fbKey !== trend12Company) return;
+            stationsOf(rec).forEach(st => {
+              if (trend12Station !== 'ALL') {
+                const stId = `${st.code || ''}|${st.name || ''}`;
+                if (stId !== trend12Station) return;
+              }
+              const sYM = getStationSampleMonth(st, rec);
+              if (sYM === ym) {
+                const val = num(st.customs ? st.customs[curInd.key] : undefined);
+                if (val !== null) matched.push({ val });
+              }
+            });
+          });
 
-        if (matched.length > 0) {
-          const vals = matched.map(m => m.val);
-          const avg = (+((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(3)));
-          const min = (+(Math.min(...vals).toFixed(3)));
-          const max = (+(Math.max(...vals).toFixed(3)));
-          const alertCount = matched.filter(m => isOutOfThreshold(curInd.key, m.val)).length;
-          const alertRate = ((alertCount / matched.length) * 100).toFixed(1);
-          const status = alertCount > 0 ? 'ເກີນເກນ' : 'ປົກກະຕິ';
-          csv += `${rowNo++},"${monthName}","${curInd.name}","${curInd.unit || ''}",${matched.length},${avg},${min},${max},${alertCount},${alertRate}%,"${status}"\n`;
-        } else {
-          csv += `${rowNo++},"${monthName}","${curInd.name}","${curInd.unit || ''}",0,-,-,-,0,0%,"ບໍ່ມີຕົວຢ່າງ"\n`;
-        }
-      });
+          if (matched.length > 0) {
+            const vals = matched.map(m => m.val);
+            const avg = (+((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(3)));
+            const min = (+(Math.min(...vals).toFixed(3)));
+            const max = (+(Math.max(...vals).toFixed(3)));
+            const alertCount = matched.filter(m => isOutOfThreshold(curInd.key, m.val)).length;
+            const alertRate = ((alertCount / matched.length) * 100).toFixed(1);
+            const status = alertCount > 0 ? 'ເກີນເກນ' : 'ປົກກະຕິ';
+            csv += `${rowNo++},"${monthName}","${curInd.name}","${curInd.unit || ''}",${matched.length},${avg},${min},${max},${alertCount},${alertRate}%,"${status}"\n`;
+          } else {
+            csv += `${rowNo++},"${monthName}","${curInd.name}","${curInd.unit || ''}",0,-,-,-,0,0%,"ບໍ່ມີຕົວຢ່າງ"\n`;
+          }
+        });
+      }
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -6194,7 +6989,7 @@
       if(waterData.length === 0) return Swal.fire({ icon: 'info', title: 'ບໍ່ມີຂໍ້ມູນ' });
       
       let customHead = valueInds().map(i => i.name).join(',');
-      let csv = `\uFEFFNo.,Company,Sampling Date,Station Code,Station Name,Province,Latitude,Longitude,${customHead},Status,Recorded By,Timestamp\n`;
+      let csv = `\uFEFFNo.,Company,Sampling Date,Station Code,Station Name,Province,Latitude,Longitude,${customHead},QWI,QWI Interpretation,Status,Recorded By,Timestamp\n`;
       
       let count = 1;
       waterData.forEach((r) => {
@@ -6202,7 +6997,11 @@
         const stations = r.stations || [r];
         stations.forEach(st => {
           let cVals = valueInds().map(i => st.customs ? (st.customs[i.key] ?? '-') : '-').join(',');
-          csv += `${count++},"${company}","${st.sampleDate || ''}","${st.code}","${st.name}","${st.province}",${st.lat},${st.lng},${cVals},"${st.status ? st.status.text : 'Normal'}","${r.recordedBy || 'ບໍ່ລະບຸ'}","${r.date}"\n`;
+          const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-') ? st.qwi : calculateAutoQWI(st.customs || {});
+          const qi = interpretQWI(qRaw);
+          const qwiVal = qi ? (qi.score !== '-' ? qi.score : '') : (st.qwi ?? '');
+          const qwiInterp = qi ? `"${qi.label} - ${qi.desc.replace(/"/g, '""')}"` : '""';
+          csv += `${count++},"${company}","${st.sampleDate || ''}","${st.code}","${st.name}","${st.province}",${st.lat},${st.lng},${cVals},${qwiVal},${qwiInterp},"${st.status ? st.status.text : 'Normal'}","${r.recordedBy || 'ບໍ່ລະບຸ'}","${r.date}"\n`;
         });
       });
 
