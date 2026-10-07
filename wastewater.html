@@ -1918,7 +1918,55 @@ var INITIAL_PROJECTS = [
   "ການທ່ອງທ່ຽວ ແລະ ບໍລິການ (ໂຮງແຮມ, ຣີສອດ)",
   "ອຸດສາຫະກຳເຄມີ ແລະ ສິ່ງທໍ",
   "ອື່ນໆ"
-], RECEIVING_WATER_BODY_TYPES = [
+];
+function getCustomProjectCategories() {
+  try {
+    const saved = localStorage.getItem("custom_wastewater_project_categories");
+    if (saved) {
+      const arr = JSON.parse(saved);
+      if (Array.isArray(arr)) {
+        return arr.filter(c => typeof c === "string" && c.trim() && !PROJECT_CATEGORIES.includes(c.trim()));
+      }
+    }
+  } catch (e) {}
+  return [];
+}
+function saveCustomProjectCategory(newCat) {
+  if (!newCat || typeof newCat !== "string") return false;
+  const trimmed = newCat.trim();
+  if (!trimmed || PROJECT_CATEGORIES.includes(trimmed)) return false;
+  try {
+    const list = getCustomProjectCategories();
+    if (!list.includes(trimmed)) {
+      list.push(trimmed);
+      localStorage.setItem("custom_wastewater_project_categories", JSON.stringify(list));
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+function deleteCustomProjectCategory(cat) {
+  if (!cat || typeof cat !== "string") return false;
+  try {
+    const list = getCustomProjectCategories().filter(c => c !== cat.trim());
+    localStorage.setItem("custom_wastewater_project_categories", JSON.stringify(list));
+    return true;
+  } catch (e) {}
+  return false;
+}
+function getAllProjectCategories(extraFromProjects = []) {
+  const custom = getCustomProjectCategories();
+  const set = new Set([...PROJECT_CATEGORIES]);
+  custom.forEach(c => set.add(c));
+  if (Array.isArray(extraFromProjects)) {
+    extraFromProjects.forEach(p => {
+      const c = p && (typeof p === "string" ? p : p.projectCategory);
+      if (c && typeof c === "string" && c.trim()) set.add(c.trim());
+    });
+  }
+  return Array.from(set);
+}
+var RECEIVING_WATER_BODY_TYPES = [
   "ແມ່ນໍ້າໃຫຍ່ (Mekong River & Major Rivers)",
   "ສາຂານໍ້າ / ຫ້ວຍ / ນໍ້າເຊ (Tributary / Stream)",
   "ໜອງ / ບຶງທໍາມະຊາດ (Natural Lake / Wetland)",
@@ -2660,7 +2708,7 @@ var ProjectTable = ({
             className: "bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5 font-medium text-slate-700 outline-hidden",
             children: [
               /* @__PURE__ */ jsx3("option", { value: "all", children: "ທຸກປະເພດກິດຈະການ" }),
-              PROJECT_CATEGORIES.map((cat) => /* @__PURE__ */ jsx3("option", { value: cat, children: cat }, cat))
+              getAllProjectCategories(projects).map((cat) => /* @__PURE__ */ jsx3("option", { value: cat, children: cat }, cat))
             ]
           }
         ),
@@ -5551,7 +5599,7 @@ var ExportReports = ({
                 className: "w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-medium",
                 children: [
                   /* @__PURE__ */ jsx6("option", { value: "all", children: "ທຸກປະເພດກິດຈະການ" }),
-                  PROJECT_CATEGORIES.map((cat) => /* @__PURE__ */ jsx6("option", { value: cat, children: cat }, cat))
+                  getAllProjectCategories(projects).map((cat) => /* @__PURE__ */ jsx6("option", { value: cat, children: cat }, cat))
                 ]
               }
             )
@@ -7243,20 +7291,36 @@ var COMMON_PARAM_PRESETS = [
     approvedBy: "",
     feePaid: 0,
     notes: ""
-  });
+  }), [isCustomCategory, setIsCustomCategory] = useState9(false), [customCategoryInput, setCustomCategoryInput] = useState9(""), [availableCategories, setAvailableCategories] = useState9(() => getAllProjectCategories());
   useEffect4(() => {
-    if (initialData)
+    if (!isOpen) {
+      setIsCustomCategory(false);
+      setCustomCategoryInput("");
+      return;
+    }
+    const currentAllCats = getAllProjectCategories();
+    setAvailableCategories(currentAllCats);
+    if (initialData) {
+      const initCat = initialData.projectCategory || PROJECT_CATEGORIES[0];
+      if (initCat && !currentAllCats.includes(initCat)) {
+        setAvailableCategories([...currentAllCats, initCat]);
+      }
+      setIsCustomCategory(false);
+      setCustomCategoryInput("");
       setFormData({
         ...initialData,
+        projectCategory: initCat,
         renewalCount: typeof initialData.renewalCount == "number" ? initialData.renewalCount : initialData.renewalHistory?.length || 0,
         renewalHistory: Array.isArray(initialData.renewalHistory) ? initialData.renewalHistory : []
       });
-    else {
+    } else {
+      setIsCustomCategory(false);
+      setCustomCategoryInput("");
       let defaultIssue = (/* @__PURE__ */ new Date()).toISOString().split("T")[0], defaultExpiry = new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1e3).toISOString().split("T")[0];
       setFormData({
         id: `proj-ww-${Date.now()}`,
         projectName: "",
-        projectCategory: PROJECT_CATEGORIES[0],
+        projectCategory: currentAllCats[0] || PROJECT_CATEGORIES[0],
         ownerName: "",
         contactPhone: "",
         contactEmail: "",
@@ -7274,7 +7338,7 @@ var COMMON_PARAM_PRESETS = [
           bod: 18,
           cod: 55,
           ph: 7.2,
-          tss: 20,
+          tss: 25,
           status: "compliant",
           customParameters: []
         },
@@ -7514,14 +7578,25 @@ var COMMON_PARAM_PRESETS = [
       )
     ] }),
     /* @__PURE__ */ jsxs9("form", { onSubmit: async (e) => {
-      if (e.preventDefault(), !formData.projectName || !formData.permitNumber) {
+      e.preventDefault();
+      if (!formData.projectName || !formData.permitNumber) {
         alert("ກະລຸນາປ້ອນຊື່ໂຄງການ ແລະ ເລກທີໃບອະນຸຍາດປ່ອຍນໍ້າເປື້ອນ");
         return;
+      }
+      const finalCategory = (isCustomCategory ? customCategoryInput.trim() : (formData.projectCategory || "")).trim();
+      if (!finalCategory) {
+        alert("ກະລຸນາເລືອກ ຫຼື ປ້ອນປະເພດກິດຈະການທີ່ປ່ອຍນໍ້າເປື້ອນ");
+        return;
+      }
+      if (isCustomCategory && finalCategory) {
+        saveCustomProjectCategory(finalCategory);
+        setAvailableCategories(getAllProjectCategories());
       }
       try {
         setIsSubmitting(!0);
         let projectToSave = {
           ...formData,
+          projectCategory: finalCategory,
           id: formData.id || `proj-ww-${Date.now()}`,
           createdAt: formData.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
           updatedAt: (/* @__PURE__ */ new Date()).toISOString()
@@ -7553,16 +7628,153 @@ var COMMON_PARAM_PRESETS = [
               }
             )
           ] }),
-          /* @__PURE__ */ jsxs9("div", { children: [
-            /* @__PURE__ */ jsx9("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ປະເພດກິດຈະການ *" }),
-            /* @__PURE__ */ jsx9(
-              "select",
-              {
-                value: formData.projectCategory || "",
-                onChange: (e) => setFormData({ ...formData, projectCategory: e.target.value }),
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500",
-                children: PROJECT_CATEGORIES.map((cat) => /* @__PURE__ */ jsx9("option", { value: cat, children: cat }, cat))
-              }
+          /* @__PURE__ */ jsxs9("div", { className: "space-y-1.5", children: [
+            /* @__PURE__ */ jsxs9("div", { className: "flex items-center justify-between", children: [
+              /* @__PURE__ */ jsxs9("label", { className: "block text-xs font-semibold text-slate-700", children: [
+                "ປະເພດກິດຈະການ ທີ່ປ່ອຍນໍ້າເປື້ອນ *",
+                formData.projectCategory && !PROJECT_CATEGORIES.includes(formData.projectCategory) && !isCustomCategory && /* @__PURE__ */ jsx9("span", { className: "ml-1.5 px-1.5 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 rounded-md", children: "✨ ກຳນົດເອງ" })
+              ] }),
+              /* @__PURE__ */ jsx9(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => {
+                    if (isCustomCategory) {
+                      setIsCustomCategory(false);
+                    } else {
+                      setIsCustomCategory(true);
+                      setCustomCategoryInput("");
+                    }
+                  },
+                  className: "text-xs font-semibold px-2 py-0.5 rounded-lg border transition-all flex items-center gap-1 cursor-pointer " + (isCustomCategory ? "text-slate-600 bg-slate-100 border-slate-300 hover:bg-slate-200" : "text-sky-700 bg-sky-50 border-sky-200 hover:bg-sky-100"),
+                  title: isCustomCategory ? "ກັບຄືນເລືອກຈາກລາຍການ" : "ກຳນົດປະເພດກິດຈະການໃໝ່ຂຶ້ນດ້ວຍຕົນເອງ",
+                  children: isCustomCategory
+                    ? "📋 ເລືອກຈາກລາຍການ"
+                    : "➕ ກຳນົດປະເພດເອງ"
+                }
+              )
+            ] }),
+            !isCustomCategory ? (
+              /* @__PURE__ */ jsxs9("div", { className: "space-y-1", children: [
+                /* @__PURE__ */ jsxs9(
+                  "select",
+                  {
+                    value: formData.projectCategory || "",
+                    onChange: (e) => {
+                      if (e.target.value === "__NEW_CUSTOM__") {
+                        setIsCustomCategory(true);
+                        setCustomCategoryInput("");
+                      } else {
+                        setFormData({ ...formData, projectCategory: e.target.value });
+                      }
+                    },
+                    className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 bg-white",
+                    children: [
+                      /* @__PURE__ */ jsx9("optgroup", {
+                        label: "📋 ປະເພດມາດຕະຖານ",
+                        children: PROJECT_CATEGORIES.map((cat) => /* @__PURE__ */ jsx9("option", { value: cat, children: cat }, cat))
+                      }),
+                      availableCategories.filter(cat => !PROJECT_CATEGORIES.includes(cat)).length > 0 && /* @__PURE__ */ jsx9("optgroup", {
+                        label: "✨ ປະເພດທີ່ກຳນົດເອງ (Custom Categories)",
+                        children: availableCategories.filter(cat => !PROJECT_CATEGORIES.includes(cat)).map((cat) => /* @__PURE__ */ jsxs9("option", { value: cat, children: [`✨ ${cat}`] }, cat))
+                      }),
+                      /* @__PURE__ */ jsx9("option", {
+                        value: "__NEW_CUSTOM__",
+                        className: "font-semibold text-sky-600",
+                        children: "➕ + ກຳນົດປະເພດໃໝ່ດ້ວຍຕົນເອງ..."
+                      })
+                    ]
+                  }
+                ),
+                formData.projectCategory && !PROJECT_CATEGORIES.includes(formData.projectCategory) && /* @__PURE__ */ jsxs9("div", {
+                  className: "flex items-center justify-between text-[11px] text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200/60",
+                  children: [
+                    /* @__PURE__ */ jsxs9("span", { children: ["ປະເພດກຳນົດເອງ: ", /* @__PURE__ */ jsx9("strong", { className: "text-slate-800", children: formData.projectCategory })] }),
+                    /* @__PURE__ */ jsx9("button", {
+                      type: "button",
+                      onClick: () => {
+                        if (confirm(`ຕ້ອງການລຶບປະເພດ "${formData.projectCategory}" ອອກຈາກລາຍການບັນທຶກບໍ່?`)) {
+                          deleteCustomProjectCategory(formData.projectCategory);
+                          const updated = getAllProjectCategories();
+                          setAvailableCategories(updated);
+                          setFormData({ ...formData, projectCategory: updated[0] || PROJECT_CATEGORIES[0] });
+                        }
+                      },
+                      className: "text-red-500 hover:text-red-700 underline ml-2 cursor-pointer",
+                      children: "ລຶບອອກຈາກລາຍການ"
+                    })
+                  ]
+                })
+              ] })
+            ) : (
+              /* @__PURE__ */ jsxs9("div", { className: "p-3 bg-gradient-to-br from-sky-50 to-blue-50/50 border border-sky-200 rounded-2xl space-y-2 shadow-xs", children: [
+                /* @__PURE__ */ jsxs9("div", { className: "flex items-center justify-between text-xs text-sky-900 font-semibold", children: [
+                  /* @__PURE__ */ jsx9("span", { children: "✏️ ປ້ອນຊື່ປະເພດກິດຈະການທີ່ຕ້ອງການກຳນົດເອງ:" }),
+                  /* @__PURE__ */ jsx9("button", {
+                    type: "button",
+                    onClick: () => setIsCustomCategory(false),
+                    className: "text-slate-400 hover:text-slate-600 text-xs cursor-pointer",
+                    children: "✕ ຍົກເລີກ"
+                  })
+                ] }),
+                /* @__PURE__ */ jsxs9("div", { className: "flex gap-2", children: [
+                  /* @__PURE__ */ jsx9(
+                    "input",
+                    {
+                      type: "text",
+                      autoFocus: true,
+                      value: customCategoryInput,
+                      onChange: (e) => setCustomCategoryInput(e.target.value),
+                      onKeyDown: (e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const val = customCategoryInput.trim();
+                          if (val) {
+                            saveCustomProjectCategory(val);
+                            const updated = getAllProjectCategories();
+                            setAvailableCategories(updated);
+                            setFormData({ ...formData, projectCategory: val });
+                            setIsCustomCategory(false);
+                            setCustomCategoryInput("");
+                          }
+                        }
+                      },
+                      placeholder: "ຕົວຢ່າງ: ໂຮງງານຜະລິດຢາງລົດ, ໂຮງງານແປຮູບໄມ້, ສູນລ້າງລົດຂະໜາດໃຫຍ່...",
+                      className: "flex-1 px-3 py-2 text-sm border border-sky-300 bg-white rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-800 font-medium"
+                    }
+                  ),
+                  /* @__PURE__ */ jsx9(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => {
+                        const val = customCategoryInput.trim();
+                        if (!val) {
+                          alert("ກະລຸນາປ້ອນຊື່ປະເພດກິດຈະການ");
+                          return;
+                        }
+                        saveCustomProjectCategory(val);
+                        const updated = getAllProjectCategories();
+                        setAvailableCategories(updated);
+                        setFormData({ ...formData, projectCategory: val });
+                        setIsCustomCategory(false);
+                        setCustomCategoryInput("");
+                      },
+                      className: "px-3.5 py-2 text-xs font-bold text-white bg-sky-600 hover:bg-sky-700 active:scale-95 rounded-xl transition-all shadow-xs shrink-0 flex items-center gap-1 cursor-pointer",
+                      children: "✓ ນໍາໃຊ້"
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxs9("div", { className: "flex items-center justify-between text-[11px] text-sky-700", children: [
+                  /* @__PURE__ */ jsx9("span", { children: "💡 ລະບົບຈະບັນທຶກປະເພດໃໝ່ນີ້ໄວ້ໃນລາຍການໃຫ້ເລືອກໃຊ້ໄດ້ຕະຫຼອດ" }),
+                  /* @__PURE__ */ jsx9("button", {
+                    type: "button",
+                    onClick: () => setIsCustomCategory(false),
+                    className: "text-slate-500 hover:text-slate-700 underline cursor-pointer",
+                    children: "ເລືອກຈາກລາຍການເກົ່າ"
+                  })
+                ] })
+              ] })
             )
           ] }),
           /* @__PURE__ */ jsxs9("div", { children: [
