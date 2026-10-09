@@ -18,6 +18,7 @@
 
   <!-- Tailwind CSS v4 (ແປງ class ໃນ browser) -->
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style type="text/tailwindcss">
 
@@ -591,13 +592,24 @@ var PATHS = {
   projects: "water_usage/projects",
   messages: "water_usage/messages",
   logs: "water_usage/audit_logs",
-  users: "system_config/users"          // ບັນຊີຜູ້ໃຊ້ຮ່ວມກັບ ລະບົບຄຸນນະພາບນ້ຳ
+  users: "system_config/users",          // ບັນຊີຜູ້ໃຊ້ຮ່ວມກັບ ລະບົບຄຸນນະພາບນ້ຳ
+  exportSecurity: "system_config/export_security" // ລະຫັດດາວໂຫຼດຮ່ວມກັບ ລະບົບຄຸນນະພາບນ້ຳ
 };
 var LOCAL_STORAGE_KEY = "lao_water_projects_cache_v1";
 var LOCAL_MESSAGES_KEY = "lao_water_messages_cache_v1";
 var LOCAL_LOGS_KEY = "lao_water_logs_cache_v1";
 var LOCAL_USERS_KEY = "lao_water_users_shared_cache_v2";
 var MIGRATE_FLAG = "lao_water_usage_migrated_to_rtdb";
+
+// ຟັງການປ່ຽນແປງລະຫັດດາວໂຫຼດຈາກ Super Admin (ຊິງຄ໌ຮ່ວມກັບລະບົບຄຸນນະພາບນ້ຳ)
+try {
+  onValue(dbRef(rtdb, PATHS.exportSecurity), (snap) => {
+    const data = snap.val();
+    if (data && data.passcode) {
+      localStorage.setItem("water_export_passcode", String(data.passcode));
+    }
+  }, (err) => console.warn("exportSecurity sync error:", err));
+} catch (e) {}
 
 // Firebase ບໍ່ຮັບ undefined / NaN
 function clean(v) {
@@ -774,6 +786,121 @@ async function saveUserProfile(user) {
 async function deleteUserProfile(userId) {
   if (!userId || userId === "default-admin" || userId === "default-staff" || userId === "guest") return;
   await remove(dbRef(rtdb, `${PATHS.users}/${safeKey(userId)}`));
+}
+
+/* ==========================================================================
+   🔒 ການກວດສອບສິດດາວໂຫຼດ/ເອົາຂໍ້ມູນອອກ (Export Security & Passcode Check)
+   ຜູ້ນໍາໃຊ້ທົ່ວໄປ (Viewer) ຫຼື ການເຂົ້າລະບົບທີ່ບໍ່ໄດ້ຜ່ານການລອກອິນ ບໍ່ສາມາດດາວໂຫຼດໄດ້
+   ຖ້າຕ້ອງການດາວໂຫຼດ ຕ້ອງມີລະຫັດໃສ່ກ່ອນ ຊຶ່ງ Super Admin ເປັນຜູ້ກໍານົດໄວ້
+   ========================================================================== */
+var DEFAULT_EXPORT_PASSCODE = "8888";
+
+function getExportPasscode() {
+  return localStorage.getItem("water_export_passcode") || DEFAULT_EXPORT_PASSCODE;
+}
+
+function setExportPasscode(val, updatedBy = "Super Admin") {
+  const code = String(val || "").trim();
+  localStorage.setItem("water_export_passcode", code);
+  try {
+    set(dbRef(rtdb, PATHS.exportSecurity), {
+      passcode: code,
+      updatedAt: new Date().toISOString(),
+      updatedBy: updatedBy || "Super Admin"
+    });
+  } catch (e) {
+    console.warn("exportSecurity save error:", e);
+  }
+}
+
+function isElevatedExportUser() {
+  let u = null;
+  try {
+    u = JSON.parse(localStorage.getItem("lao_water_current_user_v2") || sessionStorage.getItem("waterSession") || "null");
+  } catch (e) {}
+  if (!u || u.id === "guest") return false;
+  const role = String(u.role || "").toLowerCase();
+  return role === "admin" || role === "officer" || role === "super_admin" || role === "staff";
+}
+
+async function requireWaterExportPermission(onSuccess, label = "ດາວໂຫຼດຂໍ້ມູນ") {
+  // 1. Super Admin ຫຼື Staff (Officer) ທີ່ເຂົ້າສູ່ລະບົບ → ອະນຸຍາດໂດຍກົງ
+  if (isElevatedExportUser()) {
+    if (typeof onSuccess === "function") onSuccess();
+    return true;
+  }
+
+  // 2. ຫາກເຄີຍຢືນຢັນລະຫັດຜ່ານຖືກຕ້ອງໃນ Session ນີ້ແລ້ວ → ອະນຸຍາດເລີຍ
+  if (sessionStorage.getItem("water_export_authorized") === "true") {
+    if (typeof onSuccess === "function") onSuccess();
+    return true;
+  }
+
+  // 3. ຜູ້ໃຊ້ທົ່ວໄປ (Viewer) ຫຼື Guest ບໍ່ໄດ້ເຂົ້າສູ່ລະບົບ → ຕ້ອງໃສ່ລະຫັດທີ່ Super Admin ກຳນົດ
+  const correctCode = getExportPasscode();
+
+  if (typeof Swal !== "undefined") {
+    const { value: enteredCode, isConfirmed } = await Swal.fire({
+      title: "🔒 ໃສ່ລະຫັດເພື່ອດາວໂຫຼດຂໍ້ມູນ",
+      html: `
+        <div class="text-left text-xs text-slate-600 space-y-2 mb-3">
+          <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 leading-relaxed">
+            <b>⚠️ ແຈ້ງເຕືອນຄວາມປອດໄພ:</b> ຜູ້ນໍາໃຊ້ທົ່ວໄປ ຫຼື ການເຂົ້າລະບົບທີ່ບໍ່ໄດ້ຜ່ານການລອກອິນ ບໍ່ສາມາດດາວໂຫຼດ ຫຼື ເອົາຂໍ້ມູນອອກຈາກລະບົບໄດ້.
+          </div>
+          <p class="text-slate-700">ກະລຸນາໃສ່ <b>ລະຫັດອະນຸຍາດດາວໂຫຼດ</b> ທີ່ Super Admin ໄດ້ກຳນົດໄວ້ ເພື່ອດາວໂຫຼດ/ເອົາຂໍ້ມູນອອກ (${String(label).replace(/[<>&]/g, "")}):</p>
+        </div>
+      `,
+      input: "password",
+      inputPlaceholder: "ປ້ອນລະຫັດອະນຸຍາດດາວໂຫຼດ (Export Passcode)...",
+      inputAttributes: {
+        autocapitalize: "off",
+        autocorrect: "off"
+      },
+      showCancelButton: true,
+      confirmButtonText: "🔓 ຢືນຢັນດາວໂຫຼດ",
+      cancelButtonText: "ຍົກເລີກ",
+      confirmButtonColor: "#0284c7",
+      cancelButtonColor: "#64748b",
+      footer: '<span class="text-[11px] text-slate-400">💡 ຕິດຕໍ່ Super Admin ຫາກທ່ານຕ້ອງການລະຫັດອະນຸຍາດດາວໂຫຼດ</span>',
+      preConfirm: (val) => {
+        if (!val) {
+          Swal.showValidationMessage("ກະລຸນາປ້ອນລະຫັດກ່ອນ!");
+          return false;
+        }
+        if (String(val).trim() !== String(correctCode).trim()) {
+          Swal.showValidationMessage("❌ ລະຫັດບໍ່ຖືກຕ້ອງ! ກະລຸນາຕິດຕໍ່ Super Admin");
+          return false;
+        }
+        return val;
+      }
+    });
+
+    if (isConfirmed && enteredCode) {
+      sessionStorage.setItem("water_export_authorized", "true");
+      Swal.fire({
+        icon: "success",
+        title: "ຢືນຢັນລະຫັດຜ່ານສຳເລັດ!",
+        text: `ກຳລັງດຳເນີນການ ${label}...`,
+        timer: 1200,
+        showConfirmButton: false
+      });
+      if (typeof onSuccess === "function") {
+        setTimeout(onSuccess, 200);
+      }
+      return true;
+    }
+    return false;
+  } else {
+    const entered = window.prompt(`🔒 ໃສ່ລະຫັດອະນຸຍາດດາວໂຫຼດ (ກຳນົດໂດຍ Super Admin) ເພື່ອດາວໂຫຼດ ${label}:`);
+    if (entered && String(entered).trim() === String(correctCode).trim()) {
+      sessionStorage.setItem("water_export_authorized", "true");
+      if (typeof onSuccess === "function") onSuccess();
+      return true;
+    } else if (entered !== null) {
+      alert("❌ ລະຫັດບໍ່ຖືກຕ້ອງ! ກະລຸນາຕິດຕໍ່ Super Admin");
+    }
+    return false;
+  }
 }
 
 function exportSystemBackup() {
@@ -1513,6 +1640,11 @@ window.downloadProjectTemplate = downloadProjectTemplate;
 // src/lib/exportUtils.ts
 import * as XLSX from "xlsx";
 function exportProjectsToExcel(projects, filename = "Water_Projects_Lao") {
+  requireWaterExportPermission(() => {
+    _doExportProjectsToExcel(projects, filename);
+  }, "ໄຟລ໌ Excel ໂຄງການນໍາໃຊ້ນໍ້າ");
+}
+function _doExportProjectsToExcel(projects, filename = "Water_Projects_Lao") {
   const data = projects.map((p, index) => ({
     "ລ/ດ": index + 1,
     "ຊື່ໂຄງການ / ກິດຈະການ": p.projectName,
@@ -1614,6 +1746,11 @@ function exportProjectsToExcel(projects, filename = "Water_Projects_Lao") {
   XLSX.writeFile(workbook, `${filename}_${dateStr}.xlsx`);
 }
 function exportProjectsToWord(projects, title = "ບົດລາຍງານຂໍ້ມູນການນໍາໃຊ້ນໍ້າຂອງໂຄງການ ຫຼື ກິດຈະການ") {
+  requireWaterExportPermission(() => {
+    _doExportProjectsToWord(projects, title);
+  }, "ໄຟລ໌ Word ໂຄງການນໍາໃຊ້ນໍ້າ");
+}
+function _doExportProjectsToWord(projects, title = "ບົດລາຍງານຂໍ້ມູນການນໍາໃຊ້ນໍ້າຂອງໂຄງການ ຫຼື ກິດຈະການ") {
   const currentDate = (/* @__PURE__ */ new Date()).toLocaleDateString("lo-LA", {
     year: "numeric",
     month: "long",
@@ -1726,6 +1863,11 @@ function exportProjectsToWord(projects, title = "ບົດລາຍງານຂ�
   URL.revokeObjectURL(url);
 }
 function printProjectsToPDF(projects) {
+  requireWaterExportPermission(() => {
+    _doPrintProjectsToPDF(projects);
+  }, "ພິມ / ສົ່ງອອກ PDF ໂຄງການນໍາໃຊ້ນໍ້າ");
+}
+function _doPrintProjectsToPDF(projects) {
   const currentDate = (/* @__PURE__ */ new Date()).toLocaleDateString("lo-LA", {
     year: "numeric",
     month: "long",
@@ -1934,6 +2076,11 @@ function getActionLaoText(action) {
   }
 }
 function exportAuditLogsToExcel(logs, filename = "Data_Operation_Report") {
+  requireWaterExportPermission(() => {
+    _doExportAuditLogsToExcel(logs, filename);
+  }, "ໄຟລ໌ Excel ປະຫວັດການດໍາເນີນງານ");
+}
+function _doExportAuditLogsToExcel(logs, filename = "Data_Operation_Report") {
   const data = logs.map((log, index) => ({
     "ລ/ດ": index + 1,
     "ວັນທີ ແລະ ເວລາ": new Date(log.timestamp).toLocaleString("lo-LA", {
@@ -1973,6 +2120,11 @@ function exportAuditLogsToExcel(logs, filename = "Data_Operation_Report") {
   XLSX.writeFile(workbook, `${filename}_${dateStr}.xlsx`);
 }
 function exportAuditLogsToWord(logs, title = "ບົດລາຍງານການເພີ່ມ, ແກ້ໄຂ ແລະ ລົບຂໍ້ມູນໃນລະບົບ") {
+  requireWaterExportPermission(() => {
+    _doExportAuditLogsToWord(logs, title);
+  }, "ໄຟລ໌ Word ປະຫວັດການດໍາເນີນງານ");
+}
+function _doExportAuditLogsToWord(logs, title = "ບົດລາຍງານການເພີ່ມ, ແກ້ໄຂ ແລະ ລົບຂໍ້ມູນໃນລະບົບ") {
   const currentDate = (/* @__PURE__ */ new Date()).toLocaleDateString("lo-LA", {
     year: "numeric",
     month: "long",
@@ -2096,6 +2248,11 @@ function exportAuditLogsToWord(logs, title = "ບົດລາຍງານກາ�
   URL.revokeObjectURL(url);
 }
 function printAuditLogsToPDF(logs, title = "ບົດລາຍງານການເພີ່ມ, ແກ້ໄຂ ແລະ ລົບຂໍ້ມູນໃນລະບົບ") {
+  requireWaterExportPermission(() => {
+    _doPrintAuditLogsToPDF(logs, title);
+  }, "ພິມ / ສົ່ງອອກ PDF ປະຫວັດການດໍາເນີນງານ");
+}
+function _doPrintAuditLogsToPDF(logs, title = "ບົດລາຍງານການເພີ່ມ, ແກ້ໄຂ ແລະ ລົບຂໍ້ມູນໃນລະບົບ") {
   const currentDate = (/* @__PURE__ */ new Date()).toLocaleDateString("lo-LA", {
     year: "numeric",
     month: "long",
@@ -4121,6 +4278,16 @@ var ExportReports = ({
           "ສູນສົ່ງອອກບົດລາຍງານຂໍ້ມູນໂຄງການ ຫຼື ກິດຈະການນໍາໃຊ້ນໍ້າ"
         ] }),
         /* @__PURE__ */ jsx5("p", { className: "text-xs text-slate-500 mt-1", children: "ເລືອກຮູບແບບໄຟລ໌ທີ່ຕ້ອງການສົ່ງອອກ (Excel, Word, PDF) ພ້ອມກອງຂໍ້ມູນຕາມເງື່ອນໄຂ ເພື່ອນໍາໃຊ້ເຂົ້າໃນບົດລາຍງານທາງການ" }),
+        /* @__PURE__ */ jsxs5("div", { className: "mt-3 p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-amber-900 text-xs flex items-center justify-between gap-3 flex-wrap", children: [
+          /* @__PURE__ */ jsxs5("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsx5("span", { className: "text-base", children: "🔒" }),
+            /* @__PURE__ */ jsxs5("span", { children: [
+              /* @__PURE__ */ jsx5("b", { children: "ນະໂຍບາຍຄວາມປອດໄພ:" }),
+              " ຜູ້ນໍາໃຊ້ທົ່ວໄປ (Viewer) ຫຼື ການເຂົ້າລະບົບທີ່ບໍ່ໄດ້ຜ່ານການລອກອິນ ຕ້ອງໃສ່ລະຫັດອະນຸຍາດດາວໂຫຼດ ທີ່ Super Admin ກຳນົດໄວ້ ຈຶ່ງຈະສາມາດດາວໂຫຼດ ຫຼື ເອົາຂໍ້ມູນອອກຈາກລະບົບໄດ້."
+            ] })
+          ] }),
+          /* @__PURE__ */ jsx5("span", { className: "text-[11px] text-amber-800/80 font-medium", children: "ລະຫັດຖືກກໍານົດໂດຍ Super Admin" })
+        ] }),
         /* @__PURE__ */ jsxs5("div", { className: "grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-100", children: [
           /* @__PURE__ */ jsxs5("div", { children: [
             /* @__PURE__ */ jsx5("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ກອງຕາມແຂວງ" }),
@@ -4594,25 +4761,27 @@ var BackupManager = ({
   const [fileToRestore, setFileToRestore] = useState6(null);
   const fileInputRef = useRef3(null);
   const handleCreateBackup = () => {
-    setIsBackingUp(true);
-    try {
-      const backupJson = exportSystemBackup();
-      const blob = new Blob([backupJson], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      const dateStr = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-").slice(0, 19);
-      a.href = url;
-      a.download = `Water_Resource_Backup_${dateStr}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error(err);
-      alert("ເກີດຂໍ້ຜິດພາດໃນການສ້າງ Backup");
-    } finally {
-      setTimeout(() => setIsBackingUp(false), 500);
-    }
+    requireWaterExportPermission(() => {
+      setIsBackingUp(true);
+      try {
+        const backupJson = exportSystemBackup();
+        const blob = new Blob([backupJson], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const dateStr = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-").slice(0, 19);
+        a.href = url;
+        a.download = `Water_Resource_Backup_${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error(err);
+        alert("ເກີດຂໍ້ຜິດພາດໃນການສ້າງ Backup");
+      } finally {
+        setTimeout(() => setIsBackingUp(false), 500);
+      }
+    }, "ດາວໂຫຼດໄຟລ໌ Backup ລະບົບ");
   };
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -4878,7 +5047,8 @@ import {
   Trash2 as Trash23,
   Check,
   X as X2,
-  FileText as FileText2
+  FileText as FileText2,
+  Copy as CopyIcon
 } from "lucide-react";
 import { jsx as jsx7, jsxs as jsxs7 } from "react/jsx-runtime";
 /* --- ✏️ ແກ້ໄຂບັນຊີຜູ້ໃຊ້ (Admin): ຊື່ເຂົ້າລະບົບ, ຊື່ເຕັມ, ຕຳແໜ່ງ, ສິດ, ຕັ້ງລະຫັດໃໝ່ ---
@@ -5016,6 +5186,9 @@ var SecurityAndSettings = ({
   const [switchPasswordError, setSwitchPasswordError] = useState7(false);
   const [showSwitchPassword, setShowSwitchPassword] = useState7(false);
   const [userToDelete, setUserToDelete] = useState7(null);
+  const [exportPasscodeVal, setExportPasscodeVal] = useState7(getExportPasscode());
+  const [exportPasscodeSaved, setExportPasscodeSaved] = useState7(false);
+  const [copiedPasscode, setCopiedPasscode] = useState7(false);
   React8.useEffect(() => {
     setProfile(currentUser);
     setPasswordInput(currentUser.password || "");
@@ -5193,6 +5366,20 @@ var SecurityAndSettings = ({
             children: [
               /* @__PURE__ */ jsx7(History2, { size: 14 }),
               /* @__PURE__ */ jsx7("span", { children: "3. ປະຫວັດການດໍາເນີນງານ (Audit Logs)" })
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxs7(
+          "button",
+          {
+            onClick: () => {
+              setExportPasscodeVal(getExportPasscode());
+              setActiveSubTab("exportSecurity");
+            },
+            className: `flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer ${activeSubTab === "exportSecurity" ? "bg-sky-500 text-white shadow-md shadow-sky-500/25" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"}`,
+            children: [
+              /* @__PURE__ */ jsx7(Shield, { size: 14 }),
+              /* @__PURE__ */ jsx7("span", { children: "4. 🔒 ລະຫັດດາວໂຫຼດ (Export Passcode)" })
             ]
           }
         )
@@ -5602,6 +5789,83 @@ var SecurityAndSettings = ({
         ] }),
         /* @__PURE__ */ jsx7("div", { className: "text-[10px] text-slate-400 font-mono shrink-0", children: new Date(log.timestamp).toLocaleString("lo-LA") })
       ] }, log.id)) })
+    ] }),
+    activeSubTab === "exportSecurity" && /* @__PURE__ */ jsxs7("div", { className: "bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-6 max-w-3xl", children: [
+      /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-3 pb-4 border-b border-slate-800", children: [
+        /* @__PURE__ */ jsx7("div", { className: "w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-400/20 text-amber-400 flex items-center justify-center", children: /* @__PURE__ */ jsx7(Shield, { size: 20 }) }),
+        /* @__PURE__ */ jsxs7("div", { children: [
+          /* @__PURE__ */ jsx7("h3", { className: "text-base font-bold text-white", children: "ລະຫັດອະນຸຍາດດາວໂຫຼດຂໍ້ມູນ (Export Security Passcode)" }),
+          /* @__PURE__ */ jsx7("p", { className: "text-xs text-slate-400", children: "ກຳນົດລະຫັດຜ່ານສຳລັບຜູ້ໃຊ້ທົ່ວໄປ (Viewer) ຫຼື ການເຂົ້າລະບົບທີ່ບໍ່ໄດ້ຜ່ານການລອກອິນ" })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs7("div", { className: "p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs space-y-2 leading-relaxed", children: [
+        /* @__PURE__ */ jsxs7("p", { className: "font-bold text-amber-300 flex items-center gap-1.5", children: [
+          /* @__PURE__ */ jsx7("span", { children: "🛡️" }),
+          "ນະໂຍບາຍຄວາມປອດໄພການດາວໂຫຼດຂໍ້ມູນ (Data Export Protection):"
+        ] }),
+        /* @__PURE__ */ jsx7("p", { children: "ຜູ້ນໍາໃຊ້ທົ່ວໄປ (Viewer) ຫຼື ການເຂົ້າລະບົບທີ່ບໍ່ໄດ້ຜ່ານການລອກອິນ ແມ່ນບໍ່ສາມາດດາວໂຫຼດ ຫຼື ເອົາຂໍ້ມູນອອກຈາກລະບົບໄດ້ (ເຊັ່ນ: ໄຟລ໌ Excel, Word, PDF, Backup). ຖ້າຕ້ອງການດາວໂຫຼດ ຕ້ອງມີລະຫັດໃສ່ກ່ອນ ຊຶ່ງລະຫັດແມ່ນ Super Admin ເປັນຜູ້ກໍານົດໄວ້." }),
+        /* @__PURE__ */ jsx7("p", { className: "text-[11px] text-amber-300/80", children: "💡 ລະຫັດນີ້ຈະຖືກນໍາໃຊ້ຮ່ວມກັນທັງ 3 ລະບົບ (ຄຸນນະພາບນ້ຳ, ການນຳໃຊ້ນ້ຳ ແລະ ນ້ຳເປື້ອນ) ຜ່ານ Firebase Realtime Database ໂດຍອັດຕະໂນມັດ." })
+      ] }),
+      currentUser.role === "admin" ? /* @__PURE__ */ jsxs7("div", { className: "space-y-4 p-5 rounded-2xl bg-slate-850 border border-slate-750", children: [
+        /* @__PURE__ */ jsxs7("label", { className: "text-xs font-bold text-slate-200 block", children: [
+          "🔑 ລະຫັດດາວໂຫຼດປັດຈຸບັນ (Export Passcode):",
+          /* @__PURE__ */ jsx7("span", { className: "text-[11px] font-normal text-slate-400 block mt-0.5", children: "Super Admin ສາມາດປ່ຽນລະຫັດນີ້ໄດ້ຕາມຄວາມຕ້ອງການ (ແນະນຳ 4-8 ຕົວເລກ/ອັກສອນ)" })
+        ] }),
+        /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-2.5", children: [
+          /* @__PURE__ */ jsx7("input", {
+            type: "text",
+            value: exportPasscodeVal,
+            onChange: (e) => setExportPasscodeVal(e.target.value),
+            placeholder: "ເຊັ່ນ: 8888",
+            className: "flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 font-mono font-bold text-lg text-amber-300 tracking-wider focus:outline-hidden focus:border-amber-400"
+          }),
+          /* @__PURE__ */ jsxs7("button", {
+            type: "button",
+            onClick: () => {
+              navigator.clipboard?.writeText(exportPasscodeVal);
+              setCopiedPasscode(true);
+              setTimeout(() => setCopiedPasscode(false), 2000);
+            },
+            className: "px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5",
+            children: [
+              copiedPasscode ? /* @__PURE__ */ jsx7(CheckCircle25, { size: 14, className: "text-emerald-400" }) : /* @__PURE__ */ jsx7(CopyIcon, { size: 14 }),
+              /* @__PURE__ */ jsx7("span", { children: copiedPasscode ? "ສຳເນົາແລ້ວ" : "ສຳເນົາ" })
+            ]
+          })
+        ] }),
+        /* @__PURE__ */ jsxs7("div", { className: "flex items-center justify-between pt-2 border-t border-slate-800", children: [
+          exportPasscodeSaved ? /* @__PURE__ */ jsxs7("span", { className: "text-xs font-bold text-emerald-400 flex items-center gap-1.5", children: [
+            /* @__PURE__ */ jsx7(CheckCircle25, { size: 14 }),
+            "ບັນທຶກລະຫັດໃໝ່ສໍາເລັດແລ້ວ!"
+          ] }) : /* @__PURE__ */ jsxs7("span", { className: "text-[11px] text-slate-400 font-mono", children: [
+            "ລະຫັດປັດຈຸບັນ: ",
+            /* @__PURE__ */ jsx7("b", { className: "text-amber-400", children: getExportPasscode() })
+          ] }),
+          /* @__PURE__ */ jsxs7("button", {
+            type: "button",
+            onClick: () => {
+              if (!exportPasscodeVal.trim() || exportPasscodeVal.trim().length < 3) {
+                alert("ກະລຸນາກຳນົດລະຫັດຢ່າງໜ້ອຍ 3 ຕົວອັກສອນ!");
+                return;
+              }
+              setExportPasscode(exportPasscodeVal, currentUser.fullName);
+              setExportPasscodeSaved(true);
+              setTimeout(() => setExportPasscodeSaved(false), 3000);
+            },
+            className: "px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs font-bold shadow-lg shadow-amber-500/20 active:scale-98 transition-all flex items-center gap-2 cursor-pointer",
+            children: [
+              /* @__PURE__ */ jsx7(Save2, { size: 14 }),
+              /* @__PURE__ */ jsx7("span", { children: "💾 ບັນທຶກລະຫັດດາວໂຫຼດ" })
+            ]
+          })
+        ] })
+      ] }) : /* @__PURE__ */ jsxs7("div", { className: "p-4 rounded-2xl bg-slate-850 border border-slate-750 text-xs text-slate-300 space-y-2", children: [
+        /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-2 font-bold text-amber-400", children: [
+          /* @__PURE__ */ jsx7(Lock, { size: 14 }),
+          "ສະເພາະ Super Admin ເທົ່ານັ້ນທີ່ສາມາດຕັ້ງ ຫຼື ປ່ຽນລະຫັດນີ້ໄດ້"
+        ] }),
+        /* @__PURE__ */ jsx7("p", { className: "text-slate-400", children: "ຫາກທ່ານຕ້ອງການລະຫັດອະນຸຍາດດາວໂຫຼດຂໍ້ມູນ ກະລຸນາຕິດຕໍ່ຜູ້ດູແລລະບົບ (Super Admin)." })
+      ] })
     ] }),
     isAddingUser && /* @__PURE__ */ jsx7("div", { className: "fixed inset-0 z-[1300] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-150", children: /* @__PURE__ */ jsxs7("div", { className: "bg-slate-900 border border-slate-700/80 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200", children: [
       /* @__PURE__ */ jsxs7("div", { className: "p-5 bg-gradient-to-r from-emerald-950/50 via-slate-900 to-slate-900 border-b border-slate-800 flex items-center justify-between", children: [

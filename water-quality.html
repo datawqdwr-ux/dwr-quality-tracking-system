@@ -657,6 +657,7 @@
         <button onclick="switchConfigTab('indicators')" id="tabBtn-indicators" class="py-2 px-3 border-b-2 border-sky-600 text-sky-600">🧪 ເພີ່ມ Indicators</button>
         <button onclick="switchConfigTab('thresholds')" id="tabBtn-thresholds" class="py-2 px-3 border-b-2 border-transparent text-slate-500">⚠️ ເກນເຕືອນໄພ (Thresholds)</button>
         <button onclick="switchConfigTab('users')" id="tabBtn-users" class="py-2 px-3 border-b-2 border-transparent text-slate-500">👤 ຜູ້ໃຊ້ (Users)</button>
+        <button onclick="switchConfigTab('exportSecurity')" id="tabBtn-exportSecurity" class="py-2 px-3 border-b-2 border-transparent text-slate-500">🔒 ລະຫັດດາວໂຫຼດ (Export Passcode)</button>
       </div>
 
       <div id="tabContent-indicators" class="space-y-3">
@@ -702,6 +703,35 @@
         <button onclick="addSystemUser()" class="w-full bg-indigo-700 text-white font-medium py-2 rounded-lg text-sm shadow">➕ ເພີ່ມຜູ້ໃຊ້</button>
         <div class="border-t pt-2">
           <ul id="systemUsersList" class="space-y-1 max-h-72 overflow-y-auto"></ul>
+        </div>
+      </div>
+
+      <div id="tabContent-exportSecurity" class="space-y-4 hidden">
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs space-y-1.5 leading-relaxed">
+          <p class="font-bold flex items-center gap-1.5">
+            <span>🛡️</span> ນະໂຍບາຍຄວາມປອດໄພການດາວໂຫຼດຂໍ້ມູນ (Data Export Protection):
+          </p>
+          <p>
+            ຜູ້ນຳໃຊ້ທົ່ວໄປ (Viewer) ຫຼື ການເຂົ້າລະບົບທີ່ບໍ່ໄດ້ຜ່ານການລັອກອິນ (Guest) <b>ຈະບໍ່ສາມາດດາວໂຫຼດ ຫຼື ເອົາຂໍ້ມູນອອກຈາກລະບົບໄດ້</b> (ເຊັ່ນ: CSV, Excel, PDF, Word, ຮູບກຣາຟ). ຖ້າຕ້ອງການດາວໂຫຼດ ຕ້ອງໃສ່ລະຫັດທີ່ Super Admin ກຳນົດໄວ້ຢູ່ລຸ່ມນີ້ກ່ອນ.
+          </p>
+        </div>
+
+        <div class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">🔑 ລະຫັດອະນຸຍາດດາວໂຫຼດຂໍ້ມູນ (Export Passcode)</label>
+            <div class="flex gap-2">
+              <input type="text" id="exportPasscodeInput" autocomplete="off" placeholder="ກຳນົດລະຫັດດາວໂຫຼດ ເຊັ່ນ: 8888" class="flex-1 border border-slate-300 p-2.5 rounded-lg text-sm font-mono font-bold text-slate-800 outline-none focus:ring-2 focus:ring-sky-500 bg-white">
+              <button type="button" onclick="copyExportPasscode()" class="cursor-pointer px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition" title="ສຳເນົາລະຫັດ">📋 ສຳເນົາ</button>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">ລະຫັດນີ້ຈະຖືກນຳໃຊ້ຮ່ວມກັນທັງ 3 ລະບົບ (ຄຸນນະພາບນ້ຳ, ການນຳໃຊ້ນ້ຳ ແລະ ນ້ຳເປື້ອນ).</p>
+          </div>
+
+          <div class="pt-2 flex items-center justify-between">
+            <span id="exportSecurityStatusText" class="text-xs text-slate-500"></span>
+            <button onclick="saveExportSecurityConfig()" class="cursor-pointer bg-sky-700 hover:bg-sky-600 text-white font-bold px-5 py-2.5 rounded-lg text-xs shadow transition">
+              💾 ບັນທຶກລະຫັດດາວໂຫຼດ
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1207,6 +1237,17 @@
         renderSystemUsersList();
         restoreSession(systemUsers);
       });
+
+      db.ref('system_config/export_security').on('value', snapshot => {
+        const data = snapshot.val();
+        if (data && data.passcode) {
+          localStorage.setItem('water_export_passcode', String(data.passcode));
+          const inp = document.getElementById('exportPasscodeInput');
+          if (inp && document.activeElement !== inp) inp.value = data.passcode;
+          const statusEl = document.getElementById('exportSecurityStatusText');
+          if (statusEl) statusEl.innerHTML = `<span class="inline-flex items-center gap-1 text-emerald-700 font-semibold">🔒 ລະຫັດປັດຈຸບັນ: <b>${escAttr(data.passcode)}</b></span>`;
+        }
+      });
     }
 
     /* --- USER MANAGEMENT (per-user password instead of one shared code) --- */
@@ -1577,14 +1618,19 @@
     });
 
     function switchConfigTab(tabName) {
-      ['indicators', 'thresholds', 'users'].forEach(t => {
-        document.getElementById(`tabContent-${t}`).classList.add('hidden');
-        document.getElementById(`tabBtn-${t}`).className = "py-2 px-3 border-b-2 border-transparent text-slate-500";
+      ['indicators', 'thresholds', 'users', 'exportSecurity'].forEach(t => {
+        const c = document.getElementById(`tabContent-${t}`);
+        const b = document.getElementById(`tabBtn-${t}`);
+        if (c) c.classList.add('hidden');
+        if (b) b.className = "py-2 px-3 border-b-2 border-transparent text-slate-500";
       });
-      document.getElementById(`tabContent-${tabName}`).classList.remove('hidden');
-      document.getElementById(`tabBtn-${tabName}`).className = "py-2 px-3 border-b-2 border-sky-600 text-sky-600 font-bold";
+      const activeC = document.getElementById(`tabContent-${tabName}`);
+      const activeB = document.getElementById(`tabBtn-${tabName}`);
+      if (activeC) activeC.classList.remove('hidden');
+      if (activeB) activeB.className = "py-2 px-3 border-b-2 border-sky-600 text-sky-600 font-bold";
       if (tabName === 'thresholds') renderThresholdFields();
       if (tabName === 'users') renderSystemUsersList();
+      if (tabName === 'exportSecurity') renderExportSecuritySettings();
     }
 
     function toggleSettingsModal() {
@@ -1593,6 +1639,57 @@
       renderSettingsList();
       renderThresholdFields();
       renderSystemUsersList();
+      renderExportSecuritySettings();
+    }
+
+    function renderExportSecuritySettings() {
+      const code = getExportPasscode();
+      const inp = document.getElementById('exportPasscodeInput');
+      if (inp) inp.value = code;
+      const statusEl = document.getElementById('exportSecurityStatusText');
+      if (statusEl) {
+        statusEl.innerHTML = `<span class="inline-flex items-center gap-1 text-emerald-700 font-semibold text-xs">🔒 ລະຫັດປັດຈຸບັນ: <b class="font-mono">${escAttr(code)}</b></span>`;
+      }
+    }
+
+    function saveExportSecurityConfig() {
+      if (currentUserRole !== 'SUPER_ADMIN') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
+      const inp = document.getElementById('exportPasscodeInput');
+      const val = inp ? inp.value.trim() : '';
+      if (!val || val.length < 3) {
+        return Swal.fire({ icon: 'warning', title: 'ລະຫັດຕ້ອງມີຢ່າງໜ້ອຍ 3 ຕົວອັກສອນ!' });
+      }
+
+      localStorage.setItem('water_export_passcode', val);
+      try {
+        db.ref('system_config/export_security').set({
+          passcode: val,
+          updatedAt: new Date().toISOString(),
+          updatedBy: currentUserName || 'Super Admin'
+        });
+      } catch (e) {
+        console.warn('Firebase export security sync error:', e);
+      }
+
+      renderExportSecuritySettings();
+      Swal.fire({
+        icon: 'success',
+        title: 'ບັນທຶກລະຫັດດາວໂຫຼດສຳເລັດ!',
+        html: `ລະຫັດອະນຸຍາດດາວໂຫຼດໃໝ່ສຳລັບຜູ້ໃຊ້ທົ່ວໄປແມ່ນ: <b class="font-mono text-sky-600">${escAttr(val)}</b>`,
+        timer: 2000,
+        showConfirmButton: false
+      });
+    }
+
+    function copyExportPasscode() {
+      const code = getExportPasscode();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(() => {
+          Swal.fire({ icon: 'success', title: 'ສຳເນົາລະຫັດສຳເລັດ!', text: code, timer: 1200, showConfirmButton: false });
+        }).catch(() => fallbackCopyText(code));
+      } else {
+        fallbackCopyText(code);
+      }
     }
 
     function renderThresholdFields() {
@@ -3108,6 +3205,12 @@
     }
 
     function copyAllAlertsSummary() {
+      requireExportPermission(() => {
+        _doCopyAllAlertsSummary();
+      }, 'ສຳເນົາສະຫຼຸບຂໍ້ມູນເຕືອນໄພ');
+    }
+
+    function _doCopyAllAlertsSummary() {
       const all = getAllAlertStationsList();
       if (!all.length) return Swal.fire({ icon: 'info', title: 'ບໍ່ມີສະຖານີເຕືອນໄພ' });
 
@@ -3142,6 +3245,12 @@
     }
 
     function printAlertSummary() {
+      requireExportPermission(() => {
+        _doPrintAlertSummary();
+      }, 'ພິມລາຍງານເຕືອນໄພ');
+    }
+
+    function _doPrintAlertSummary() {
       const all = getAllAlertStationsList();
       if (!all.length) return Swal.fire({ icon: 'info', title: 'ບໍ່ມີສະຖານີເຕືອນໄພ' });
       const printWin = window.open('', '_blank');
@@ -5749,7 +5858,94 @@
         </div>`;
     }
 
+    /* ==========================================================================
+       🔒 ການກວດສອບສິດດາວໂຫຼດ/ເອົາຂໍ້ມູນອອກ (Export Security & Passcode Check)
+       ========================================================================== */
+    const DEFAULT_EXPORT_PASSCODE = '8888';
+
+    function getExportPasscode() {
+      return localStorage.getItem('water_export_passcode') || DEFAULT_EXPORT_PASSCODE;
+    }
+
+    function isElevatedExportUser() {
+      return currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'STAFF';
+    }
+
+    async function requireExportPermission(onSuccess, label = 'ດາວໂຫຼດຂໍ້ມູນ') {
+      // 1. Super Admin ຫຼື Staff ທີ່ເຂົ້າສູ່ລະບົບ → ອະນຸຍາດໂດຍກົງ
+      if (isElevatedExportUser()) {
+        if (typeof onSuccess === 'function') onSuccess();
+        return true;
+      }
+
+      // 2. ຫາກເຄີຍຢືນຢັນລະຫັດຜ່ານຖືກຕ້ອງໃນ Session ນີ້ແລ້ວ → ອະນຸຍາດເລີຍ
+      if (sessionStorage.getItem('water_export_authorized') === 'true') {
+        if (typeof onSuccess === 'function') onSuccess();
+        return true;
+      }
+
+      // 3. ຜູ້ໃຊ້ທົ່ວໄປ (Viewer) ຫຼື Guest ບໍ່ໄດ້ເຂົ້າສູ່ລະບົບ → ຕ້ອງໃສ່ລະຫັດທີ່ Super Admin ກຳນົດ
+      const correctCode = getExportPasscode();
+
+      const { value: enteredCode, isConfirmed } = await Swal.fire({
+        title: '🔒 ໃສ່ລະຫັດເພື່ອດາວໂຫຼດຂໍ້ມູນ',
+        html: `
+          <div class="text-left text-xs text-slate-600 space-y-2 mb-3">
+            <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 leading-relaxed">
+              <b>⚠️ ແຈ້ງເຕືອນຄວາມປອດໄພ:</b> ຜູ້ນໍາໃຊ້ທົ່ວໄປ ຫຼື ການເຂົ້າລະບົບທີ່ບໍ່ໄດ້ຜ່ານການລອກອິນ ບໍ່ສາມາດດາວໂຫຼດ ຫຼື ເອົາຂໍ້ມູນອອກຈາກລະບົບໄດ້.
+            </div>
+            <p class="text-slate-700">ກະລຸນາໃສ່ <b>ລະຫັດອະນຸຍາດດາວໂຫຼດ</b> ທີ່ Super Admin ໄດ້ກຳນົດໄວ້ ເພື່ອດາວໂຫຼດ/ເອົາຂໍ້ມູນອອກ (${escAttr(label)}):</p>
+          </div>
+        `,
+        input: 'password',
+        inputPlaceholder: 'ປ້ອນລະຫັດອະນຸຍາດດາວໂຫຼດ (Export Passcode)...',
+        inputAttributes: {
+          autocapitalize: 'off',
+          autocorrect: 'off'
+        },
+        showCancelButton: true,
+        confirmButtonText: '🔓 ຢືນຢັນດາວໂຫຼດ',
+        cancelButtonText: 'ຍົກເລີກ',
+        confirmButtonColor: '#0284c7',
+        cancelButtonColor: '#64748b',
+        footer: '<span class="text-[11px] text-slate-400">💡 ຕິດຕໍ່ Super Admin ຫາກທ່ານຕ້ອງການລະຫັດອະນຸຍາດດາວໂຫຼດ</span>',
+        preConfirm: (val) => {
+          if (!val) {
+            Swal.showValidationMessage('ກະລຸນາປ້ອນລະຫັດກ່ອນ!');
+            return false;
+          }
+          if (String(val).trim() !== String(correctCode).trim()) {
+            Swal.showValidationMessage('❌ ລະຫັດບໍ່ຖືກຕ້ອງ! ກະລຸນາຕິດຕໍ່ Super Admin');
+            return false;
+          }
+          return val;
+        }
+      });
+
+      if (isConfirmed && enteredCode) {
+        sessionStorage.setItem('water_export_authorized', 'true');
+        Swal.fire({
+          icon: 'success',
+          title: 'ຢືນຢັນລະຫັດຜ່ານສຳເລັດ!',
+          text: `ກຳລັງດຳເນີນການ ${label}...`,
+          timer: 1200,
+          showConfirmButton: false
+        });
+        if (typeof onSuccess === 'function') {
+          setTimeout(onSuccess, 200);
+        }
+        return true;
+      }
+      return false;
+    }
+
     function exportBatchCSV(fbKey) {
+      requireExportPermission(() => {
+        _doExportBatchCSV(fbKey);
+      }, 'Excel ຕາຕະລາງຊຸດນີ້');
+    }
+
+    function _doExportBatchCSV(fbKey) {
       const item = waterData.find(d => d.fbKey === fbKey);
       if (!item) return;
       const stations = item.stations || [item];
@@ -6490,6 +6686,12 @@
     }
 
     async function downloadTrendPNG() {
+      requireExportPermission(async () => {
+        _doDownloadTrendPNG();
+      }, 'ດາວໂຫຼດຮູບກຣາຟ PNG');
+    }
+
+    async function _doDownloadTrendPNG() {
       if (!trendChart) return Swal.fire({ icon: 'info', title: 'ເປີດໂໝດ 📈 ກຣາຟ ກ່ອນ' });
       const { imgURI } = await trendChart.dataURI({ scale: 2 });
       const a = document.createElement('a');
@@ -7928,6 +8130,12 @@
 
     // ດາວໂຫລດ CSV ຂອງສະຖິຕິ 12 ເດືອນ
     function export12MonthCSV() {
+      requireExportPermission(() => {
+        _doExport12MonthCSV();
+      }, 'ດາວໂຫຼດສະຖິຕິ 12 ເດືອນ (CSV)');
+    }
+
+    function _doExport12MonthCSV() {
       const months = get12MonthsList();
       const activeInds = chartInds().length ? chartInds() : (customIndicators || []);
       if (!activeInds.length) return Swal.fire({ icon: 'info', title: 'ບໍ່ມີຂໍ້ມູນ' });
@@ -8030,6 +8238,12 @@
     }
 
     function exportCSV() {
+      requireExportPermission(() => {
+        _doExportCSV();
+      }, 'ດາວໂຫຼດຕາຕະລາງທັງໝົດ (CSV)');
+    }
+
+    function _doExportCSV() {
       if(waterData.length === 0) return Swal.fire({ icon: 'info', title: 'ບໍ່ມີຂໍ້ມູນ' });
       
       let customHead = valueInds().map(i => i.name).join(',');
@@ -8057,6 +8271,12 @@
     }
 
     async function downloadPDFReport() {
+      requireExportPermission(async () => {
+        await _doDownloadPDFReport();
+      }, 'ດາວໂຫຼດລາຍງານ (PDF)');
+    }
+
+    async function _doDownloadPDFReport() {
       if(waterData.length === 0) return Swal.fire({ icon: 'info', title: 'ບໍ່ມີຂໍ້ມູນສຳລັບການອອກລາຍງານ PDF!' });
       const btn = document.getElementById('pdfBtn');
       btn.innerText = '⏳ ກຳລັງສ້າງ PDF...';

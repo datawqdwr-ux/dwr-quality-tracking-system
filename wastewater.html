@@ -14,6 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;500;600;700&family=Noto+Serif+Lao:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style type="text/tailwindcss">
 
 
@@ -122,8 +123,17 @@ var FIREBASE_CONFIG = {
   projects: "wastewater/projects",
   messages: "wastewater/messages",
   logs: "wastewater/audit_logs",
-  users: "system_config/users"
+  users: "system_config/users",
+  exportSecurity: "system_config/export_security"
 }, LOCAL_STORAGE_KEY = "lao_wastewater_projects_v2", LOCAL_MESSAGES_KEY = "lao_wastewater_messages_v2", LOCAL_LOGS_KEY = "lao_wastewater_logs_v2", LOCAL_USERS_KEY = "lao_wastewater_users_shared_v3";
+try {
+  onValue(dbRef(rtdb, PATHS.exportSecurity), (snap) => {
+    let data = snap.val();
+    if (data && data.passcode) {
+      localStorage.setItem("water_export_passcode", String(data.passcode));
+    }
+  }, (err) => console.warn("exportSecurity sync error:", err));
+} catch (e) {}
 function clean(v) {
   if (v === void 0 || typeof v == "number" && !isFinite(v)) return null;
   if (Array.isArray(v)) return v.map(clean);
@@ -280,6 +290,122 @@ function subscribeToAuditLogs(onUpdate) {
     writeCache(LOCAL_LOGS_KEY, list), onUpdate(list);
   }, (err) => console.warn("logs listener error:", err));
 }
+
+/* ==========================================================================
+   🔒 ການກວດສອບສິດດາວໂຫຼດ/ເອົາຂໍ້ມູນອອກ (Export Security & Passcode Check)
+   ຜູ້ນໍາໃຊ້ທົ່ວໄປ (Viewer) ຫຼື ການເຂົ້າລະບົບທີ່ບໍ່ໄດ້ຜ່ານການລອກອິນ ບໍ່ສາມາດດາວໂຫຼດໄດ້
+   ຖ້າຕ້ອງການດາວໂຫຼດ ຕ້ອງມີລະຫັດໃສ່ກ່ອນ ຊຶ່ງ Super Admin ເປັນຜູ້ກໍານົດໄວ້
+   ========================================================================== */
+var DEFAULT_EXPORT_PASSCODE = "8888";
+
+function getExportPasscode() {
+  return localStorage.getItem("water_export_passcode") || DEFAULT_EXPORT_PASSCODE;
+}
+
+function setExportPasscode(val, updatedBy = "Super Admin") {
+  let code = String(val || "").trim();
+  localStorage.setItem("water_export_passcode", code);
+  try {
+    set(dbRef(rtdb, PATHS.exportSecurity), {
+      passcode: code,
+      updatedAt: new Date().toISOString(),
+      updatedBy: updatedBy || "Super Admin"
+    });
+  } catch (e) {
+    console.warn("exportSecurity save error:", e);
+  }
+}
+
+function isElevatedExportUser() {
+  let u = null;
+  try {
+    u = JSON.parse(localStorage.getItem("lao_wastewater_current_user_v2") || sessionStorage.getItem("waterSession") || "null");
+  } catch (e) {}
+  if (!u || u.id === "guest") return false;
+  let role = String(u.role || "").toLowerCase();
+  return role === "admin" || role === "officer" || role === "super_admin" || role === "staff";
+}
+
+async function requireWaterExportPermission(onSuccess, label = "ດາວໂຫຼດຂໍ້ມູນ") {
+  // 1. Super Admin ຫຼື Staff (Officer) ທີ່ເຂົ້າສູ່ລະບົບ → ອະນຸຍາດໂດຍກົງ
+  if (isElevatedExportUser()) {
+    if (typeof onSuccess === "function") onSuccess();
+    return true;
+  }
+
+  // 2. ຫາກເຄີຍຢືນຢັນລະຫັດຜ່ານຖືກຕ້ອງໃນ Session ນີ້ແລ້ວ → ອະນຸຍາດເລີຍ
+  if (sessionStorage.getItem("water_export_authorized") === "true") {
+    if (typeof onSuccess === "function") onSuccess();
+    return true;
+  }
+
+  // 3. ຜູ້ໃຊ້ທົ່ວໄປ (Viewer) ຫຼື Guest ບໍ່ໄດ້ເຂົ້າສູ່ລະບົບ → ຕ້ອງໃສ່ລະຫັດທີ່ Super Admin ກຳນົດ
+  let correctCode = getExportPasscode();
+
+  if (typeof Swal !== "undefined") {
+    let { value: enteredCode, isConfirmed } = await Swal.fire({
+      title: "🔒 ໃສ່ລະຫັດເພື່ອດາວໂຫຼດຂໍ້ມູນ",
+      html: `
+        <div class="text-left text-xs text-slate-600 space-y-2 mb-3">
+          <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 leading-relaxed">
+            <b>⚠️ ແຈ້ງເຕືອນຄວາມປອດໄພ:</b> ຜູ້ນໍາໃຊ້ທົ່ວໄປ ຫຼື ການເຂົ້າລະບົບທີ່ບໍ່ໄດ້ຜ່ານການລອກອິນ ບໍ່ສາມາດດາວໂຫຼດ ຫຼື ເອົາຂໍ້ມູນອອກຈາກລະບົບໄດ້.
+          </div>
+          <p class="text-slate-700">ກະລຸນາໃສ່ <b>ລະຫັດອະນຸຍາດດາວໂຫຼດ</b> ທີ່ Super Admin ໄດ້ກຳນົດໄວ້ ເພື່ອດາວໂຫຼດ/ເອົາຂໍ້ມູນອອກ (${String(label).replace(/[<>&]/g, "")}):</p>
+        </div>
+      `,
+      input: "password",
+      inputPlaceholder: "ປ້ອນລະຫັດອະນຸຍາດດາວໂຫຼດ (Export Passcode)...",
+      inputAttributes: {
+        autocapitalize: "off",
+        autocorrect: "off"
+      },
+      showCancelButton: true,
+      confirmButtonText: "🔓 ຢືນຢັນດາວໂຫຼດ",
+      cancelButtonText: "ຍົກເລີກ",
+      confirmButtonColor: "#0284c7",
+      cancelButtonColor: "#64748b",
+      footer: '<span class="text-[11px] text-slate-400">💡 ຕິດຕໍ່ Super Admin ຫາກທ່ານຕ້ອງການລະຫັດອະນຸຍາດດາວໂຫຼດ</span>',
+      preConfirm: (val) => {
+        if (!val) {
+          Swal.showValidationMessage("ກະລຸນາປ້ອນລະຫັດກ່ອນ!");
+          return false;
+        }
+        if (String(val).trim() !== String(correctCode).trim()) {
+          Swal.showValidationMessage("❌ ລະຫັດບໍ່ຖືກຕ້ອງ! ກະລຸນາຕິດຕໍ່ Super Admin");
+          return false;
+        }
+        return val;
+      }
+    });
+
+    if (isConfirmed && enteredCode) {
+      sessionStorage.setItem("water_export_authorized", "true");
+      Swal.fire({
+        icon: "success",
+        title: "ຢືນຢັນລະຫັດຜ່ານສຳເລັດ!",
+        text: `ກຳລັງດຳເນີນການ ${label}...`,
+        timer: 1200,
+        showConfirmButton: false
+      });
+      if (typeof onSuccess === "function") {
+        setTimeout(onSuccess, 200);
+      }
+      return true;
+    }
+    return false;
+  } else {
+    let entered = window.prompt(`🔒 ໃສ່ລະຫັດອະນຸຍາດດາວໂຫຼດ (ກຳນົດໂດຍ Super Admin) ເພື່ອດາວໂຫຼດ ${label}:`);
+    if (entered && String(entered).trim() === String(correctCode).trim()) {
+      sessionStorage.setItem("water_export_authorized", "true");
+      if (typeof onSuccess === "function") onSuccess();
+      return true;
+    } else if (entered !== null) {
+      alert("❌ ລະຫັດບໍ່ຖືກຕ້ອງ! ກະລຸນາຕິດຕໍ່ Super Admin");
+    }
+    return false;
+  }
+}
+
 function exportSystemBackup() {
   let projects = readCache(LOCAL_STORAGE_KEY) || [], messages = readCache(LOCAL_MESSAGES_KEY) || [], logs = readCache(LOCAL_LOGS_KEY) || [];
   return JSON.stringify({
@@ -304,6 +430,11 @@ async function restoreSystemBackup(jsonString, mode = "replace") {
 // src/lib/exportUtils.ts
 import * as XLSX from "xlsx";
 function exportProjectsToExcel(projects, filename = "Wastewater_Discharge_Projects_Lao") {
+  requireWaterExportPermission(() => {
+    _doExportProjectsToExcel(projects, filename);
+  }, "ໄຟລ໌ Excel ໂຄງການປ່ອຍນໍ້າເປື້ອນ");
+}
+function _doExportProjectsToExcel(projects, filename = "Wastewater_Discharge_Projects_Lao") {
   let data = projects.map((p, index) => ({
     "ລ/ດ": index + 1,
     "ຊື່ໂຄງການ / ກິດຈະການ": p.projectName,
@@ -427,6 +558,11 @@ function exportProjectsToExcel(projects, filename = "Wastewater_Discharge_Projec
   XLSX.writeFile(workbook, `${filename}_${dateStr}.xlsx`);
 }
 function exportProjectsToWord(projects, title = "ບົດລາຍງານຂໍ້ມູນໂຄງການ ຫຼື ກິດຈະການ ທີ່ປ່ອຍນໍ້າເປື້ອນ") {
+  requireWaterExportPermission(() => {
+    _doExportProjectsToWord(projects, title);
+  }, "ໄຟລ໌ Word ໂຄງການປ່ອຍນໍ້າເປື້ອນ");
+}
+function _doExportProjectsToWord(projects, title = "ບົດລາຍງານຂໍ້ມູນໂຄງການ ຫຼື ກິດຈະການ ທີ່ປ່ອຍນໍ້າເປື້ອນ") {
   let currentDate = (/* @__PURE__ */ new Date()).toLocaleDateString("lo-LA", {
     year: "numeric",
     month: "long",
@@ -538,6 +674,11 @@ function exportProjectsToWord(projects, title = "ບົດລາຍງານຂ�
   a.href = url, a.download = `ບົດລາຍງານ_ໂຄງການປ່ອຍນໍ້າເປື້ອນ_${(/* @__PURE__ */ new Date()).toISOString().split("T")[0]}.doc`, document.body.appendChild(a), a.click(), document.body.removeChild(a), URL.revokeObjectURL(url);
 }
 function printProjectsToPDF(projects) {
+  requireWaterExportPermission(() => {
+    _doPrintProjectsToPDF(projects);
+  }, "ພິມ / ສົ່ງອອກ PDF ໂຄງການປ່ອຍນໍ້າເປື້ອນ");
+}
+function _doPrintProjectsToPDF(projects) {
   let currentDate = (/* @__PURE__ */ new Date()).toLocaleDateString("lo-LA", {
     year: "numeric",
     month: "long",
