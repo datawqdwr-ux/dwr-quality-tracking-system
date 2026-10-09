@@ -184,12 +184,18 @@
         </div>
         <div class="bg-emerald-50 p-3 rounded-lg text-emerald-600 text-xl">✅</div>
       </div>
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+      <div onclick="openAlertStationsModal()" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-rose-400 hover:shadow-md hover:bg-rose-50/20 transition group select-none" title="ກົດເພື່ອເບິ່ງລາຍລະອຽດສະຖານີທີ່ແຈ້ງເຕືອນ (Alert Details)">
         <div>
-          <p class="text-xs text-slate-500 font-medium">ສະຖານີເຕືອນໄພ (Alert)</p>
-          <h3 class="text-2xl font-bold text-rose-600" id="kpiAlert">0</h3>
+          <div class="flex items-center gap-1.5">
+            <p class="text-xs text-slate-500 font-medium group-hover:text-rose-600 transition">ສະຖານີເຕືອນໄພ (Alert)</p>
+            <span class="text-[10px] text-rose-500 opacity-80 group-hover:opacity-100 font-bold">ℹ️ ລາຍລະອຽດ</span>
+          </div>
+          <div class="flex flex-wrap items-baseline gap-1.5 mt-1">
+            <h3 class="text-2xl font-bold text-rose-600" id="kpiAlert">0</h3>
+            <span id="kpiAlertBadge" class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">ລໍຖ້າຂໍ້ມູນ</span>
+          </div>
         </div>
-        <div class="bg-rose-50 p-3 rounded-lg text-rose-600 text-xl">⚠️</div>
+        <div class="bg-rose-50 group-hover:bg-rose-600 group-hover:text-white p-3 rounded-lg text-rose-600 text-xl transition shadow-xs">⚠️</div>
       </div>
       <div onclick="openQwiDetailModal()" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-indigo-400 hover:shadow-md hover:bg-indigo-50/20 transition group select-none" title="ກົດເພື່ອເບິ່ງລາຍລະອຽດດັດຊະນີ QWI, ການແປຄ່າ ແລະ ສະຖິຕິຕາມສະຖານີ">
         <div>
@@ -2514,6 +2520,694 @@
       document.body.style.overflow = '';
     }
 
+    /* ==========================================================================
+       🚨 ລາຍລະອຽດສະຖານີເຕືອນໄພ (Alert Stations Details Modal)
+       ========================================================================== */
+    let alertModalState = {
+      search: '',
+      indicator: 'ALL',
+      company: 'ALL',
+      province: 'ALL'
+    };
+
+    function getStationAlertViolations(st) {
+      const violations = [];
+      const customs = st.customs || {};
+      (customIndicators || []).forEach(i => {
+        const raw = customs[i.key];
+        if (raw !== undefined && raw !== null && raw !== '' && raw !== '-' && !isNaN(raw)) {
+          const v = Number(raw);
+          const minVal = sysThresholds[`cfg_${i.key}_min`];
+          const maxVal = sysThresholds[`cfg_${i.key}_max`];
+          const hasMin = minVal !== null && minVal !== undefined && minVal !== '';
+          const hasMax = maxVal !== null && maxVal !== undefined && maxVal !== '';
+
+          if (hasMin && v < Number(minVal)) {
+            const minNum = Number(minVal);
+            const diff = +( (v - minNum).toFixed(3) );
+            const pct = minNum !== 0 ? Math.round(Math.abs(diff / minNum) * 100) : 0;
+            violations.push({
+              key: i.key,
+              name: i.name,
+              unit: i.unit || '',
+              val: v,
+              rawVal: raw,
+              limit: minNum,
+              minVal: minNum,
+              maxVal: hasMax ? Number(maxVal) : null,
+              type: 'MIN',
+              diff: diff,
+              pct: pct,
+              label: `ຕ່ຳກວ່າເກນ (< ${minVal} ${i.unit || ''})`,
+              standardRange: hasMax ? `${minVal} – ${maxVal} ${i.unit || ''}` : `≥ ${minVal} ${i.unit || ''}`
+            });
+          } else if (hasMax && v > Number(maxVal)) {
+            const maxNum = Number(maxVal);
+            const diff = +( (v - maxNum).toFixed(3) );
+            const pct = maxNum !== 0 ? Math.round((diff / maxNum) * 100) : 0;
+            violations.push({
+              key: i.key,
+              name: i.name,
+              unit: i.unit || '',
+              val: v,
+              rawVal: raw,
+              limit: maxNum,
+              minVal: hasMin ? Number(minVal) : null,
+              maxVal: maxNum,
+              type: 'MAX',
+              diff: diff,
+              pct: pct,
+              label: `ເກີນເກນ (> ${maxVal} ${i.unit || ''})`,
+              standardRange: hasMin ? `${minVal} – ${maxVal} ${i.unit || ''}` : `≤ ${maxVal} ${i.unit || ''}`
+            });
+          }
+        }
+      });
+      return violations;
+    }
+
+    function getAllAlertStationsList() {
+      const list = [];
+      (waterData || []).forEach(rec => {
+        const comp = rec.companyName || rec.name || 'ບໍ່ລະບຸບໍລິສັດ';
+        const sts = stationsOf(rec);
+        sts.forEach((st, stIdx) => {
+          const violations = getStationAlertViolations(st);
+          const isAlert = (st.status && st.status.isAlert) || violations.length > 0;
+          if (isAlert) {
+            const rawQ = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-')
+              ? st.qwi
+              : calculateAutoQWI(st.customs || {});
+            const qi = interpretQWI(rawQ);
+            list.push({
+              st,
+              rec,
+              comp,
+              stIdx,
+              violations,
+              isAlert,
+              rawQ,
+              qi,
+              code: st.code || '-',
+              name: st.name || '-',
+              province: st.province || '-',
+              sampleDate: st.sampleDate || '',
+              section: st.section || rec.section || '',
+              lat: st.lat,
+              lng: st.lng
+            });
+          }
+        });
+      });
+      return list;
+    }
+
+    function openAlertStationsModal() {
+      alertModalState = { search: '', indicator: 'ALL', company: 'ALL', province: 'ALL' };
+
+      let modal = document.getElementById('alertStationsModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'alertStationsModal';
+        modal.className = 'fixed inset-0 z-[1600] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 md:p-5 overflow-y-auto';
+        document.body.appendChild(modal);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAlertStationsModal(); });
+      }
+      document.body.style.overflow = 'hidden';
+
+      renderAlertModalShell();
+    }
+
+    function closeAlertStationsModal() {
+      const modal = document.getElementById('alertStationsModal');
+      if (modal) modal.remove();
+      document.body.style.overflow = '';
+    }
+
+    function renderAlertModalShell() {
+      const modal = document.getElementById('alertStationsModal');
+      if (!modal) return;
+
+      const allAlertStations = getAllAlertStationsList();
+      const affectedCompanies = new Set();
+      const affectedProvinces = new Set();
+      const violationCountsByParam = {};
+      let totalSystemStations = 0;
+
+      (waterData || []).forEach(rec => {
+        totalSystemStations += stationsOf(rec).length;
+      });
+
+      allAlertStations.forEach(item => {
+        affectedCompanies.add(item.comp);
+        if (item.province && item.province !== '-') affectedProvinces.add(item.province);
+        item.violations.forEach(v => {
+          if (!violationCountsByParam[v.key]) {
+            violationCountsByParam[v.key] = { key: v.key, name: v.name, unit: v.unit, count: 0 };
+          }
+          violationCountsByParam[v.key].count++;
+        });
+      });
+
+      allAlertStations.sort((a, b) => b.violations.length - a.violations.length);
+      const topViolatedParams = Object.values(violationCountsByParam).sort((a, b) => b.count - a.count);
+      const totalAlertsCount = allAlertStations.length;
+      const alertRate = totalSystemStations > 0 ? ((totalAlertsCount / totalSystemStations) * 100).toFixed(1) : '0';
+
+      modal.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" onclick="event.stopPropagation()">
+          
+          <!-- Modal Header -->
+          <div class="px-5 py-4 bg-gradient-to-r from-rose-700 via-rose-600 to-amber-600 text-white flex items-center justify-between shadow-xs">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center text-2xl shadow-inner animate-pulse">
+                🚨
+              </div>
+              <div>
+                <h3 class="font-bold text-base md:text-lg flex items-center gap-2">
+                  <span>ລາຍລະອຽດສະຖານີເຕືອນໄພຄຸນນະພາບນ້ຳ (Alert Stations)</span>
+                  <span class="text-[11px] font-normal px-2 py-0.5 rounded-full bg-white/20 text-white/95">${totalAlertsCount} ສະຖານີ</span>
+                </h3>
+                <p class="text-xs text-rose-100">ລະບົບຕິດຕາມກວດກາ ແລະ ແຈ້ງເຕືອນຄ່າຄຸນນະພາບນ້ຳທີ່ເກີນມາດຕະຖານ · ກົມຊັບພະຍາກອນນ້ຳ</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="copyAllAlertsSummary()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition cursor-pointer" title="ສຳເນົາສະຫຼຸບຂໍ້ມູນເຕືອນໄພ">
+                📋 <span>ສຳເນົາສະຫຼຸບ</span>
+              </button>
+              <button type="button" onclick="printAlertSummary()" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition cursor-pointer" title="ພິມລາຍງານ">
+                🖨️ <span>ພິມ</span>
+              </button>
+              <button type="button" onclick="closeAlertStationsModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer" title="ປິດ (Esc)">
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="p-5 overflow-y-auto space-y-4 text-slate-700 text-xs">
+            
+            <!-- Summary KPI Box -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="bg-gradient-to-br from-rose-50 to-white p-3.5 rounded-xl border border-rose-200 flex flex-col justify-between">
+                <span class="text-slate-500 font-semibold text-[11px]">ສະຖານີເຕືອນໄພ (Alert)</span>
+                <div class="my-1 flex items-baseline gap-1.5">
+                  <span class="text-2xl md:text-3xl font-extrabold text-rose-700">${totalAlertsCount}</span>
+                  <span class="text-xs text-slate-400">/ ${totalSystemStations} ຈຸດ</span>
+                </div>
+                <div>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold ${totalAlertsCount > 0 ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}">
+                    ${totalAlertsCount > 0 ? `⚠️ ກວມເອົາ ${alertRate}%` : '✅ ປົກກະຕິ 100%'}
+                  </span>
+                </div>
+              </div>
+
+              <div class="bg-gradient-to-br from-amber-50 to-white p-3.5 rounded-xl border border-amber-200 flex flex-col justify-between">
+                <span class="text-slate-500 font-semibold text-[11px]">ບໍລິສັດ/ຊຸດຂໍ້ມູນທີ່ພົບ</span>
+                <div class="my-1 flex items-baseline gap-1.5">
+                  <span class="text-2xl md:text-3xl font-extrabold text-amber-700">${affectedCompanies.size}</span>
+                  <span class="text-xs text-slate-400">ບໍລິສັດ</span>
+                </div>
+                <span class="text-[10px] text-amber-700 font-medium">ມີຈຸດວັດແທກທີ່ຜິດປົກກະຕິ</span>
+              </div>
+
+              <div class="bg-gradient-to-br from-sky-50 to-white p-3.5 rounded-xl border border-sky-200 flex flex-col justify-between">
+                <span class="text-slate-500 font-semibold text-[11px]">ພາຣາມິເຕີທີ່ເກີນເກນ</span>
+                <div class="my-1 flex items-baseline gap-1.5">
+                  <span class="text-2xl md:text-3xl font-extrabold text-sky-700">${topViolatedParams.length}</span>
+                  <span class="text-xs text-slate-400">ຕົວຊີ້ວັດ</span>
+                </div>
+                <span class="text-[10px] text-sky-700 font-medium">ຖືກລະບຸວ່າມີຄ່າຜິດມາດຕະຖານ</span>
+              </div>
+
+              <div class="bg-gradient-to-br from-violet-50 to-white p-3.5 rounded-xl border border-violet-200 flex flex-col justify-between">
+                <span class="text-slate-500 font-semibold text-[11px]">ພາຣາມິເຕີເກີນຫຼາຍສຸດ</span>
+                <div class="my-1 flex items-baseline gap-1.5">
+                  <span class="text-xl md:text-2xl font-extrabold text-violet-700 truncate" title="${topViolatedParams[0] ? escAttr(topViolatedParams[0].name) : '-'}">
+                    ${topViolatedParams[0] ? escAttr(topViolatedParams[0].name) : '-'}
+                  </span>
+                </div>
+                <span class="text-[10px] text-violet-700 font-medium">${topViolatedParams[0] ? `ພົບເກີນ ${topViolatedParams[0].count} ຈຸດວັດແທກ` : 'ບໍ່ມີ'}</span>
+              </div>
+            </div>
+
+            <!-- Frequency Chips of Violated Parameters -->
+            ${topViolatedParams.length > 0 ? `
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-wrap items-center gap-2">
+                <span class="text-[11px] font-bold text-slate-600 flex items-center gap-1">
+                  <span>🔥</span> ພາຣາມິເຕີທີ່ພົບການເຕືອນໄພເລື້ອຍໆ:
+                </span>
+                <button type="button" onclick="setAlertParamFilter('ALL')" id="alertChip_ALL" class="cursor-pointer px-2.5 py-1 rounded-lg text-[11px] font-bold transition border ${alertModalState.indicator === 'ALL' ? 'bg-rose-600 text-white border-rose-600 shadow-xs' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'}">
+                  ທັງໝົດ (${totalAlertsCount})
+                </button>
+                ${topViolatedParams.map(p => `
+                  <button type="button" onclick="setAlertParamFilter('${escAttr(p.key)}')" id="alertChip_${escAttr(p.key)}" class="cursor-pointer px-2.5 py-1 rounded-lg text-[11px] font-bold transition border ${alertModalState.indicator === p.key ? 'bg-rose-600 text-white border-rose-600 shadow-xs' : 'bg-white text-slate-700 border-slate-300 hover:bg-rose-50 hover:border-rose-300'}">
+                    <span>${escAttr(p.name)}</span>
+                    <span class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] ${alertModalState.indicator === p.key ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700'}">${p.count}</span>
+                  </button>
+                `).join('')}
+              </div>
+            ` : ''}
+
+            <!-- Filter Controls Bar -->
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+              <div class="sm:col-span-1">
+                <label class="block text-[10.5px] font-bold text-slate-500 mb-1">🔍 ຄົ້ນຫາ</label>
+                <input type="text" id="alertModalSearchInput" oninput="onAlertFilterChange()" value="${escAttr(alertModalState.search)}" placeholder="ລະຫັດ, ຊື່ສະຖານີ, ບໍລິສັດ..." class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-rose-400 bg-white">
+              </div>
+              <div>
+                <label class="block text-[10.5px] font-bold text-slate-500 mb-1">🧪 ພາຣາມິເຕີທີ່ເກີນເກນ</label>
+                <select id="alertModalParamSelect" onchange="onAlertFilterChange()" class="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-rose-400 bg-white font-medium text-slate-700">
+                  <option value="ALL">ທຸກພາຣາມິເຕີ</option>
+                  ${topViolatedParams.map(p => `<option value="${escAttr(p.key)}" ${alertModalState.indicator === p.key ? 'selected' : ''}>${escAttr(p.name)} (${p.count} ຈຸດ)</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block text-[10.5px] font-bold text-slate-500 mb-1">🏢 ບໍລິສັດ / ຊຸດຂໍ້ມູນ</label>
+                <select id="alertModalCompSelect" onchange="onAlertFilterChange()" class="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-rose-400 bg-white font-medium text-slate-700">
+                  <option value="ALL">ທຸກບໍລິສັດ (${affectedCompanies.size})</option>
+                  ${[...affectedCompanies].sort().map(c => `<option value="${escAttr(c)}" ${alertModalState.company === c ? 'selected' : ''}>${escAttr(c)}</option>`).join('')}
+                </select>
+              </div>
+              <div class="flex items-end gap-1.5">
+                <div class="flex-1">
+                  <label class="block text-[10.5px] font-bold text-slate-500 mb-1">📍 ແຂວງ</label>
+                  <select id="alertModalProvSelect" onchange="onAlertFilterChange()" class="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-rose-400 bg-white font-medium text-slate-700">
+                    <option value="ALL">ທຸກແຂວງ</option>
+                    ${[...affectedProvinces].sort().map(p => `<option value="${escAttr(p)}" ${alertModalState.province === p ? 'selected' : ''}>${escAttr(p)}</option>`).join('')}
+                  </select>
+                </div>
+                <button type="button" onclick="resetAlertModalFilters()" class="cursor-pointer px-2.5 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-100 text-slate-600 font-bold text-xs" title="ລ້າງການກອງ">
+                  🔄
+                </button>
+              </div>
+            </div>
+
+            <!-- List Container (Dynamically rendered) -->
+            <div id="alertModalListContainer">
+              <!-- Rendered by renderAlertModalList() -->
+            </div>
+
+            <!-- Standard Reference Guide Note -->
+            <div class="bg-rose-50/50 p-3.5 rounded-xl border border-rose-200 text-[11px] text-slate-600 space-y-1">
+              <p class="font-bold text-rose-900 flex items-center gap-1.5">
+                <span>📖</span> ເກນການແຈ້ງເຕືອນຄຸນນະພາບນ້ຳ (National Surface Water Quality Alert Standards):
+              </p>
+              <p class="text-slate-600 leading-relaxed">
+                ລະບົບກວດສອບຄ່າວັດແທກຕົວຈິງທຽບກັບເກນມາດຕະຖານທີ່ກຳນົດໄວ້ໃນລະບົບ (System Thresholds) ຂອງກົມຊັບພະຍາກອນນ້ຳ. ສະຖານີຈະຖືກຈັດເຂົ້າໃນກຸ່ມ <b>Alert (ເຕືອນໄພ)</b> ເມື່ອມີພາຣາມິເຕີໃດໜຶ່ງ <b>ສູງກວ່າຄ່າສູງສຸດ (Max)</b> ຫຼື <b>ຕ່ຳກວ່າຄ່າຕ່ຳສຸດ (Min)</b> ທີ່ກົດໝາຍອະນຸຍາດ (ເຊັ່ນ: ຄ່າ pH ຫຼຸດ 6.0 ຫຼື ເກີນ 8.5, DO ຫຼຸດຕ່ຳກວ່າ 4 mg/L, BOD/COD ສູງເກີນເກນ).
+              </p>
+            </div>
+
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span id="alertModalFooterCount" class="text-xs text-slate-600 font-medium"></span>
+              <button type="button" onclick="filterMainTableByAlerts()" class="cursor-pointer px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 text-xs transition">
+                🌐 ກອງສະຖານະ Alert ໃນຕາຕະລາງຫຼັກ
+              </button>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="closeAlertStationsModal()" class="cursor-pointer px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs transition shadow-xs">
+                ປິດໜ້າຕ່າງ
+              </button>
+            </div>
+          </div>
+
+        </div>
+      `;
+
+      renderAlertModalList(allAlertStations);
+    }
+
+    function renderAlertModalList(preloadedList) {
+      const container = document.getElementById('alertModalListContainer');
+      if (!container) return;
+
+      const list = preloadedList || getAllAlertStationsList();
+      const kw = (alertModalState.search || '').trim().toLowerCase();
+      const paramF = alertModalState.indicator;
+      const compF = alertModalState.company;
+      const provF = alertModalState.province;
+
+      const filtered = list.filter(item => {
+        if (kw) {
+          const matchCode = (item.code || '').toLowerCase().includes(kw);
+          const matchName = (item.name || '').toLowerCase().includes(kw);
+          const matchComp = (item.comp || '').toLowerCase().includes(kw);
+          const matchProv = (item.province || '').toLowerCase().includes(kw);
+          const matchSec = (item.section || '').toLowerCase().includes(kw);
+          const matchParam = item.violations.some(v => v.name.toLowerCase().includes(kw));
+          if (!matchCode && !matchName && !matchComp && !matchProv && !matchSec && !matchParam) return false;
+        }
+        if (paramF !== 'ALL') {
+          if (!item.violations.some(v => v.key === paramF)) return false;
+        }
+        if (compF !== 'ALL') {
+          if (item.comp !== compF) return false;
+        }
+        if (provF !== 'ALL') {
+          if (item.province !== provF) return false;
+        }
+        return true;
+      });
+
+      const footerCount = document.getElementById('alertModalFooterCount');
+      if (footerCount) {
+        footerCount.innerHTML = `ສະແດງ <b>${filtered.length}</b> ຈາກທັງໝົດ <b>${list.length}</b> ສະຖານີເຕືອນໄພ`;
+      }
+
+      if (filtered.length === 0) {
+        if (list.length === 0) {
+          container.innerHTML = `
+            <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-8 text-center space-y-3">
+              <div class="text-4xl">🎉</div>
+              <h4 class="text-base font-bold text-emerald-800">ບໍ່ພົບສະຖານີທີ່ມີການແຈ້ງເຕືອນ (No Alert Stations)</h4>
+              <p class="text-xs text-emerald-600 max-w-md mx-auto">
+                ທຸກສະຖານີໃນລະບົບວັດແທກຄຸນນະພາບນ້ຳໄດ້ຄ່າປົກກະຕິ (Normal) ຕາມເກນມາດຕະຖານຄຸນນະພາບນ້ຳແຫ່ງຊາດ.
+              </p>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center space-y-2">
+              <div class="text-3xl">🔍</div>
+              <h4 class="text-sm font-bold text-slate-700">ບໍ່ພົບຂໍ້ມູນທີ່ກົງກັບເງື່ອນໄຂການຄົ້ນຫາ</h4>
+              <p class="text-xs text-slate-500">ກະລຸນາລອງປ່ຽນຄຳຄົ້ນຫາ ຫຼື ຣີເຊັດຕົວກອງ</p>
+              <button type="button" onclick="resetAlertModalFilters()" class="cursor-pointer mt-2 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-100">
+                🔄 ລ້າງການກອງທັງໝົດ
+              </button>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="space-y-3">
+          ${filtered.map((item, idx) => {
+            const { st, rec, comp, stIdx, violations, qi, code, name, province, sampleDate, lat, lng } = item;
+            const coordsValid = lat !== null && lat !== undefined && lat !== '' && !isNaN(lat) && lng !== null && lng !== undefined && lng !== '' && !isNaN(lng);
+
+            return `
+              <div class="bg-white border-2 border-rose-200 hover:border-rose-300 rounded-xl p-4 shadow-2xs hover:shadow-sm transition space-y-3">
+                
+                <!-- Station Title & Tags Bar -->
+                <div class="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-2.5">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono font-bold text-xs bg-rose-100 text-rose-800 border border-rose-200 shadow-2xs">
+                      🚨 ${escAttr(code)}
+                    </span>
+                    <span class="font-bold text-slate-800 text-sm">${escAttr(name)}</span>
+                    ${renderOrgBadge(comp)}
+                    ${item.section ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600">📂 ${escAttr(item.section)}</span>` : ''}
+                    ${province && province !== '-' ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-100">📍 ${escAttr(province)}</span>` : ''}
+                  </div>
+
+                  <!-- Quick Action Buttons -->
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    ${coordsValid ? `
+                      <button type="button" onclick="jumpFromAlertToMap('${rec.fbKey}', ${stIdx})" class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 font-bold text-[11px] transition" title="ເບິ່ງຈຸດນີ້ໃນແຜນທີ່ Google Maps GIS">
+                        🗺️ <span>ແຜນທີ່</span>
+                      </button>
+                    ` : `
+                      <span class="text-[10px] text-slate-400 px-2 py-0.5 rounded bg-slate-50 border border-slate-200">ບໍ່ມີພິກັດ</span>
+                    `}
+                    <button type="button" onclick="jumpFromAlertToRecord('${rec.fbKey}')" class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[11px] transition" title="ເປີດຕາຕະລາງລາຍລະອຽດຂອງຊຸດຂໍ້ມູນນີ້">
+                      👁️ <span>ຕາຕະລາງ</span>
+                    </button>
+                    <button type="button" onclick="copyStationAlert('${escAttr(code)}', '${escAttr(comp)}')" class="cursor-pointer inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition" title="ສຳເນົາລາຍລະອຽດແຈ້ງເຕືອນຂອງສະຖານີນີ້">
+                      📋
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Meta Information Row -->
+                <div class="flex flex-wrap items-center gap-y-1 gap-x-4 text-[11px] text-slate-500">
+                  <div class="flex items-center gap-1">
+                    <span class="text-slate-400">📅 ວັນທີເກັບຕົວຢ່າງ:</span>
+                    <span class="font-semibold text-slate-700">${sampleDate ? fmtSampleDate(sampleDate) : '-'}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <span class="text-slate-400">🧭 ພິກັດ:</span>
+                    <span class="font-mono text-slate-700 font-medium">${coordsValid ? `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}` : '-'}</span>
+                  </div>
+                  ${qi ? `
+                    <div class="flex items-center gap-1">
+                      <span class="text-slate-400">🌊 QWI:</span>
+                      <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold border ${qi.badgeClass}">
+                        ${qi.dot} ${qi.score !== '-' ? qi.score : ''} ${qi.label}
+                      </span>
+                    </div>
+                  ` : ''}
+                  <div class="flex items-center gap-1 ml-auto">
+                    <span class="text-rose-600 font-bold">⚠️ ພົບຄ່າເກີນມາດຕະຖານ:</span>
+                    <span class="font-extrabold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">${violations.length} ລາຍການ</span>
+                  </div>
+                </div>
+
+                <!-- Exceeded Parameters Table / Grid -->
+                <div class="bg-rose-50/40 rounded-xl border border-rose-200/80 p-3 space-y-2">
+                  <div class="font-bold text-rose-900 text-[11px] flex items-center justify-between">
+                    <span class="flex items-center gap-1.5">
+                      <span>🧪</span> ລາຍການພາຣາມິເຕີທີ່ເກີນມາດຕະຖານຄຸນນະພາບນ້ຳ:
+                    </span>
+                    <span class="text-[10px] text-rose-600 font-semibold">ທຽບມາດຕະຖານ ກົມຊັບພະຍາກອນນ້ຳ</span>
+                  </div>
+                  
+                  ${violations.length > 0 ? `
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      ${violations.map(v => `
+                        <div class="bg-white p-2.5 rounded-lg border ${v.type === 'MAX' ? 'border-rose-300' : 'border-amber-300'} shadow-2xs flex flex-col justify-between space-y-1">
+                          <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-800 text-xs">${escAttr(v.name)}</span>
+                            <span class="text-[10px] font-bold px-1.5 py-0.2 rounded ${v.type === 'MAX' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}">
+                              ${v.type === 'MAX' ? `🔺 ເກີນເກນ (+${v.pct}%)` : `🔻 ຫຼຸດເກນ (-${v.pct}%)`}
+                            </span>
+                          </div>
+                          <div class="flex items-baseline justify-between mt-1">
+                            <div>
+                              <span class="text-[10px] text-slate-400">ຄ່າຕົວຈິງ: </span>
+                              <span class="font-mono font-extrabold text-sm ${v.type === 'MAX' ? 'text-rose-700' : 'text-amber-700'}">${v.val}</span>
+                              <span class="text-[10px] text-slate-500 font-medium">${escAttr(v.unit)}</span>
+                            </div>
+                          </div>
+                          <div class="pt-1 border-t border-slate-100 text-[10px] text-slate-500 flex items-center justify-between">
+                            <span>ມາດຕະຖານ:</span>
+                            <span class="font-semibold text-slate-700">${v.standardRange}</span>
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  ` : `
+                    <div class="text-xs text-rose-700 bg-white p-2.5 rounded-lg border border-rose-200">
+                      🚨 ສະຖານີນີ້ຖືກໝາຍສະຖານະ Alert (ເຕືອນໄພ)
+                    </div>
+                  `}
+                </div>
+
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function onAlertFilterChange() {
+      const searchInput = document.getElementById('alertModalSearchInput');
+      const paramSelect = document.getElementById('alertModalParamSelect');
+      const compSelect = document.getElementById('alertModalCompSelect');
+      const provSelect = document.getElementById('alertModalProvSelect');
+
+      alertModalState.search = searchInput ? searchInput.value : '';
+      alertModalState.indicator = paramSelect ? paramSelect.value : 'ALL';
+      alertModalState.company = compSelect ? compSelect.value : 'ALL';
+      alertModalState.province = provSelect ? provSelect.value : 'ALL';
+
+      // Update frequency chips highlight
+      const allChips = document.querySelectorAll('[id^="alertChip_"]');
+      allChips.forEach(chip => {
+        const idKey = chip.id.replace('alertChip_', '');
+        if (idKey === alertModalState.indicator) {
+          chip.className = 'cursor-pointer px-2.5 py-1 rounded-lg text-[11px] font-bold transition border bg-rose-600 text-white border-rose-600 shadow-xs';
+        } else {
+          chip.className = 'cursor-pointer px-2.5 py-1 rounded-lg text-[11px] font-bold transition border bg-white text-slate-700 border-slate-300 hover:bg-rose-50 hover:border-rose-300';
+        }
+      });
+
+      renderAlertModalList();
+    }
+
+    function setAlertParamFilter(paramKey) {
+      alertModalState.indicator = paramKey;
+      const paramSelect = document.getElementById('alertModalParamSelect');
+      if (paramSelect) paramSelect.value = paramKey;
+      onAlertFilterChange();
+    }
+
+    function resetAlertModalFilters() {
+      alertModalState = { search: '', indicator: 'ALL', company: 'ALL', province: 'ALL' };
+      renderAlertModalShell();
+    }
+
+    function jumpFromAlertToMap(fbKey, stIdx) {
+      closeAlertStationsModal();
+      mapSelectCompany(fbKey);
+      setTimeout(() => {
+        mapSelectStation(`${fbKey}:${stIdx}`);
+      }, 300);
+    }
+
+    function jumpFromAlertToRecord(fbKey) {
+      closeAlertStationsModal();
+      jumpToRecords([fbKey]);
+    }
+
+    function filterMainTableByAlerts() {
+      closeAlertStationsModal();
+      const sf = document.getElementById('statusFilter');
+      if (sf) sf.value = 'ALERT';
+      render();
+      const el = document.getElementById('printableTableContainer');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      Swal.fire({
+        icon: 'info',
+        title: 'ກອງສະແດງສະເພາະ Alert',
+        text: 'ຕາຕະລາງຫຼັກໄດ້ຖືກກອງໃຫ້ສະແດງສະເພາະຊຸດຂໍ້ມູນທີ່ມີການເຕືອນໄພແລ້ວ',
+        timer: 1600,
+        showConfirmButton: false
+      });
+    }
+
+    function copyStationAlert(code, comp) {
+      const all = getAllAlertStationsList();
+      const target = all.find(item => item.code === code && item.comp === comp) || all.find(item => item.code === code);
+      if (!target) return Swal.fire({ icon: 'warning', title: 'ບໍ່ພົບຂໍ້ມູນສະຖານີ' });
+
+      let text = `🚨 ແຈ້ງເຕືອນຄຸນນະພາບນ້ຳ - ກົມຊັບພະຍາກອນນ້ຳ\n`;
+      text += `• ລະຫັດສະຖານີ: ${target.code}\n`;
+      text += `• ຊື່ສະຖານີ: ${target.name}\n`;
+      text += `• ບໍລິສັດ/ຊຸດຂໍ້ມູນ: ${target.comp}\n`;
+      if (target.province && target.province !== '-') text += `• ແຂວງ: ${target.province}\n`;
+      if (target.sampleDate) text += `• ວັນທີເກັບຕົວຢ່າງ: ${fmtSampleDate(target.sampleDate)}\n`;
+      if (target.lat && target.lng) text += `• ພິກັດ: ${target.lat}, ${target.lng}\n`;
+      if (target.qi) text += `• ດັດຊະນີ QWI: ${target.qi.score} (${target.qi.label})\n`;
+      text += `• ພາຣາມິເຕີທີ່ເກີນເກນມາດຕະຖານ (${target.violations.length} ລາຍການ):\n`;
+      target.violations.forEach((v, i) => {
+        text += `   ${i + 1}. ${v.name}: ${v.val} ${v.unit} (ມາດຕະຖານ: ${v.standardRange}) -> ${v.type === 'MAX' ? 'ເກີນເກນສູງສຸດ' : 'ຕ່ຳກວ່າເກນຕ່ຳສຸດ'}\n`;
+      });
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          Swal.fire({ icon: 'success', title: 'ສຳເນົາຂໍ້ມູນສຳເລັດ!', timer: 1400, showConfirmButton: false });
+        }).catch(() => fallbackCopyText(text));
+      } else {
+        fallbackCopyText(text);
+      }
+    }
+
+    function copyAllAlertsSummary() {
+      const all = getAllAlertStationsList();
+      if (!all.length) return Swal.fire({ icon: 'info', title: 'ບໍ່ມີສະຖານີເຕືອນໄພ' });
+
+      let text = `🚨 ລາຍງານສະຫຼຸບສະຖານີເຕືອນໄພຄຸນນະພາບນ້ຳ (Water Quality Alert Report)\n`;
+      text += `ກົມຊັບພະຍາກອນນ້ຳ · ກະຊວງຊັບພະຍາກອນທຳມະຊາດ ແລະ ສິ່ງແວດລ້ອມ\n`;
+      text += `ວັນທີອອກລາຍງານ: ${new Date().toLocaleDateString('lo-LA')}\n`;
+      text += `ຈຳນວນສະຖານີເຕືອນໄພທັງໝົດ: ${all.length} ສະຖານີ\n`;
+      text += `--------------------------------------------------\n`;
+      all.forEach((item, idx) => {
+        text += `[${idx + 1}] ${item.code} - ${item.name} | 🏢 ${item.comp}\n`;
+        if (item.province && item.province !== '-') text += `    ແຂວງ: ${item.province} | ວັນທີ: ${item.sampleDate ? fmtSampleDate(item.sampleDate) : '-'}\n`;
+        text += `    ຄ່າທີ່ເກີນເກນ: ` + item.violations.map(v => `${v.name}=${v.val}${v.unit} (ເກນ: ${v.standardRange})`).join('; ') + `\n\n`;
+      });
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          Swal.fire({ icon: 'success', title: 'ສຳເນົາສະຫຼຸບທັງໝົດສຳເລັດ!', timer: 1500, showConfirmButton: false });
+        }).catch(() => fallbackCopyText(text));
+      } else {
+        fallbackCopyText(text);
+      }
+    }
+
+    function fallbackCopyText(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      Swal.fire({ icon: 'success', title: 'ສຳເນົາສຳເລັດ!', timer: 1400, showConfirmButton: false });
+    }
+
+    function printAlertSummary() {
+      const all = getAllAlertStationsList();
+      if (!all.length) return Swal.fire({ icon: 'info', title: 'ບໍ່ມີສະຖານີເຕືອນໄພ' });
+      const printWin = window.open('', '_blank');
+      if (!printWin) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາອະນຸຍາດ Pop-up ເພື່ອພິມ' });
+
+      let rowsHtml = all.map((item, idx) => `
+        <tr>
+          <td style="text-align:center; padding:6px; border:1px solid #cbd5e1;">${idx + 1}</td>
+          <td style="padding:6px; border:1px solid #cbd5e1; font-weight:bold; font-family:monospace; color:#b91c1c;">${escAttr(item.code)}</td>
+          <td style="padding:6px; border:1px solid #cbd5e1;"><b>${escAttr(item.name)}</b></td>
+          <td style="padding:6px; border:1px solid #cbd5e1;">${escAttr(item.comp)}</td>
+          <td style="padding:6px; border:1px solid #cbd5e1;">${escAttr(item.province)}</td>
+          <td style="text-align:center; padding:6px; border:1px solid #cbd5e1;">${item.sampleDate ? fmtSampleDate(item.sampleDate) : '-'}</td>
+          <td style="padding:6px; border:1px solid #cbd5e1;">
+            ${item.violations.map(v => `<div style="margin-bottom:3px;"><b style="color:#b91c1c;">${escAttr(v.name)}:</b> ${v.val} ${escAttr(v.unit)} <span style="color:#64748b; font-size:11px;">(ມາດຕະຖານ: ${v.standardRange})</span></div>`).join('')}
+          </td>
+        </tr>
+      `).join('');
+
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>ລາຍງານສະຖານີເຕືອນໄພຄຸນນະພາບນ້ຳ</title>
+          <style>
+            body { font-family: 'Noto Sans Lao', sans-serif, system-ui; padding: 20px; color: #1e293b; }
+            h2, h4 { margin: 0 0 6px 0; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 15px; }
+            th { background: #f1f5f9; padding: 8px; border: 1px solid #cbd5e1; text-align: left; }
+            @media print {
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #e2e8f0; padding-bottom:12px; margin-bottom:12px;">
+            <div>
+              <h2>🚨 ລາຍງານສະຖານີເຕືອນໄພຄຸນນະພາບນ້ຳ (Water Quality Alert Stations)</h2>
+              <h4>ກົມຊັບພະຍາກອນນ້ຳ · ກະຊວງຊັບພະຍາກອນທຳມະຊາດ ແລະ ສິ່ງແວດລ້ອມ</h4>
+              <div style="font-size:12px; color:#64748b;">ວັນທີອອກລາຍງານ: ${new Date().toLocaleDateString('lo-LA')} | ຈຳນວນທັງໝົດ: ${all.length} ສະຖານີ</div>
+            </div>
+            <button onclick="window.print()" style="padding:8px 16px; background:#e11d48; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ ສັ່ງພິມ</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40px; text-align:center;">ລ/ດ</th>
+                <th style="width:80px;">ລະຫັດ</th>
+                <th>ຊື່ສະຖານີ</th>
+                <th>ບໍລິສັດ / ຊຸດຂໍ້ມູນ</th>
+                <th>ແຂວງ</th>
+                <th style="text-align:center;">ວັນທີເກັບ</th>
+                <th>ພາຣາມິເຕີທີ່ເກີນເກນມາດຕະຖານ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `);
+      printWin.document.close();
+    }
+
     /* --- BATCH SAVE & ACCORDION SYSTEM --- */
 
     function addTempStation(e) {
@@ -4006,6 +4700,17 @@
 
       document.getElementById('kpiNormal').innerText = totalNormal;
       document.getElementById('kpiAlert').innerText = totalAlert;
+
+      const kpiAlertBadge = document.getElementById('kpiAlertBadge');
+      if (kpiAlertBadge) {
+        if (totalAlert > 0) {
+          kpiAlertBadge.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 animate-pulse';
+          kpiAlertBadge.innerText = `🚨 ${totalAlert} ສະຖານີ`;
+        } else {
+          kpiAlertBadge.className = 'text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
+          kpiAlertBadge.innerText = '✅ ປົກກະຕິ';
+        }
+      }
 
       const qwiAvgEl = document.getElementById('kpiQwiAvg');
       const qwiBadgeEl = document.getElementById('kpiQwiBadge');
