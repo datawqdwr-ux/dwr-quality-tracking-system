@@ -99,7 +99,11 @@
       </div>
       <button type="button" id="sl_guest" class="w-full bg-white hover:bg-slate-50 text-slate-700 font-bold py-2.5 rounded-xl border border-slate-300 transition">👁️ ເຂົ້າເບິ່ງແບບທົ່ວໄປ (ບໍ່ຕ້ອງ Login)</button>
       <p class="text-[11px] text-slate-400 text-center -mt-3">ເບິ່ງແຜນທີ່ ແລະ ຂໍ້ມູນໄດ້ ແຕ່ບັນທຶກ/ແກ້ໄຂບໍ່ໄດ້</p>
-      <a href="index.html" class="block text-center text-[11px] font-semibold text-indigo-600 hover:underline">🏠 ກັບໄປໜ້າຫຼັກ</a>
+      <div class="flex items-center justify-center gap-3 text-[11px] font-semibold pt-1">
+        <a href="index.html" class="text-indigo-600 hover:underline">🏠 ໜ້າຫຼັກ</a>
+        <span class="text-slate-300">•</span>
+        <a href="wastewater.html" class="text-rose-600 hover:underline flex items-center gap-1">🏭 ໄປລະບົບປ່ອຍນໍ້າເປື້ອນ</a>
+      </div>
     </div>
   </div>
   <div id="root"></div>
@@ -2641,6 +2645,17 @@ var Navbar = ({
                   children: [
                     /* @__PURE__ */ jsx(LogIn, { size: 14, className: "text-sky-400" }),
                     /* @__PURE__ */ jsx("span", { children: "ເຂົ້າສູ່ລະບົບດ້ວຍບັນຊີອື່ນ" })
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxs(
+                "a",
+                {
+                  href: "wastewater.html",
+                  className: "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-rose-300 hover:text-white hover:bg-rose-500/10 transition-colors text-left font-medium",
+                  children: [
+                    /* @__PURE__ */ jsx("span", { className: "text-sm", children: "🏭" }),
+                    /* @__PURE__ */ jsx("span", { children: "ໄປລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ" })
                   ]
                 }
               )
@@ -8774,6 +8789,20 @@ var CommandPalette = ({
           ]
         }
       ),
+      /* @__PURE__ */ jsxs11(
+        "a",
+        {
+          href: "wastewater.html",
+          className: "w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-rose-50 text-slate-700 hover:text-rose-700 transition-colors group text-left",
+          children: [
+            /* @__PURE__ */ jsxs11("div", { className: "flex items-center gap-2.5", children: [
+              /* @__PURE__ */ jsx11("span", { className: "p-1 rounded-lg bg-rose-100 text-rose-700 text-sm", children: "🏭" }),
+              /* @__PURE__ */ jsx11("span", { className: "font-semibold", children: "ໄປລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ" })
+            ] }),
+            /* @__PURE__ */ jsx11("span", { className: "text-[10px] text-rose-600 font-medium", children: "ປ່ຽນລະບົບ" })
+          ]
+        }
+      ),
       filteredProjects.length > 0 && /* @__PURE__ */ jsxs11("div", { className: "pt-2", children: [
         /* @__PURE__ */ jsxs11("div", { className: "px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider", children: [
           "ໂຄງການທີ່ພົບເຫັນ (",
@@ -9126,7 +9155,10 @@ var LoginModal = ({
           ]
         }
       ),
-      /* @__PURE__ */ jsx13("p", { className: "pt-3 border-t border-slate-800 text-[11px] text-slate-400", children: "ໃຊ້ບັນຊີດຽວກັບ ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ" })
+      /* @__PURE__ */ jsxs13("div", { className: "pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400", children: [
+        /* @__PURE__ */ jsx13("span", { children: "ໃຊ້ບັນຊີດຽວກັບ ທຸກລະບົບນ້ຳ" }),
+        /* @__PURE__ */ jsx13("a", { href: "wastewater.html", className: "text-rose-400 hover:text-rose-300 font-semibold hover:underline flex items-center gap-1", children: "🏭 ໄປລະບົບປ່ອຍນໍ້າເປື້ອນ" })
+      ] })
     ] })
   ] }) });
 };
@@ -9573,7 +9605,10 @@ function App() {
       )
     ] }),
     /* @__PURE__ */ jsx14("footer", { className: "bg-white border-t border-slate-200 mt-16 py-6 text-center text-xs text-slate-500", children: /* @__PURE__ */ jsxs14("div", { className: "max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3", children: [
-      /* @__PURE__ */ jsx14("div", { children: "ລະບົບຕິດຕາມຂໍ້ມູນການນໍາໃຊ້ນໍ້າຂອງໂຄງການ ຫຼື ກິດຈະການ • ກົມຊັບພະຍາກອນນໍ້າ, ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ" }),
+      /* @__PURE__ */ jsxs14("div", { className: "flex flex-col sm:flex-row items-center gap-2 sm:gap-4", children: [
+        /* @__PURE__ */ jsx14("span", { children: "ລະບົບຕິດຕາມຂໍ້ມູນການນໍາໃຊ້ນໍ້າຂອງໂຄງການ ຫຼື ກິດຈະການ • ກົມຊັບພະຍາກອນນໍ້າ, ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ" }),
+        /* @__PURE__ */ jsx14("a", { href: "wastewater.html", className: "text-rose-600 hover:text-rose-700 font-bold flex items-center gap-1 hover:underline text-xs", children: "🏭 ໄປລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ" })
+      ] }),
       /* @__PURE__ */ jsxs14("div", { className: "flex items-center gap-2", children: [
         /* @__PURE__ */ jsx14("span", { className: "w-2 h-2 rounded-full bg-emerald-500 animate-pulse" }),
         /* @__PURE__ */ jsxs14("span", { children: [
@@ -9871,8 +9906,9 @@ window.sharedLogout = sharedLogout;
 
   </script>
 <style>body.map-fs #navPills{display:none!important}</style>
-<div id="navPills" style="position:fixed;left:14px;bottom:14px;z-index:9000;display:flex;gap:8px;font:600 13px 'Noto Sans Lao',sans-serif">
+<div id="navPills" style="position:fixed;left:14px;bottom:14px;z-index:9000;display:flex;flex-wrap:wrap;gap:8px;font:600 13px 'Noto Sans Lao',sans-serif">
   <a href="index.html" title="ກັບໄປໜ້າເລືອກລະບົບ" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#0b3a53;color:#fff;text-decoration:none;box-shadow:0 4px 14px rgba(11,58,83,.35)">🏠 ໜ້າຫຼັກ</a>
+  <a href="wastewater.html" title="ໄປລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ (ບໍ່ຕ້ອງ Login ໃໝ່)" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#a04a3a;color:#fff;text-decoration:none;box-shadow:0 4px 14px rgba(160,74,58,.35)">🏭 ໄປລະບົບປ່ອຍນ້ຳເປື້ອນ</a>
   <a href="water-quality.html" title="ໄປລະບົບຄຸນນະພາບນ້ຳ (ບໍ່ຕ້ອງ Login ໃໝ່)" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#13667a;color:#fff;text-decoration:none;box-shadow:0 4px 14px rgba(19,102,122,.35)">🧪 ໄປລະບົບຄຸນນະພາບນ້ຳ</a>
 </div>
 </body>
