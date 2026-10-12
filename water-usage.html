@@ -2902,29 +2902,34 @@ var Navbar = ({
   isFirebaseConnected
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isSystemMenuOpen, setIsSystemMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
+  const systemMenuRef = useRef(null);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);
       }
+      if (systemMenuRef.current && !systemMenuRef.current.contains(event.target)) {
+        setIsSystemMenuOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  return /* @__PURE__ */ jsx("header", { className: "sticky top-0 z-[900] bg-slate-900/95 backdrop-blur-xl border-b border-slate-800 text-white shadow-lg", children: /* @__PURE__ */ jsxs("div", { className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8", children: [
-    /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between h-16 gap-3", children: [
+  return /* @__PURE__ */ jsx("header", { className: "sticky top-0 z-[900] bg-slate-900/95 backdrop-blur-xl border-b border-slate-800 text-white shadow-lg", children: /* @__PURE__ */ jsxs("div", { className: "w-full px-3 sm:px-6 lg:px-8", children: [
+    /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between h-16 gap-3 sm:gap-6", children: [
       /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3 shrink-0", children: [
         /* @__PURE__ */ jsxs("div", { className: "relative", children: [
           /* @__PURE__ */ jsx("div", { className: "w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-sky-500/20 ring-2 ring-white/10", children: /* @__PURE__ */ jsx("span", { className: "text-xl", children: "💧" }) }),
           /* @__PURE__ */ jsx("span", { className: "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-900 animate-pulse" })
         ] }),
-        /* @__PURE__ */ jsxs("div", { children: [
+        /* @__PURE__ */ jsxs("div", { className: "flex flex-col sm:flex-row sm:items-baseline sm:gap-2", children: [
           /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
-            /* @__PURE__ */ jsx("h1", { className: "text-sm sm:text-base font-bold text-white tracking-tight leading-tight", children: "ລະບົບຕິດຕາມຂໍ້ມູນການນໍາໃຊ້ນໍ້າຂອງໂຄງການ ຫຼື ກິດຈະການ" }),
-            /* @__PURE__ */ jsx("span", { className: "hidden xl:inline-block text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 border border-sky-400/30", children: "GIS Real-time" })
+            /* @__PURE__ */ jsx("h1", { className: "text-sm sm:text-base font-bold text-white tracking-tight leading-tight whitespace-nowrap", children: "ລະບົບຕິດຕາມຂໍ້ມູນການນໍາໃຊ້ນໍ້າ" }),
+            /* @__PURE__ */ jsx("span", { className: "hidden md:inline-block text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 border border-sky-400/30 whitespace-nowrap", children: "GIS Real-time" })
           ] }),
-          /* @__PURE__ */ jsx("p", { className: "text-[11px] text-slate-400 hidden sm:block", children: "ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ • ກົມຊັບພະຍາກອນນໍ້າ" })
+          /* @__PURE__ */ jsx("p", { className: "text-[11px] text-slate-400 hidden lg:inline-block whitespace-nowrap", children: "· ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ • ກົມຊັບພະຍາກອນນໍ້າ" })
         ] })
       ] }),
       /* @__PURE__ */ jsxs("nav", { className: "hidden lg:flex items-center gap-1 bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/60 shadow-inner text-xs font-semibold", children: [
@@ -10422,11 +10427,119 @@ window.sharedLogout = sharedLogout;
  */
 
   </script>
-<style>body.map-fs #navPills{display:none!important}</style>
-<div id="navPills" style="position:fixed;left:14px;bottom:14px;z-index:9000;display:flex;flex-wrap:wrap;gap:8px;font:600 13px 'Noto Sans Lao',sans-serif">
-  <a href="index.html" title="ກັບໄປໜ້າເລືອກລະບົບ" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#0b3a53;color:#fff;text-decoration:none;box-shadow:0 4px 14px rgba(11,58,83,.35)">🏠 ໜ້າຫຼັກ</a>
-  <a href="wastewater.html" title="ໄປລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ (ບໍ່ຕ້ອງ Login ໃໝ່)" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#a04a3a;color:#fff;text-decoration:none;box-shadow:0 4px 14px rgba(160,74,58,.35)">🏭 ໄປລະບົບປ່ອຍນ້ຳເປື້ອນ</a>
-  <a href="water-quality.html" title="ໄປລະບົບຄຸນນະພາບນ້ຳ (ບໍ່ຕ້ອງ Login ໃໝ່)" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#13667a;color:#fff;text-decoration:none;box-shadow:0 4px 14px rgba(19,102,122,.35)">🧪 ໄປລະບົບຄຸນນະພາບນ້ຳ</a>
+<style>
+  body.map-fs #systemSwitcherBar { display: none !important; }
+  #systemSwitcherBar {
+    position: fixed;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    z-index: 9000;
+    max-width: calc(100vw - 24px);
+  }
+  .system-switcher-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 9999px;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(51, 65, 85, 0.85);
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    font-family: 'Noto Sans Lao', system-ui, -apple-system, sans-serif;
+    white-space: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .system-switcher-container::-webkit-scrollbar {
+    display: none;
+  }
+  .sys-badge-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-right: 1px solid rgba(51, 65, 85, 0.7);
+    margin-right: 2px;
+  }
+  .sys-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
+    border-radius: 9999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #e2e8f0;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(71, 85, 105, 0.4);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+  .sys-btn:hover {
+    color: #ffffff;
+    transform: translateY(-1px);
+    border-color: rgba(148, 163, 184, 0.6);
+  }
+  .sys-btn.active-sys {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff;
+    border-color: #38bdf8;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.45), 0 2px 4px rgba(0, 0, 0, 0.2);
+    cursor: default;
+    pointer-events: none;
+  }
+  .sys-btn.btn-home:hover {
+    background: rgba(51, 65, 85, 0.85);
+  }
+  .sys-btn.btn-waste:hover {
+    background: rgba(185, 28, 28, 0.85);
+    border-color: #f87171;
+  }
+  .sys-btn.btn-wq:hover {
+    background: rgba(13, 148, 136, 0.85);
+    border-color: #2dd4bf;
+  }
+</style>
+
+<div id="systemSwitcherBar" aria-label="ແຖບເລືອກລະບົບ">
+  <div class="system-switcher-container">
+    <span class="sys-badge-title">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #38bdf8;">
+        <rect x="3" y="3" width="7" height="7"></rect>
+        <rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect>
+        <rect x="3" y="14" width="7" height="7"></rect>
+      </svg>
+      ເລືອກລະບົບ
+    </span>
+    <a href="index.html" class="sys-btn btn-home" title="ກັບໄປໜ້າຫຼັກເລືອກລະບົບ">
+      <span>🏠</span>
+      <span>ໜ້າຫຼັກ</span>
+    </a>
+    <span class="sys-btn active-sys" title="ລະບົບປະຈຸບັນ: ລະບົບຂໍ້ມູນການນໍາໃຊ້ນໍ້າ">
+      <span>💧</span>
+      <span>ລະບົບການນໍາໃຊ້ນໍ້າ</span>
+      <span style="font-size: 9px; padding: 2px 5px; border-radius: 9999px; background: rgba(255,255,255,0.22); margin-left: 2px;">ປັດຈຸບັນ</span>
+    </span>
+    <a href="water-quality.html" class="sys-btn btn-wq" title="ປ່ຽນໄປລະບົບຄຸນນະພາບນ້ຳ (ໃຊ້ງານຕໍ່ເນື່ອງໂດຍບໍ່ຕ້ອງ Login ໃໝ່)">
+      <span>🧪</span>
+      <span>ລະບົບຄຸນນະພາບນ້ຳ</span>
+    </a>
+    <a href="wastewater.html" class="sys-btn btn-waste" title="ປ່ຽນໄປລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ (ໃຊ້ງານຕໍ່ເນື່ອງໂດຍບໍ່ຕ້ອງ Login ໃໝ່)">
+      <span>🏭</span>
+      <span>ລະບົບປ່ອຍນ້ຳເປື້ອນ</span>
+    </a>
+  </div>
 </div>
 </body>
 </html>
