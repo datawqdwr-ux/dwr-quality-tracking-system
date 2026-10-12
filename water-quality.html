@@ -154,38 +154,23 @@
             <span>📅</span>
             <span>ສະຖິຕິ 12 ເດືອນ</span>
           </a>
-          <button onclick="toggleLogsModal()" class="px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all cursor-pointer" title="ປະວັດການບັນທຶກ ແລະ ລົບຂໍ້ມູນ">
+          <button onclick="toggleLogsModal()" class="px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all cursor-pointer" title="ປະຫວັດການບັນທຶກ ແລະ ລົບຂໍ້ມູນ">
             <span>📜</span>
-            <span>ປະວັດການໃຊ້ງານ</span>
+            <span>ປະຫວັດການໃຊ້ງານ</span>
+          </button>
+          <button onclick="openExportModal()" class="px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold shadow-md shadow-teal-500/25 hover:from-teal-400 hover:to-emerald-500 transition-all cursor-pointer" title="ສູນສົ່ງອອກບົດລາຍງານສະເພາະ (Excel, Word, PDF)">
+            <span>📥</span>
+            <span>ສົ່ງອອກລາຍງານ</span>
           </button>
         </div>
 
         <!-- Right: Actions & User Section -->
         <div class="flex items-center gap-1.5 sm:gap-2.5">
-          <!-- Export Actions Dropdown -->
-          <div class="relative" id="wqExportDropdownWrapper">
-            <button type="button" onclick="toggleWqMenu('wqExportDropdown')" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 text-xs font-semibold text-slate-200 hover:text-white transition shadow-sm cursor-pointer" title="ສົ່ງອອກຂໍ້ມູນ">
-              <span>📥</span>
-              <span class="hidden sm:inline">ສົ່ງອອກຂໍ້ມູນ</span>
-              <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            </button>
-            <div id="wqExportDropdown" class="hidden absolute right-0 mt-2 w-56 bg-slate-900/98 backdrop-blur-xl border border-slate-700/90 rounded-2xl shadow-2xl p-2 z-[60] space-y-1">
-              <button onclick="exportCSV(); closeWqMenus();" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 text-xs transition text-left cursor-pointer">
-                <span class="text-emerald-400 text-base">📊</span>
-                <div>
-                  <div class="font-bold">Export CSV</div>
-                  <div class="text-[10px] text-slate-400">ດາວໂຫລດໄຟລ໌ຂໍ້ມູນຕາຕະລາງ</div>
-                </div>
-              </button>
-              <button onclick="downloadPDFReport(); closeWqMenus();" id="pdfBtn" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 text-xs transition text-left cursor-pointer">
-                <span class="text-rose-400 text-base">📄</span>
-                <div>
-                  <div class="font-bold">ດາວໂຫລດ PDF</div>
-                  <div class="text-[10px] text-slate-400">ບົດລາຍງານສະຫຼຸບທາງການ</div>
-                </div>
-              </button>
-            </div>
-          </div>
+          <!-- Quick Export Action Button (Visible on smaller screens when center bar is hidden) -->
+          <button type="button" onclick="openExportModal()" class="lg:hidden flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-teal-600/25 hover:bg-teal-600/40 border border-teal-500/50 text-xs font-bold text-teal-200 hover:text-white transition shadow-sm cursor-pointer" title="ເປີດສູນສົ່ງອອກບົດລາຍງານ">
+            <span>📥</span>
+            <span class="hidden sm:inline">ຫ້ອງສົ່ງອອກ</span>
+          </button>
 
           <!-- Admin Settings Button (Visible only to SUPER_ADMIN) -->
           <button id="adminSettingsBtn" onclick="toggleSettingsModal()" class="items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 text-xs font-semibold transition cursor-pointer shadow-sm hidden" title="ຕັ້ງຄ່າລະບົບ (Administrator Config)">
@@ -214,7 +199,7 @@
 
       <!-- Mobile Navigation Drawer -->
       <div id="wqMobileMenu" class="hidden lg:hidden border-t border-slate-800 py-3 space-y-2">
-        <div class="grid grid-cols-3 gap-2 text-xs font-medium">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-medium">
           <button onclick="openAnnualReport(); closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
             <span>📊</span>
             <span>ບົດວິເຄາະ</span>
@@ -225,7 +210,11 @@
           </a>
           <button onclick="toggleLogsModal(); closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
             <span>📜</span>
-            <span>ປະວັດ</span>
+            <span>ປະຫວັດການໃຊ້ງານ</span>
+          </button>
+          <button onclick="openExportModal(); closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold shadow-md hover:from-teal-400 hover:to-emerald-500">
+            <span>📥</span>
+            <span>ສົ່ງອອກລາຍງານ</span>
           </button>
         </div>
       </div>
@@ -684,12 +673,324 @@
     </div>
   </div>
 
+  <!-- Modal Dedicated Export Reports (ຫ້ອງສົ່ງອອກລາຍງານສະເພາະ) -->
+  <div id="exportModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5 z-[80] overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-4xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Modal Header -->
+      <div class="bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 text-white p-5 sm:p-6 border-b border-teal-800/40 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-500 flex items-center justify-center text-white text-xl shadow-lg shadow-teal-500/25 ring-2 ring-white/10">
+            📥
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">ຫ້ອງສົ່ງອອກບົດລາຍງານ (Export Reports Hub)</h3>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-400/30">Official</span>
+            </div>
+            <p class="text-xs text-slate-300 mt-0.5">ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ · ກົມຊັບພະຍາກອນນ້ຳ</p>
+          </div>
+        </div>
+        <button onclick="closeExportModal()" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xl transition cursor-pointer" title="ປິດ">
+          &times;
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="p-5 sm:p-7 space-y-6 overflow-y-auto flex-1">
+        
+        <!-- Tab Selector: 1. ບົດລາຍງານຜົນກວດຄຸນນະພາບນ້ຳ | 2. ບົດລາຍງານປະຫວັດການດຳເນີນງານ -->
+        <div class="bg-slate-100 p-1.5 rounded-2xl border border-slate-200 flex flex-wrap gap-1.5">
+          <button id="expTabWqBtn" onclick="switchExportModalTab('water_quality')" class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-teal-700 text-white shadow-md">
+            <span>🧪</span>
+            <span>1. ບົດລາຍງານຂໍ້ມູນຄຸນນະພາບນ້ຳ (Water Quality)</span>
+            <span id="expTabWqBadge" class="bg-teal-800 text-teal-100 px-2 py-0.5 rounded-full text-[10px]">0</span>
+          </button>
+          <button id="expTabLogsBtn" onclick="switchExportModalTab('logs')" class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200">
+            <span>📜</span>
+            <span>2. ບົດລາຍງານປະຫວັດການດຳເນີນງານ (Audit Logs)</span>
+            <span id="expTabLogsBadge" class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full text-[10px]">0</span>
+          </button>
+        </div>
+
+        <!-- Security Notice Box -->
+        <div class="p-3.5 bg-amber-50 border border-amber-200/90 rounded-2xl text-amber-900 text-xs flex items-start gap-3">
+          <span class="text-lg leading-none mt-0.5">🔒</span>
+          <div class="flex-1 space-y-0.5">
+            <p class="font-bold text-amber-950">ນະໂຍບາຍຄວາມປອດໄພຂອງຂໍ້ມູນທາງການ:</p>
+            <p class="text-[11.5px] text-amber-900/90 leading-relaxed">
+              Super Admin ແລະ Staff ທີ່ເຂົ້າສູ່ລະບົບສາມາດດາວໂຫຼດໄດ້ທັນທີ. ສຳລັບຜູ້ໃຊ້ທົ່ວໄປ (Viewer / ແຂກ) ຕ້ອງໃສ່ລະຫັດອະນຸຍາດດາວໂຫຼດ (Export Passcode) ທີ່ Super Admin ກຳນົດໄວ້.
+            </p>
+          </div>
+        </div>
+
+        <!-- Panel 1: Water Quality Reports -->
+        <div id="expPanelWq" class="space-y-6">
+          
+          <!-- Filters Card -->
+          <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-200/80 pb-3">
+              <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                <span>🔍</span>
+                <span>ກັ່ນຕອງເງື່ອນໄຂບົດລາຍງານ</span>
+              </h4>
+              <button onclick="resetExportFilters()" class="text-[11px] text-teal-700 hover:text-teal-900 font-semibold underline cursor-pointer">
+                ລ້າງຕົວກອງທັງໝົດ
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">ກອງຕາມແຂວງ (Province)</label>
+                <select id="expFilterProvince" onchange="updateExportPreview()" class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-teal-500 outline-none">
+                  <option value="ALL">ທຸກແຂວງ (ທັງໝົດ)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">ກອງຕາມສະຖານະ (Status)</label>
+                <select id="expFilterStatus" onchange="updateExportPreview()" class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-teal-500 outline-none">
+                  <option value="ALL">ທຸກສະຖານະ (Normal & Alert)</option>
+                  <option value="NORMAL">✅ Normal (ປົກກະຕິ)</option>
+                  <option value="ALERT">🚨 Alert (ເຕືອນໄພເກີນເກນ)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">ຄົ້ນຫາຊື່ບໍລິສັດ/ສະຖານີ</label>
+                <input type="text" id="expFilterSearch" oninput="updateExportPreview()" placeholder="ພິມຊື່ ຫຼື ລະຫັດ..." class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-teal-500 outline-none">
+              </div>
+            </div>
+
+            <!-- Custom Report Title Input -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">ຫົວຂໍ້ບົດລາຍງານທາງການ (Title Header ສໍາລັບ Word/PDF)</label>
+              <input type="text" id="expReportTitle" value="ບົດລາຍງານຜົນການກວດກາ ແລະ ວິເຄາະຄຸນນະພາບນ້ຳ" class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3.5 py-2 font-semibold text-slate-800 focus:ring-2 focus:ring-teal-500 outline-none">
+            </div>
+          </div>
+
+          <!-- Preview & Count Badge -->
+          <div class="flex items-center justify-between px-2 text-xs">
+            <span class="text-slate-600 font-medium">
+              ຈຳນວນຂໍ້ມູນທີ່ເລືອກ: <b id="expMatchedRecordsCount" class="text-teal-700 font-bold">0</b> ສະຖານີ 
+              (ຈາກ <b id="expMatchedDatasetsCount" class="text-slate-800">0</b> ຊຸດຂໍ້ມູນບໍລິສັດ)
+            </span>
+            <span class="text-slate-400 text-[11px]">ພ້ອມສົ່ງອອກທຸກຮູບແບບ</span>
+          </div>
+
+          <!-- Export Action Cards (Excel, Word, PDF, CSV) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <!-- 1. Excel Button -->
+            <button onclick="handleExportModalExcel()" class="group p-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100/70 hover:border-emerald-400 transition text-left flex flex-col justify-between shadow-xs cursor-pointer">
+              <div class="space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-md group-hover:scale-105 transition">
+                  📊
+                </div>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-900 group-hover:text-emerald-950">ໄຟລ໌ Excel (.xlsx)</h5>
+                  <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">ຕາຕະລາງເຕັມຮູບແບບ ແບ່ງຄໍລຳພ້ອມສູດ ແລະ ດັດຊະນີ QWI</p>
+                </div>
+              </div>
+              <div class="mt-3 pt-2.5 border-t border-emerald-200/80 flex items-center justify-between text-xs font-bold text-emerald-700 group-hover:text-emerald-800">
+                <span>ດາວໂຫຼດ Excel</span>
+                <span>➔</span>
+              </div>
+            </button>
+
+            <!-- 2. Word Button -->
+            <button onclick="handleExportModalWord()" class="group p-4 rounded-2xl border-2 border-blue-200 bg-blue-50/50 hover:bg-blue-100/70 hover:border-blue-400 transition text-left flex flex-col justify-between shadow-xs cursor-pointer">
+              <div class="space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-lg shadow-md group-hover:scale-105 transition">
+                  📝
+                </div>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-900 group-hover:text-blue-950">ໄຟລ໌ Word (.doc)</h5>
+                  <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">ເອກະສານບົດລາຍງານພ້ອມຫົວຂໍ້ທາງການ, ຕາຕະລາງ ແລະ ຊ່ອງເຊັນອະນຸມັດ</p>
+                </div>
+              </div>
+              <div class="mt-3 pt-2.5 border-t border-blue-200/80 flex items-center justify-between text-xs font-bold text-blue-700 group-hover:text-blue-800">
+                <span>ດາວໂຫຼດ Word</span>
+                <span>➔</span>
+              </div>
+            </button>
+
+            <!-- 3. PDF Button -->
+            <button onclick="handleExportModalPDF()" class="group p-4 rounded-2xl border-2 border-rose-200 bg-rose-50/50 hover:bg-rose-100/70 hover:border-rose-400 transition text-left flex flex-col justify-between shadow-xs cursor-pointer">
+              <div class="space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg shadow-md group-hover:scale-105 transition">
+                  📄
+                </div>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-900 group-hover:text-rose-950">ພິມ / PDF (.pdf)</h5>
+                  <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">ພິມອອກເອກະສານ A4 ທາງການ ຫຼື ບັນທຶກເປັນ PDF ຄຸນນະພາບສູງ</p>
+                </div>
+              </div>
+              <div class="mt-3 pt-2.5 border-t border-rose-200/80 flex items-center justify-between text-xs font-bold text-rose-700 group-hover:text-rose-800">
+                <span>ພິມ / ອອກ PDF</span>
+                <span>➔</span>
+              </div>
+            </button>
+
+            <!-- 4. CSV Button -->
+            <button onclick="handleExportModalCSV()" class="group p-4 rounded-2xl border-2 border-amber-200 bg-amber-50/50 hover:bg-amber-100/70 hover:border-amber-400 transition text-left flex flex-col justify-between shadow-xs cursor-pointer">
+              <div class="space-y-2">
+                <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center text-lg shadow-md group-hover:scale-105 transition">
+                  📑
+                </div>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-900 group-hover:text-amber-950">ໄຟລ໌ CSV (Raw Data)</h5>
+                  <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">ຂໍ້ມູນດິບລະຫັດ UTF-8 BOM ສຳລັບນຳໄປໃຊ້ຕໍ່ໃນລະບົບ GIS ອື່ນໆ</p>
+                </div>
+              </div>
+              <div class="mt-3 pt-2.5 border-t border-amber-200/80 flex items-center justify-between text-xs font-bold text-amber-700 group-hover:text-amber-800">
+                <span>ດາວໂຫຼດ CSV</span>
+                <span>➔</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Preview Table Snippet -->
+          <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
+            <div class="p-3 bg-slate-100/90 border-b border-slate-200 flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <span>👁️</span>
+                <span>ຕົວຢ່າງຂໍ້ມູນທີ່ຈະສົ່ງອອກ (10 ແຖວທຳອິດ)</span>
+              </span>
+              <span id="expPreviewTotalNotice" class="text-[11px] text-slate-500 font-medium"></span>
+            </div>
+            <div class="overflow-x-auto max-h-56">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-50 text-slate-600 border-b sticky top-0">
+                  <tr>
+                    <th class="p-2 text-center w-10">ລ/ດ</th>
+                    <th class="p-2">ບໍລິສັດ / ຫົວຂໍ້</th>
+                    <th class="p-2">ສະຖານີ</th>
+                    <th class="p-2">ແຂວງ</th>
+                    <th class="p-2 text-center">ວັນທີເກັບຕົວຢ່າງ</th>
+                    <th class="p-2 text-center">QWI</th>
+                    <th class="p-2 text-center">ສະຖານະ</th>
+                  </tr>
+                </thead>
+                <tbody id="expPreviewTableBody" class="divide-y divide-slate-100">
+                  <tr><td colspan="7" class="p-4 text-center text-slate-400">ກຳລັງໂຫລດຂໍ້ມູນຕົວຢ່າງ...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Panel 2: Audit Logs Reports -->
+        <div id="expPanelLogs" class="space-y-6 hidden">
+          <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-200/80 pb-3">
+              <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                <span>🔍</span>
+                <span>ກັ່ນຕອງປະຫວັດການດຳເນີນງານ (Audit Logs)</span>
+              </h4>
+              <button onclick="fetchActivityLogsForExport()" class="text-[11px] text-teal-700 hover:text-teal-900 font-semibold underline cursor-pointer">
+                ໂຫລດຂໍ້ມູນໃໝ່
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">ປະເພດການດຳເນີນງານ (Action)</label>
+                <select id="expLogActionFilter" onchange="filterAndRenderLogsExport()" class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-teal-500 outline-none">
+                  <option value="ALL">ທຸກການກະທຳ (All Actions)</option>
+                  <option value="CREATE">🟢 ເພີ່ມຂໍ້ມູນ (CREATE)</option>
+                  <option value="EDIT">✏️ ແກ້ໄຂຂໍ້ມູນ (EDIT)</option>
+                  <option value="DELETE">🔴 ລົບຂໍ້ມູນ (DELETE)</option>
+                  <option value="MERGE">🔗 ລວມຂໍ້ມູນ (MERGE)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">ຄົ້ນຫາຜູ້ບັນທຶກ ຫຼື ລະຫັດ</label>
+                <input type="text" id="expLogSearch" oninput="filterAndRenderLogsExport()" placeholder="ພິມຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດລາຍການ..." class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-teal-500 outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Logs Export Buttons (Excel, Word, PDF) -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <button onclick="handleExportLogsExcel()" class="p-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100/70 hover:border-emerald-400 transition text-left flex flex-col justify-between cursor-pointer">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📊</span>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-900">Excel ປະຫວັດ</h5>
+                  <p class="text-[11px] text-slate-500">ດາວໂຫຼດ Audit Logs ເປັນ .xlsx</p>
+                </div>
+              </div>
+            </button>
+            <button onclick="handleExportLogsWord()" class="p-4 rounded-2xl border-2 border-blue-200 bg-blue-50/50 hover:bg-blue-100/70 hover:border-blue-400 transition text-left flex flex-col justify-between cursor-pointer">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📝</span>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-900">Word ປະຫວັດ</h5>
+                  <p class="text-[11px] text-slate-500">ບົດລາຍງານປະຫວັດ .doc ພ້ອມເຊັນ</p>
+                </div>
+              </div>
+            </button>
+            <button onclick="handleExportLogsPDF()" class="p-4 rounded-2xl border-2 border-rose-200 bg-rose-50/50 hover:bg-rose-100/70 hover:border-rose-400 transition text-left flex flex-col justify-between cursor-pointer">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">📄</span>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-900">ພິມ / PDF ປະຫວັດ</h5>
+                  <p class="text-[11px] text-slate-500">ພິມບົດລາຍງານ Audit Logs ທາງການ</p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <!-- Logs Preview Table -->
+          <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
+            <div class="p-3 bg-slate-100/90 border-b border-slate-200 flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700">📜 ຕົວຢ່າງລາຍການປະຫວັດ (<span id="expLogsMatchedCount" class="font-bold text-teal-700">0</span> ລາຍການ)</span>
+            </div>
+            <div class="overflow-x-auto max-h-56">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-50 text-slate-600 border-b sticky top-0">
+                  <tr>
+                    <th class="p-2">ເວລາ</th>
+                    <th class="p-2">ການກະທຳ</th>
+                    <th class="p-2">ລະຫັດ/ຂໍ້ມູນ</th>
+                    <th class="p-2">ຜູ້ດຳເນີນການ</th>
+                    <th class="p-2">ສິດ</th>
+                  </tr>
+                </thead>
+                <tbody id="expLogsPreviewBody" class="divide-y divide-slate-100">
+                  <tr><td colspan="5" class="p-4 text-center text-slate-400">ກຳລັງໂຫລດຂໍ້ມູນ...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+        <span class="text-xs text-slate-500">
+          💡 ສູນລວມການສົ່ງອອກລາຍງານ ລະບົບຂໍ້ມູນຊັບພະຍາກອນນ້ຳ
+        </span>
+        <button onclick="closeExportModal()" class="px-5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition cursor-pointer">
+          ປິດໜ້າຕ່າງ
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Modal Activity Logs -->
   <div id="logsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
       <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">📜 ປະວັດການບັນທຶກ ແລະ ລົບຂໍ້ມູນ (Activity Logs)</h3>
-        <button onclick="toggleLogsModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+        <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <h3 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">📜 ປະຫວັດການບັນທຶກ ແລະ ລົບຂໍ້ມູນ (Activity Logs)</h3>
+          <button onclick="toggleLogsModal(); openExportModal('logs');" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 flex items-center gap-1 transition cursor-pointer" title="ສົ່ງອອກບົດລາຍງານປະຫວັດການໃຊ້ງານ">
+            <span>📥</span>
+            <span>ສົ່ງອອກລາຍງານ</span>
+          </button>
+        </div>
+        <button onclick="toggleLogsModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
       </div>
 
       <div class="overflow-y-auto flex-1 border rounded-xl">
@@ -8428,6 +8729,655 @@
 
       btn.innerText = '📄 ດາວໂຫລດ PDF';
       btn.disabled = false;
+    }
+
+    /* ====================================================================
+       ສູນສົ່ງອອກບົດລາຍງານສະເພາະ (Dedicated Export Hub Management & Generators)
+       ==================================================================== */
+    let currentExportModalTab = 'water_quality';
+    let cachedExportLogs = [];
+
+    function openExportModal(defaultTab) {
+      const modal = document.getElementById('exportModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      if (defaultTab) {
+        switchExportModalTab(defaultTab);
+      }
+      populateExportProvinceOptions();
+      updateExportPreview();
+      fetchActivityLogsForExport();
+    }
+
+    function closeExportModal() {
+      const modal = document.getElementById('exportModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function switchExportModalTab(tab) {
+      currentExportModalTab = tab;
+      const wqBtn = document.getElementById('expTabWqBtn');
+      const logsBtn = document.getElementById('expTabLogsBtn');
+      const panelWq = document.getElementById('expPanelWq');
+      const panelLogs = document.getElementById('expPanelLogs');
+
+      if (tab === 'water_quality') {
+        wqBtn.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-teal-700 text-white shadow-md';
+        logsBtn.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200';
+        panelWq.classList.remove('hidden');
+        panelLogs.classList.add('hidden');
+        updateExportPreview();
+      } else {
+        logsBtn.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 bg-teal-700 text-white shadow-md';
+        wqBtn.className = 'flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-slate-200';
+        panelLogs.classList.remove('hidden');
+        panelWq.classList.add('hidden');
+        fetchActivityLogsForExport();
+      }
+    }
+
+    function populateExportProvinceOptions() {
+      const select = document.getElementById('expFilterProvince');
+      if (!select) return;
+      const cur = select.value;
+      const provSet = new Set();
+      waterData.forEach(r => {
+        (r.stations || [r]).forEach(st => {
+          if (st.province && String(st.province).trim() && st.province !== 'null') {
+            provSet.add(String(st.province).trim());
+          }
+        });
+      });
+      const sorted = Array.from(provSet).sort();
+      select.innerHTML = '<option value="ALL">ທຸກແຂວງ (ທັງໝົດ)</option>' + sorted.map(p => `<option value="${escAttr(p)}">${escAttr(p)}</option>`).join('');
+      if (provSet.has(cur)) select.value = cur;
+    }
+
+    function resetExportFilters() {
+      const p = document.getElementById('expFilterProvince');
+      const s = document.getElementById('expFilterStatus');
+      const q = document.getElementById('expFilterSearch');
+      if (p) p.value = 'ALL';
+      if (s) s.value = 'ALL';
+      if (q) q.value = '';
+      updateExportPreview();
+    }
+
+    function getFilteredWaterQualityExportData() {
+      const selProv = document.getElementById('expFilterProvince')?.value || 'ALL';
+      const selStatus = document.getElementById('expFilterStatus')?.value || 'ALL';
+      const query = (document.getElementById('expFilterSearch')?.value || '').toLowerCase().trim();
+
+      const matchedDatasets = [];
+      const flatStations = [];
+
+      waterData.forEach(r => {
+        const company = r.companyName || r.name || 'ບໍ່ລະບຸ';
+        const stations = r.stations || [r];
+        const filteredStations = [];
+
+        stations.forEach(st => {
+          const prov = st.province || '';
+          if (selProv !== 'ALL' && prov !== selProv) return;
+
+          const isAlert = st.status && (st.status.isAlert || st.status.type === 'ALERT' || st.status.text?.toLowerCase().includes('alert'));
+          if (selStatus === 'NORMAL' && isAlert) return;
+          if (selStatus === 'ALERT' && !isAlert) return;
+
+          if (query) {
+            const matchCompany = company.toLowerCase().includes(query);
+            const matchName = (st.name || '').toLowerCase().includes(query);
+            const matchCode = (st.code || '').toLowerCase().includes(query);
+            const matchProv = prov.toLowerCase().includes(query);
+            if (!matchCompany && !matchName && !matchCode && !matchProv) return;
+          }
+
+          filteredStations.push(st);
+          flatStations.push({ ...st, companyName: company, datasetDate: r.date, recordedBy: r.recordedBy || 'ບໍ່ລະບຸ' });
+        });
+
+        if (filteredStations.length > 0) {
+          matchedDatasets.push({ ...r, stations: filteredStations });
+        }
+      });
+
+      return { matchedDatasets, flatStations };
+    }
+
+    function updateExportPreview() {
+      const { matchedDatasets, flatStations } = getFilteredWaterQualityExportData();
+      
+      const badgeRec = document.getElementById('expMatchedRecordsCount');
+      const badgeDs = document.getElementById('expMatchedDatasetsCount');
+      const tabBadge = document.getElementById('expTabWqBadge');
+      if (badgeRec) badgeRec.innerText = flatStations.length;
+      if (badgeDs) badgeDs.innerText = matchedDatasets.length;
+      if (tabBadge) tabBadge.innerText = flatStations.length;
+
+      const notice = document.getElementById('expPreviewTotalNotice');
+      if (notice) notice.innerText = `ລວມທັງໝົດ ${flatStations.length} ລາຍການ`;
+
+      const tbody = document.getElementById('expPreviewTableBody');
+      if (!tbody) return;
+
+      if (flatStations.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">ບໍ່ພົບຂໍ້ມູນທີ່ກົງກັບເງື່ອນໄຂການກັ່ນຕອງ</td></tr>';
+        return;
+      }
+
+      const previewRows = flatStations.slice(0, 10);
+      tbody.innerHTML = previewRows.map((st, idx) => {
+        const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-') ? st.qwi : calculateAutoQWI(st.customs || {});
+        const qi = interpretQWI(qRaw);
+        const qScore = qi && qi.score !== '-' ? qi.score : (st.qwi || '-');
+        const isAlert = st.status && (st.status.isAlert || st.status.type === 'ALERT' || st.status.text?.toLowerCase().includes('alert'));
+        const statusBadge = isAlert 
+          ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">🚨 Alert</span>'
+          : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">✅ Normal</span>';
+
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-2 text-center text-slate-500 font-mono">${idx + 1}</td>
+            <td class="p-2 font-bold text-slate-800">${escAttr(st.companyName)}</td>
+            <td class="p-2"><span class="font-mono text-teal-700 font-bold">${escAttr(st.code || '-')}</span> ${escAttr(st.name || '')}</td>
+            <td class="p-2 text-slate-600">${escAttr(st.province || '-')}</td>
+            <td class="p-2 text-center text-slate-500 font-mono">${escAttr(st.sampleDate || '-')}</td>
+            <td class="p-2 text-center font-bold font-mono text-indigo-700">${qScore}</td>
+            <td class="p-2 text-center">${statusBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /* ---- 1. ສົ່ງອອກ Excel (.xlsx) ລະບົບຄຸນນະພາບນ້ຳ ---- */
+    function handleExportModalExcel() {
+      requireExportPermission(() => {
+        const { flatStations } = getFilteredWaterQualityExportData();
+        if (flatStations.length === 0) return Swal.fire({ icon: 'warning', title: 'ບໍ່ມີຂໍ້ມູນສຳລັບການສົ່ງອອກ' });
+
+        const inds = valueInds();
+        const header = [
+          'ລຳດັບ', 'ບໍລິສັດ/ຫົວຂໍ້ຫຼັກ', 'ລະຫັດສະຖານີ', 'ຊື່ສະຖານີ', 'ແຂວງ', 'ວັນທີເກັບຕົວຢ່າງ',
+          'Latitude', 'Longitude',
+          ...inds.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`),
+          'ຄ່າ QWI', 'ການແປຜົນ QWI', 'ສະຖານະ (Status)', 'ຜູ້ບັນທຶກ', 'ເວລາບັນທຶກ'
+        ];
+
+        const rows = [header];
+        flatStations.forEach((st, idx) => {
+          const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-') ? st.qwi : calculateAutoQWI(st.customs || {});
+          const qi = interpretQWI(qRaw);
+          const qScore = qi && qi.score !== '-' ? qi.score : (st.qwi || '');
+          const qLabel = qi ? `${qi.label} - ${qi.desc}` : '';
+          const isAlert = st.status && (st.status.isAlert || st.status.type === 'ALERT' || st.status.text?.toLowerCase().includes('alert'));
+
+          const indVals = inds.map(i => (st.customs && st.customs[i.key] !== undefined && st.customs[i.key] !== '') ? st.customs[i.key] : '-');
+
+          rows.push([
+            idx + 1,
+            st.companyName,
+            st.code || '',
+            st.name || '',
+            st.province || '',
+            st.sampleDate || '',
+            st.lat || '',
+            st.lng || '',
+            ...indVals,
+            qScore,
+            qLabel,
+            isAlert ? 'Alert (ເຕືອນໄພ)' : 'Normal (ປົກກະຕິ)',
+            st.recordedBy || '',
+            st.datasetDate || ''
+          ]);
+        });
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        ws['!cols'] = [
+          { wch: 6 }, { wch: 28 }, { wch: 14 }, { wch: 24 }, { wch: 16 }, { wch: 14 },
+          { wch: 12 }, { wch: 12 },
+          ...inds.map(() => ({ wch: 14 })),
+          { wch: 10 }, { wch: 25 }, { wch: 16 }, { wch: 16 }, { wch: 20 }
+        ];
+        XLSX.utils.book_append_sheet(wb, ws, 'ຜົນວິເຄາະຄຸນນະພາບນ້ຳ');
+
+        const fileName = `Water_Quality_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'ສົ່ງອອກ Excel ສຳເລັດ!',
+          text: `ດາວໂຫຼດໄຟລ໌ ${fileName} ຈຳນວນ ${flatStations.length} ລາຍການ`,
+          timer: 1800,
+          showConfirmButton: false
+        });
+      }, 'ສົ່ງອອກໄຟລ໌ Excel ຂໍ້ມູນຄຸນນະພາບນ້ຳ');
+    }
+
+    /* ---- 2. ສົ່ງອອກ Word (.doc) ລະບົບຄຸນນະພາບນ້ຳ ---- */
+    function handleExportModalWord() {
+      requireExportPermission(() => {
+        const { flatStations } = getFilteredWaterQualityExportData();
+        if (flatStations.length === 0) return Swal.fire({ icon: 'warning', title: 'ບໍ່ມີຂໍ້ມູນສຳລັບການສົ່ງອອກ' });
+
+        const title = document.getElementById('expReportTitle')?.value || 'ບົດລາຍງານຜົນການກວດກາ ແລະ ວິເຄາະຄຸນນະພາບນ້ຳ';
+        const currentDate = new Date().toLocaleDateString('lo-LA', { year: 'numeric', month: 'long', day: 'numeric' });
+        const inds = valueInds();
+
+        const theadInds = inds.map(i => `<th style="border:1px solid #cbd5e1; padding:6px; background:#0f766e; color:#ffffff; font-size:11px;">${escapeHtml(i.name)}</th>`).join('');
+
+        const tableRows = flatStations.map((st, idx) => {
+          const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-') ? st.qwi : calculateAutoQWI(st.customs || {});
+          const qi = interpretQWI(qRaw);
+          const qScore = qi && qi.score !== '-' ? qi.score : (st.qwi || '-');
+          const isAlert = st.status && (st.status.isAlert || st.status.type === 'ALERT' || st.status.text?.toLowerCase().includes('alert'));
+          const indTds = inds.map(i => {
+            const v = (st.customs && st.customs[i.key] !== undefined && st.customs[i.key] !== '') ? st.customs[i.key] : '-';
+            return `<td style="border:1px solid #cbd5e1; padding:6px; text-align:center; font-family:monospace; font-size:11px;">${escapeHtml(String(v))}</td>`;
+          }).join('');
+
+          return `
+            <tr>
+              <td style="border:1px solid #cbd5e1; padding:6px; text-align:center; font-size:11px;">${idx + 1}</td>
+              <td style="border:1px solid #cbd5e1; padding:6px; font-weight:bold; font-size:11px;">${escapeHtml(st.companyName)}</td>
+              <td style="border:1px solid #cbd5e1; padding:6px; font-size:11px;"><b>${escapeHtml(st.code || '')}</b> - ${escapeHtml(st.name || '')}</td>
+              <td style="border:1px solid #cbd5e1; padding:6px; font-size:11px;">${escapeHtml(st.province || '-')}</td>
+              <td style="border:1px solid #cbd5e1; padding:6px; text-align:center; font-size:11px;">${escapeHtml(st.sampleDate || '-')}</td>
+              ${indTds}
+              <td style="border:1px solid #cbd5e1; padding:6px; text-align:center; font-weight:bold; font-size:11px; color:#0f766e;">${escapeHtml(String(qScore))}</td>
+              <td style="border:1px solid #cbd5e1; padding:6px; text-align:center; font-size:11px; font-weight:bold; color:${isAlert ? '#dc2626' : '#16a34a'};">${isAlert ? 'Alert' : 'Normal'}</td>
+            </tr>
+          `;
+        }).join('');
+
+        const wordHtml = `
+          <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+          <head>
+            <meta charset='utf-8'>
+            <title>${escapeHtml(title)}</title>
+            <style>
+              @page { size: A4 landscape; margin: 1.5cm 1cm 1.5cm 1cm; }
+              body { font-family: 'Noto Sans Lao', 'Segoe UI', Tahoma, sans-serif; font-size: 11pt; color: #0f172a; line-height: 1.4; }
+              .header-box { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #0f766e; padding-bottom: 12px; }
+              .doc-title { font-size: 15pt; font-weight: bold; color: #0f766e; margin-top: 6px; }
+              .meta-info { font-size: 10pt; color: #64748b; margin-top: 4px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+              th { background: #0f766e; color: #ffffff; padding: 7px; text-align: center; font-size: 10pt; }
+              td { padding: 6px; border: 1px solid #cbd5e1; }
+              .footer-sign { margin-top: 36px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+              .sign-col { width: 45%; text-align: center; font-size: 11pt; }
+            </style>
+          </head>
+          <body>
+            <div class="header-box">
+              <div style="font-weight:bold; font-size:12pt;">ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ<br/>ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</div>
+              <div style="font-size:10pt; color:#475569; margin-top:4px;">
+                ກະຊວງຊັບພະຍາກອນທຳມະຊາດ ແລະ ສິ່ງແວດລ້ອມ · ກົມຊັບພະຍາກອນນ້ຳ (DWR)
+              </div>
+              <div class="doc-title">${escapeHtml(title)}</div>
+              <div class="meta-info">ວັນທີອອກບົດລາຍງານ: ${currentDate} | ຈຳນວນສະຖານີທັງໝົດ: ${flatStations.length} ລາຍການ</div>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:4%;">ລ/ດ</th>
+                  <th style="width:20%;">ບໍລິສັດ / ຫົວຂໍ້ຫຼັກ</th>
+                  <th style="width:18%;">ລະຫັດ & ຊື່ສະຖານີ</th>
+                  <th style="width:10%;">ແຂວງ</th>
+                  <th style="width:10%;">ວັນທີເກັບ</th>
+                  ${theadInds}
+                  <th style="width:7%;">QWI</th>
+                  <th style="width:8%;">ສະຖານະ</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRows}
+              </tbody>
+            </table>
+
+            <div style="margin-top: 32px; width: 100%;">
+              <table style="border: none; width: 100%;">
+                <tr style="border: none;">
+                  <td style="border: none; width: 50%; text-align: center;">
+                    <b>ພະນັກງານກວດກາ / ຜູ້ລາຍງານ</b><br/><br/><br/><br/>
+                    ............................................................
+                  </td>
+                  <td style="border: none; width: 50%; text-align: center;">
+                    <b>ຫົວໜ້າພະແນກ / ຜູ້ອະນຸມັດ</b><br/><br/><br/><br/>
+                    ............................................................
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </body>
+          </html>
+        `;
+
+        const blob = new Blob(['\uFEFF', wordHtml], { type: 'application/msword;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ບົດລາຍງານ_ຄຸນນະພາບນ້ຳ_${new Date().toISOString().slice(0, 10)}.doc`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'ດາວໂຫຼດ Word ສຳເລັດ!',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      }, 'ສົ່ງອອກໄຟລ໌ Word ຂໍ້ມູນຄຸນນະພາບນ້ຳ');
+    }
+
+    /* ---- 3. ພິມ / PDF ລະບົບຄຸນນະພາບນ້ຳ ---- */
+    function handleExportModalPDF() {
+      requireExportPermission(() => {
+        const { flatStations } = getFilteredWaterQualityExportData();
+        if (flatStations.length === 0) return Swal.fire({ icon: 'warning', title: 'ບໍ່ມີຂໍ້ມູນສຳລັບການສົ່ງອອກ' });
+
+        const title = document.getElementById('expReportTitle')?.value || 'ບົດລາຍງານຜົນການກວດກາ ແລະ ວິເຄາະຄຸນນະພາບນ້ຳ';
+        const currentDate = new Date().toLocaleDateString('lo-LA', { year: 'numeric', month: 'long', day: 'numeric' });
+        const inds = valueInds();
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return alert('ກະລຸນາອະນຸຍາດ Pop-up window ເພື່ອເປີດໜ້າພິມ');
+
+        const theadInds = inds.map(i => `<th style="border:1px solid #cbd5e1; padding:6px; background:#0f766e; color:#ffffff; font-size:11px;">${escapeHtml(i.name)}</th>`).join('');
+
+        const tableRows = flatStations.map((st, idx) => {
+          const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-') ? st.qwi : calculateAutoQWI(st.customs || {});
+          const qi = interpretQWI(qRaw);
+          const qScore = qi && qi.score !== '-' ? qi.score : (st.qwi || '-');
+          const isAlert = st.status && (st.status.isAlert || st.status.type === 'ALERT' || st.status.text?.toLowerCase().includes('alert'));
+          const indTds = inds.map(i => {
+            const v = (st.customs && st.customs[i.key] !== undefined && st.customs[i.key] !== '') ? st.customs[i.key] : '-';
+            return `<td style="border:1px solid #cbd5e1; padding:5px; text-align:center; font-family:monospace; font-size:11px;">${escapeHtml(String(v))}</td>`;
+          }).join('');
+
+          return `
+            <tr>
+              <td style="border:1px solid #cbd5e1; padding:5px; text-align:center; font-size:11px;">${idx + 1}</td>
+              <td style="border:1px solid #cbd5e1; padding:5px; font-weight:bold; font-size:11px;">${escapeHtml(st.companyName)}</td>
+              <td style="border:1px solid #cbd5e1; padding:5px; font-size:11px;"><b>${escapeHtml(st.code || '')}</b> - ${escapeHtml(st.name || '')}</td>
+              <td style="border:1px solid #cbd5e1; padding:5px; font-size:11px;">${escapeHtml(st.province || '-')}</td>
+              <td style="border:1px solid #cbd5e1; padding:5px; text-align:center; font-size:11px;">${escapeHtml(st.sampleDate || '-')}</td>
+              ${indTds}
+              <td style="border:1px solid #cbd5e1; padding:5px; text-align:center; font-weight:bold; font-size:11px; color:#0f766e;">${escapeHtml(String(qScore))}</td>
+              <td style="border:1px solid #cbd5e1; padding:5px; text-align:center; font-size:11px; font-weight:bold; color:${isAlert ? '#dc2626' : '#16a34a'};">${isAlert ? 'Alert' : 'Normal'}</td>
+            </tr>
+          `;
+        }).join('');
+
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>${escapeHtml(title)}</title>
+            <style>
+              @page { size: A4 landscape; margin: 1cm; }
+              body { font-family: 'Noto Sans Lao', system-ui, sans-serif; font-size: 11px; color: #0f172a; margin: 0; padding: 10px; }
+              .header { text-align: center; border-bottom: 2px solid #0f766e; padding-bottom: 10px; margin-bottom: 12px; }
+              .title { font-size: 16px; font-weight: bold; color: #0f766e; margin-top: 4px; }
+              .sub { font-size: 11px; color: #64748b; margin-top: 2px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+              th, td { border: 1px solid #cbd5e1; padding: 5px; }
+              th { background: #0f766e; color: white; font-weight: bold; }
+              .signs { display: flex; justify-content: space-between; margin-top: 30px; page-break-inside: avoid; }
+              .sign-col { width: 45%; text-align: center; }
+              @media print {
+                .no-print { display: none; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="no-print" style="margin-bottom: 12px; background: #f1f5f9; padding: 8px 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+              <span>💡 ກະລຸນາກົດປຸ່ມ <b>Print / ພິມ</b> ຫຼື ເລືອກ <b>Save as PDF</b> ໃນໜ້າຕ່າງພິມ</span>
+              <button onclick="window.print()" style="background:#0f766e; color:#fff; border:none; padding:6px 14px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ ພິມເອກະສານ / ບັນທຶກ PDF</button>
+            </div>
+            <div class="header">
+              <div style="font-weight:bold; font-size:12px;">ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ<br/>ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</div>
+              <div class="title">${escapeHtml(title)}</div>
+              <div class="sub">ວັນທີອອກລາຍງານ: ${currentDate} | ລວມທັງໝົດ: ${flatStations.length} ສະຖານີ</div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:4%;">ລ/ດ</th>
+                  <th style="width:20%;">ບໍລິສັດ / ຫົວຂໍ້ຫຼັກ</th>
+                  <th style="width:18%;">ລະຫັດ & ຊື່ສະຖານີ</th>
+                  <th style="width:10%;">ແຂວງ</th>
+                  <th style="width:10%;">ວັນທີເກັບ</th>
+                  ${theadInds}
+                  <th style="width:7%;">QWI</th>
+                  <th style="width:8%;">ສະຖານະ</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRows}
+              </tbody>
+            </table>
+            <div class="signs">
+              <div class="sign-col">
+                <b>ພະນັກງານກວດກາ / ຜູ້ລາຍງານ</b><br/><br/><br/><br/>
+                ............................................................
+              </div>
+              <div class="sign-col">
+                <b>ຫົວໜ້າພະແນກ / ຜູ້ອະນຸມັດ</b><br/><br/><br/><br/>
+                ............................................................
+              </div>
+            </div>
+          </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }, 'ພິມ / ອອກ PDF ຂໍ້ມູນຄຸນນະພາບນ້ຳ');
+    }
+
+    /* ---- 4. ສົ່ງອອກ CSV ລະບົບຄຸນນະພາບນ້ຳ ---- */
+    function handleExportModalCSV() {
+      requireExportPermission(() => {
+        const { flatStations } = getFilteredWaterQualityExportData();
+        if (flatStations.length === 0) return Swal.fire({ icon: 'warning', title: 'ບໍ່ມີຂໍ້ມູນສຳລັບການສົ່ງອອກ' });
+
+        const inds = valueInds();
+        let customHead = inds.map(i => i.name).join(',');
+        let csv = `\uFEFFNo.,Company,Sampling Date,Station Code,Station Name,Province,Latitude,Longitude,${customHead},QWI,QWI Interpretation,Status,Recorded By,Timestamp\n`;
+
+        flatStations.forEach((st, idx) => {
+          let cVals = inds.map(i => (st.customs && st.customs[i.key] !== undefined && st.customs[i.key] !== '') ? st.customs[i.key] : '-').join(',');
+          const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-') ? st.qwi : calculateAutoQWI(st.customs || {});
+          const qi = interpretQWI(qRaw);
+          const qwiVal = qi ? (qi.score !== '-' ? qi.score : '') : (st.qwi ?? '');
+          const qwiInterp = qi ? `"${qi.label} - ${qi.desc.replace(/"/g, '""')}"` : '""';
+          const isAlert = st.status && (st.status.isAlert || st.status.type === 'ALERT' || st.status.text?.toLowerCase().includes('alert'));
+
+          csv += `${idx + 1},"${st.companyName.replace(/"/g, '""')}","${st.sampleDate || ''}","${st.code || ''}","${(st.name || '').replace(/"/g, '""')}","${st.province || ''}",${st.lat || ''},${st.lng || ''},${cVals},${qwiVal},${qwiInterp},"${isAlert ? 'Alert' : 'Normal'}","${(st.recordedBy || '').replace(/"/g, '""')}","${st.datasetDate || ''}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `DWR_Water_Quality_Filtered_${Date.now()}.csv`;
+        a.click();
+      }, 'ສົ່ງອອກໄຟລ໌ CSV ຂໍ້ມູນຄຸນນະພາບນ້ຳ');
+    }
+
+    /* ---- 5. Audit Logs Export Handlers ---- */
+    function fetchActivityLogsForExport() {
+      db.ref('activity_logs').limitToLast(150).once('value', snapshot => {
+        const logs = snapshot.val();
+        cachedExportLogs = [];
+        if (logs) {
+          Object.keys(logs).forEach(k => cachedExportLogs.push({ fbKey: k, ...logs[k] }));
+          cachedExportLogs.reverse();
+        }
+        const tabBadge = document.getElementById('expTabLogsBadge');
+        if (tabBadge) tabBadge.innerText = cachedExportLogs.length;
+        filterAndRenderLogsExport();
+      });
+    }
+
+    function getFilteredLogsExportData() {
+      const actFilter = document.getElementById('expLogActionFilter')?.value || 'ALL';
+      const search = (document.getElementById('expLogSearch')?.value || '').toLowerCase().trim();
+
+      return cachedExportLogs.filter(log => {
+        if (actFilter !== 'ALL' && log.action !== actFilter) return false;
+        if (search) {
+          const matchUser = (log.performedBy || '').toLowerCase().includes(search);
+          const matchCode = (log.itemCode || '').toLowerCase().includes(search);
+          const matchAct = (log.action || '').toLowerCase().includes(search);
+          if (!matchUser && !matchCode && !matchAct) return false;
+        }
+        return true;
+      });
+    }
+
+    function filterAndRenderLogsExport() {
+      const filtered = getFilteredLogsExportData();
+      const countEl = document.getElementById('expLogsMatchedCount');
+      if (countEl) countEl.innerText = filtered.length;
+
+      const tbody = document.getElementById('expLogsPreviewBody');
+      if (!tbody) return;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400">ບໍ່ມີປະຫວັດການດຳເນີນງານທີ່ກົງກັບເງື່ອນໄຂ</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.slice(0, 10).map(log => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-2 font-mono text-slate-500">${log.timestamp || '-'}</td>
+          <td class="p-2 font-bold text-slate-700">${log.action || '-'}</td>
+          <td class="p-2 font-mono text-teal-700">${log.itemCode || '-'}</td>
+          <td class="p-2 font-bold text-slate-800">${log.performedBy || 'ບໍ່ລະບຸ'}</td>
+          <td class="p-2 text-slate-500">${log.userRole || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    function handleExportLogsExcel() {
+      requireExportPermission(() => {
+        const logs = getFilteredLogsExportData();
+        if (logs.length === 0) return Swal.fire({ icon: 'warning', title: 'ບໍ່ມີປະຫວັດຂໍ້ມູນ' });
+
+        const rows = [
+          ['ລຳດັບ', 'ວັນທີ & ເວລາ', 'ການກະທຳ (Action)', 'ລະຫັດ / ລາຍການ', 'ຜູ້ດຳເນີນການ', 'ສິດຜູ້ໃຊ້ (Role)']
+        ];
+        logs.forEach((l, i) => {
+          rows.push([i + 1, l.timestamp || '', l.action || '', l.itemCode || '', l.performedBy || '', l.userRole || '']);
+        });
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        ws['!cols'] = [{ wch: 6 }, { wch: 22 }, { wch: 18 }, { wch: 24 }, { wch: 20 }, { wch: 16 }];
+        XLSX.utils.book_append_sheet(wb, ws, 'Audit_Logs');
+        XLSX.writeFile(wb, `Water_Quality_Audit_Logs_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      }, 'ສົ່ງອອກ Excel ປະຫວັດການດຳເນີນງານ');
+    }
+
+    function handleExportLogsWord() {
+      requireExportPermission(() => {
+        const logs = getFilteredLogsExportData();
+        if (logs.length === 0) return Swal.fire({ icon: 'warning', title: 'ບໍ່ມີປະຫວັດຂໍ້ມູນ' });
+        const currentDate = new Date().toLocaleDateString('lo-LA');
+
+        const rows = logs.map((l, i) => `
+          <tr>
+            <td style="border:1px solid #cbd5e1; padding:6px; text-align:center;">${i + 1}</td>
+            <td style="border:1px solid #cbd5e1; padding:6px; font-family:monospace;">${escapeHtml(l.timestamp || '-')}</td>
+            <td style="border:1px solid #cbd5e1; padding:6px; font-weight:bold;">${escapeHtml(l.action || '-')}</td>
+            <td style="border:1px solid #cbd5e1; padding:6px;">${escapeHtml(l.itemCode || '-')}</td>
+            <td style="border:1px solid #cbd5e1; padding:6px; font-weight:bold;">${escapeHtml(l.performedBy || '-')}</td>
+            <td style="border:1px solid #cbd5e1; padding:6px;">${escapeHtml(l.userRole || '-')}</td>
+          </tr>
+        `).join('');
+
+        const wordHtml = `
+          <html><head><meta charset="utf-8"><title>ບົດລາຍງານປະຫວັດການດຳເນີນງານ</title></head>
+          <body style="font-family:'Noto Sans Lao',sans-serif;">
+            <h2 style="text-align:center; color:#0f766e;">ບົດລາຍງານປະຫວັດການດຳເນີນງານໃນລະບົບ (Audit Logs)</h2>
+            <p style="text-align:center; color:#64748b;">ວັນທີອອກບົດລາຍງານ: ${currentDate} | ລວມ: ${logs.length} ລາຍການ</p>
+            <table style="width:100%; border-collapse:collapse; margin-top:14px;">
+              <thead>
+                <tr style="background:#0f766e; color:white;">
+                  <th style="padding:6px; border:1px solid #cbd5e1;">ລ/ດ</th>
+                  <th style="padding:6px; border:1px solid #cbd5e1;">ເວລາ</th>
+                  <th style="padding:6px; border:1px solid #cbd5e1;">ການກະທຳ</th>
+                  <th style="padding:6px; border:1px solid #cbd5e1;">ລະຫັດ/ຂໍ້ມູນ</th>
+                  <th style="padding:6px; border:1px solid #cbd5e1;">ຜູ້ດຳເນີນການ</th>
+                  <th style="padding:6px; border:1px solid #cbd5e1;">ສິດ</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </body></html>
+        `;
+        const blob = new Blob(['\uFEFF', wordHtml], { type: 'application/msword;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Audit_Logs_Report_${Date.now()}.doc`;
+        a.click();
+      }, 'ສົ່ງອອກ Word ປະຫວັດການດຳເນີນງານ');
+    }
+
+    function handleExportLogsPDF() {
+      requireExportPermission(() => {
+        const logs = getFilteredLogsExportData();
+        if (logs.length === 0) return Swal.fire({ icon: 'warning', title: 'ບໍ່ມີປະຫວັດຂໍ້ມູນ' });
+        const currentDate = new Date().toLocaleDateString('lo-LA');
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return alert('ກະລຸນາອະນຸຍາດ Pop-up window');
+
+        const rows = logs.map((l, i) => `
+          <tr>
+            <td style="border:1px solid #cbd5e1; padding:5px; text-align:center;">${i + 1}</td>
+            <td style="border:1px solid #cbd5e1; padding:5px; font-family:monospace;">${escapeHtml(l.timestamp || '-')}</td>
+            <td style="border:1px solid #cbd5e1; padding:5px; font-weight:bold;">${escapeHtml(l.action || '-')}</td>
+            <td style="border:1px solid #cbd5e1; padding:5px;">${escapeHtml(l.itemCode || '-')}</td>
+            <td style="border:1px solid #cbd5e1; padding:5px; font-weight:bold;">${escapeHtml(l.performedBy || '-')}</td>
+            <td style="border:1px solid #cbd5e1; padding:5px;">${escapeHtml(l.userRole || '-')}</td>
+          </tr>
+        `).join('');
+
+        printWindow.document.write(`
+          <!DOCTYPE html><html><head><meta charset="utf-8"><title>ບົດລາຍງານປະຫວັດການດຳເນີນງານ</title>
+          <style>
+            body { font-family:'Noto Sans Lao',sans-serif; font-size:11px; padding:12px; }
+            table { width:100%; border-collapse:collapse; margin-top:10px; }
+            th, td { border:1px solid #cbd5e1; padding:5px; }
+            th { background:#0f766e; color:white; }
+          </style></head>
+          <body>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <h2 style="color:#0f766e; margin:0;">ບົດລາຍງານປະຫວັດການດຳເນີນງານ (Audit Logs)</h2>
+              <button onclick="window.print()" style="background:#0f766e; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">🖨️ ພິມ / ອອກ PDF</button>
+            </div>
+            <p style="color:#64748b; margin-top:2px;">ວັນທີ: ${currentDate} | ລວມ: ${logs.length} ລາຍການ</p>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:5%;">ລ/ດ</th>
+                  <th style="width:20%;">ເວລາ</th>
+                  <th style="width:20%;">ການກະທຳ</th>
+                  <th style="width:25%;">ລະຫັດ/ຂໍ້ມູນ</th>
+                  <th style="width:18%;">ຜູ້ດຳເນີນການ</th>
+                  <th style="width:12%;">ສິດ</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </body></html>
+        `);
+        printWindow.document.close();
+      }, 'ພິມ / ອອກ PDF ປະຫວັດການດຳເນີນງານ');
     }
 
     window.addEventListener('load', () => setTimeout(() => bindGpsFields(document.getElementById('gpsDms'), document.getElementById('lat'), document.getElementById('lng')), 300));
