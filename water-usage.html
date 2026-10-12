@@ -992,11 +992,167 @@ function unpackDMSNumber(v, max) {
   return Math.round(v * 1e6) / 1e6;
 }
 
-// ຫາຄູ່ພິກັດໃນຂໍ້ຄວາມ: "17°58'13.0"N 102°35'48.1"E" ຫຼື "17.9703, 102.5967" → { lat, lng }
+// 🌐 ຟັງຊັນແປງພິກັດ WGS84 Lat/Lng ⇄ UTM (Universal Transverse Mercator - ໂຊນ 47N / 48N)
+function latLngToUtm(lat, lng, forcedZone) {
+  if (lat === null || lat === undefined || lng === null || lng === undefined || isNaN(lat) || isNaN(lng)) return null;
+  const nLat = Number(lat), nLng = Number(lng);
+  if (Math.abs(nLat) > 90 || Math.abs(nLng) > 180) return null;
+  const a = 6378137.0; // WGS84 semi-major axis
+  const f = 1 / 298.257223563; // flattening
+  const e2 = 2 * f - f * f;
+  const ep2 = e2 / (1 - e2);
+  const k0 = 0.9996;
+  const zone = forcedZone ? Number(forcedZone) : (Math.floor((nLng + 180) / 6) + 1);
+  const hemi = nLat >= 0 ? "N" : "S";
+  const rad = Math.PI / 180;
+  const phi = nLat * rad;
+  const lambda = nLng * rad;
+  const lambda0 = ((zone - 1) * 6 - 180 + 3) * rad;
+  const dlambda = lambda - lambda0;
+
+  const N = a / Math.sqrt(1 - e2 * Math.sin(phi) ** 2);
+  const T = Math.tan(phi) ** 2;
+  const C = ep2 * Math.cos(phi) ** 2;
+  const A = Math.cos(phi) * dlambda;
+
+  const M = a * ((1 - e2 / 4 - 3 * e2 ** 2 / 64 - 5 * e2 ** 3 / 256) * phi
+    - (3 * e2 / 8 + 3 * e2 ** 2 / 32 + 45 * e2 ** 3 / 1024) * Math.sin(2 * phi)
+    + (15 * e2 ** 2 / 256 + 45 * e2 ** 3 / 1024) * Math.sin(4 * phi)
+    - (35 * e2 ** 3 / 3072) * Math.sin(6 * phi));
+
+  const x = k0 * N * (A + (1 - T + C) * A ** 3 / 6 + (5 - 18 * T + T ** 2 + 72 * C - 58 * ep2) * A ** 5 / 120) + 500000;
+  let y = k0 * (M + N * Math.tan(phi) * (A ** 2 / 2 + (5 - T + 9 * C + 4 * C ** 2) * A ** 4 / 24 + (61 - 58 * T + T ** 2 + 600 * C - 330 * ep2) * A ** 6 / 720));
+  if (nLat < 0) y += 10000000;
+
+  const easting = Math.round(x * 100) / 100;
+  const northing = Math.round(y * 100) / 100;
+  return {
+    zone,
+    hemi,
+    easting,
+    northing,
+    formatted: `${zone}${hemi} ${Math.round(easting)} ${Math.round(northing)}`
+  };
+}
+
+function utmToLatLng(easting, northing, zone, hemi = "N") {
+  if (easting === null || easting === undefined || northing === null || northing === undefined) return null;
+  const eVal = Number(easting), nVal = Number(northing), zVal = Number(zone) || 48;
+  if (isNaN(eVal) || isNaN(nVal) || isNaN(zVal)) return null;
+  if (eVal < 50000 || eVal > 950000) return null;
+  if (nVal < 0 || nVal > 10000000) return null;
+
+  const a = 6378137.0;
+  const f = 1 / 298.257223563;
+  const e2 = 2 * f - f * f;
+  const ep2 = e2 / (1 - e2);
+  const k0 = 0.9996;
+  const e1 = (1 - Math.sqrt(1 - e2)) / (1 + Math.sqrt(1 - e2));
+  const x = eVal - 500000;
+  let y = nVal;
+  if (String(hemi).toUpperCase() === "S") y -= 10000000;
+
+  const M = y / k0;
+  const mu = M / (a * (1 - e2 / 4 - 3 * e2 ** 2 / 64 - 5 * e2 ** 3 / 256));
+
+  const phi1 = mu + (3 * e1 / 2 - 27 * e1 ** 3 / 32) * Math.sin(2 * mu)
+    + (21 * e1 ** 2 / 16 - 55 * e1 ** 4 / 32) * Math.sin(4 * mu)
+    + (151 * e1 ** 3 / 96) * Math.sin(6 * mu)
+    + (1097 * e1 ** 4 / 512) * Math.sin(8 * mu);
+
+  const N1 = a / Math.sqrt(1 - e2 * Math.sin(phi1) ** 2);
+  const T1 = Math.tan(phi1) ** 2;
+  const C1 = ep2 * Math.cos(phi1) ** 2;
+  const R1 = a * (1 - e2) / Math.pow(1 - e2 * Math.sin(phi1) ** 2, 1.5);
+  const D = x / (N1 * k0);
+
+  const phi = phi1 - (N1 * Math.tan(phi1) / R1) * (D ** 2 / 2 - (5 + 3 * T1 + 10 * C1 - 4 * C1 ** 2 - 9 * ep2) * D ** 4 / 24 + (61 + 90 * T1 + 298 * C1 + 45 * T1 ** 2 - 252 * ep2 - 3 * C1 ** 2) * D ** 6 / 720);
+  const lambda0 = ((zVal - 1) * 6 - 180 + 3) * Math.PI / 180;
+  const lambda = lambda0 + (D - (1 + 2 * T1 + C1) * D ** 3 / 6 + (5 - 2 * C1 + 28 * T1 - 3 * C1 ** 2 + 8 * ep2 + 24 * T1 ** 2) * D ** 5 / 120) / Math.cos(phi1);
+
+  const lat = Math.round(phi * (180 / Math.PI) * 1e6) / 1e6;
+  const lng = Math.round(lambda * (180 / Math.PI) * 1e6) / 1e6;
+  if (!validLL(lat, lng)) return null;
+  return { lat, lng };
+}
+
+function formatUtm(lat, lng) {
+  const u = latLngToUtm(lat, lng);
+  return u ? u.formatted : "";
+}
+
+function parseUtmString(str, defaultZone = 48) {
+  if (!str || typeof str !== "string") return null;
+  const s = str.trim();
+
+  let zone = defaultZone;
+  let hemi = "N";
+  let rest = s;
+
+  const explicitZoneMatch = s.match(/\b(?:zone|ໂຊນ\s*)?\s*(4[78]|[1-5]?\d)\s*([A-Za-z])\b/i) ||
+                           s.match(/\b(?:zone|ໂຊນ)\s*(4[78]|[1-5]?\d)\b/i);
+
+  if (explicitZoneMatch) {
+    const parsedZ = parseInt(explicitZoneMatch[1], 10);
+    if (parsedZ >= 1 && parsedZ <= 60) {
+      zone = parsedZ;
+      if (explicitZoneMatch[2] && /^[sS]$/i.test(explicitZoneMatch[2])) hemi = "S";
+      rest = s.replace(explicitZoneMatch[0], " ");
+    }
+  }
+
+  const xMatch = rest.match(/(?:x|easting|e|ຕາເວັນອອກ)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)/i);
+  const yMatch = rest.match(/(?:y|northing|n|ເໜືອ)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)/i);
+  if (xMatch && yMatch) {
+    const e = parseFloat(xMatch[1]), n = parseFloat(yMatch[1]);
+    if (e >= 10000 && n >= 10000) {
+      return { zone, hemi, easting: e, northing: n };
+    }
+  }
+
+  const nums = rest.match(/[0-9]+(?:\.[0-9]+)?/g);
+  if (nums) {
+    if (nums.length === 3 && (nums[0] === "47" || nums[0] === "48")) {
+      let n1 = parseFloat(nums[1]), n2 = parseFloat(nums[2]);
+      if (n1 >= 50000 && n2 >= 50000) {
+        zone = parseInt(nums[0], 10);
+        let easting = n1 > 900000 ? n2 : n1;
+        let northing = n1 > 900000 ? n1 : n2;
+        return { zone, hemi, easting, northing };
+      }
+    }
+    if (nums.length >= 2) {
+      let n1 = parseFloat(nums[0]);
+      let n2 = parseFloat(nums[1]);
+      if (n1 >= 50000 && n2 >= 50000) {
+        let easting, northing;
+        if (n1 > 900000 && n2 < 900000) {
+          northing = n1;
+          easting = n2;
+        } else {
+          easting = n1;
+          northing = n2;
+        }
+        return { zone, hemi, easting, northing };
+      }
+    }
+  }
+  return null;
+}
+
+// ຫາຄູ່ພິກັດໃນຂໍ້ຄວາມ: "17°58'13.0"N 102°35'48.1"E" ຫຼື "17.9703, 102.5967" ຫຼື "48N 249341 1989096" → { lat, lng }
 function parseCoordPair(txt) {
   if (txt === null || txt === undefined) return null;
   const t = String(txt).trim().replace(/[′’‘`´]/g, "'").replace(/[″”“]/g, '"');
   if (!t) return null;
+
+  // ຮອງຮັບພິກັດ UTM: e.g. "48N 249341 1989096" ຫຼື "Zone 48, X=249341, Y=1989096"
+  const utmPr = parseUtmString(t);
+  if (utmPr) {
+    const ll = utmToLatLng(utmPr.easting, utmPr.northing, utmPr.zone, utmPr.hemi);
+    if (ll && validLL(ll.lat, ll.lng)) return ll;
+  }
+
   let a, b;
   // ມີ N/S ແລະ E/W → ແຍກຕາມຕົວອັກສອນທິດ
   const dms = t.match(/([-\d.,\s°º˚'"d]+?\s*[NS])[\s,;/]*([-\d.,\s°º˚'"d]+?\s*[EW])/i) || t.match(/([NS]\s*[-\d.,\s°º˚'"]+?)[\s,;/]+([EW]\s*[-\d.,\s°º˚'"]+)/i);
@@ -1066,6 +1222,299 @@ var DmsCoordField = ({ lat, lng, onChange, ring = "focus:ring-green-500", label 
     status === "bad" && /* @__PURE__ */ jsx8("p", { className: "text-[11px] text-rose-600 mt-1", children: "ຍັງອ່ານພິກັດບໍ່ໄດ້ — ຕົວຢ່າງ: 16°04'00.1\"N 106°11'49.3\"E ຫຼື 16.0667, 106.1970" }),
     status === "ok" && /* @__PURE__ */ jsx8("p", { className: "text-[11px] text-emerald-600 mt-1", children: `✓ Lat ${lat}, Lng ${lng}` })
   ] });
+};
+
+// 🌐 ຊ່ອງພິກັດໃນຮູບແບບ UTM (Universal Transverse Mercator - ໂຊນ 48N / 47N WGS84)
+var UtmCoordField = ({
+  lat,
+  lng,
+  onChange,
+  ring = "focus:ring-sky-500",
+  pointIdx = 0,
+  label = null
+}) => {
+  const currentUtm = validLL(lat, lng) ? latLngToUtm(lat, lng) : null;
+  const initialZone = currentUtm ? currentUtm.zone : (lng && lng < 102 ? 47 : 48);
+
+  const [zone, setZone] = useState8(initialZone);
+  const [easting, setEasting] = useState8(currentUtm ? Math.round(currentUtm.easting).toString() : "");
+  const [northing, setNorthing] = useState8(currentUtm ? Math.round(currentUtm.northing).toString() : "");
+  const [quickText, setQuickText] = useState8("");
+  const [isFocused, setIsFocused] = useState8(false);
+  const [copyFeedback, setCopyFeedback] = useState8(false);
+  const [status, setStatus] = useState8(validLL(lat, lng) ? "ok" : "");
+
+  // ຊິ້ງຄ່າຈາກ props ຕອນ lat/lng ປ່ຽນຢູ່ດ້ານນອກ (ເຊັ່ນ: ກົດແຜນທີ່ ຫຼື ແກ້ໄຂ Lat/Lng)
+  useEffect3(() => {
+    if (!isFocused) {
+      if (validLL(lat, lng)) {
+        const u = latLngToUtm(lat, lng, zone);
+        if (u) {
+          setZone(u.zone);
+          setEasting(Math.round(u.easting).toString());
+          setNorthing(Math.round(u.northing).toString());
+          setStatus("ok");
+        }
+      } else {
+        if (!easting && !northing) {
+          setStatus("");
+        }
+      }
+    }
+  }, [lat, lng, isFocused]);
+
+  const applyUtm = (newE, newN, newZ) => {
+    const eNum = parseFloat(newE);
+    const nNum = parseFloat(newN);
+    const zNum = parseInt(newZ, 10) || 48;
+    if (isNaN(eNum) || isNaN(nNum)) {
+      setStatus(newE || newN ? "bad" : "");
+      return;
+    }
+    const res = utmToLatLng(eNum, nNum, zNum, "N");
+    if (res && validLL(res.lat, res.lng)) {
+      setStatus("ok");
+      onChange(res.lat, res.lng);
+    } else {
+      setStatus("bad");
+    }
+  };
+
+  const handleZoneChange = (zVal) => {
+    const nz = Number(zVal) || 48;
+    setZone(nz);
+    applyUtm(easting, northing, nz);
+  };
+
+  const handleEastingChange = (val) => {
+    setEasting(val);
+    applyUtm(val, northing, zone);
+  };
+
+  const handleNorthingChange = (val) => {
+    setNorthing(val);
+    applyUtm(easting, val, zone);
+  };
+
+  const handleQuickPaste = (val) => {
+    setQuickText(val);
+    if (!val.trim()) return;
+    const parsed = parseUtmString(val, zone);
+    if (parsed) {
+      const zNum = parsed.zone;
+      const eStr = Math.round(parsed.easting).toString();
+      const nStr = Math.round(parsed.northing).toString();
+      setZone(zNum);
+      setEasting(eStr);
+      setNorthing(nStr);
+      applyUtm(parsed.easting, parsed.northing, zNum);
+      setQuickText("");
+    }
+  };
+
+  const handleCopy = () => {
+    if (easting && northing) {
+      const txt = `${zone}N ${Math.round(Number(easting))} ${Math.round(Number(northing))}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(txt);
+        setCopyFeedback(true);
+        setTimeout(() => setCopyFeedback(false), 2000);
+      }
+    }
+  };
+
+  return /* @__PURE__ */ jsxs8("div", {
+    className: "p-3.5 bg-gradient-to-r from-sky-50/75 via-blue-50/40 to-slate-50 border border-sky-200/90 rounded-2xl space-y-2.5 shadow-2xs",
+    children: [
+      /* Top row with Title, Zone Pill, Copy button */
+      /* @__PURE__ */ jsxs8("div", {
+        className: "flex flex-wrap items-center justify-between gap-2 pb-1.5 border-b border-sky-100",
+        children: [
+          /* @__PURE__ */ jsxs8("div", {
+            className: "flex items-center gap-2",
+            children: [
+              /* @__PURE__ */ jsx8("span", { className: "text-sm", children: "🌐" }),
+              /* @__PURE__ */ jsx8("span", {
+                className: "text-xs font-bold text-sky-900",
+                children: label || "ຈຸດພິກັດໃນຮູບແບບ UTM (WGS84)"
+              }),
+              /* @__PURE__ */ jsxs8("span", {
+                className: "text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-600 text-white shadow-2xs",
+                children: ["ໂຊນ ", zone, "N"]
+              })
+            ]
+          }),
+          /* @__PURE__ */ jsxs8("div", {
+            className: "flex items-center gap-1.5",
+            children: [
+              /* Copy Button */
+              easting && northing && /* @__PURE__ */ jsxs8(
+                "button",
+                {
+                  type: "button",
+                  onClick: handleCopy,
+                  className: `text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition flex items-center gap-1 cursor-pointer ${
+                    copyFeedback
+                      ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                      : "bg-white text-sky-700 hover:bg-sky-50 border-sky-200"
+                  }`,
+                  title: "ສຳເນົາຄ່າ UTM",
+                  children: [
+                    copyFeedback ? "✓ ສຳເນົາແລ້ວ!" : "📋 ສຳເນົາ UTM"
+                  ]
+                }
+              )
+            ]
+          })
+        ]
+      }),
+
+      /* 3-Column Inputs: Zone, Easting (X), Northing (Y) */
+      /* @__PURE__ */ jsxs8("div", {
+        className: "grid grid-cols-1 sm:grid-cols-3 gap-2.5",
+        children: [
+          /* UTM Zone selector */
+          /* @__PURE__ */ jsxs8("div", {
+            children: [
+              /* @__PURE__ */ jsxs8("label", {
+                className: "block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between",
+                children: [
+                  /* @__PURE__ */ jsx8("span", { children: "ໂຊນ UTM (Zone) *" }),
+                  /* @__PURE__ */ jsx8("span", { className: "text-[10px] text-slate-400 font-normal", children: "ລາວ 47/48" })
+                ]
+              }),
+              /* @__PURE__ */ jsxs8(
+                "select",
+                {
+                  value: zone,
+                  onChange: (e) => handleZoneChange(e.target.value),
+                  className: `w-full px-3 py-1.5 text-xs border border-slate-300 rounded-xl bg-white font-bold text-slate-800 focus:ring-2 ${ring} shadow-2xs`,
+                  children: [
+                    /* @__PURE__ */ jsx8("option", { value: 48, children: "ໂຊນ 48N (ລາວກາງ/ໃຕ້/ນະຄອນຫຼວງ)" }),
+                    /* @__PURE__ */ jsx8("option", { value: 47, children: "ໂຊນ 47N (ລາວເໜືອ/ຕາເວັນຕົກ)" })
+                  ]
+                }
+              )
+            ]
+          }),
+
+          /* Easting (X) input */
+          /* @__PURE__ */ jsxs8("div", {
+            children: [
+              /* @__PURE__ */ jsxs8("label", {
+                className: "block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between",
+                children: [
+                  /* @__PURE__ */ jsx8("span", { children: "ຄ່າແກນ X (Easting) *" }),
+                  /* @__PURE__ */ jsx8("span", { className: "text-[10px] text-sky-600 font-mono", children: "ແມັດ (6 ຕົວເລກ)" })
+                ]
+              }),
+              /* @__PURE__ */ jsx8(
+                "input",
+                {
+                  type: "number",
+                  step: "any",
+                  value: easting,
+                  onChange: (e) => handleEastingChange(e.target.value),
+                  onFocus: () => setIsFocused(true),
+                  onBlur: () => setIsFocused(false),
+                  placeholder: "ຕົວຢ່າງ: 249341",
+                  className: `w-full px-3 py-1.5 text-xs border rounded-xl font-mono bg-white font-semibold text-slate-900 focus:ring-2 ${ring} shadow-2xs ${
+                    status === "bad" ? "border-rose-400 bg-rose-50/50" : "border-slate-300"
+                  }`
+                }
+              )
+            ]
+          }),
+
+          /* Northing (Y) input */
+          /* @__PURE__ */ jsxs8("div", {
+            children: [
+              /* @__PURE__ */ jsxs8("label", {
+                className: "block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between",
+                children: [
+                  /* @__PURE__ */ jsx8("span", { children: "ຄ່າແກນ Y (Northing) *" }),
+                  /* @__PURE__ */ jsx8("span", { className: "text-[10px] text-sky-600 font-mono", children: "ແມັດ (7 ຕົວເລກ)" })
+                ]
+              }),
+              /* @__PURE__ */ jsx8(
+                "input",
+                {
+                  type: "number",
+                  step: "any",
+                  value: northing,
+                  onChange: (e) => handleNorthingChange(e.target.value),
+                  onFocus: () => setIsFocused(true),
+                  onBlur: () => setIsFocused(false),
+                  placeholder: "ຕົວຢ່າງ: 1989096",
+                  className: `w-full px-3 py-1.5 text-xs border rounded-xl font-mono bg-white font-semibold text-slate-900 focus:ring-2 ${ring} shadow-2xs ${
+                    status === "bad" ? "border-rose-400 bg-rose-50/50" : "border-slate-300"
+                  }`
+                }
+              )
+            ]
+          })
+        ]
+      }),
+
+      /* Quick single-line UTM paste box */
+      /* @__PURE__ */ jsxs8("div", {
+        className: "flex items-center gap-2",
+        children: [
+          /* @__PURE__ */ jsx8(
+            "input",
+            {
+              type: "text",
+              value: quickText,
+              onChange: (e) => handleQuickPaste(e.target.value),
+              placeholder: `⌨️ ຫຼື ວາງພິກັດ UTM ຂໍ້ຄວາມ: ເຊັ່ນ ${zone}N 249341 1989096 ຫຼື X: 249341, Y: 1989096`,
+              className: "flex-1 px-3 py-1 text-[11px] border border-dashed border-sky-300 rounded-xl bg-white/90 font-mono text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 shadow-2xs"
+            }
+          ),
+          /* @__PURE__ */ jsx8("span", {
+            className: "text-[10px] text-slate-400 whitespace-nowrap hidden md:inline",
+            children: "ແປງອັດຕະໂນມັດ ⚡"
+          })
+        ]
+      }),
+
+      /* Status line */
+      status === "ok" && validLL(lat, lng) && /* @__PURE__ */ jsxs8(
+        "div",
+        {
+          className: "text-[10px] text-emerald-700 font-semibold flex items-center justify-between pt-0.5 px-0.5",
+          children: [
+            /* @__PURE__ */ jsxs8("span", {
+              className: "flex items-center gap-1",
+              children: [
+                "✓ ເຊື່ອມຕໍ່ກັບ WGS84: Lat ",
+                Number(lat).toFixed(6),
+                "°, Long ",
+                Number(lng).toFixed(6),
+                "° (UTM: ",
+                zone,
+                "N ",
+                Math.round(Number(easting) || 0),
+                " ",
+                Math.round(Number(northing) || 0),
+                ")"
+              ]
+            }),
+            /* @__PURE__ */ jsx8("span", {
+              className: "text-[10px] text-slate-400 font-normal",
+              children: "ມາດຕະຖານແຜນທີ່ສາກົນ"
+            })
+          ]
+        }
+      ),
+      status === "bad" && /* @__PURE__ */ jsx8(
+        "div",
+        {
+          className: "text-[10px] text-rose-600 font-semibold px-0.5",
+          children: "⚠️ ຄ່າພິກັດ UTM ບໍ່ຖືກຕ້ອງ (ໃນລາວ X ປະມານ 200,000–800,000 ແລະ Y ປະມານ 1,500,000–2,500,000 ແມັດ)"
+        }
+      )
+    ]
+  });
 };
 // 📅 ບັນທຶກຂໍ້ມູນການນຳໃຊ້ນ້ຳ ລາຍປີ: ເລືອກປີ → ປ້ອນຄ່າ → ເພີ່ມເຂົ້າລາຍການ (ຮ່າງ) → ກົດ "ບັນທຶກຂໍ້ມູນໂຄງການ" ບັນທຶກພ້ອມກັນ
 // (ແບບດຽວກັບ ລາຍການລໍຖ້າບັນທຶກ ຂອງລະບົບຄຸນນະພາບນ້ຳ)
@@ -1675,11 +2124,13 @@ function _doExportProjectsToExcel(projects, filename = "Water_Projects_Lao") {
     "ທີ່ຕັ້ງໂຄງການ (ແຂວງ)": p.projectLocation.province,
     "ພິກັດໂຄງການ Lat": p.projectLocation.latitude,
     "ພິກັດໂຄງການ Long": p.projectLocation.longitude,
+    "ພິກັດໂຄງການ UTM": formatUtm(p.projectLocation.latitude, p.projectLocation.longitude),
     "ບ່ອນດູດນໍ້າ (ບ້ານ)": p.intakeLocation.village,
     "ບ່ອນດູດນໍ້າ (ເມືອງ)": p.intakeLocation.district,
     "ບ່ອນດູດນໍ້າ (ແຂວງ)": p.intakeLocation.province,
     "ພິກັດດູດນໍ້າ Lat": p.intakeLocation.latitude,
     "ພິກັດດູດນໍ້າ Long": p.intakeLocation.longitude,
+    "ພິກັດດູດນໍ້າ UTM": formatUtm(p.intakeLocation.latitude, p.intakeLocation.longitude),
     "ກໍາລັງຈັກສູບ": p.intakeLocation.pumpCapacity || "",
     "ແຜນການນໍາໃຊ້ນໍ້າ": p.waterUsagePlan,
     "ໝາຍເຫດ": p.notes || ""
@@ -6414,6 +6865,13 @@ var IntakeMapPickerModal = ({
                     /* @__PURE__ */ jsxs8("span", { children: ["Long: ", /* @__PURE__ */ jsx8("b", { children: Number(currentLng).toFixed(6) })] })
                   ]
                 }),
+                validLL(currentLat, currentLng) && /* @__PURE__ */ jsxs8("div", {
+                  className: "bg-blue-50 text-blue-900 px-2.5 py-1.5 rounded-xl font-mono font-semibold flex items-center gap-1 border border-blue-200 text-[11px]",
+                  children: [
+                    /* @__PURE__ */ jsx8("span", { children: "🌐 UTM: " }),
+                    /* @__PURE__ */ jsx8("b", { children: formatUtm(currentLat, currentLng) })
+                  ]
+                }),
                 dist !== null && /* @__PURE__ */ jsxs8("span", {
                   className: "bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-1.5 rounded-xl font-semibold",
                   children: ["📏 ຫ່າງຈາກໂຄງການ: ", dist, " ກມ"]
@@ -6632,7 +7090,7 @@ var ProjectFormModal = ({
       setBulkError("");
       alert(`✅ ນໍາເຂົ້າຈຸດພິກັດສໍາເລັດ ${parsed.length} ຈຸດ!${lineErr > 0 ? ` (ຂ້າມ ${lineErr} ແຖວທີ່ອ່ານພິກັດບໍ່ໄດ້)` : ""}`);
     } else {
-      setBulkError("ບໍ່ສາມາດອ່ານຄູ່ພິກັດໄດ້. ກະລຸນາກວດສອບຮູບແບບ (ຕົວຢ່າງ: 17.9620, 102.6150 ຫຼື 17°58'13.0\"N 102°35'48.1\"E)");
+      setBulkError("ບໍ່ສາມາດອ່ານຄູ່ພິກັດໄດ້. ກະລຸນາກວດສອບຮູບແບບ (ຕົວຢ່າງ: 17.9620, 102.6150 ຫຼື 48N 249341 1989096 ຫຼື 17°58'13.0\"N 102°35'48.1\"E)");
     }
   };
 
@@ -7395,6 +7853,13 @@ var ProjectFormModal = ({
             lng: formData.projectLocation?.longitude,
             onChange: (la, lo) => setFormData({ ...formData, projectLocation: { ...formData.projectLocation, latitude: la, longitude: lo } })
           }),
+          /* @__PURE__ */ jsx8(UtmCoordField, {
+            lat: formData.projectLocation?.latitude,
+            lng: formData.projectLocation?.longitude,
+            ring: "focus:ring-green-500",
+            label: "🌐 ພິກັດທີ່ຕັ້ງໂຄງການໃນຮູບແບບ UTM (Zone 48N / 47N, X / Y ແມັດ)",
+            onChange: (la, lo) => setFormData({ ...formData, projectLocation: { ...formData.projectLocation, latitude: la, longitude: lo } })
+          }),
           /* @__PURE__ */ jsxs8("div", { children: [
             /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ຈຸດພິກັດ Latitude (ເສັ້ນຂະໜານ) *" }),
             /* @__PURE__ */ jsx8(
@@ -7497,12 +7962,12 @@ var ProjectFormModal = ({
               children: "✕ ປິດ"
             })
           ] }),
-          /* @__PURE__ */ jsx8("p", { className: "text-[11px] text-slate-600", children: "ວາງຄູ່ພິກັດ (Lat, Long) 1 ແຖວຕໍ່ 1 ຈຸດ. ຮອງຮັບທັງເລກທົດສະນິຍົມ ຫຼື ພິກັດອົງສາ (DMS). ຕົວຢ່າງ: 17.9620, 102.6150 ຫຼື ໃສ່ຊື່ເຊັ່ນ: ທໍ່ດູດ 1: 17.9620, 102.6150" }),
+          /* @__PURE__ */ jsx8("p", { className: "text-[11px] text-slate-600", children: "ວາງຄູ່ພິກັດ (Lat, Long ຫຼື UTM ຫຼື DMS) 1 ແຖວຕໍ່ 1 ຈຸດ. ຮອງຮັບເລກທົດສະນິຍົມ, ພິກັດອົງສາ (DMS), ຫຼື ພິກັດ UTM (ເຊັ່ນ: 48N 249341 1989096). ຕົວຢ່າງ: 17.9620, 102.6150 ຫຼື 48N 249341 1989096" }),
           /* @__PURE__ */ jsx8("textarea", {
             rows: 3,
             value: bulkText,
             onChange: (e) => { setBulkText(e.target.value); setBulkError(""); },
-            placeholder: "ຕົວຢ່າງ:\n17.9620, 102.6150\n17.9655, 102.6190\nຫຼື: ທໍ່ດູດ 3: 17.9710, 102.6240",
+            placeholder: "ຕົວຢ່າງ:\n17.9620, 102.6150\n48N 249341 1989096\nຫຼື: ທໍ່ດູດ 3: 48N 250100 1989500",
             className: "w-full px-3 py-2 text-xs font-mono border border-sky-300 rounded-xl bg-white focus:ring-2 focus:ring-sky-500 outline-none"
           }),
           bulkError && /* @__PURE__ */ jsx8("p", { className: "text-xs text-rose-600 font-semibold", children: bulkError }),
@@ -7756,6 +8221,16 @@ var ProjectFormModal = ({
                     lng: pt.longitude,
                     ring: "focus:ring-sky-500",
                     label: `🧭 ພິກັດອົງສາ (GPS) ຈຸດທີ ${idx + 1} — ວາງພິກັດອົງສາ (DMS) ຫຼື ວາງ Lat/Lng ຫຼື Google Maps link`,
+                    onChange: (la, lo) => handleUpdateIntakePoint(idx, { latitude: la, longitude: lo })
+                  }),
+
+                  /* UtmCoordField: UTM Coordinates (Zone 48N/47N, Easting X, Northing Y) */
+                  /* @__PURE__ */ jsx8(UtmCoordField, {
+                    lat: pt.latitude,
+                    lng: pt.longitude,
+                    pointIdx: idx,
+                    ring: "focus:ring-sky-500",
+                    label: `🌐 ຈຸດພິກັດໃນຮູບແບບ UTM ຈຸດທີ ${idx + 1} (Zone 48N / 47N, X / Y ແມັດ)`,
                     onChange: (la, lo) => handleUpdateIntakePoint(idx, { latitude: la, longitude: lo })
                   }),
 
@@ -8109,11 +8584,17 @@ var ProjectDetailModal = ({
               project.projectLocation.province
             ] })
           ] }),
-          /* @__PURE__ */ jsxs9("div", { className: "pt-2 font-mono text-[11px] text-emerald-800 font-bold bg-white/70 p-2 rounded-xl border border-emerald-200/50", children: [
-            "📍 Lat: ",
-            project.projectLocation.latitude.toFixed(6),
-            ", Long: ",
-            project.projectLocation.longitude.toFixed(6)
+          /* @__PURE__ */ jsxs9("div", { className: "pt-2 font-mono text-[11px] text-emerald-800 font-bold bg-white/70 p-2 rounded-xl border border-emerald-200/50 flex items-center justify-between flex-wrap gap-1", children: [
+            /* @__PURE__ */ jsxs9("span", { children: [
+              "📍 Lat: ",
+              project.projectLocation.latitude.toFixed(6),
+              ", Long: ",
+              project.projectLocation.longitude.toFixed(6)
+            ] }),
+            validLL(project.projectLocation?.latitude, project.projectLocation?.longitude) && /* @__PURE__ */ jsxs9("span", { className: "text-[10px] text-emerald-900 bg-emerald-100/70 px-2 py-0.5 rounded-lg border border-emerald-200", children: [
+              "🌐 UTM: ",
+              formatUtm(project.projectLocation.latitude, project.projectLocation.longitude)
+            ] })
           ] })
         ] }),
         /* @__PURE__ */ jsxs9("div", { className: "bg-sky-50/60 border border-sky-200 p-4 rounded-2xl space-y-3 text-xs", children: [
@@ -8161,6 +8642,7 @@ var ProjectDetailModal = ({
                 ] }),
                 /* @__PURE__ */ jsxs9("div", { className: "font-mono text-[10px] text-sky-800 flex items-center gap-2 flex-wrap", children: [
                   /* @__PURE__ */ jsxs9("span", { children: ["Lat: ", Number(pt.latitude).toFixed(6), ", Long: ", Number(pt.longitude).toFixed(6)] }),
+                  validLL(pt.latitude, pt.longitude) && /* @__PURE__ */ jsxs9("span", { className: "text-blue-900 bg-sky-100/80 px-1.5 py-0.2 rounded font-semibold", children: ["🌐 UTM: ", formatUtm(pt.latitude, pt.longitude)] }),
                   dist !== null && /* @__PURE__ */ jsxs9("span", { className: "text-emerald-700 font-sans font-semibold", children: ["• ຫ່າງໂຄງການ: ", dist, " ກມ"] })
                 ] })
               ] }),
