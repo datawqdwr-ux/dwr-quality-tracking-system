@@ -427,6 +427,302 @@ async function restoreSystemBackup(jsonString, mode = "replace") {
   }), await update(dbRef(rtdb), updates), await addAuditLog("restore", "ລະບົບຖານຂໍ້ມູນ", `ຟື້ນຟູຂໍ້ມູນໂຄງການປ່ອຍນໍ້າເປື້ອນ ${importedProjects.length} ລາຍການ (${mode})`), { count: importedProjects.length };
 }
 
+// 🌐 ຟັງຊັນກວດສອບ ແລະ ແປງພິກັດ Lat/Lng ⇄ UTM (ໂຊນ 47N / 48N) ແລະ ອົງສາ (DMS: ອົງສາ-ລິບດາ-ຟີລິບດາ) ແລະ ດຶງພິກັດຈາກ Google Maps
+function validLL(lat, lng) {
+  if (lat === null || lat === undefined || lng === null || lng === undefined) return false;
+  const nLat = Number(lat), nLng = Number(lng);
+  if (isNaN(nLat) || isNaN(nLng)) return false;
+  return nLat >= -90 && nLat <= 90 && nLng >= -180 && nLng <= 180 && (nLat !== 0 || nLng !== 0);
+}
+
+// 🧭 ແປງຄ່າທົດສະນິຍົມເປັນຮູບແບບອົງສາ (Degree DMS: deg° min' sec" N/E)
+function toDMSPart(v, pos, neg) {
+  if (v === null || v === undefined || v === "" || isNaN(v)) return "";
+  const a = Math.abs(Number(v));
+  let d = Math.floor(a), m = Math.floor((a - d) * 60), sec = Math.round(((a - d) * 60 - m) * 600) / 10;
+  if (sec >= 60) { sec = 0; m++; }
+  if (m >= 60) { m = 0; d++; }
+  return `${d}°${String(m).padStart(2, "0")}'${sec.toFixed(1).padStart(4, "0")}"${Number(v) < 0 ? neg : pos}`;
+}
+
+function toDMS(lat, lng) {
+  if (!validLL(lat, lng)) return "";
+  const a = toDMSPart(lat, "N", "S"), b = toDMSPart(lng, "E", "W");
+  return a && b ? `${a} ${b}` : "";
+}
+
+function splitDmsParts(v, isLng = false) {
+  if (v === null || v === undefined || isNaN(v) || v === "" || Number(v) === 0) {
+    return { deg: "", min: "", sec: "", dir: isLng ? "E" : "N" };
+  }
+  const n = Number(v);
+  const a = Math.abs(n);
+  let d = Math.floor(a);
+  let m = Math.floor((a - d) * 60);
+  let sec = Math.round(((a - d) * 60 - m) * 600) / 10;
+  if (sec >= 60) { sec = 0; m++; }
+  if (m >= 60) { m = 0; d++; }
+  const dir = isLng ? (n < 0 ? "W" : "E") : (n < 0 ? "S" : "N");
+  return { deg: String(d), min: String(m), sec: sec.toFixed(1), dir };
+}
+
+function dmsToDecimal(deg, min, sec, dir) {
+  const d = parseFloat(deg) || 0;
+  const m = parseFloat(min) || 0;
+  const s = parseFloat(sec) || 0;
+  let val = Math.abs(d) + m / 60 + s / 3600;
+  if (dir === "S" || dir === "W" || (typeof dir === "string" && /^[sw]|ໃຕ້|ຕາເວັນຕົກ/i.test(dir))) {
+    val = -val;
+  }
+  return Math.round(val * 1e6) / 1e6;
+}
+
+function parseCoordPart(txt) {
+  if (txt === null || txt === undefined) return NaN;
+  if (typeof txt === "number") return txt;
+  let t = String(txt).trim().replace(/[′’‘`´]/g, "'").replace(/[″”“]/g, '"').replace(/''/g, '"').replace(/,/g, ".");
+  if (!t) return NaN;
+  const hemi = (t.match(/[NSEW]|ເໜືອ|ໃຕ້|ຕາເວັນອອກ|ຕາເວັນຕົກ/i) || [""])[0].toUpperCase();
+  const nums = t.match(/-?\d+(?:\.\d+)?/g);
+  if (!nums) return NaN;
+  let [d, m = 0, s = 0] = nums.map(Number);
+  if (nums.length === 1 && !/[°º˚d']/.test(t)) {
+    const v = Number(nums[0]);
+    return /^[SW]|ໃຕ້|ຕາເວັນຕົກ/.test(hemi) ? -Math.abs(v) : v;
+  }
+  if (m >= 60 || s >= 60) return NaN;
+  let v = Math.abs(d) + m / 60 + s / 3600;
+  if (d < 0 || /^[SW]|ໃຕ້|ຕາເວັນຕົກ/.test(hemi)) v = -v;
+  return Math.round(v * 1e6) / 1e6;
+}
+
+function parseCoordPair(txt) {
+  if (!txt || typeof txt !== "string") return null;
+  let t = txt.trim().replace(/[′’‘`´]/g, "'").replace(/[″”“]/g, '"').replace(/''/g, '"');
+  if (!t) return null;
+  let a, b;
+  const dms = t.match(/([-\d.,\s°º˚'"d]+?\s*[NS])[\s,;/]*([-\d.,\s°º˚'"d]+?\s*[EW])/i) ||
+              t.match(/([NS]\s*[-\d.,\s°º˚'"]+?)[\s,;/]+([EW]\s*[-\d.,\s°º˚'"]+)/i);
+  if (dms) {
+    a = parseCoordPart(dms[1]);
+    b = parseCoordPart(dms[2]);
+  } else {
+    const nums = t.match(/-?\d+(?:\.\d+)?/g);
+    if (!nums) return null;
+    if (nums.length === 2) {
+      a = Number(nums[0]);
+      b = Number(nums[1]);
+    } else if (nums.length === 6) {
+      a = parseCoordPart(nums.slice(0, 3).join(" ") + "°");
+      b = parseCoordPart(nums.slice(3).join(" ") + "°");
+    }
+  }
+  if (!isNaN(a) && !isNaN(b)) {
+    if (Math.abs(a) > 90 && Math.abs(b) <= 90) [a, b] = [b, a];
+    return { lat: a, lng: b };
+  }
+  return null;
+}
+
+function latLngToUtm(lat, lng, forcedZone) {
+  if (lat === null || lat === undefined || lng === null || lng === undefined || isNaN(lat) || isNaN(lng)) return null;
+  const nLat = Number(lat), nLng = Number(lng);
+  if (Math.abs(nLat) > 90 || Math.abs(nLng) > 180) return null;
+  const a = 6378137.0;
+  const f = 1 / 298.257223563;
+  const e2 = 2 * f - f * f;
+  const ep2 = e2 / (1 - e2);
+  const k0 = 0.9996;
+  const zone = forcedZone ? Number(forcedZone) : (Math.floor((nLng + 180) / 6) + 1);
+  const hemi = nLat >= 0 ? "N" : "S";
+  const rad = Math.PI / 180;
+  const phi = nLat * rad;
+  const lambda = nLng * rad;
+  const lambda0 = ((zone - 1) * 6 - 180 + 3) * rad;
+  const dlambda = lambda - lambda0;
+
+  const N = a / Math.sqrt(1 - e2 * Math.sin(phi) ** 2);
+  const T = Math.tan(phi) ** 2;
+  const C = ep2 * Math.cos(phi) ** 2;
+  const A = Math.cos(phi) * dlambda;
+
+  const M = a * ((1 - e2 / 4 - 3 * e2 ** 2 / 64 - 5 * e2 ** 3 / 256) * phi
+    - (3 * e2 / 8 + 3 * e2 ** 2 / 32 + 45 * e2 ** 3 / 1024) * Math.sin(2 * phi)
+    + (15 * e2 ** 2 / 256 + 45 * e2 ** 3 / 1024) * Math.sin(4 * phi)
+    - (35 * e2 ** 3 / 3072) * Math.sin(6 * phi));
+
+  const x = k0 * N * (A + (1 - T + C) * A ** 3 / 6 + (5 - 18 * T + T ** 2 + 72 * C - 58 * ep2) * A ** 5 / 120) + 500000;
+  let y = k0 * (M + N * Math.tan(phi) * (A ** 2 / 2 + (5 - T + 9 * C + 4 * C ** 2) * A ** 4 / 24 + (61 - 58 * T + T ** 2 + 600 * C - 330 * ep2) * A ** 6 / 720));
+  if (nLat < 0) y += 10000000;
+
+  const easting = Math.round(x * 100) / 100;
+  const northing = Math.round(y * 100) / 100;
+  return {
+    zone,
+    hemi,
+    easting,
+    northing,
+    formatted: `${zone}${hemi} ${Math.round(easting)} ${Math.round(northing)}`
+  };
+}
+
+function utmToLatLng(easting, northing, zone, hemi = "N") {
+  if (easting === null || easting === undefined || northing === null || northing === undefined) return null;
+  const eVal = Number(easting), nVal = Number(northing), zVal = Number(zone) || 48;
+  if (isNaN(eVal) || isNaN(nVal) || isNaN(zVal)) return null;
+  if (eVal < 50000 || eVal > 950000) return null;
+  if (nVal < 0 || nVal > 10000000) return null;
+
+  const a = 6378137.0;
+  const f = 1 / 298.257223563;
+  const e2 = 2 * f - f * f;
+  const ep2 = e2 / (1 - e2);
+  const k0 = 0.9996;
+  const e1 = (1 - Math.sqrt(1 - e2)) / (1 + Math.sqrt(1 - e2));
+  const x = eVal - 500000;
+  let y = nVal;
+  if (String(hemi).toUpperCase() === "S") y -= 10000000;
+
+  const M = y / k0;
+  const mu = M / (a * (1 - e2 / 4 - 3 * e2 ** 2 / 64 - 5 * e2 ** 3 / 256));
+
+  const phi1 = mu + (3 * e1 / 2 - 27 * e1 ** 3 / 32) * Math.sin(2 * mu)
+    + (21 * e1 ** 2 / 16 - 55 * e1 ** 4 / 32) * Math.sin(4 * mu)
+    + (151 * e1 ** 3 / 96) * Math.sin(6 * mu)
+    + (1097 * e1 ** 4 / 512) * Math.sin(8 * mu);
+
+  const N1 = a / Math.sqrt(1 - e2 * Math.sin(phi1) ** 2);
+  const T1 = Math.tan(phi1) ** 2;
+  const C1 = ep2 * Math.cos(phi1) ** 2;
+  const R1 = a * (1 - e2) / Math.pow(1 - e2 * Math.sin(phi1) ** 2, 1.5);
+  const D = x / (N1 * k0);
+
+  const phi = phi1 - (N1 * Math.tan(phi1) / R1) * (D ** 2 / 2 - (5 + 3 * T1 + 10 * C1 - 4 * C1 ** 2 - 9 * ep2) * D ** 4 / 24 + (61 + 90 * T1 + 298 * C1 + 45 * T1 ** 2 - 252 * ep2 - 3 * C1 ** 2) * D ** 6 / 720);
+  const lambda0 = ((zVal - 1) * 6 - 180 + 3) * Math.PI / 180;
+  const lambda = lambda0 + (D - (1 + 2 * T1 + C1) * D ** 3 / 6 + (5 - 2 * C1 + 28 * T1 - 3 * C1 ** 2 + 8 * ep2 + 24 * T1 ** 2) * D ** 5 / 120) / Math.cos(phi1);
+
+  const lat = Math.round(phi * (180 / Math.PI) * 1e6) / 1e6;
+  const lng = Math.round(lambda * (180 / Math.PI) * 1e6) / 1e6;
+  if (!validLL(lat, lng)) return null;
+  return { lat, lng };
+}
+
+function formatUtm(lat, lng) {
+  const u = latLngToUtm(lat, lng);
+  return u ? u.formatted : "";
+}
+
+function parseUtmString(str, defaultZone = 48) {
+  if (!str || typeof str !== "string") return null;
+  const s = str.trim();
+
+  let zone = defaultZone;
+  let hemi = "N";
+  let rest = s;
+
+  const explicitZoneMatch = s.match(/\b(?:zone|ໂຊນ\s*)?\s*(4[78]|[1-5]?\d)\s*([A-Za-z])\b/i) ||
+                           s.match(/\b(?:zone|ໂຊນ)\s*(4[78]|[1-5]?\d)\b/i);
+
+  if (explicitZoneMatch) {
+    const parsedZ = parseInt(explicitZoneMatch[1], 10);
+    if (parsedZ >= 1 && parsedZ <= 60) {
+      zone = parsedZ;
+      if (explicitZoneMatch[2] && /^[sS]$/i.test(explicitZoneMatch[2])) hemi = "S";
+      rest = s.replace(explicitZoneMatch[0], " ");
+    }
+  }
+
+  const xMatch = rest.match(/(?:x|easting|e|ຕາເວັນອອກ)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)/i);
+  const yMatch = rest.match(/(?:y|northing|n|ເໜືອ)\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?)/i);
+  if (xMatch && yMatch) {
+    const e = parseFloat(xMatch[1]), n = parseFloat(yMatch[1]);
+    if (e >= 10000 && n >= 10000) {
+      return { zone, hemi, easting: e, northing: n };
+    }
+  }
+
+  const nums = rest.match(/[0-9]+(?:\.[0-9]+)?/g);
+  if (nums) {
+    if (nums.length === 3 && (nums[0] === "47" || nums[0] === "48")) {
+      let n1 = parseFloat(nums[1]), n2 = parseFloat(nums[2]);
+      if (n1 >= 50000 && n2 >= 50000) {
+        zone = parseInt(nums[0], 10);
+        let easting = n1 > 900000 ? n2 : n1;
+        let northing = n1 > 900000 ? n1 : n2;
+        return { zone, hemi, easting, northing };
+      }
+    }
+    if (nums.length >= 2) {
+      let n1 = parseFloat(nums[0]);
+      let n2 = parseFloat(nums[1]);
+      if (n1 >= 50000 && n2 >= 50000) {
+        let easting, northing;
+        if (n1 > 900000 && n2 < 900000) {
+          northing = n1;
+          easting = n2;
+        } else {
+          easting = n1;
+          northing = n2;
+        }
+        return { zone, hemi, easting, northing };
+      }
+    }
+  }
+  return null;
+}
+
+// 🔍 ແຍກພິກັດຈາກລິ້ງ Google Maps ຫຼື ຂໍ້ຄວາມພິກັດທຸກຮູບແບບ
+function parseGoogleMapsOrCoord(txt) {
+  if (!txt || typeof txt !== "string") return null;
+  const str = txt.trim();
+  if (!str) return null;
+
+  const urlAtMatch = str.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (urlAtMatch) {
+    const lat = parseFloat(urlAtMatch[1]), lng = parseFloat(urlAtMatch[2]);
+    if (validLL(lat, lng)) return { lat, lng };
+  }
+
+  const queryMatch = str.match(/[?&](?:q|query|ll|destination)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (queryMatch) {
+    const lat = parseFloat(queryMatch[1]), lng = parseFloat(queryMatch[2]);
+    if (validLL(lat, lng)) return { lat, lng };
+  }
+
+  const pairMatch = parseCoordPair(str);
+  if (pairMatch && validLL(pairMatch.lat, pairMatch.lng)) {
+    return pairMatch;
+  }
+
+  const utmMatch = parseUtmString(str);
+  if (utmMatch) {
+    const ll = utmToLatLng(utmMatch.easting, utmMatch.northing, utmMatch.zone, utmMatch.hemi);
+    if (ll && validLL(ll.lat, ll.lng)) return ll;
+  }
+
+  const dmsMatch = str.match(/(\d+)[°\s]+(\d+)['\s]+([\d.]+)?["\s]*([NS])[\s,;]+(\d+)[°\s]+(\d+)['\s]+([\d.]+)?["\s]*([EW])/i);
+  if (dmsMatch) {
+    const d1 = parseFloat(dmsMatch[1]), m1 = parseFloat(dmsMatch[2]), s1 = parseFloat(dmsMatch[3] || 0), h1 = dmsMatch[4].toUpperCase();
+    const d2 = parseFloat(dmsMatch[5]), m2 = parseFloat(dmsMatch[6]), s2 = parseFloat(dmsMatch[7] || 0), h2 = dmsMatch[8].toUpperCase();
+    let lat = d1 + m1 / 60 + s1 / 3600;
+    if (h1 === "S") lat = -lat;
+    let lng = d2 + m2 / 60 + s2 / 3600;
+    if (h2 === "W") lng = -lng;
+    if (validLL(lat, lng)) return { lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 };
+  }
+
+  const numMatches = str.match(/-?\d+\.\d+/g);
+  if (numMatches && numMatches.length >= 2) {
+    let lat = parseFloat(numMatches[0]);
+    let lng = parseFloat(numMatches[1]);
+    if (Math.abs(lat) > 90 && Math.abs(lng) <= 90) [lat, lng] = [lng, lat];
+    if (lat > 90 && lng < 30) [lat, lng] = [lng, lat];
+    if (validLL(lat, lng)) return { lat, lng };
+  }
+
+  return null;
+}
+
 // src/lib/exportUtils.ts
 import * as XLSX from "xlsx";
 function exportProjectsToExcel(projects, filename = "Wastewater_Discharge_Projects_Lao") {
@@ -465,11 +761,15 @@ function _doExportProjectsToExcel(projects, filename = "Wastewater_Discharge_Pro
     "ທີ່ຕັ້ງໂຄງການ (ແຂວງ)": p.projectLocation.province,
     "ພິກັດໂຄງການ Lat": p.projectLocation.latitude,
     "ພິກັດໂຄງການ Long": p.projectLocation.longitude,
+    "ພິກັດໂຄງການ ອົງສາ (DMS)": toDMS(p.projectLocation.latitude, p.projectLocation.longitude),
+    "ພິກັດໂຄງການ UTM": formatUtm(p.projectLocation.latitude, p.projectLocation.longitude),
     "ຈຸດປ່ອຍນໍ້າເປື້ອນ (ບ້ານ)": p.dischargeLocation.village,
     "ຈຸດປ່ອຍນໍ້າເປື້ອນ (ເມືອງ)": p.dischargeLocation.district,
     "ຈຸດປ່ອຍນໍ້າເປື້ອນ (ແຂວງ)": p.dischargeLocation.province,
     "ພິກັດຈຸດປ່ອຍ Lat": p.dischargeLocation.latitude,
     "ພິກັດຈຸດປ່ອຍ Long": p.dischargeLocation.longitude,
+    "ພິກັດຈຸດປ່ອຍ ອົງສາ (DMS)": toDMS(p.dischargeLocation.latitude, p.dischargeLocation.longitude),
+    "ພິກັດຈຸດປ່ອຍ UTM": formatUtm(p.dischargeLocation.latitude, p.dischargeLocation.longitude),
     ຮູບແບບຈຸດປ່ອຍນໍ້າ: p.dischargeLocation.outfallType || "",
     ກໍາລັງການລະບາຍ: p.dischargeLocation.dischargeCapacity || "",
     "ແຜນການບໍາບັດ ແລະ ປ່ອຍນໍ້າເປື້ອນ": p.dischargePlan,
@@ -7371,7 +7671,894 @@ var COMMON_PARAM_PRESETS = [
   { name: "ທາດບາຫຼອດ (Mercury - Hg)", unit: "mg/L", standard: "≤ 0.005" },
   { name: "ຄວາມຂຸ່ນ (Turbidity)", unit: "NTU", standard: "≤ 20" },
   { name: "ການນໍາໄຟຟ້າ (EC)", unit: "µS/cm", standard: "≤ 1000" }
-], ProjectFormModal = ({
+];
+
+// 🧭 ຄອມໂພເນັ້ນປ້ອນ/ຄົ້ນຫາພິກັດໃນຮູບແບບອົງສາ (Degree DMS: ອົງສາ-ລິບດາ-ຟີລິບດາ) ແລະ ຄົ້ນຫາຜ່ານ Google Maps
+var WastewaterDmsCoordField = ({
+  lat,
+  lng,
+  onChange,
+  themeColor = "emerald",
+  label = "ຈຸດພິກັດໃນຮູບແບບອົງສາ (DMS: ອົງສາ-ລິບດາ-ຟີລິບດາ)",
+  locationName = ""
+}) => {
+  const currentDms = validLL(lat, lng) ? toDMS(lat, lng) : "";
+  const initialLatParts = splitDmsParts(lat, false);
+  const initialLngParts = splitDmsParts(lng, true);
+
+  const [latParts, setLatParts] = useState9(initialLatParts);
+  const [lngParts, setLngParts] = useState9(initialLngParts);
+  const [searchGmapText, setSearchGmapText] = useState9("");
+  const [isFocused, setIsFocused] = useState9(false);
+  const [copyFeedback, setCopyFeedback] = useState9(false);
+  const [parseMsg, setParseMsg] = useState9(null);
+
+  useEffect4(() => {
+    if (!isFocused) {
+      if (validLL(lat, lng)) {
+        setLatParts(splitDmsParts(lat, false));
+        setLngParts(splitDmsParts(lng, true));
+      } else {
+        if (!latParts.deg && !lngParts.deg) {
+          setLatParts({ deg: "", min: "", sec: "", dir: "N" });
+          setLngParts({ deg: "", min: "", sec: "", dir: "E" });
+        }
+      }
+    }
+  }, [lat, lng, isFocused]);
+
+  const updateLat = (field, val) => {
+    const updated = { ...latParts, [field]: val };
+    setLatParts(updated);
+    const newLat = dmsToDecimal(updated.deg, updated.min, updated.sec, updated.dir);
+    const currLng = dmsToDecimal(lngParts.deg, lngParts.min, lngParts.sec, lngParts.dir);
+    if (validLL(newLat, currLng)) {
+      onChange(newLat, currLng);
+    }
+  };
+
+  const updateLng = (field, val) => {
+    const updated = { ...lngParts, [field]: val };
+    setLngParts(updated);
+    const currLat = dmsToDecimal(latParts.deg, latParts.min, latParts.sec, latParts.dir);
+    const newLng = dmsToDecimal(updated.deg, updated.min, updated.sec, updated.dir);
+    if (validLL(currLat, newLng)) {
+      onChange(currLat, newLng);
+    }
+  };
+
+  const handleCopyDms = () => {
+    const dmsStr = validLL(lat, lng) ? toDMS(lat, lng) : (latParts.deg && lngParts.deg ? `${latParts.deg}°${latParts.min || "00"}'${latParts.sec || "00.0"}"${latParts.dir} ${lngParts.deg}°${lngParts.min || "00"}'${lngParts.sec || "00.0"}"${lngParts.dir}` : "");
+    if (dmsStr && navigator.clipboard) {
+      navigator.clipboard.writeText(dmsStr);
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 2000);
+    }
+  };
+
+  const handleOpenGoogleMapsSearch = () => {
+    let query = searchGmapText.trim();
+    if (!query) {
+      if (validLL(lat, lng)) {
+        query = toDMS(lat, lng) || `${lat},${lng}`;
+      } else if (locationName) {
+        query = locationName;
+      } else {
+        query = "Vientiane, Laos";
+      }
+    }
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    window.open(url, "_blank");
+  };
+
+  const handleApplyGoogleMapsInput = () => {
+    const txt = searchGmapText.trim();
+    if (!txt) return;
+    const parsed = parseGoogleMapsOrCoord(txt);
+    if (parsed && validLL(parsed.lat, parsed.lng)) {
+      onChange(parsed.lat, parsed.lng);
+      setLatParts(splitDmsParts(parsed.lat, false));
+      setLngParts(splitDmsParts(parsed.lng, true));
+      setParseMsg({
+        type: "success",
+        text: `✓ ດຶງພິກັດອົງສາສໍາເລັດ: ${toDMS(parsed.lat, parsed.lng)} (Lat ${parsed.lat.toFixed(6)}, Long ${parsed.lng.toFixed(6)})`
+      });
+      setSearchGmapText("");
+      setTimeout(() => setParseMsg(null), 4000);
+    } else {
+      setParseMsg({
+        type: "error",
+        text: "⚠️ ບໍ່ພົບພິກັດໃນຂໍ້ຄວາມ. ທ່ານສາມາດກົດປຸ່ມ '🔍 ຄົ້ນຫາຢູ່ Google Map' ເພື່ອຊອກຫາສະຖານທີ່"
+      });
+      setTimeout(() => setParseMsg(null), 5000);
+    }
+  };
+
+  const isRose = themeColor === "rose";
+  const ringCls = isRose ? "focus:ring-rose-500" : "focus:ring-emerald-500";
+  const bgCardCls = isRose
+    ? "bg-gradient-to-r from-rose-50/80 via-pink-50/40 to-slate-50 border-rose-200/90"
+    : "bg-gradient-to-r from-emerald-50/80 via-teal-50/40 to-slate-50 border-emerald-200/90";
+  const textTitleCls = isRose ? "text-rose-950" : "text-emerald-950";
+  const badgeCls = isRose ? "bg-rose-600 text-white" : "bg-emerald-600 text-white";
+
+  return /* @__PURE__ */ jsxs9("div", {
+    className: `p-4 border rounded-2xl space-y-3 shadow-2xs ${bgCardCls}`,
+    children: [
+      /* ແຖວຫົວຂໍ້ + badge + ປຸ່ມ Google Map + ປຸ່ມ Copy */
+      /* @__PURE__ */ jsxs9("div", {
+        className: "flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/60",
+        children: [
+          /* @__PURE__ */ jsxs9("div", {
+            className: "flex items-center gap-2",
+            children: [
+              /* @__PURE__ */ jsx9("span", { className: "text-base", children: "🧭" }),
+              /* @__PURE__ */ jsx9("span", {
+                className: `text-xs font-bold ${textTitleCls}`,
+                children: label
+              }),
+              validLL(lat, lng) && /* @__PURE__ */ jsx9("span", {
+                className: `text-[10px] font-mono font-bold px-2 py-0.5 rounded-full shadow-2xs ${badgeCls}`,
+                children: toDMS(lat, lng)
+              })
+            ]
+          }),
+          /* @__PURE__ */ jsxs9("div", {
+            className: "flex items-center gap-1.5 flex-wrap",
+            children: [
+              /* ປຸ່ມຄົ້ນຫາໃນ Google Map */
+              /* @__PURE__ */ jsxs9(
+                "button",
+                {
+                  type: "button",
+                  onClick: handleOpenGoogleMapsSearch,
+                  className: "text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-sky-300 bg-white text-sky-700 hover:bg-sky-50 transition flex items-center gap-1 shadow-2xs cursor-pointer",
+                  title: "ເປີດຄົ້ນຫາພິກັດອົງສານີ້ໃນ Google Maps",
+                  children: [
+                    /* @__PURE__ */ jsx9("span", { children: "🗺️" }),
+                    /* @__PURE__ */ jsx9("span", { children: "ຄົ້ນຫາຢູ່ Google Map" })
+                  ]
+                }
+              ),
+              /* ປຸ່ມນໍາທາງ Google Maps (ຖ້າມີພິກັດ) */
+              validLL(lat, lng) && /* @__PURE__ */ jsxs9(
+                "a",
+                {
+                  href: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+                  target: "_blank",
+                  rel: "noreferrer",
+                  className: "text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition flex items-center gap-1 shadow-2xs",
+                  title: "ນໍາທາງ Google Maps ໄປຫາຈຸດນີ້",
+                  children: [
+                    /* @__PURE__ */ jsx9("span", { children: "🧭" }),
+                    /* @__PURE__ */ jsx9("span", { children: "ນໍາທາງ" })
+                  ]
+                }
+              ),
+              /* ປຸ່ມ ສຳເນົາອົງສາ */
+              validLL(lat, lng) && /* @__PURE__ */ jsxs9(
+                "button",
+                {
+                  type: "button",
+                  onClick: handleCopyDms,
+                  className: `text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition flex items-center gap-1 cursor-pointer ${
+                    copyFeedback
+                      ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                      : "bg-white text-slate-700 hover:bg-slate-50 border-slate-200 shadow-2xs"
+                  }`,
+                  title: "ສຳເນົາພິກັດໃນຮູບແບບອົງສາ (DMS)",
+                  children: [
+                    copyFeedback ? "✓ ສຳເນົາແລ້ວ!" : "📋 ສຳເນົາອົງສາ"
+                  ]
+                }
+              )
+            ]
+          })
+        ]
+      }),
+
+      /* 2 ແຖວປ້ອນພິກັດອົງສາ: Latitude (Deg, Min, Sec, N/S) ແລະ Longitude (Deg, Min, Sec, E/W) */
+      /* @__PURE__ */ jsxs9("div", {
+        className: "grid grid-cols-1 md:grid-cols-2 gap-3",
+        children: [
+          /* ກ່ອງ Latitude (ເສັ້ນຂະໜານ) */
+          /* @__PURE__ */ jsxs9("div", {
+            className: "bg-white/80 p-2.5 rounded-xl border border-slate-200/90 space-y-1.5 shadow-2xs",
+            children: [
+              /* @__PURE__ */ jsxs9("div", {
+                className: "flex items-center justify-between text-[11px] font-bold text-slate-700",
+                children: [
+                  /* @__PURE__ */ jsx9("span", { children: "🌐 ເສັ້ນຂະໜານ Latitude (ອົງສາເໜືອ/ໃຕ້)" }),
+                  /* @__PURE__ */ jsx9("span", { className: `text-[10px] font-mono ${isRose ? "text-rose-600" : "text-emerald-600"}`, children: `${latParts.deg || 0}° ${latParts.min || 0}' ${latParts.sec || 0}" ${latParts.dir}` })
+                ]
+              }),
+              /* @__PURE__ */ jsxs9("div", {
+                className: "grid grid-cols-4 gap-1.5",
+                children: [
+                  /* Deg */
+                  /* @__PURE__ */ jsxs9("div", {
+                    children: [
+                      /* @__PURE__ */ jsx9("label", { className: "block text-[9px] text-slate-500 font-semibold mb-0.5", children: "ອົງສາ (°)" }),
+                      /* @__PURE__ */ jsx9("input", {
+                        type: "number",
+                        min: "0",
+                        max: "90",
+                        value: latParts.deg,
+                        onChange: (e) => updateLat("deg", e.target.value),
+                        onFocus: () => setIsFocused(true),
+                        onBlur: () => setIsFocused(false),
+                        placeholder: "17",
+                        className: `w-full px-2 py-1 text-xs border rounded-lg font-mono bg-white font-bold text-slate-900 focus:ring-2 ${ringCls} shadow-2xs`
+                      })
+                    ]
+                  }),
+                  /* Min */
+                  /* @__PURE__ */ jsxs9("div", {
+                    children: [
+                      /* @__PURE__ */ jsx9("label", { className: "block text-[9px] text-slate-500 font-semibold mb-0.5", children: "ລິບດາ (')" }),
+                      /* @__PURE__ */ jsx9("input", {
+                        type: "number",
+                        min: "0",
+                        max: "59",
+                        value: latParts.min,
+                        onChange: (e) => updateLat("min", e.target.value),
+                        onFocus: () => setIsFocused(true),
+                        onBlur: () => setIsFocused(false),
+                        placeholder: "55",
+                        className: `w-full px-2 py-1 text-xs border rounded-lg font-mono bg-white font-bold text-slate-900 focus:ring-2 ${ringCls} shadow-2xs`
+                      })
+                    ]
+                  }),
+                  /* Sec */
+                  /* @__PURE__ */ jsxs9("div", {
+                    children: [
+                      /* @__PURE__ */ jsx9("label", { className: "block text-[9px] text-slate-500 font-semibold mb-0.5", children: "ຟີລິບດາ (\")" }),
+                      /* @__PURE__ */ jsx9("input", {
+                        type: "number",
+                        step: "any",
+                        min: "0",
+                        max: "59.999",
+                        value: latParts.sec,
+                        onChange: (e) => updateLat("sec", e.target.value),
+                        onFocus: () => setIsFocused(true),
+                        onBlur: () => setIsFocused(false),
+                        placeholder: "31.4",
+                        className: `w-full px-2 py-1 text-xs border rounded-lg font-mono bg-white font-bold text-slate-900 focus:ring-2 ${ringCls} shadow-2xs`
+                      })
+                    ]
+                  }),
+                  /* Dir (N/S) */
+                  /* @__PURE__ */ jsxs9("div", {
+                    children: [
+                      /* @__PURE__ */ jsx9("label", { className: "block text-[9px] text-slate-500 font-semibold mb-0.5", children: "ທິດ" }),
+                      /* @__PURE__ */ jsxs9("select", {
+                        value: latParts.dir,
+                        onChange: (e) => updateLat("dir", e.target.value),
+                        className: `w-full px-1.5 py-1 text-xs border border-slate-300 rounded-lg bg-white font-bold text-slate-900 focus:ring-2 ${ringCls} shadow-2xs`,
+                        children: [
+                          /* @__PURE__ */ jsx9("option", { value: "N", children: "N (ເໜືອ)" }),
+                          /* @__PURE__ */ jsx9("option", { value: "S", children: "S (ໃຕ້)" })
+                        ]
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          }),
+
+          /* ກ່ອງ Longitude (ເສັ້ນແວງ) */
+          /* @__PURE__ */ jsxs9("div", {
+            className: "bg-white/80 p-2.5 rounded-xl border border-slate-200/90 space-y-1.5 shadow-2xs",
+            children: [
+              /* @__PURE__ */ jsxs9("div", {
+                className: "flex items-center justify-between text-[11px] font-bold text-slate-700",
+                children: [
+                  /* @__PURE__ */ jsx9("span", { children: "🌐 ເສັ້ນແວງ Longitude (ອົງສາຕາເວັນອອກ/ຕົກ)" }),
+                  /* @__PURE__ */ jsx9("span", { className: `text-[10px] font-mono ${isRose ? "text-rose-600" : "text-emerald-600"}`, children: `${lngParts.deg || 0}° ${lngParts.min || 0}' ${lngParts.sec || 0}" ${lngParts.dir}` })
+                ]
+              }),
+              /* @__PURE__ */ jsxs9("div", {
+                className: "grid grid-cols-4 gap-1.5",
+                children: [
+                  /* Deg */
+                  /* @__PURE__ */ jsxs9("div", {
+                    children: [
+                      /* @__PURE__ */ jsx9("label", { className: "block text-[9px] text-slate-500 font-semibold mb-0.5", children: "ອົງສາ (°)" }),
+                      /* @__PURE__ */ jsx9("input", {
+                        type: "number",
+                        min: "0",
+                        max: "180",
+                        value: lngParts.deg,
+                        onChange: (e) => updateLng("deg", e.target.value),
+                        onFocus: () => setIsFocused(true),
+                        onBlur: () => setIsFocused(false),
+                        placeholder: "102",
+                        className: `w-full px-2 py-1 text-xs border rounded-lg font-mono bg-white font-bold text-slate-900 focus:ring-2 ${ringCls} shadow-2xs`
+                      })
+                    ]
+                  }),
+                  /* Min */
+                  /* @__PURE__ */ jsxs9("div", {
+                    children: [
+                      /* @__PURE__ */ jsx9("label", { className: "block text-[9px] text-slate-500 font-semibold mb-0.5", children: "ລິບດາ (')" }),
+                      /* @__PURE__ */ jsx9("input", {
+                        type: "number",
+                        min: "0",
+                        max: "59",
+                        value: lngParts.min,
+                        onChange: (e) => updateLng("min", e.target.value),
+                        onFocus: () => setIsFocused(true),
+                        onBlur: () => setIsFocused(false),
+                        placeholder: "39",
+                        className: `w-full px-2 py-1 text-xs border rounded-lg font-mono bg-white font-bold text-slate-900 focus:ring-2 ${ringCls} shadow-2xs`
+                      })
+                    ]
+                  }),
+                  /* Sec */
+                  /* @__PURE__ */ jsxs9("div", {
+                    children: [
+                      /* @__PURE__ */ jsx9("label", { className: "block text-[9px] text-slate-500 font-semibold mb-0.5", children: "ຟີລິບດາ (\")" }),
+                      /* @__PURE__ */ jsx9("input", {
+                        type: "number",
+                        step: "any",
+                        min: "0",
+                        max: "59.999",
+                        value: lngParts.sec,
+                        onChange: (e) => updateLng("sec", e.target.value),
+                        onFocus: () => setIsFocused(true),
+                        onBlur: () => setIsFocused(false),
+                        placeholder: "43.6",
+                        className: `w-full px-2 py-1 text-xs border rounded-lg font-mono bg-white font-bold text-slate-900 focus:ring-2 ${ringCls} shadow-2xs`
+                      })
+                    ]
+                  }),
+                  /* Dir (E/W) */
+                  /* @__PURE__ */ jsxs9("div", {
+                    children: [
+                      /* @__PURE__ */ jsx9("label", { className: "block text-[9px] text-slate-500 font-semibold mb-0.5", children: "ທິດ" }),
+                      /* @__PURE__ */ jsxs9("select", {
+                        value: lngParts.dir,
+                        onChange: (e) => updateLng("dir", e.target.value),
+                        className: `w-full px-1.5 py-1 text-xs border border-slate-300 rounded-lg bg-white font-bold text-slate-900 focus:ring-2 ${ringCls} shadow-2xs`,
+                        children: [
+                          /* @__PURE__ */ jsx9("option", { value: "E", children: "E (ຕາເວັນອອກ)" }),
+                          /* @__PURE__ */ jsx9("option", { value: "W", children: "W (ຕາເວັນຕົກ)" })
+                        ]
+                      })
+                    ]
+                  })
+                ]
+              })
+            ]
+          })
+        ]
+      }),
+
+      /* ຊ່ອງຄົ້ນຫາ / ວາງລິ້ງຈາກ Google Maps ຫຼື ພິກັດອົງສາແບບວ່ອງໄວ */
+      /* @__PURE__ */ jsxs9("div", {
+        className: "bg-white/85 p-2.5 rounded-xl border border-slate-200/90 space-y-2",
+        children: [
+          /* @__PURE__ */ jsxs9("div", {
+            className: "flex flex-col sm:flex-row items-stretch sm:items-center gap-2",
+            children: [
+              /* @__PURE__ */ jsx9(
+                "input",
+                {
+                  type: "text",
+                  value: searchGmapText,
+                  onChange: (e) => setSearchGmapText(e.target.value),
+                  onKeyDown: (e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleApplyGoogleMapsInput();
+                    }
+                  },
+                  placeholder: "🔍 ຄົ້ນຫາສະຖານທີ່ ຫຼື ວາງພິກັດອົງສາ (17°55'31.4\"N 102°39'43.6\"E) / ລິ້ງ Google Maps...",
+                  className: "flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-xl bg-white font-mono text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 shadow-2xs"
+                }
+              ),
+              /* @__PURE__ */ jsxs9("div", {
+                className: "flex items-center gap-1.5 shrink-0",
+                children: [
+                  /* @__PURE__ */ jsxs9(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: handleApplyGoogleMapsInput,
+                      className: `px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-2xs flex items-center gap-1 cursor-pointer transition ${
+                        isRose ? "bg-rose-600 hover:bg-rose-700" : "bg-emerald-600 hover:bg-emerald-700"
+                      }`,
+                      title: "ແປງເປັນອົງສາ ແລະ ດຶງພິກັດຈາກລິ້ງ ຫຼື ຂໍ້ຄວາມ",
+                      children: [
+                        /* @__PURE__ */ jsx9("span", { children: "⚡" }),
+                        /* @__PURE__ */ jsx9("span", { children: "ແປງເປັນອົງສາ" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxs9(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: handleOpenGoogleMapsSearch,
+                      className: "px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-2xs flex items-center gap-1 cursor-pointer transition",
+                      title: "ເປີດຄົ້ນຫາໃນ Google Maps",
+                      children: [
+                        /* @__PURE__ */ jsx9("span", { children: "🔍" }),
+                        /* @__PURE__ */ jsx9("span", { children: "ຄົ້ນຫາຢູ່ Google Map" })
+                      ]
+                    }
+                  )
+                ]
+              })
+            ]
+          }),
+          parseMsg && /* @__PURE__ */ jsx9(
+            "div",
+            {
+              className: `text-[11px] font-semibold px-2.5 py-1 rounded-lg ${
+                parseMsg.type === "success" ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : "bg-rose-50 text-rose-800 border border-rose-200"
+              }`,
+              children: parseMsg.text
+            }
+          ),
+          /* @__PURE__ */ jsxs9("div", {
+            className: "flex items-center justify-between text-[10px] text-slate-500",
+            children: [
+              /* @__PURE__ */ jsx9("span", { children: "💡 ໃສ່ອົງສາ (°), ລິບດາ ('), ຟີລິບດາ (\") ຫຼື ກົດ 'ຄົ້ນຫາຢູ່ Google Map' ເພື່ອຊອກຫາສະຖານທີ່" }),
+              /* @__PURE__ */ jsx9("span", { className: "text-slate-400 font-medium hidden md:inline", children: "ຮອງຮັບ: ອົງສາ DMS / Google Maps URL / Lat,Long" })
+            ]
+          })
+        ]
+      }),
+
+      /* ແຖວສະແດງສະຖານະອົງສາ (DMS) ພ້ອມລິ້ງ Google Maps */
+      validLL(lat, lng) && /* @__PURE__ */ jsxs9(
+        "div",
+        {
+          className: "text-[11px] text-emerald-800 font-semibold flex flex-wrap items-center justify-between gap-1 pt-1 px-1",
+          children: [
+            /* @__PURE__ */ jsxs9("span", {
+              className: "flex items-center gap-1",
+              children: [
+                "✓ ພິກັດອົງສາ: ",
+                toDMS(lat, lng),
+                " ⇄ Lat/Lng: ",
+                Number(lat).toFixed(6),
+                "°, ",
+                Number(lng).toFixed(6),
+                "°"
+              ]
+            }),
+            /* @__PURE__ */ jsxs9(
+              "a",
+              {
+                href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(toDMS(lat, lng) || `${lat},${lng}`)}`,
+                target: "_blank",
+                rel: "noreferrer",
+                className: "text-[10px] text-sky-700 hover:text-sky-900 underline flex items-center gap-0.5 font-bold",
+                children: [
+                  "🗺️ ກວດສອບຕຳແໜ່ງໃນ Google Maps"
+                ]
+              }
+            )
+          ]
+        }
+      )
+    ]
+  });
+};
+
+// 🌐 ຄອມໂພເນັ້ນປ້ອນ/ຄົ້ນຫາພິກັດ UTM (Zone 47N/48N) ແລະ ຄົ້ນຫາຜ່ານ Google Maps
+var WastewaterUtmCoordField = ({
+  lat,
+  lng,
+  onChange,
+  themeColor = "rose",
+  label = "ຈຸດພິກັດໃນຮູບແບບ UTM (WGS84)",
+  locationName = ""
+}) => {
+  const currentUtm = validLL(lat, lng) ? latLngToUtm(lat, lng) : null;
+  const initialZone = currentUtm ? currentUtm.zone : (lng && lng < 102 ? 47 : 48);
+
+  const [zone, setZone] = useState9(initialZone);
+  const [easting, setEasting] = useState9(currentUtm ? Math.round(currentUtm.easting).toString() : "");
+  const [northing, setNorthing] = useState9(currentUtm ? Math.round(currentUtm.northing).toString() : "");
+  const [searchGmapText, setSearchGmapText] = useState9("");
+  const [isFocused, setIsFocused] = useState9(false);
+  const [copyFeedback, setCopyFeedback] = useState9(false);
+  const [status, setStatus] = useState9(validLL(lat, lng) ? "ok" : "");
+  const [parseMsg, setParseMsg] = useState9(null);
+
+  useEffect4(() => {
+    if (!isFocused) {
+      if (validLL(lat, lng)) {
+        const u = latLngToUtm(lat, lng, zone);
+        if (u) {
+          setZone(u.zone);
+          setEasting(Math.round(u.easting).toString());
+          setNorthing(Math.round(u.northing).toString());
+          setStatus("ok");
+        }
+      } else {
+        if (!easting && !northing) {
+          setStatus("");
+        }
+      }
+    }
+  }, [lat, lng, isFocused]);
+
+  const applyUtm = (newE, newN, newZ) => {
+    const eNum = parseFloat(newE);
+    const nNum = parseFloat(newN);
+    const zNum = parseInt(newZ, 10) || 48;
+    if (isNaN(eNum) || isNaN(nNum)) {
+      setStatus(newE || newN ? "bad" : "");
+      return;
+    }
+    const res = utmToLatLng(eNum, nNum, zNum, "N");
+    if (res && validLL(res.lat, res.lng)) {
+      setStatus("ok");
+      onChange(res.lat, res.lng);
+    } else {
+      setStatus("bad");
+    }
+  };
+
+  const handleZoneChange = (zVal) => {
+    const nz = Number(zVal) || 48;
+    setZone(nz);
+    applyUtm(easting, northing, nz);
+  };
+
+  const handleEastingChange = (val) => {
+    setEasting(val);
+    applyUtm(val, northing, zone);
+  };
+
+  const handleNorthingChange = (val) => {
+    setNorthing(val);
+    applyUtm(easting, val, zone);
+  };
+
+  const handleCopy = () => {
+    if (easting && northing) {
+      const txt = `${zone}N ${Math.round(Number(easting))} ${Math.round(Number(northing))}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(txt);
+        setCopyFeedback(true);
+        setTimeout(() => setCopyFeedback(false), 2000);
+      }
+    }
+  };
+
+  const handleOpenGoogleMapsSearch = () => {
+    let query = searchGmapText.trim();
+    if (!query) {
+      if (validLL(lat, lng)) {
+        query = `${lat},${lng}`;
+      } else if (locationName) {
+        query = locationName;
+      } else {
+        query = "Vientiane, Laos";
+      }
+    }
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    window.open(url, "_blank");
+  };
+
+  const handleApplyGoogleMapsInput = () => {
+    const txt = searchGmapText.trim();
+    if (!txt) return;
+    const parsed = parseGoogleMapsOrCoord(txt);
+    if (parsed && validLL(parsed.lat, parsed.lng)) {
+      onChange(parsed.lat, parsed.lng);
+      setParseMsg({ type: "success", text: `✓ ດຶງພິກັດສໍາເລັດ: Lat ${parsed.lat.toFixed(6)}, Long ${parsed.lng.toFixed(6)}` });
+      setSearchGmapText("");
+      setTimeout(() => setParseMsg(null), 4000);
+    } else {
+      setParseMsg({ type: "error", text: "⚠️ ບໍ່ພົບພິກັດໃນຂໍ້ຄວາມ. ທ່ານສາມາດກົດປຸ່ມ '🔍 ຄົ້ນຫາໃນ Google Map' ເພື່ອຊອກຫາສະຖານທີ່" });
+      setTimeout(() => setParseMsg(null), 5000);
+    }
+  };
+
+  const isRose = themeColor === "rose";
+  const ringCls = isRose ? "focus:ring-rose-500" : "focus:ring-emerald-500";
+  const bgCardCls = isRose
+    ? "bg-gradient-to-r from-rose-50/70 via-orange-50/30 to-slate-50 border-rose-200/90"
+    : "bg-gradient-to-r from-emerald-50/70 via-teal-50/30 to-slate-50 border-emerald-200/90";
+  const textTitleCls = isRose ? "text-rose-950" : "text-emerald-950";
+  const badgeCls = isRose ? "bg-rose-600 text-white" : "bg-emerald-600 text-white";
+
+  return /* @__PURE__ */ jsxs9("div", {
+    className: `p-4 border rounded-2xl space-y-3 shadow-2xs ${bgCardCls}`,
+    children: [
+      /* ແຖວຫົວຂໍ້ + ປຸ່ມ Google Map + ປຸ່ມ Copy */
+      /* @__PURE__ */ jsxs9("div", {
+        className: "flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/60",
+        children: [
+          /* @__PURE__ */ jsxs9("div", {
+            className: "flex items-center gap-2",
+            children: [
+              /* @__PURE__ */ jsx9("span", { className: "text-base", children: "🌐" }),
+              /* @__PURE__ */ jsx9("span", {
+                className: `text-xs font-bold ${textTitleCls}`,
+                children: label
+              }),
+              /* @__PURE__ */ jsxs9("span", {
+                className: `text-[10px] font-bold px-2 py-0.5 rounded-full shadow-2xs ${badgeCls}`,
+                children: ["ໂຊນ ", zone, "N"]
+              })
+            ]
+          }),
+          /* @__PURE__ */ jsxs9("div", {
+            className: "flex items-center gap-1.5 flex-wrap",
+            children: [
+              /* ປຸ່ມຄົ້ນຫາໃນ Google Map */
+              /* @__PURE__ */ jsxs9(
+                "button",
+                {
+                  type: "button",
+                  onClick: handleOpenGoogleMapsSearch,
+                  className: "text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-sky-300 bg-white text-sky-700 hover:bg-sky-50 transition flex items-center gap-1 shadow-2xs cursor-pointer",
+                  title: "ເປີດຄົ້ນຫາຈຸດພິກັດນີ້ໃນ Google Maps",
+                  children: [
+                    /* @__PURE__ */ jsx9("span", { children: "🗺️" }),
+                    /* @__PURE__ */ jsx9("span", { children: "ຄົ້ນຫາຢູ່ Google Map" })
+                  ]
+                }
+              ),
+              /* ປຸ່ມນໍາທາງ Google Maps (ຖ້າມີພິກັດ) */
+              validLL(lat, lng) && /* @__PURE__ */ jsxs9(
+                "a",
+                {
+                  href: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+                  target: "_blank",
+                  rel: "noreferrer",
+                  className: "text-[11px] font-semibold px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition flex items-center gap-1 shadow-2xs",
+                  title: "ນໍາທາງ Google Maps ໄປຫາຈຸດນີ້",
+                  children: [
+                    /* @__PURE__ */ jsx9("span", { children: "🧭" }),
+                    /* @__PURE__ */ jsx9("span", { children: "ນໍາທາງ" })
+                  ]
+                }
+              ),
+              /* ປຸ່ມ ສຳເນົາ UTM */
+              easting && northing && /* @__PURE__ */ jsxs9(
+                "button",
+                {
+                  type: "button",
+                  onClick: handleCopy,
+                  className: `text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition flex items-center gap-1 cursor-pointer ${
+                    copyFeedback
+                      ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                      : "bg-white text-slate-700 hover:bg-slate-50 border-slate-200 shadow-2xs"
+                  }`,
+                  title: "ສຳເນົາຄ່າ UTM",
+                  children: [
+                    copyFeedback ? "✓ ສຳເນົາແລ້ວ!" : "📋 ສຳເນົາ UTM"
+                  ]
+                }
+              )
+            ]
+          })
+        ]
+      }),
+
+      /* 3 ຊ່ອງປ້ອນຂໍ້ມູນ UTM: ໂຊນ, X (Easting), Y (Northing) */
+      /* @__PURE__ */ jsxs9("div", {
+        className: "grid grid-cols-1 sm:grid-cols-3 gap-3",
+        children: [
+          /* UTM Zone selector */
+          /* @__PURE__ */ jsxs9("div", {
+            children: [
+              /* @__PURE__ */ jsxs9("label", {
+                className: "block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between",
+                children: [
+                  /* @__PURE__ */ jsx9("span", { children: "ໂຊນ UTM (Zone) *" }),
+                  /* @__PURE__ */ jsx9("span", { className: "text-[10px] text-slate-400 font-normal", children: "ລາວ 47/48" })
+                ]
+              }),
+              /* @__PURE__ */ jsxs9(
+                "select",
+                {
+                  value: zone,
+                  onChange: (e) => handleZoneChange(e.target.value),
+                  className: `w-full px-3 py-1.5 text-xs border border-slate-300 rounded-xl bg-white font-bold text-slate-800 focus:ring-2 ${ringCls} shadow-2xs`,
+                  children: [
+                    /* @__PURE__ */ jsx9("option", { value: 48, children: "ໂຊນ 48N (ລາວກາງ/ໃຕ້/ນະຄອນຫຼວງ)" }),
+                    /* @__PURE__ */ jsx9("option", { value: 47, children: "ໂຊນ 47N (ລາວເໜືອ/ຕາເວັນຕົກ)" })
+                  ]
+                }
+              )
+            ]
+          }),
+
+          /* Easting (X) input */
+          /* @__PURE__ */ jsxs9("div", {
+            children: [
+              /* @__PURE__ */ jsxs9("label", {
+                className: "block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between",
+                children: [
+                  /* @__PURE__ */ jsx9("span", { children: "ຄ່າແກນ X (Easting) *" }),
+                  /* @__PURE__ */ jsx9("span", { className: `text-[10px] font-mono ${isRose ? "text-rose-600" : "text-emerald-600"}`, children: "ແມັດ (6 ຕົວເລກ)" })
+                ]
+              }),
+              /* @__PURE__ */ jsx9(
+                "input",
+                {
+                  type: "number",
+                  step: "any",
+                  value: easting,
+                  onChange: (e) => handleEastingChange(e.target.value),
+                  onFocus: () => setIsFocused(true),
+                  onBlur: () => setIsFocused(false),
+                  placeholder: "ຕົວຢ່າງ: 249341",
+                  className: `w-full px-3 py-1.5 text-xs border rounded-xl font-mono bg-white font-semibold text-slate-900 focus:ring-2 ${ringCls} shadow-2xs ${
+                    status === "bad" ? "border-rose-400 bg-rose-50/50" : "border-slate-300"
+                  }`
+                }
+              )
+            ]
+          }),
+
+          /* Northing (Y) input */
+          /* @__PURE__ */ jsxs9("div", {
+            children: [
+              /* @__PURE__ */ jsxs9("label", {
+                className: "block text-[11px] font-bold text-slate-700 mb-1 flex items-center justify-between",
+                children: [
+                  /* @__PURE__ */ jsx9("span", { children: "ຄ່າແກນ Y (Northing) *" }),
+                  /* @__PURE__ */ jsx9("span", { className: `text-[10px] font-mono ${isRose ? "text-rose-600" : "text-emerald-600"}`, children: "ແມັດ (7 ຕົວເລກ)" })
+                ]
+              }),
+              /* @__PURE__ */ jsx9(
+                "input",
+                {
+                  type: "number",
+                  step: "any",
+                  value: northing,
+                  onChange: (e) => handleNorthingChange(e.target.value),
+                  onFocus: () => setIsFocused(true),
+                  onBlur: () => setIsFocused(false),
+                  placeholder: "ຕົວຢ່າງ: 1989096",
+                  className: `w-full px-3 py-1.5 text-xs border rounded-xl font-mono bg-white font-semibold text-slate-900 focus:ring-2 ${ringCls} shadow-2xs ${
+                    status === "bad" ? "border-rose-400 bg-rose-50/50" : "border-slate-300"
+                  }`
+                }
+              )
+            ]
+          })
+        ]
+      }),
+
+      /* ຊ່ອງຄົ້ນຫາ / ວາງລິ້ງຈາກ Google Maps ຫຼື ພິກັດ UTM ແບບວ່ອງໄວ */
+      /* @__PURE__ */ jsxs9("div", {
+        className: "bg-white/85 p-2.5 rounded-xl border border-slate-200/90 space-y-2",
+        children: [
+          /* @__PURE__ */ jsxs9("div", {
+            className: "flex flex-col sm:flex-row items-stretch sm:items-center gap-2",
+            children: [
+              /* @__PURE__ */ jsx9(
+                "input",
+                {
+                  type: "text",
+                  value: searchGmapText,
+                  onChange: (e) => setSearchGmapText(e.target.value),
+                  onKeyDown: (e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleApplyGoogleMapsInput();
+                    }
+                  },
+                  placeholder: "🔍 ຄົ້ນຫາສະຖານທີ່ ຫຼື ວາງລິ້ງ / ພິກັດຈາກ Google Maps (URL / Lat, Long / UTM)...",
+                  className: "flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-xl bg-white font-mono text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 shadow-2xs"
+                }
+              ),
+              /* @__PURE__ */ jsxs9("div", {
+                className: "flex items-center gap-1.5 shrink-0",
+                children: [
+                  /* @__PURE__ */ jsxs9(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: handleApplyGoogleMapsInput,
+                      className: `px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-2xs flex items-center gap-1 cursor-pointer transition ${
+                        isRose ? "bg-rose-600 hover:bg-rose-700" : "bg-emerald-600 hover:bg-emerald-700"
+                      }`,
+                      title: "ດຶງພິກັດຈາກລິ້ງ ຫຼື ຂໍ້ຄວາມທີ່ວາງໃສ່",
+                      children: [
+                        /* @__PURE__ */ jsx9("span", { children: "⚡" }),
+                        /* @__PURE__ */ jsx9("span", { children: "ດຶງພິກັດ" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxs9(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: handleOpenGoogleMapsSearch,
+                      className: "px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white shadow-2xs flex items-center gap-1 cursor-pointer transition",
+                      title: "ເປີດຄົ້ນຫາໃນ Google Maps",
+                      children: [
+                        /* @__PURE__ */ jsx9("span", { children: "🔍" }),
+                        /* @__PURE__ */ jsx9("span", { children: "ຄົ້ນຫາຢູ່ Google Map" })
+                      ]
+                    }
+                  )
+                ]
+              })
+            ]
+          }),
+          parseMsg && /* @__PURE__ */ jsx9(
+            "div",
+            {
+              className: `text-[11px] font-semibold px-2.5 py-1 rounded-lg ${
+                parseMsg.type === "success" ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : "bg-rose-50 text-rose-800 border border-rose-200"
+              }`,
+              children: parseMsg.text
+            }
+          ),
+          /* @__PURE__ */ jsxs9("div", {
+            className: "flex items-center justify-between text-[10px] text-slate-500",
+            children: [
+              /* @__PURE__ */ jsx9("span", { children: "💡 ທ່ານສາມາດກົດ 'ຄົ້ນຫາຢູ່ Google Map' ເພື່ອຊອກຫາສະຖານທີ່, ຫຼື ກັອບປີ້ລິ້ງຈາກ Google Maps ມາວາງໃສ່ນີ້" }),
+              /* @__PURE__ */ jsx9("span", { className: "text-slate-400 font-medium hidden md:inline", children: "ຮອງຮັບ: URL / Lat,Long / DMS / UTM" })
+            ]
+          })
+        ]
+      }),
+
+      /* ແຖວສະແດງສະຖານະ WGS84 ແລະ UTM ພ້ອມລິ້ງ Google Maps */
+      status === "ok" && validLL(lat, lng) && /* @__PURE__ */ jsxs9(
+        "div",
+        {
+          className: "text-[11px] text-emerald-800 font-semibold flex flex-wrap items-center justify-between gap-1 pt-1 px-1",
+          children: [
+            /* @__PURE__ */ jsxs9("span", {
+              className: "flex items-center gap-1",
+              children: [
+                "✓ ເຊື່ອມຕໍ່ກັບ WGS84: Lat ",
+                Number(lat).toFixed(6),
+                "°, Long ",
+                Number(lng).toFixed(6),
+                "° (UTM: ",
+                zone,
+                "N ",
+                Math.round(Number(easting) || 0),
+                " ",
+                Math.round(Number(northing) || 0),
+                ")"
+              ]
+            }),
+            /* @__PURE__ */ jsxs9(
+              "a",
+              {
+                href: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,
+                target: "_blank",
+                rel: "noreferrer",
+                className: "text-[10px] text-sky-700 hover:text-sky-900 underline flex items-center gap-0.5 font-bold",
+                children: [
+                  "🗺️ ກວດສອບຕຳແໜ່ງໃນ Google Maps",
+                  /* @__PURE__ */ jsx9("span", { children: "↗" })
+                ]
+              }
+            )
+          ]
+        }
+      ),
+      status === "bad" && /* @__PURE__ */ jsx9(
+        "div",
+        {
+          className: "text-[11px] text-rose-600 font-semibold px-1",
+          children: "⚠️ ຄ່າພິກັດ UTM ບໍ່ຖືກຕ້ອງ (ໃນລາວ X ປະມານ 200,000–800,000 ແລະ Y ປະມານ 1,500,000–2,500,000 ແມັດ)"
+        }
+      )
+    ]
+  });
+};
+
+var ProjectFormModal = ({
   isOpen,
   onClose,
   onSave,
@@ -7705,7 +8892,7 @@ var COMMON_PARAM_PRESETS = [
           type: "button",
           onClick: () => setActiveTab("location"),
           className: `py-3 px-3 border-b-2 transition-all whitespace-nowrap cursor-pointer ${activeTab === "location" ? "border-emerald-600 text-emerald-700 font-bold" : "border-transparent text-slate-600 hover:text-slate-900"}`,
-          children: "🟢 4. ທີ່ຕັ້ງໂຄງການ (ສີຂຽວ)"
+          children: "🟢 4. ທີ່ຕັ້ງໂຄງການ (ອົງສາ & UTM ສີຂຽວ)"
         }
       ),
       /* @__PURE__ */ jsx9(
@@ -7714,7 +8901,7 @@ var COMMON_PARAM_PRESETS = [
           type: "button",
           onClick: () => setActiveTab("discharge"),
           className: `py-3 px-3 border-b-2 transition-all whitespace-nowrap cursor-pointer ${activeTab === "discharge" ? "border-rose-600 text-rose-700 font-bold" : "border-transparent text-slate-600 hover:text-slate-900"}`,
-          children: "🔴 5. ຈຸດປ່ອຍ & ແຜນການບໍາບັດ"
+          children: "🔴 5. ບ່ອນດູດ/ປ່ອຍນໍ້າ (ອົງສາ, UTM & ແຜນການ)"
         }
       )
     ] }),
@@ -8608,18 +9795,39 @@ var COMMON_PARAM_PRESETS = [
             /* @__PURE__ */ jsx9("span", { className: "w-3 h-3 rounded-full bg-emerald-600 inline-block" }),
             "ສະຖານທີ່ຕັ້ງໂຄງການ / ໂຮງງານ (ສະແດງໃນແຜນທີ່ເປັນ ສີຂຽວ 🟢)"
           ] }),
-          onOpenMapPicker && /* @__PURE__ */ jsxs9(
-            "button",
-            {
-              type: "button",
-              onClick: () => onOpenMapPicker("project"),
-              className: "text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg flex items-center gap-1 font-medium transition-colors cursor-pointer",
-              children: [
-                /* @__PURE__ */ jsx9(MapPin2, { size: 14 }),
-                "ເລືອກພິກັດຈາກແຜນທີ່"
-              ]
-            }
-          )
+          /* @__PURE__ */ jsxs9("div", { className: "flex items-center gap-2 flex-wrap", children: [
+            /* @__PURE__ */ jsxs9(
+              "button",
+              {
+                type: "button",
+                onClick: () => {
+                  let q = `${formData.projectLocation?.latitude},${formData.projectLocation?.longitude}`;
+                  if (!validLL(formData.projectLocation?.latitude, formData.projectLocation?.longitude)) {
+                    q = `${formData.projectLocation?.village || ""} ${formData.projectLocation?.district || ""} ${formData.projectLocation?.province || ""} ${formData.projectName || ""}`.trim() || "Vientiane, Laos";
+                  }
+                  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`, "_blank");
+                },
+                className: "text-xs bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 px-3 py-1.5 rounded-lg flex items-center gap-1 font-medium transition-colors cursor-pointer",
+                title: "ຄົ້ນຫາທີ່ຕັ້ງໂຄງການໃນ Google Maps",
+                children: [
+                  /* @__PURE__ */ jsx9("span", { children: "🗺️" }),
+                  "ຄົ້ນຫາຢູ່ Google Map"
+                ]
+              }
+            ),
+            onOpenMapPicker && /* @__PURE__ */ jsxs9(
+              "button",
+              {
+                type: "button",
+                onClick: () => onOpenMapPicker("project"),
+                className: "text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg flex items-center gap-1 font-medium transition-colors cursor-pointer",
+                children: [
+                  /* @__PURE__ */ jsx9(MapPin2, { size: 14 }),
+                  "ເລືອກພິກັດຈາກແຜນທີ່"
+                ]
+              }
+            )
+          ] })
         ] }),
         /* @__PURE__ */ jsxs9("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-4", children: [
           /* @__PURE__ */ jsxs9("div", { children: [
@@ -8718,26 +9926,85 @@ var COMMON_PARAM_PRESETS = [
             /* @__PURE__ */ jsx9("b", { className: "text-emerald-700", children: "ຮູບສັນຍາລັກໂຮງງານສີຂຽວ 🟢" }),
             " ເທິງແຜນທີ່ GIS"
           ] }) })
-        ] })
+        ] }),
+        /* Degree DMS Coordinates & Google Maps search for Project Location */
+        /* @__PURE__ */ jsx9(
+          WastewaterDmsCoordField,
+          {
+            lat: formData.projectLocation?.latitude,
+            lng: formData.projectLocation?.longitude,
+            onChange: (newLat, newLng) => setFormData((prev) => ({
+              ...prev,
+              projectLocation: {
+                ...prev.projectLocation,
+                latitude: newLat,
+                longitude: newLng
+              }
+            })),
+            themeColor: "emerald",
+            label: "ຈຸດພິກັດທີ່ຕັ້ງໂຄງການ ໃນຮູບແບບອົງສາ (DMS: ອົງສາ-ລິບດາ-ຟີລິບດາ)",
+            locationName: `${formData.projectLocation?.village || ""} ${formData.projectLocation?.district || ""} ${formData.projectLocation?.province || ""} ${formData.projectName || ""}`.trim()
+          }
+        ),
+        /* UTM Coordinates & Google Maps search for Project Location */
+        /* @__PURE__ */ jsx9(
+          WastewaterUtmCoordField,
+          {
+            lat: formData.projectLocation?.latitude,
+            lng: formData.projectLocation?.longitude,
+            onChange: (newLat, newLng) => setFormData((prev) => ({
+              ...prev,
+              projectLocation: {
+                ...prev.projectLocation,
+                latitude: newLat,
+                longitude: newLng
+              }
+            })),
+            themeColor: "emerald",
+            label: "ຈຸດພິກັດທີ່ຕັ້ງໂຄງການ ໃນຮູບແບບ UTM (WGS84)",
+            locationName: `${formData.projectLocation?.village || ""} ${formData.projectLocation?.district || ""} ${formData.projectLocation?.province || ""} ${formData.projectName || ""}`.trim()
+          }
+        )
       ] }),
       activeTab === "discharge" && /* @__PURE__ */ jsxs9("div", { className: "space-y-5", children: [
         /* @__PURE__ */ jsxs9("div", { className: "flex items-center justify-between pb-2 border-b border-rose-100", children: [
           /* @__PURE__ */ jsxs9("h4", { className: "text-sm font-bold text-rose-800 flex items-center gap-2", children: [
             /* @__PURE__ */ jsx9("span", { className: "w-3 h-3 rounded-full bg-rose-600 inline-block" }),
-            "ສະຖານທີ່ຕັ້ງຈຸດປ່ອຍນໍ້າເປື້ອນ / ຈຸດລະບາຍນໍ້າເສຍ (ສະແດງໃນແຜນທີ່ເປັນ ສີແດງ 🔴)"
+            "ສະຖານທີ່ຕັ້ງຈຸດປ່ອຍນໍ້າເປື້ອນ / ບ່ອນດູດນໍ້າເສຍ (ສະແດງໃນແຜນທີ່ເປັນ ສີແດງ 🔴)"
           ] }),
-          onOpenMapPicker && /* @__PURE__ */ jsxs9(
-            "button",
-            {
-              type: "button",
-              onClick: () => onOpenMapPicker("discharge"),
-              className: "text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 px-3 py-1.5 rounded-lg flex items-center gap-1 font-medium transition-colors cursor-pointer",
-              children: [
-                /* @__PURE__ */ jsx9(Droplets3, { size: 14 }),
-                "ເລືອກພິກັດຈາກແຜນທີ່"
-              ]
-            }
-          )
+          /* @__PURE__ */ jsxs9("div", { className: "flex items-center gap-2 flex-wrap", children: [
+            /* @__PURE__ */ jsxs9(
+              "button",
+              {
+                type: "button",
+                onClick: () => {
+                  let q = `${formData.dischargeLocation?.latitude},${formData.dischargeLocation?.longitude}`;
+                  if (!validLL(formData.dischargeLocation?.latitude, formData.dischargeLocation?.longitude)) {
+                    q = `${formData.dischargeLocation?.village || ""} ${formData.dischargeLocation?.district || ""} ${formData.dischargeLocation?.province || ""} ${formData.projectName || ""}`.trim() || "Vientiane, Laos";
+                  }
+                  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`, "_blank");
+                },
+                className: "text-xs bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 px-3 py-1.5 rounded-lg flex items-center gap-1 font-medium transition-colors cursor-pointer",
+                title: "ຄົ້ນຫາຈຸດປ່ອຍ/ດູດນໍ້າໃນ Google Maps",
+                children: [
+                  /* @__PURE__ */ jsx9("span", { children: "🗺️" }),
+                  "ຄົ້ນຫາຢູ່ Google Map"
+                ]
+              }
+            ),
+            onOpenMapPicker && /* @__PURE__ */ jsxs9(
+              "button",
+              {
+                type: "button",
+                onClick: () => onOpenMapPicker("discharge"),
+                className: "text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 px-3 py-1.5 rounded-lg flex items-center gap-1 font-medium transition-colors cursor-pointer",
+                children: [
+                  /* @__PURE__ */ jsx9(Droplets3, { size: 14 }),
+                  "ເລືອກພິກັດຈາກແຜນທີ່"
+                ]
+              }
+            )
+          ] })
         ] }),
         /* @__PURE__ */ jsxs9("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-4", children: [
           /* @__PURE__ */ jsxs9("div", { children: [
@@ -8851,6 +10118,44 @@ var COMMON_PARAM_PRESETS = [
             )
           ] })
         ] }),
+        /* Degree DMS Coordinates & Google Maps search for Discharge Location */
+        /* @__PURE__ */ jsx9(
+          WastewaterDmsCoordField,
+          {
+            lat: formData.dischargeLocation?.latitude,
+            lng: formData.dischargeLocation?.longitude,
+            onChange: (newLat, newLng) => setFormData((prev) => ({
+              ...prev,
+              dischargeLocation: {
+                ...prev.dischargeLocation,
+                latitude: newLat,
+                longitude: newLng
+              }
+            })),
+            themeColor: "rose",
+            label: "ຈຸດພິກັດບ່ອນປ່ອຍ/ດູດນໍ້າເປື້ອນ ໃນຮູບແບບອົງສາ (DMS: ອົງສາ-ລິບດາ-ຟີລິບດາ)",
+            locationName: `${formData.dischargeLocation?.village || ""} ${formData.dischargeLocation?.district || ""} ${formData.dischargeLocation?.province || ""} ${formData.projectName || ""}`.trim()
+          }
+        ),
+        /* UTM Coordinates & Google Maps search for Discharge Location */
+        /* @__PURE__ */ jsx9(
+          WastewaterUtmCoordField,
+          {
+            lat: formData.dischargeLocation?.latitude,
+            lng: formData.dischargeLocation?.longitude,
+            onChange: (newLat, newLng) => setFormData((prev) => ({
+              ...prev,
+              dischargeLocation: {
+                ...prev.dischargeLocation,
+                latitude: newLat,
+                longitude: newLng
+              }
+            })),
+            themeColor: "rose",
+            label: "ຈຸດພິກັດບ່ອນດູດ/ປ່ອຍນໍ້າເປື້ອນ ໃນຮູບແບບ UTM (WGS84)",
+            locationName: `${formData.dischargeLocation?.village || ""} ${formData.dischargeLocation?.district || ""} ${formData.dischargeLocation?.province || ""} ${formData.projectName || ""}`.trim()
+          }
+        ),
         /* @__PURE__ */ jsxs9("div", { className: "pt-4 border-t border-slate-200 space-y-3", children: [
           /* @__PURE__ */ jsxs9("div", { className: "flex flex-col sm:flex-row sm:items-center justify-between gap-2", children: [
             /* @__PURE__ */ jsx9("label", { className: "block text-xs font-bold text-slate-900", children: "ແຜນການບໍາບັດ ແລະ ປ່ອຍນໍ້າເປື້ອນ *" }),
@@ -9397,19 +10702,36 @@ var ProjectDetailModal = ({
                 /* @__PURE__ */ jsx10("span", { className: "w-3.5 h-3.5 rounded-full bg-emerald-600" }),
                 /* @__PURE__ */ jsx10("span", { className: "font-bold text-emerald-900 uppercase", children: "1. ທີ່ຕັ້ງໂຄງການ / ໂຮງງານ (ສີຂຽວ 🟢)" })
               ] }),
-              /* @__PURE__ */ jsxs10(
-                "a",
-                {
-                  href: `https://www.google.com/maps/dir/?api=1&destination=${project.projectLocation.latitude},${project.projectLocation.longitude}`,
-                  target: "_blank",
-                  rel: "noreferrer",
-                  className: "text-emerald-700 hover:text-emerald-950 flex items-center gap-1 font-semibold text-[11px]",
-                  children: [
-                    /* @__PURE__ */ jsx10(Navigation2, { size: 12 }),
-                    "Google Maps"
-                  ]
-                }
-              )
+              /* @__PURE__ */ jsxs10("div", { className: "flex items-center gap-2", children: [
+                /* @__PURE__ */ jsxs10(
+                  "a",
+                  {
+                    href: `https://www.google.com/maps/search/?api=1&query=${project.projectLocation.latitude},${project.projectLocation.longitude}`,
+                    target: "_blank",
+                    rel: "noreferrer",
+                    className: "text-sky-700 hover:text-sky-950 flex items-center gap-1 font-semibold text-[11px] bg-white px-2 py-0.5 rounded-lg border border-sky-200 shadow-2xs",
+                    title: "ຄົ້ນຫາໃນ Google Maps",
+                    children: [
+                      /* @__PURE__ */ jsx10("span", { children: "🔍" }),
+                      "ຄົ້ນຫາ Google Map"
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxs10(
+                  "a",
+                  {
+                    href: `https://www.google.com/maps/dir/?api=1&destination=${project.projectLocation.latitude},${project.projectLocation.longitude}`,
+                    target: "_blank",
+                    rel: "noreferrer",
+                    className: "text-emerald-700 hover:text-emerald-950 flex items-center gap-1 font-semibold text-[11px] bg-white px-2 py-0.5 rounded-lg border border-emerald-200 shadow-2xs",
+                    title: "ນໍາທາງ Google Maps",
+                    children: [
+                      /* @__PURE__ */ jsx10(Navigation2, { size: 12 }),
+                      "ນໍາທາງ"
+                    ]
+                  }
+                )
+              ] })
             ] }),
             /* @__PURE__ */ jsxs10("div", { children: [
               /* @__PURE__ */ jsx10("span", { className: "text-slate-500", children: "ບ້ານ/ເມືອງ/ແຂວງ:" }),
@@ -9422,32 +10744,64 @@ var ProjectDetailModal = ({
                 project.projectLocation.province
               ] })
             ] }),
-            /* @__PURE__ */ jsxs10("div", { className: "pt-2 font-mono text-[11px] text-emerald-800 font-bold bg-white/70 p-2 rounded-xl border border-emerald-200/50", children: [
-              "📍 Lat: ",
-              project.projectLocation.latitude.toFixed(6),
-              ", Long: ",
-              project.projectLocation.longitude.toFixed(6)
+            /* @__PURE__ */ jsxs10("div", { className: "pt-2 font-mono text-[11px] text-emerald-800 font-bold bg-white/70 p-2.5 rounded-xl border border-emerald-200/50 space-y-1", children: [
+              /* @__PURE__ */ jsxs10("div", { className: "flex flex-wrap items-center justify-between gap-1", children: [
+                /* @__PURE__ */ jsxs10("span", { children: [
+                  "📍 Lat: ",
+                  project.projectLocation.latitude.toFixed(6),
+                  ", Long: ",
+                  project.projectLocation.longitude.toFixed(6)
+                ] }),
+                /* @__PURE__ */ jsxs10("span", { className: "text-emerald-700 font-semibold text-[10px] bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200", children: [
+                  "UTM: ",
+                  formatUtm(project.projectLocation.latitude, project.projectLocation.longitude)
+                ] })
+              ] }),
+              toDMS(project.projectLocation.latitude, project.projectLocation.longitude) && /* @__PURE__ */ jsxs10("div", { className: "text-[10px] text-emerald-900 font-semibold flex items-center justify-between border-t border-emerald-200/40 pt-1", children: [
+                /* @__PURE__ */ jsxs10("span", { children: [
+                  "🧭 ອົງສາ: ",
+                  toDMS(project.projectLocation.latitude, project.projectLocation.longitude)
+                ] }),
+                /* @__PURE__ */ jsx10("span", { className: "text-[9px] text-emerald-600 bg-emerald-100/60 px-1.5 py-0.2 rounded font-sans", children: "DMS" })
+              ] })
             ] })
           ] }),
           /* @__PURE__ */ jsxs10("div", { className: "bg-rose-50/60 border border-rose-200 p-4 rounded-2xl space-y-2 text-xs", children: [
             /* @__PURE__ */ jsxs10("div", { className: "flex items-center justify-between pb-2 border-b border-rose-200/60", children: [
               /* @__PURE__ */ jsxs10("div", { className: "flex items-center gap-2", children: [
                 /* @__PURE__ */ jsx10("span", { className: "w-3.5 h-3.5 rounded-full bg-rose-600" }),
-                /* @__PURE__ */ jsx10("span", { className: "font-bold text-rose-900 uppercase", children: "2. ຈຸດປ່ອຍນໍ້າເປື້ອນ / ຈຸດລະບາຍ (ສີແດງ 🔴)" })
+                /* @__PURE__ */ jsx10("span", { className: "font-bold text-rose-900 uppercase", children: "2. ຈຸດປ່ອຍນໍ້າເປື້ອນ / ບ່ອນດູດ (ສີແດງ 🔴)" })
               ] }),
-              /* @__PURE__ */ jsxs10(
-                "a",
-                {
-                  href: `https://www.google.com/maps/dir/?api=1&destination=${project.dischargeLocation.latitude},${project.dischargeLocation.longitude}`,
-                  target: "_blank",
-                  rel: "noreferrer",
-                  className: "text-rose-700 hover:text-rose-950 flex items-center gap-1 font-semibold text-[11px]",
-                  children: [
-                    /* @__PURE__ */ jsx10(Navigation2, { size: 12 }),
-                    "Google Maps"
-                  ]
-                }
-              )
+              /* @__PURE__ */ jsxs10("div", { className: "flex items-center gap-2", children: [
+                /* @__PURE__ */ jsxs10(
+                  "a",
+                  {
+                    href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(toDMS(project.dischargeLocation.latitude, project.dischargeLocation.longitude) || `${project.dischargeLocation.latitude},${project.dischargeLocation.longitude}`)}`,
+                    target: "_blank",
+                    rel: "noreferrer",
+                    className: "text-sky-700 hover:text-sky-950 flex items-center gap-1 font-semibold text-[11px] bg-white px-2 py-0.5 rounded-lg border border-sky-200 shadow-2xs",
+                    title: "ຄົ້ນຫາໃນ Google Maps",
+                    children: [
+                      /* @__PURE__ */ jsx10("span", { children: "🔍" }),
+                      "ຄົ້ນຫາ Google Map"
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxs10(
+                  "a",
+                  {
+                    href: `https://www.google.com/maps/dir/?api=1&destination=${project.dischargeLocation.latitude},${project.dischargeLocation.longitude}`,
+                    target: "_blank",
+                    rel: "noreferrer",
+                    className: "text-rose-700 hover:text-rose-950 flex items-center gap-1 font-semibold text-[11px] bg-white px-2 py-0.5 rounded-lg border border-rose-200 shadow-2xs",
+                    title: "ນໍາທາງ Google Maps",
+                    children: [
+                      /* @__PURE__ */ jsx10(Navigation2, { size: 12 }),
+                      "ນໍາທາງ"
+                    ]
+                  }
+                )
+              ] })
             ] }),
             /* @__PURE__ */ jsxs10("div", { children: [
               /* @__PURE__ */ jsx10("span", { className: "text-slate-500", children: "ບ້ານ/ເມືອງ/ແຂວງ:" }),
@@ -9464,11 +10818,26 @@ var ProjectDetailModal = ({
                 project.dischargeLocation.outfallType || "ທໍ່ລະບາຍ"
               ] })
             ] }),
-            /* @__PURE__ */ jsxs10("div", { className: "pt-2 font-mono text-[11px] text-rose-800 font-bold bg-white/70 p-2 rounded-xl border border-rose-200/50", children: [
-              "💧 Lat: ",
-              project.dischargeLocation.latitude.toFixed(6),
-              ", Long: ",
-              project.dischargeLocation.longitude.toFixed(6)
+            /* @__PURE__ */ jsxs10("div", { className: "pt-2 font-mono text-[11px] text-rose-800 font-bold bg-white/70 p-2.5 rounded-xl border border-rose-200/50 space-y-1", children: [
+              /* @__PURE__ */ jsxs10("div", { className: "flex flex-wrap items-center justify-between gap-1", children: [
+                /* @__PURE__ */ jsxs10("span", { children: [
+                  "💧 Lat: ",
+                  project.dischargeLocation.latitude.toFixed(6),
+                  ", Long: ",
+                  project.dischargeLocation.longitude.toFixed(6)
+                ] }),
+                /* @__PURE__ */ jsxs10("span", { className: "text-rose-700 font-semibold text-[10px] bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-200", children: [
+                  "UTM: ",
+                  formatUtm(project.dischargeLocation.latitude, project.dischargeLocation.longitude)
+                ] })
+              ] }),
+              toDMS(project.dischargeLocation.latitude, project.dischargeLocation.longitude) && /* @__PURE__ */ jsxs10("div", { className: "text-[10px] text-rose-900 font-semibold flex items-center justify-between border-t border-rose-200/40 pt-1", children: [
+                /* @__PURE__ */ jsxs10("span", { children: [
+                  "🧭 ອົງສາ: ",
+                  toDMS(project.dischargeLocation.latitude, project.dischargeLocation.longitude)
+                ] }),
+                /* @__PURE__ */ jsx10("span", { className: "text-[9px] text-rose-600 bg-rose-100/60 px-1.5 py-0.2 rounded font-sans", children: "DMS" })
+              ] })
             ] })
           ] })
         ] }),
