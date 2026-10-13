@@ -29,8 +29,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Noto Sans Lao', sans-serif; }
-    #map { height: 340px; min-height: 340px; z-index: 1; background-color: #aad3df; }
-    @media (min-width: 1024px) { #mapCard #map { height: auto; } }
+    #map { height: 460px; min-height: 400px; z-index: 1; background-color: #aad3df; }
+    @media (min-width: 768px) { #map { height: 520px; } }
+    @media (min-width: 1280px) { #map { height: 580px; } }
 
     #map:fullscreen {
       width: 100vw !important;
@@ -145,27 +146,45 @@
         </div>
 
         <!-- Center: Clear Analytics & Reports Navigation (Desktop) -->
-        <div class="hidden lg:flex items-center gap-1 bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/60 shadow-inner text-xs font-semibold">
-          <button onclick="openAnnualReport()" class="px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all cursor-pointer" title="ບົດວິເຄາະສະຖິຕິຄຸນນະພາບນ້ຳ ປະຈຳປີ">
-            <span>📊</span>
-            <span>ບົດວິເຄາະປະຈຳປີ</span>
-          </button>
-          <a href="#monthlyTrendCard" class="px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all" title="ແນວໂນ້ມລາຍເດືອນ ຫຼາຍໂຕຊີ້ວັດ">
+        <div class="hidden xl:flex items-center gap-1 bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/60 shadow-inner text-xs font-semibold">
+          <a href="#mapCard" class="px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all" title="ແຜນທີ່ Google Maps GIS ສະພາບນ້ຳ">
+            <span>📍</span>
+            <span>ແຜນທີ່ GIS</span>
+          </a>
+          <a href="#chartCard" class="px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all" title="ກຣາຟແຍກສະເພາະຕົວຊີ້ວັດ">
             <span>📈</span>
+            <span>ກຣາຟຕົວຊີ້ວັດ</span>
+          </a>
+          <a href="#monthlyTrendCard" class="px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all" title="ແນວໂນ້ມລາຍເດືອນ ຫຼາຍໂຕຊີ້ວັດ">
+            <span>📊</span>
             <span>ແນວໂນ້ມລາຍເດືອນ</span>
           </a>
-          <a href="#twelveMonthCard" class="px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all" title="ສະຖິຕິການປ່ຽນແປງຄຸນນະພາບນໍ້າໃນຮອບ 12 ເດືອນ">
+          <a href="#twelveMonthCard" class="px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all" title="ສະຖິຕິການປ່ຽນແປງຄຸນນະພາບນໍ້າໃນຮອບ 12 ເດືອນ">
             <span>📅</span>
             <span>ສະຖິຕິ 12 ເດືອນ</span>
           </a>
-          <button onclick="toggleLogsModal()" class="px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all cursor-pointer" title="ປະຫວັດການບັນທຶກ ແລະ ລົບຂໍ້ມູນ">
+          <button onclick="openAnnualReport()" class="px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all cursor-pointer" title="ບົດວິເຄາະສະຖິຕິຄຸນນະພາບນ້ຳ ປະຈຳປີ">
+            <span>📑</span>
+            <span>ບົດວິເຄາະ</span>
+          </button>
+          <button onclick="toggleLogsModal()" class="px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all cursor-pointer" title="ປະຫວັດການບັນທຶກ ແລະ ລົບຂໍ້ມູນ">
             <span>📜</span>
             <span>ປະຫວັດການໃຊ້ງານ</span>
           </button>
-          <button onclick="openExportModal()" class="px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold shadow-md shadow-teal-500/25 hover:from-teal-400 hover:to-emerald-500 transition-all cursor-pointer" title="ສູນສົ່ງອອກບົດລາຍງານສະເພາະ (Excel, Word, PDF)">
+          <button onclick="openExportModal()" class="px-3 py-1.5 rounded-xl flex items-center gap-1.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold shadow-md shadow-teal-500/25 hover:from-teal-400 hover:to-emerald-500 transition-all cursor-pointer" title="ສູນສົ່ງອອກບົດລາຍງານສະເພາະ (Excel, Word, PDF)">
             <span>📥</span>
             <span>ສົ່ງອອກລາຍງານ</span>
           </button>
+        </div>
+
+        <!-- Medium Screens Navigation (lg to xl) -->
+        <div class="hidden lg:flex xl:hidden items-center gap-1 bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/60 shadow-inner text-xs font-semibold">
+          <a href="#mapCard" class="px-2 py-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70">📍 ແຜນທີ່</a>
+          <a href="#chartCard" class="px-2 py-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70">📈 ກຣາຟ</a>
+          <a href="#monthlyTrendCard" class="px-2 py-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70">📊 ແນວໂນ້ມ</a>
+          <a href="#twelveMonthCard" class="px-2 py-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70">📅 12 ເດືອນ</a>
+          <button onclick="toggleLogsModal()" class="px-2 py-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70">📜 ປະຫວັດ</button>
+          <button onclick="openExportModal()" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold">📥 ສົ່ງອອກ</button>
         </div>
 
         <!-- Right: Actions & User Section -->
@@ -203,24 +222,32 @@
 
       <!-- Mobile Navigation Drawer -->
       <div id="wqMobileMenu" class="hidden lg:hidden border-t border-slate-800 py-3 space-y-2">
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs font-medium">
-          <button onclick="openAnnualReport(); closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
-            <span>📊</span>
-            <span>ບົດວິເຄາະ</span>
-          </button>
-          <a href="#monthlyTrendCard" onclick="closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-medium">
+          <a href="#mapCard" onclick="closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
+            <span>📍</span>
+            <span>ແຜນທີ່ GIS</span>
+          </a>
+          <a href="#chartCard" onclick="closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
             <span>📈</span>
+            <span>ກຣາຟຕົວຊີ້ວັດ</span>
+          </a>
+          <a href="#monthlyTrendCard" onclick="closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
+            <span>📊</span>
             <span>ແນວໂນ້ມ</span>
           </a>
           <a href="#twelveMonthCard" onclick="closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
             <span>📅</span>
             <span>12 ເດືອນ</span>
           </a>
+          <button onclick="openAnnualReport(); closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
+            <span>📑</span>
+            <span>ບົດວິເຄາະ</span>
+          </button>
           <button onclick="toggleLogsModal(); closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
             <span>📜</span>
             <span>ປະຫວັດການໃຊ້ງານ</span>
           </button>
-          <button onclick="openExportModal(); closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold shadow-md hover:from-teal-400 hover:to-emerald-500 col-span-2 sm:col-span-1">
+          <button onclick="openExportModal(); closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold shadow-md hover:from-teal-400 hover:to-emerald-500 col-span-2">
             <span>📥</span>
             <span>ສົ່ງອອກລາຍງານ</span>
           </button>
@@ -275,78 +302,94 @@
       </div>
     </div>
 
-    <!-- Map & Analytics -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div id="mapCard" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col min-w-0">
-        <div class="flex justify-between items-center mb-3">
-          <h2 class="font-bold text-slate-800 flex items-center gap-2">📍 ແຜນທີ່ Google Maps GIS ສະພາບນ້ຳ</h2>
-          <span class="text-xs bg-sky-100 text-sky-800 px-2.5 py-1 rounded-full font-semibold" id="stationCount">0 Batch Records</span>
-        </div>
-        <div class="flex flex-wrap items-center gap-2 mb-2 text-[11px]">
-          <select id="mapCompanySel" onchange="mapSelectCompany(this.value)" class="flex-1 min-w-[170px] max-w-full border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400">
-            <option value="">🏢 ເລືອກບໍລິສັດ / ຊຸດຂໍ້ມູນ...</option>
-          </select>
-          <select id="mapStationSel" onchange="mapSelectStation(this.value)" disabled class="flex-1 min-w-[170px] max-w-full border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400 disabled:text-slate-300">
-            <option value="">📍 ເລືອກສະຖານີ...</option>
-          </select>
-          <label class="flex items-center gap-1 border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-semibold text-slate-600 cursor-pointer" title="ເຊື່ອງໝຸດຂອງບໍລິສັດອື່ນ">
-            <input type="checkbox" id="mapOnlyChk" onchange="setMapOnly(this.checked)"> ສະເພາະບໍລິສັດນີ້
-          </label>
-          <button type="button" onclick="mapResetView()" class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-bold text-slate-600 hover:bg-slate-50" title="ເບິ່ງທັງໝົດ">🌐 ທັງໝົດ</button>
-          <div class="flex w-full gap-1">
-            <input type="text" id="mapGoto" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();mapGotoCoord()}" placeholder="🧭 ໄປຫາພິກັດ: 17°58'13.0&quot;N 102°35'48.1&quot;E ຫຼື 17.9703, 102.5967" class="flex-1 border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-mono outline-none focus:ring-2 focus:ring-sky-400">
-            <button type="button" onclick="mapGotoCoord()" class="border border-sky-300 rounded-lg px-3 py-1.5 bg-sky-50 font-bold text-sky-700 hover:bg-sky-100">ໄປ</button>
+    <!-- 📍 ແຜນທີ່ Google Maps GIS ສະພາບນ້ຳ (Full-Width GIS Map Section) -->
+    <div id="mapCard" class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col min-w-0 space-y-3">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 text-white text-lg shadow-sm">📍</span>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <h2 class="text-base font-bold text-slate-800">ແຜນທີ່ GIS ສະພາບນ້ຳ (Water Quality GIS Map)</h2>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200">Google Maps / GIS</span>
+            </div>
+            <p class="text-xs text-slate-500">ສະແດງຕຳແໜ່ງພິກັດສະຖານີເກັບຕົວຢ່າງນ້ຳ, ລະດັບຄຸນນະພາບນ້ຳ ແລະ ສະຖານະມາດຕະຖານຕາມແຜນທີ່ພູມສາດ</p>
           </div>
         </div>
-        <div id="map" class="rounded-xl border border-slate-200 flex-1"></div>
+        <span class="text-xs bg-sky-100 text-sky-800 px-3 py-1 rounded-full font-bold self-start sm:self-auto border border-sky-200" id="stationCount">0 Batch Records</span>
       </div>
 
-      <!-- Chart Panel: ກຣາຟແຍກສະເພາະຕົວຊີ້ວັດ (ປຽບທຽບສະຖານີ) -->
-      <div id="chartCard" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col min-w-0">
-        <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
-          <div class="flex items-center gap-2">
-            <h2 class="font-bold text-slate-800">📈 ກຣາຟແຍກສະເພາະຕົວຊີ້ວັດ</h2>
-            <span class="text-[10px] bg-indigo-50 text-indigo-700 font-semibold px-2 py-0.5 rounded-full border border-indigo-200">ປຽບທຽບສະຖານີ</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span id="chartIndCurrent" class="text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-full px-2.5 py-0.5"></span>
-          </div>
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <select id="mapCompanySel" onchange="mapSelectCompany(this.value)" class="flex-1 min-w-[190px] border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400">
+          <option value="">🏢 ເລືອກບໍລິສັດ / ຊຸດຂໍ້ມູນ...</option>
+        </select>
+        <select id="mapStationSel" onchange="mapSelectStation(this.value)" disabled class="flex-1 min-w-[190px] border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400 disabled:text-slate-300">
+          <option value="">📍 ເລືອກສະຖານີ...</option>
+        </select>
+        <label class="flex items-center gap-1.5 border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-600 cursor-pointer hover:bg-slate-50" title="ເຊື່ອງໝຸດຂອງບໍລິສັດອື່ນ">
+          <input type="checkbox" id="mapOnlyChk" onchange="setMapOnly(this.checked)" class="rounded text-sky-600 focus:ring-sky-400"> ສະເພາະບໍລິສັດນີ້
+        </label>
+        <button type="button" onclick="mapResetView()" class="border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition" title="ເບິ່ງທັງໝົດ">🌐 ທັງໝົດ</button>
+        <div class="flex w-full md:w-auto md:flex-1 gap-1 min-w-[260px]">
+          <input type="text" id="mapGoto" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();mapGotoCoord()}" placeholder="🧭 ໄປຫາພິກັດ: 17°58'13.0&quot;N 102°35'48.1&quot;E ຫຼື 17.9703, 102.5967" class="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-mono text-xs outline-none focus:ring-2 focus:ring-sky-400">
+          <button type="button" onclick="mapGotoCoord()" class="border border-sky-300 rounded-lg px-3.5 py-1.5 bg-sky-50 font-bold text-sky-700 hover:bg-sky-100 transition">ໄປ</button>
         </div>
-        <!-- ປຸ່ມໂຕຊີ້ວັດ ລວມຢູ່ໃນກ່ອງດຽວ ເລື່ອນພາຍໃນ + ຄົ້ນຫາ -->
-        <div id="chartIndBox" class="border border-slate-300 rounded-xl bg-slate-50/60 overflow-hidden mb-2">
-          <div class="p-2 border-b border-slate-200 bg-white">
-            <input type="text" id="chartIndSearch" oninput="filterChartInds(this.value)" autocomplete="off" placeholder="🔍 ຄົ້ນຫາໂຕຊີ້ວັດ... (ເຊັ່ນ pH, BOD)" class="w-full border border-slate-200 px-2 py-1.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50">
-          </div>
-          <div id="chartIndicatorTabs" class="flex flex-wrap gap-1 text-[11px] p-2 max-h-[112px] overflow-y-auto"></div>
-          <p id="chartIndNoMatch" class="hidden text-center text-[11px] text-slate-400 pb-2">ບໍ່ພົບໂຕຊີ້ວັດທີ່ຄົ້ນຫາ</p>
-        </div>
-        <div class="flex flex-wrap items-center gap-2 mb-1 text-[11px]">
-          <select id="chartDatasetSel" onchange="setChartDataset(this.value)" class="flex-1 min-w-[180px] max-w-full border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400">
-            <option value="ALL">🌐 ທຸກຊຸດ (15 ສະຖານີລ່າສຸດ)</option>
-          </select>
-          <div id="chartStationWrap" class="relative">
-            <button type="button" id="chartStationBtn" onclick="toggleStationPicker()" class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-700 disabled:text-slate-300 disabled:cursor-not-allowed">📍 ສະຖານີ: ເລືອກຊຸດກ່ອນ</button>
-            <div id="chartStationPicker" class="hidden absolute right-0 z-40 mt-1 w-72 max-w-[80vw] bg-white border border-slate-300 rounded-xl shadow-xl p-2 space-y-2">
-              <input type="text" id="chartStationSearch" oninput="renderStationPicker()" autocomplete="off" placeholder="🔍 ຄົ້ນຫາສະຖານີ..." class="w-full border rounded-lg px-2 py-1 outline-none">
-              <div class="flex gap-2">
-                <button type="button" onclick="setAllChartStations(true)" class="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded px-2 py-1">☑ ເລືອກທັງໝົດ</button>
-                <button type="button" onclick="setAllChartStations(false)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded px-2 py-1">☐ ລ້າງ</button>
-              </div>
-              <div id="chartStationList" class="max-h-56 overflow-y-auto space-y-0.5"></div>
-            </div>
-          </div>
-          <label id="chartLogWrap" class="hidden items-center gap-1 border border-slate-300 rounded-lg px-2 py-1.5 bg-white font-semibold text-slate-600 cursor-pointer" title="ໃຊ້ເມື່ອຄ່າແຕ່ລະໂຕຊີ້ວັດຕ່າງກັນຫຼາຍ (ເຊັ່ນ EC 300 ກັບ NO2 0.03)">
-            <input type="checkbox" id="chartLogChk" checked onchange="setChartLog(this.checked)"> ສະເກລ log
-          </label>
-          <div id="chartTypeWrap" class="flex rounded-lg border border-slate-300 overflow-hidden font-bold">
-            <button type="button" data-charttype="bar" onclick="setChartType('bar')" class="px-2.5 py-1.5" title="ກຣາຟແທ່ງ">📊</button>
-            <button type="button" data-charttype="area" onclick="setChartType('area')" class="px-2.5 py-1.5 border-l border-slate-300" title="ກຣາຟເສັ້ນ">📈</button>
-          </div>
-        </div>
-        <p id="chartCaption" class="text-[11px] text-slate-500 mb-1"></p>
-        <div class="relative w-full" style="min-height:260px" id="apexChartContainer"></div>
-        <div id="chartSummary" class="mt-3"></div>
       </div>
+      <div id="map" class="rounded-xl border border-slate-200 w-full shadow-inner"></div>
+    </div>
+
+    <!-- 📈 ກຣາຟແຍກສະເພາະຕົວຊີ້ວັດ (Dedicated Indicator Comparative Chart Section) -->
+    <div id="chartCard" class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col min-w-0 space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white text-lg shadow-sm">📈</span>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <h2 class="text-base font-bold text-slate-800">ກຣາຟແຍກສະເພາະຕົວຊີ້ວັດ (Indicator Comparative Analytics)</h2>
+              <span class="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2.5 py-0.5 rounded-full border border-indigo-200">ປຽບທຽບສະຖານີ</span>
+            </div>
+            <p class="text-xs text-slate-500">ປຽບທຽບຄ່າວິເຄາະຕົວຊີ້ວັດແຕ່ລະສະຖານີ ພ້ອມເສັ້ນມາດຕະຖານຄຸນນະພາບນ້ຳແຫ່ງຊາດ</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 self-start sm:self-auto">
+          <span id="chartIndCurrent" class="text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-full px-3 py-1"></span>
+        </div>
+      </div>
+
+      <!-- ປຸ່ມໂຕຊີ້ວັດ ລວມຢູ່ໃນກ່ອງດຽວ ເລື່ອນພາຍໃນ + ຄົ້ນຫາ -->
+      <div id="chartIndBox" class="border border-slate-300 rounded-xl bg-slate-50/60 overflow-hidden">
+        <div class="p-2.5 border-b border-slate-200 bg-white">
+          <input type="text" id="chartIndSearch" oninput="filterChartInds(this.value)" autocomplete="off" placeholder="🔍 ຄົ້ນຫາໂຕຊີ້ວັດ... (ເຊັ່ນ pH, BOD, COD, DO, Turbidity, EC, TSS)" class="w-full border border-slate-200 px-3 py-1.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50">
+        </div>
+        <div id="chartIndicatorTabs" class="flex flex-wrap gap-1.5 text-xs p-2.5 max-h-[120px] overflow-y-auto"></div>
+        <p id="chartIndNoMatch" class="hidden text-center text-xs text-slate-400 py-3">ບໍ່ພົບໂຕຊີ້ວັດທີ່ຄົ້ນຫາ</p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <select id="chartDatasetSel" onchange="setChartDataset(this.value)" class="flex-1 min-w-[200px] max-w-full border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400">
+          <option value="ALL">🌐 ທຸກຊຸດ (15 ສະຖານີລ່າສຸດ)</option>
+        </select>
+        <div id="chartStationWrap" class="relative">
+          <button type="button" id="chartStationBtn" onclick="toggleStationPicker()" class="border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-semibold text-slate-700 disabled:text-slate-300 disabled:cursor-not-allowed">📍 ສະຖານີ: ເລືອກຊຸດກ່ອນ</button>
+          <div id="chartStationPicker" class="hidden absolute right-0 z-40 mt-1 w-72 max-w-[85vw] bg-white border border-slate-300 rounded-xl shadow-xl p-2.5 space-y-2">
+            <input type="text" id="chartStationSearch" oninput="renderStationPicker()" autocomplete="off" placeholder="🔍 ຄົ້ນຫາສະຖານີ..." class="w-full border rounded-lg px-2.5 py-1.5 outline-none text-xs">
+            <div class="flex gap-2 text-xs">
+              <button type="button" onclick="setAllChartStations(true)" class="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg px-2 py-1 transition">☑ ເລືອກທັງໝົດ</button>
+              <button type="button" onclick="setAllChartStations(false)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg px-2 py-1 transition">☐ ລ້າງ</button>
+            </div>
+            <div id="chartStationList" class="max-h-56 overflow-y-auto space-y-1 text-xs"></div>
+          </div>
+        </div>
+        <label id="chartLogWrap" class="hidden items-center gap-1.5 border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-600 cursor-pointer hover:bg-slate-50" title="ໃຊ້ເມື່ອຄ່າແຕ່ລະໂຕຊີ້ວັດຕ່າງກັນຫຼາຍ (ເຊັ່ນ EC 300 ກັບ NO2 0.03)">
+          <input type="checkbox" id="chartLogChk" checked onchange="setChartLog(this.checked)" class="rounded text-indigo-600 focus:ring-indigo-400"> ສະເກລ log
+        </label>
+        <div id="chartTypeWrap" class="flex rounded-lg border border-slate-300 overflow-hidden font-bold">
+          <button type="button" data-charttype="bar" onclick="setChartType('bar')" class="px-3 py-1.5 text-xs transition" title="ກຣາຟແທ່ງ">📊</button>
+          <button type="button" data-charttype="area" onclick="setChartType('area')" class="px-3 py-1.5 text-xs border-l border-slate-300 transition" title="ກຣາຟເສັ້ນ">📈</button>
+        </div>
+      </div>
+      <p id="chartCaption" class="text-xs text-slate-500"></p>
+      <div class="relative w-full" style="min-height:320px" id="apexChartContainer"></div>
+      <div id="chartSummary" class="mt-2"></div>
     </div>
 
     <!-- 📈 ຫ້ອງແນວໂນ້ມລາຍເດືອນ (Monthly Trend Analytics - ແຍກເປັນຫ້ອງສະເພາະ) -->
@@ -7206,7 +7249,7 @@
       const options = {
         chart: {
           type: isBar ? 'bar' : 'area',
-          height: 260,
+          height: 320,
           toolbar: { show: true, tools: { zoom: !isBar, zoomin: !isBar, zoomout: !isBar, pan: !isBar, reset: true, download: true } },
           animations: { enabled: true, easing: 'easeinout', speed: 400 }
         },
