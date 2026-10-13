@@ -27,8 +27,34 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/400.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/700.css">
   <style>
-    body { font-family: 'Noto Sans Lao', sans-serif; }
+    @font-face {
+      font-family: 'Phetsarath OT';
+      src: local('Phetsarath OT'), local('Phetsarath'),
+           url('https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/files/phetsarath-lao-400-normal.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Phetsarath OT';
+      src: local('Phetsarath OT Bold'), local('Phetsarath-Bold'),
+           url('https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/files/phetsarath-lao-700-normal.woff2') format('woff2');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    *, ::before, ::after {
+      font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', 'phetsarath', 'Saysettha OT', 'Noto Sans Lao', serif;
+    }
+    html, body {
+      font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', 'phetsarath', 'Saysettha OT', 'Noto Sans Lao', serif;
+    }
+    body, button, input, select, textarea, div, span, p, h1, h2, h3, h4, h5, h6, a, table, th, td {
+      font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', 'phetsarath', 'Saysettha OT', 'Noto Sans Lao', serif;
+    }
     #map { height: 460px; min-height: 400px; z-index: 1; background-color: #aad3df; }
     @media (min-width: 768px) { #map { height: 520px; } }
     @media (min-width: 1280px) { #map { height: 580px; } }
@@ -123,143 +149,177 @@
     </div>
   </div>
 
-  <!-- Navigation -->
-  <nav class="bg-slate-900/95 backdrop-blur-xl text-white border-b border-slate-800/80 sticky top-0 z-50 shadow-lg">
-    <div class="w-full px-3 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16 gap-3 sm:gap-6">
+  <!-- App Shell with Left Sidebar Layout (ລະບົບຂໍ້ມູນຊັບພະຍາກອນນ້ຳ - ແຍກຫົວຂໍ້ຟັງຊັນໄວ້ຝັ່ງຊ້າຍມື) -->
+  <div class="min-h-screen flex bg-slate-100 font-sans text-slate-850">
 
-        <!-- Left: Brand (Full Width expanded, single row) -->
-        <div class="flex items-center gap-3 shrink-0">
-          <div class="relative">
-            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 via-teal-600 to-blue-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/20 ring-2 ring-white/10">
-              <span class="text-xl">🌊</span>
+    <!-- Mobile Sidebar Backdrop -->
+    <div id="sidebarBackdrop" onclick="closeSidebarMobile()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 hidden lg:hidden transition-opacity"></div>
+
+    <!-- Left Sidebar (ຂ້າງຝາກຊ້າຍມື: ລວມຫົວຂໍ້ຂອງແຕ່ລະຟັງຊັນ) -->
+    <aside id="appSidebar" class="fixed lg:sticky top-0 h-screen w-64 xl:w-72 shrink-0 bg-slate-900 text-white z-50 flex flex-col border-r border-slate-800 shadow-2xl lg:shadow-none -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+      
+      <!-- Sidebar Header & DWR Identity -->
+      <div class="p-4 border-b border-slate-800 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 via-teal-600 to-blue-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/20 ring-2 ring-white/10 shrink-0">
+            <span class="text-xl">🌊</span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5">
+              <h1 class="text-sm font-bold text-white tracking-tight truncate">ຄຸນນະພາບນ້ຳ</h1>
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-400/30">Enterprise</span>
             </div>
-            <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-900 animate-pulse"></span>
+            <p class="text-[11px] text-slate-400 truncate">ກົມຊັບພະຍາກອນນ້ຳ (DWR)</p>
           </div>
-          <div class="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
-            <div class="flex items-center gap-2">
-              <h1 class="text-sm sm:text-base font-bold text-white tracking-tight leading-tight whitespace-nowrap">ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ</h1>
-              <span class="hidden md:inline-block text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-500/20 text-teal-300 border border-teal-400/30 whitespace-nowrap">Enterprise</span>
+        </div>
+
+        <!-- ຫ້ອງເລືອກລະບົບ (System Selector Box on Left Sidebar) -->
+        <div class="mt-3 pt-3 border-t border-slate-800/80">
+          <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                <span>🔄</span> ເລືອກລະບົບ
+              </span>
+              <a href="index.html" class="text-[10px] font-semibold text-teal-400 hover:text-teal-300 flex items-center gap-0.5 transition" title="ກັບໄປໜ້າຫຼັກເລືອກລະບົບທັງໝົດ">
+                <span>🏠</span> ໜ້າຫຼັກ ↗
+              </a>
             </div>
-            <p class="text-[11px] text-slate-400 hidden lg:inline-block whitespace-nowrap">· ກົມຊັບພະຍາກອນນ້ຳ (Department of Water Resources)</p>
+            <div class="grid grid-cols-1 gap-1">
+              <span class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] bg-gradient-to-r from-teal-500/25 to-teal-600/15 text-teal-300 font-bold border border-teal-500/30 cursor-default">
+                <span class="flex items-center gap-1.5 truncate"><span>🧪</span> <span class="truncate">ຄຸນນະພາບນ້ຳ</span></span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-teal-500/30 text-teal-200">ປັດຈຸບັນ</span>
+              </span>
+              <a href="water-usage.html" class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] text-slate-300 hover:text-white hover:bg-slate-800 transition" title="ປ່ຽນໄປລະບົບຕິດຕາມຂໍ້ມູນການນຳໃຊ້ນ້ຳ">
+                <span class="flex items-center gap-1.5 truncate"><span>💧</span> <span class="truncate">ການນຳໃຊ້ນ້ຳ</span></span>
+                <span class="text-[10px] text-slate-500">→</span>
+              </a>
+              <a href="wastewater.html" class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] text-slate-300 hover:text-white hover:bg-slate-800 transition" title="ປ່ຽນໄປລະບົບຕິດຕາມໂຄງການປ່ອຍນ້ຳເປື້ອນ">
+                <span class="flex items-center gap-1.5 truncate"><span>🏭</span> <span class="truncate">ການປ່ອຍນ້ຳເປື້ອນ</span></span>
+                <span class="text-[10px] text-slate-500">→</span>
+              </a>
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- Center: Clear Analytics & Reports Navigation (Desktop) -->
-        <div class="hidden xl:flex items-center gap-1 bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/60 shadow-inner text-xs font-semibold">
-          <a href="#mapCard" class="px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all" title="ແຜນທີ່ Google Maps GIS ສະພາບນ້ຳ">
-            <span>📍</span>
-            <span>ແຜນທີ່ GIS</span>
-          </a>
-          <a href="#chartCard" class="px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all" title="ກຣາຟແຍກສະເພາະຕົວຊີ້ວັດ">
-            <span>📈</span>
-            <span>ກຣາຟຕົວຊີ້ວັດ</span>
-          </a>
-          <a href="#monthlyTrendCard" class="px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all" title="ແນວໂນ້ມລາຍເດືອນ ຫຼາຍໂຕຊີ້ວັດ">
-            <span>📊</span>
-            <span>ແນວໂນ້ມລາຍເດືອນ</span>
-          </a>
-          <a href="#twelveMonthCard" class="px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all" title="ສະຖິຕິການປ່ຽນແປງຄຸນນະພາບນໍ້າໃນຮອບ 12 ເດືອນ">
-            <span>📅</span>
-            <span>ສະຖິຕິ 12 ເດືອນ</span>
-          </a>
-          <button onclick="openAnnualReport()" class="px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all cursor-pointer" title="ບົດວິເຄາະສະຖິຕິຄຸນນະພາບນ້ຳ ປະຈຳປີ">
-            <span>📑</span>
-            <span>ບົດວິເຄາະ</span>
-          </button>
-          <button onclick="toggleLogsModal()" class="px-2.5 py-1.5 rounded-xl flex items-center gap-1 text-slate-300 hover:text-white hover:bg-slate-700/70 transition-all cursor-pointer" title="ປະຫວັດການບັນທຶກ ແລະ ລົບຂໍ້ມູນ">
-            <span>📜</span>
-            <span>ປະຫວັດການໃຊ້ງານ</span>
-          </button>
-          <button onclick="openExportModal()" class="px-3 py-1.5 rounded-xl flex items-center gap-1.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold shadow-md shadow-teal-500/25 hover:from-teal-400 hover:to-emerald-500 transition-all cursor-pointer" title="ສູນສົ່ງອອກບົດລາຍງານສະເພາະ (Excel, Word, PDF)">
-            <span>📥</span>
-            <span>ສົ່ງອອກລາຍງານ</span>
-          </button>
+      <!-- Sidebar Navigation Menu (ຫົວຂໍ້ຂອງແຕ່ລະຟັງຊັນ) -->
+      <div class="flex-1 overflow-y-auto px-3 py-4 space-y-5 text-xs">
+        
+        <!-- Group 1: ຕິດຕາມ & ວິເຄາະ -->
+        <div>
+          <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">📊 ຕິດຕາມ & ວິເຄາະ</p>
+          <nav class="space-y-1">
+            <button type="button" data-nav-view="map" onclick="setAppView('map')" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer">
+              <span class="text-base">📍</span>
+              <span class="flex-1 truncate">ແຜນທີ່ GIS ສະພາບນ້ຳ</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-sky-900/60 text-sky-300 border border-sky-700/50">GIS</span>
+            </button>
+            <button type="button" data-nav-view="chart" onclick="setAppView('chart')" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer">
+              <span class="text-base">📈</span>
+              <span class="flex-1 truncate">ກຣາຟແຍກສະເພາະຕົວຊີ້ວັດ</span>
+            </button>
+            <button type="button" data-nav-view="trend" onclick="setAppView('trend')" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer">
+              <span class="text-base">📊</span>
+              <span class="flex-1 truncate">ແນວໂນ້ມລາຍເດືອນ</span>
+            </button>
+            <button type="button" data-nav-view="stats12" onclick="setAppView('stats12')" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer">
+              <span class="text-base">📅</span>
+              <span class="flex-1 truncate">ສະຖິຕິ 12 ເດືອນ</span>
+            </button>
+          </nav>
         </div>
 
-        <!-- Medium Screens Navigation (lg to xl) -->
-        <div class="hidden lg:flex xl:hidden items-center gap-1 bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/60 shadow-inner text-xs font-semibold">
-          <a href="#mapCard" class="px-2 py-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70">📍 ແຜນທີ່</a>
-          <a href="#chartCard" class="px-2 py-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70">📈 ກຣາຟ</a>
-          <a href="#monthlyTrendCard" class="px-2 py-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70">📊 ແນວໂນ້ມ</a>
-          <a href="#twelveMonthCard" class="px-2 py-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70">📅 12 ເດືອນ</a>
-          <button onclick="toggleLogsModal()" class="px-2 py-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/70">📜 ປະຫວັດ</button>
-          <button onclick="openExportModal()" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold">📥 ສົ່ງອອກ</button>
+        <!-- Group 2: ຖານຂໍ້ມູນ & ລາຍງານ -->
+        <div>
+          <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">📁 ຖານຂໍ້ມູນ & ບັນທຶກ</p>
+          <nav class="space-y-1">
+            <button type="button" data-nav-view="records" onclick="setAppView('records')" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer">
+              <span class="text-base">📝</span>
+              <span class="flex-1 truncate">ຟອມບັນທຶກ & ຕາຕະລາງ</span>
+            </button>
+            <button type="button" onclick="openAnnualReport(); if(window.innerWidth<1024)closeSidebarMobile();" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all cursor-pointer">
+              <span class="text-base">📑</span>
+              <span class="flex-1 truncate">ບົດວິເຄາະສະຖິຕິປະຈຳປີ</span>
+            </button>
+            <button type="button" onclick="toggleLogsModal(); if(window.innerWidth<1024)closeSidebarMobile();" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all cursor-pointer">
+              <span class="text-base">📜</span>
+              <span class="flex-1 truncate">ປະຫວັດການໃຊ້ງານ</span>
+            </button>
+            <button type="button" onclick="openExportModal(); if(window.innerWidth<1024)closeSidebarMobile();" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-bold text-teal-300 bg-teal-950/40 border border-teal-800/40 hover:bg-teal-900/50 transition-all cursor-pointer shadow-xs">
+              <span class="text-base">📥</span>
+              <span class="flex-1 truncate">ສູນສົ່ງອອກລາຍງານ</span>
+            </button>
+          </nav>
         </div>
 
-        <!-- Right: Actions & User Section -->
-        <div class="flex items-center gap-1.5 sm:gap-2.5">
-          <!-- Quick Export Action Button (Visible on smaller screens when center bar is hidden) -->
-          <button type="button" onclick="openExportModal()" class="lg:hidden flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-teal-600/25 hover:bg-teal-600/40 border border-teal-500/50 text-xs font-bold text-teal-200 hover:text-white transition shadow-sm cursor-pointer" title="ເປີດສູນສົ່ງອອກບົດລາຍງານ">
-            <span>📥</span>
-            <span class="hidden sm:inline">ຫ້ອງສົ່ງອອກ</span>
-          </button>
+        <!-- Group 3: ລະບົບອື່ນໆ ຂອງກົມ -->
+        <div>
+          <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">🌊 ລະບົບອື່ນໆ ໃນກົມ</p>
+          <nav class="space-y-1">
+            <a href="water-usage.html" class="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 text-slate-400 hover:text-amber-300 hover:bg-slate-800 transition-all">
+              <span>💧</span>
+              <span class="truncate">ລະບົບການນຳໃຊ້ນ້ຳ</span>
+            </a>
+            <a href="wastewater.html" class="w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 text-slate-400 hover:text-rose-300 hover:bg-slate-800 transition-all">
+              <span>🏭</span>
+              <span class="truncate">ລະບົບນ້ຳເປື້ອນ</span>
+            </a>
+          </nav>
+        </div>
+      </div>
 
-          <!-- Admin Settings Button (Visible only to SUPER_ADMIN) -->
-          <button id="adminSettingsBtn" onclick="toggleSettingsModal()" class="items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 text-xs font-semibold transition cursor-pointer shadow-sm hidden" title="ຕັ້ງຄ່າລະບົບ (Administrator Config)">
-            <span>⚙️</span>
-            <span class="hidden md:inline">ຕັ້ງຄ່າ</span>
-          </button>
+      <!-- Sidebar Footer (Admin Settings & Session) -->
+      <div class="p-3 border-t border-slate-800 bg-slate-950/40 space-y-2 shrink-0">
+        <!-- Admin Settings Button -->
+        <button id="adminSettingsBtn" onclick="toggleSettingsModal(); if(window.innerWidth<1024)closeSidebarMobile();" class="w-full hidden items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 text-xs font-semibold transition cursor-pointer">
+          <span>⚙️</span>
+          <span class="truncate">ຕັ້ງຄ່າລະບົບ (Admin)</span>
+        </button>
 
-          <!-- User Role & Session Pill -->
-          <div class="bg-slate-800/80 px-2.5 py-1.5 rounded-xl border border-slate-700/80 flex items-center gap-1.5 text-xs">
-            <span class="text-slate-400 text-[11px] hidden xl:inline">ຜູ້ໃຊ້:</span>
-            <span id="roleBadge" class="font-bold text-white text-xs">👁️ ຜູ້ເບິ່ງທົ່ວໄປ</span>
-            <span id="loggedInUserLabel" class="text-[11px] text-emerald-400 font-semibold hidden"></span>
+        <!-- User Profile & Session -->
+        <div class="px-3 py-2 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-between text-xs">
+          <div class="min-w-0 pr-2">
+            <p id="loggedInUserLabel" class="text-emerald-400 font-semibold text-[11px] truncate hidden"></p>
+            <span id="roleBadge" class="font-bold text-white text-[11px] truncate">👁️ ຜູ້ເບິ່ງທົ່ວໄປ</span>
           </div>
-
-          <!-- Auth Button (Login / Logout) -->
-          <button id="authBtn" onclick="logout()" class="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 border border-slate-700/80 hover:border-rose-500/40 text-slate-200 hover:text-rose-200 text-xs font-semibold transition shadow-sm cursor-pointer" title="ອອກຈາກລະບົບ ຫຼື ເຂົ້າສູ່ລະບົບ">
-            🚪 <span class="hidden sm:inline">ອອກຈາກລະບົບ</span>
+          <button id="authBtn" onclick="logout()" class="px-2 py-1 rounded-lg bg-slate-700 hover:bg-rose-500/30 hover:text-rose-200 border border-slate-600 text-slate-200 text-[11px] font-semibold transition shrink-0 cursor-pointer" title="ອອກຈາກລະບົບ ຫຼື ເຂົ້າສູ່ລະບົບ">
+            🚪 ອອກ
           </button>
+        </div>
+      </div>
+    </aside>
 
-          <!-- Mobile Hamburger Toggle -->
-          <button type="button" onclick="toggleWqMenu('wqMobileMenu')" class="lg:hidden p-2 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 text-slate-300 hover:text-white transition cursor-pointer" title="ເມນູເພີ່ມເຕີມ">
+    <!-- Right Main Workspace Window (ໜ້າຕ່າງສະແດງຜົນຫຼັກ) -->
+    <div class="flex-1 min-w-0 flex flex-col min-h-screen">
+      
+      <!-- Top Bar Header (ແຖບຫົວຂໍ້ດ້ານເທິງ ຂອງໜ້າຕ່າງ) -->
+      <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-4 sm:px-6 py-2.5 shadow-xs flex items-center justify-between gap-3">
+        <!-- Left: Mobile Toggle + Active View Title -->
+        <div class="flex items-center gap-3 min-w-0">
+          <button type="button" onclick="openSidebarMobile()" class="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition cursor-pointer" title="ເປີດເມນູຟັງຊັນ">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
           </button>
+          <div class="min-w-0">
+            <h2 id="topbarViewTitle" class="text-sm sm:text-base font-bold text-slate-800 truncate">📍 ແຜນທີ່ Google Maps GIS ສະພາບນ້ຳ</h2>
+            <p id="topbarViewSubtitle" class="text-[11px] text-slate-500 hidden sm:block truncate">ສະແດງຕຳແໜ່ງພິກັດສະຖານີເກັບຕົວຢ່າງນ້ຳ, ລະດັບຄຸນນະພາບນ້ຳ ແລະ ສະຖານະມາດຕະຖານ</p>
+          </div>
         </div>
-      </div>
 
-      <!-- Mobile Navigation Drawer -->
-      <div id="wqMobileMenu" class="hidden lg:hidden border-t border-slate-800 py-3 space-y-2">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-medium">
-          <a href="#mapCard" onclick="closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
-            <span>📍</span>
-            <span>ແຜນທີ່ GIS</span>
-          </a>
-          <a href="#chartCard" onclick="closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
-            <span>📈</span>
-            <span>ກຣາຟຕົວຊີ້ວັດ</span>
-          </a>
-          <a href="#monthlyTrendCard" onclick="closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
-            <span>📊</span>
-            <span>ແນວໂນ້ມ</span>
-          </a>
-          <a href="#twelveMonthCard" onclick="closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
-            <span>📅</span>
-            <span>12 ເດືອນ</span>
-          </a>
-          <button onclick="openAnnualReport(); closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
-            <span>📑</span>
-            <span>ບົດວິເຄາະ</span>
-          </button>
-          <button onclick="toggleLogsModal(); closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-200">
-            <span>📜</span>
-            <span>ປະຫວັດການໃຊ້ງານ</span>
-          </button>
-          <button onclick="openExportModal(); closeWqMenus();" class="flex items-center justify-center gap-1.5 p-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold shadow-md hover:from-teal-400 hover:to-emerald-500 col-span-2">
+        <!-- Right: Quick Actions -->
+        <div class="flex items-center gap-2 shrink-0">
+          <!-- Quick Export Action Button -->
+          <button type="button" onclick="openExportModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold text-xs shadow-sm shadow-teal-500/20 hover:from-teal-400 hover:to-emerald-500 transition cursor-pointer" title="ສູນສົ່ງອອກບົດລາຍງານ">
             <span>📥</span>
-            <span>ສົ່ງອອກລາຍງານ</span>
+            <span class="hidden md:inline">ສົ່ງອອກລາຍງານ</span>
           </button>
         </div>
-      </div>
-    </div>
-  </nav>
+      </header>
 
-  <div class="w-full p-4 md:p-6 space-y-6">
+      <!-- Main Body Content Workspace -->
+      <main class="flex-1 p-4 sm:p-6 lg:p-7 space-y-6">
 
-    <!-- KPI Metric Dashboard Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- KPI Metric Dashboard Cards -->
+        <div id="kpiDashboardGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
         <div>
           <p class="text-xs text-slate-500 font-medium">ຊຸດຂໍ້ມູນບໍລິສັດ/ຫົວຂໍ້ຫຼັກ</p>
@@ -538,8 +598,9 @@
       </div>
     </div>
 
-    <!-- Form & Table Area -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+    <!-- 📝 ຟອມບັນທຶກ & ຕາຕະລາງ (Data Entry & Stations Table View) -->
+    <div id="dataSection" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
       
       <!-- Input Form Layer -->
       <div id="formCard" class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 min-w-0">
@@ -739,6 +800,9 @@
           </table>
         </div>
       </div>
+    </div>
+  </div>
+      </main>
     </div>
   </div>
 
@@ -1185,52 +1249,109 @@
       }
     }
 
-    // System Navigation
-    const SYSTEM_PAGES = [
-      { url: 'index.html', title: 'ໜ້າລວມສູນ' },
-      { url: 'water-quality.html', title: 'ຄຸນນະພາບນ້ຳ' },
-      { url: 'water-usage.html', title: 'ການນຳໃຊ້ນ້ຳ' },
-      { url: 'wastewater.html', title: 'ປ່ອຍນ້ຳເປື້ອນ' }
-    ];
-
-    function navigateSystem(direction, event) {
-      if (event) {
-        event.stopPropagation();
-      }
-      const currentPath = window.location.pathname.split('/').pop() || 'water-quality.html';
-      let idx = SYSTEM_PAGES.findIndex(p => p.url === currentPath);
-      if (idx === -1) idx = 1;
-      
-      let targetIdx;
-      if (direction === 'up' || direction === 'prev') {
-        targetIdx = (idx - 1 + SYSTEM_PAGES.length) % SYSTEM_PAGES.length;
-      } else {
-        targetIdx = (idx + 1) % SYSTEM_PAGES.length;
-      }
-      window.location.href = SYSTEM_PAGES[targetIdx].url;
+    /* ================================================================
+       🧭 ລະບົບເມນູຂ້າງຊ້າຍ ແລະ ສະຫຼັບໜ້າຕ່າງຟັງຊັນ (Left Sidebar & App View Router)
+       ================================================================ */
+    let currentAppView = 'all';
+    try {
+      currentAppView = localStorage.getItem('dwr_wq_active_view') || 'map';
+      if (currentAppView === 'all' || !currentAppView) currentAppView = 'map';
+    } catch (e) {
+      currentAppView = 'map';
     }
 
-    function handleSystemArrow(direction, menuId, event) {
-      navigateSystem(direction, event);
+    function openSidebarMobile() {
+      const sb = document.getElementById('appSidebar');
+      const bd = document.getElementById('sidebarBackdrop');
+      if (sb) sb.classList.remove('-translate-x-full');
+      if (bd) bd.classList.remove('hidden');
     }
 
-    function closeWqMenus() {
-      ['wqExportDropdown', 'wqMobileMenu'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.add('hidden');
+    function closeSidebarMobile() {
+      const sb = document.getElementById('appSidebar');
+      const bd = document.getElementById('sidebarBackdrop');
+      if (sb) sb.classList.add('-translate-x-full');
+      if (bd) bd.classList.add('hidden');
+    }
+
+    function setAppView(viewId) {
+      currentAppView = (viewId === 'all' || !viewId) ? 'map' : viewId;
+      try { localStorage.setItem('dwr_wq_active_view', currentAppView); } catch (e) {}
+      updateAppViewUI();
+      if (window.innerWidth < 1024) closeSidebarMobile();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateAppViewUI() {
+      // 1. Update active states on left sidebar navigation
+      document.querySelectorAll('[data-nav-view]').forEach(btn => {
+        const isAct = btn.dataset.navView === currentAppView;
+        btn.classList.toggle('bg-gradient-to-r', isAct);
+        btn.classList.toggle('from-sky-500', isAct);
+        btn.classList.toggle('to-indigo-600', isAct);
+        btn.classList.toggle('text-white', isAct);
+        btn.classList.toggle('font-bold', isAct);
+        btn.classList.toggle('shadow-md', isAct);
+        btn.classList.toggle('shadow-sky-500/20', isAct);
+
+        btn.classList.toggle('text-slate-300', !isAct);
+        btn.classList.toggle('hover:bg-slate-800', !isAct);
+        btn.classList.toggle('hover:text-white', !isAct);
       });
+
+      // 2. Update visibility of cards in workspace (Each function is in its own dedicated clear window)
+      const kpiGrid = document.getElementById('kpiDashboardGrid');
+      const mapCard = document.getElementById('mapCard');
+      const chartCard = document.getElementById('chartCard');
+      const trendCard = document.getElementById('monthlyTrendCard');
+      const twelveCard = document.getElementById('twelveMonthCard');
+      const dataSec = document.getElementById('dataSection');
+
+      if (kpiGrid) kpiGrid.classList.toggle('hidden', currentAppView !== 'map');
+      if (mapCard) mapCard.classList.toggle('hidden', currentAppView !== 'map');
+      if (chartCard) chartCard.classList.toggle('hidden', currentAppView !== 'chart');
+      if (trendCard) trendCard.classList.toggle('hidden', currentAppView !== 'trend');
+      if (twelveCard) twelveCard.classList.toggle('hidden', currentAppView !== 'stats12');
+      if (dataSec) dataSec.classList.toggle('hidden', currentAppView !== 'records');
+
+      // 3. Update Header Title and Breadcrumb
+      const viewMeta = {
+        map: { title: '📍 ແຜນທີ່ Google Maps GIS ສະພາບນ້ຳ', sub: 'ສະແດງຕຳແໜ່ງພິກັດສະຖານີເກັບຕົວຢ່າງນ້ຳ, ລະດັບຄຸນນະພາບນ້ຳ ແລະ ສະຖານະມາດຕະຖານຕາມແຜນທີ່ພູມສາດ' },
+        chart: { title: '📈 ກຣາຟແຍກສະເພາະຕົວຊີ້ວັດ', sub: 'ປຽບທຽບຄ່າວິເຄາະຕົວຊີ້ວັດແຕ່ລະສະຖານີ ພ້ອມເສັ້ນມາດຕະຖານຄຸນນະພາບນ້ຳແຫ່ງຊາດ' },
+        trend: { title: '📊 ແນວໂນ້ມລາຍເດືອນ (Monthly Trend Analytics)', sub: 'ວິເຄາະທ່າອ່ຽງຄຸນນະພາບນ້ຳຕາມເດືອນ, ປຽບທຽບຫຼາຍໂຕຊີ້ວັດພ້ອມກັນ ພ້ອມອັດຕາຜ່ານມາດຕະຖານ' },
+        stats12: { title: '📅 ສະຖິຕິການປ່ຽນແປງຄຸນນະພາບນໍ້າໃນຮອບ 12 ເດືອນ', sub: 'ຕິດຕາມທ່າອ່ຽງຄຸນນະພາບນ້ຳ, ຄ່າສະເລ່ຍລາຍເດືອນ, ຈຳນວນຕົວຢ່າງທີ່ກວດ ແລະ ອັດຕາການເກີນເກນ' },
+        records: { title: '📝 ຟອມບັນທຶກ & ຖານຂໍ້ມູນຜົນການກວດວັດ', sub: 'ບັນທຶກຜົນວິເຄາະຄຸນນະພາບນ້ຳໃໝ່, ນຳເຂົ້າຈາກ Excel ແລະ ຈັດການຖານຂໍ້ມູນລາຍບໍລິສັດ' }
+      };
+      const cur = viewMeta[currentAppView] || viewMeta.map;
+      const titleEl = document.getElementById('topbarViewTitle');
+      const subEl = document.getElementById('topbarViewSubtitle');
+      if (titleEl) titleEl.innerText = cur.title;
+      if (subEl) subEl.innerText = cur.sub;
+
+      // 4. Invalidate sizes and re-render visual components if needed
+      if (currentAppView === 'map') {
+        setTimeout(() => { if (typeof map !== 'undefined' && map) map.invalidateSize(); }, 150);
+      }
+      if (currentAppView === 'chart') {
+        setTimeout(() => { if (typeof drawChartNow === 'function') drawChartNow(); }, 150);
+      }
+      if (currentAppView === 'trend') {
+        setTimeout(() => { if (typeof renderTrend === 'function') renderTrend(); }, 150);
+      }
+      if (currentAppView === 'stats12') {
+        setTimeout(() => { if (typeof render12MonthTrendSection === 'function') render12MonthTrendSection(); }, 150);
+      }
     }
 
-    document.addEventListener('click', function(e) {
-      if (!e.target.closest('#wqExportDropdownWrapper') &&
-          !e.target.closest('#wqMobileMenu') &&
-          !e.target.closest('[onclick*="toggleWqMenu"]')) {
-        closeWqMenus();
-      }
+    document.addEventListener('DOMContentLoaded', () => {
+      updateAppViewUI();
     });
 
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeWqMenus();
+      if (e.key === 'Escape') {
+        closeWqMenus();
+        closeSidebarMobile();
+      }
     });
 
     const firebaseConfig = {
@@ -5882,6 +6003,7 @@
       render12MonthTrendSection();
       requestAnimationFrame(xlRefreshAll);
       renderSettingsList(); // ອັບເດດຈຳນວນຄ່າຂອງໂຕຊີ້ວັດທີ່ເຊື່ອງໄວ້
+      updateAppViewUI();
     }
 
     /* --- EDIT SYSTEM (ແກ້ໄຂຂໍ້ມູນ ຢູ່ກ້ອງບ໋ອກລາຍລະອຽດ) --- */
@@ -9450,119 +9572,5 @@
       listenToFirebase();
     };
   </script>
-<style>
-  body.map-fs #systemSwitcherBar { display: none !important; }
-  #systemSwitcherBar {
-    position: fixed;
-    left: 50%;
-    bottom: 14px;
-    transform: translateX(-50%);
-    z-index: 9000;
-    max-width: calc(100vw - 24px);
-  }
-  .system-switcher-container {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    border-radius: 9999px;
-    background: rgba(15, 23, 42, 0.92);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(51, 65, 85, 0.85);
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
-    font-family: 'Noto Sans Lao', system-ui, -apple-system, sans-serif;
-    white-space: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .system-switcher-container::-webkit-scrollbar {
-    display: none;
-  }
-  .sys-badge-title {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    border-right: 1px solid rgba(51, 65, 85, 0.7);
-    margin-right: 2px;
-  }
-  .sys-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 13px;
-    border-radius: 9999px;
-    font-size: 12.5px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    color: #e2e8f0;
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(71, 85, 105, 0.4);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  }
-  .sys-btn:hover {
-    color: #ffffff;
-    transform: translateY(-1px);
-    border-color: rgba(148, 163, 184, 0.6);
-  }
-  .sys-btn.active-sys {
-    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
-    color: #ffffff;
-    border-color: #2dd4bf;
-    box-shadow: 0 0 14px rgba(45, 212, 191, 0.45), 0 2px 4px rgba(0, 0, 0, 0.2);
-    cursor: default;
-    pointer-events: none;
-  }
-  .sys-btn.btn-home:hover {
-    background: rgba(51, 65, 85, 0.85);
-  }
-  .sys-btn.btn-usage:hover {
-    background: rgba(2, 132, 199, 0.85);
-    border-color: #38bdf8;
-  }
-  .sys-btn.btn-waste:hover {
-    background: rgba(185, 28, 28, 0.85);
-    border-color: #f87171;
-  }
-</style>
-
-<div id="systemSwitcherBar" aria-label="ແຖບເລືອກລະບົບ">
-  <div class="system-switcher-container">
-    <span class="sys-badge-title">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #2dd4bf;">
-        <rect x="3" y="3" width="7" height="7"></rect>
-        <rect x="14" y="3" width="7" height="7"></rect>
-        <rect x="14" y="14" width="7" height="7"></rect>
-        <rect x="3" y="14" width="7" height="7"></rect>
-      </svg>
-      ເລືອກລະບົບ
-    </span>
-    <a href="index.html" class="sys-btn btn-home" title="ກັບໄປໜ້າຫຼັກເລືອກລະບົບ">
-      <span>🏠</span>
-      <span>ໜ້າຫຼັກ</span>
-    </a>
-    <span class="sys-btn active-sys" title="ລະບົບປະຈຸບັນ: ລະບົບຄຸນນະພາບນ້ຳ">
-      <span>🧪</span>
-      <span>ລະບົບຄຸນນະພາບນ້ຳ</span>
-      <span style="font-size: 9px; padding: 2px 5px; border-radius: 9999px; background: rgba(255,255,255,0.22); margin-left: 2px;">ປັດຈຸບັນ</span>
-    </span>
-    <a href="water-usage.html" class="sys-btn btn-usage" title="ປ່ຽນໄປລະບົບຕິດຕາມຂໍ້ມູນການນໍາໃຊ້ນໍ້າ (ໃຊ້ງານຕໍ່ເນື່ອງໂດຍບໍ່ຕ້ອງ Login ໃໝ່)">
-      <span>💧</span>
-      <span>ລະບົບການນໍາໃຊ້ນໍ້າ</span>
-    </a>
-    <a href="wastewater.html" class="sys-btn btn-waste" title="ປ່ຽນໄປລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ (ໃຊ້ງານຕໍ່ເນື່ອງໂດຍບໍ່ຕ້ອງ Login ໃໝ່)">
-      <span>🏭</span>
-      <span>ລະບົບປ່ອຍນ້ຳເປື້ອນ</span>
-    </a>
-  </div>
-</div>
 </body>
 </html>

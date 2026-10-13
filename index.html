@@ -10,7 +10,25 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;600;700&family=Noto+Serif+Lao:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/400.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/700.css">
   <style>
+    @font-face {
+      font-family: 'Phetsarath OT';
+      src: local('Phetsarath OT'), local('Phetsarath'),
+           url('https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/files/phetsarath-lao-400-normal.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Phetsarath OT';
+      src: local('Phetsarath OT Bold'), local('Phetsarath-Bold'),
+           url('https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/files/phetsarath-lao-700-normal.woff2') format('woff2');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
     :root {
       --river: #0b3a53;     /* ນ້ຳເລິກ */
       --channel: #13667a;   /* ຮ່ອງນ້ຳ */
@@ -22,12 +40,19 @@
       --muted: #587584;
     }
     * { box-sizing: border-box; }
-    html, body { margin: 0; height: 100%; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', 'phetsarath', 'Saysettha OT', 'Noto Sans Lao', serif;
+    }
     body {
-      font-family: 'Noto Sans Lao', system-ui, sans-serif;
+      font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', 'phetsarath', 'Saysettha OT', 'Noto Sans Lao', serif;
       color: var(--ink);
       background: var(--mist);
       line-height: 1.6;
+    }
+    h1, h2, h3, h4, h5, h6, button, input, select, textarea, p, span, a, li, div {
+      font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', 'phetsarath', 'Saysettha OT', 'Noto Sans Lao', serif;
     }
     .page { min-height: 100%; display: grid; grid-template-columns: minmax(320px, 42%) 1fr; }
 
@@ -40,7 +65,7 @@
     .bank .org { font-size: 15px; font-weight: 600; opacity: .85; display: flex; align-items: center; gap: 10px; }
     .bank .org svg { flex: none; }
     .bank h1 {
-      font-family: 'Noto Serif Lao', serif; font-weight: 700;
+      font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', 'Noto Serif Lao', serif; font-weight: 700;
       font-size: clamp(30px, 3.4vw, 46px); line-height: 1.35; margin: 0 0 16px; max-width: 14em; text-wrap: balance;
       position: relative; z-index: 1;
     }

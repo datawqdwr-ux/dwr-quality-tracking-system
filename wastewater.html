@@ -11,20 +11,40 @@
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;500;600;700&family=Noto+Serif+Lao:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;500;600;700&family=Noto+Serif+Lao:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/400.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/700.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style type="text/tailwindcss">
 
-
 @layer base {
+  @font-face {
+    font-family: 'Phetsarath OT';
+    src: local('Phetsarath OT'), local('Phetsarath'),
+         url('https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/files/phetsarath-lao-400-normal.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Phetsarath OT';
+    src: local('Phetsarath OT Bold'), local('Phetsarath-Bold'),
+         url('https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/files/phetsarath-lao-700-normal.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
   *, ::before, ::after {
-    font-family: 'Noto Sans Lao', 'Noto Serif Lao', 'Phetsarath OT', 'Saysettha OT', system-ui, sans-serif;
+    font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', 'Saysettha OT', 'Noto Sans Lao', serif;
   }
   html, body {
-    font-family: 'Noto Sans Lao', 'Noto Serif Lao', 'Phetsarath OT', 'Saysettha OT', system-ui, sans-serif;
+    font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', 'Saysettha OT', 'Noto Sans Lao', serif;
     letter-spacing: 0.01em;
+  }
+  body, button, input, select, textarea, div, span, p, h1, h2, h3, h4, h5, h6, a, table, th, td {
+    font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', 'Saysettha OT', 'Noto Sans Lao', serif;
   }
 }
 
@@ -36,7 +56,7 @@
 }
 .leaflet-popup-content {
   margin: 12px;
-  font-family: 'Noto Sans Lao', system-ui, sans-serif;
+  font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', serif;
   line-height: 1.6;
 }
 
@@ -1464,9 +1484,224 @@ import {
   LogIn
 } from "lucide-react";
 import { jsx, jsxs } from "react/jsx-runtime";
-var Navbar = ({
+var AppSidebar = ({
   activeTab,
   setActiveTab,
+  currentUser,
+  onOpenLogin,
+  onLogout,
+  isSidebarOpen,
+  setIsSidebarOpen
+}) => {
+  const getRoleLabel = (r) => r === "admin" ? "👑 Admin" : r === "officer" ? "🛠️ Staff" : "👁️ ຜູ້ເບິ່ງທົ່ວໄປ";
+
+  return /* @__PURE__ */ jsxs("div", { children: [
+    isSidebarOpen && /* @__PURE__ */ jsx("div", {
+      onClick: () => setIsSidebarOpen(!1),
+      className: "fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 lg:hidden transition-opacity"
+    }),
+    /* @__PURE__ */ jsxs("aside", {
+      className: `fixed lg:sticky top-0 h-screen w-64 xl:w-72 shrink-0 bg-slate-900 text-white z-50 flex flex-col border-r border-slate-800 shadow-2xl lg:shadow-none transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`,
+      children: [
+        /* Sidebar Header & Identity */
+        /* @__PURE__ */ jsxs("div", { className: "p-4 border-b border-slate-800 shrink-0", children: [
+          /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
+            /* @__PURE__ */ jsx("div", { className: "w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-500/20 ring-2 ring-white/10 shrink-0", children: /* @__PURE__ */ jsx("span", { className: "text-xl", children: "🏭" }) }),
+            /* @__PURE__ */ jsxs("div", { className: "min-w-0 flex-1", children: [
+              /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5", children: [
+                /* @__PURE__ */ jsx("h1", { className: "text-sm font-bold text-white tracking-tight truncate", children: "ການປ່ອຍນ້ຳເປື້ອນ" }),
+                /* @__PURE__ */ jsx("span", { className: "text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-400/30", children: "Outfall Portal" })
+              ] }),
+              /* @__PURE__ */ jsx("p", { className: "text-[11px] text-slate-400 truncate", children: "ກົມຄວບຄຸມມົນລະພິດ (DPC)" })
+            ] })
+          ] }),
+          /* ຫ້ອງເລືອກລະບົບ (System Selector Box on Left Sidebar) */
+          /* @__PURE__ */ jsx("div", { className: "mt-3 pt-3 border-t border-slate-800/80", children: [
+            /* @__PURE__ */ jsxs("div", { className: "p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs space-y-2", children: [
+              /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
+                /* @__PURE__ */ jsxs("span", { className: "text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1", children: [
+                  /* @__PURE__ */ jsx("span", { children: "🔄" }),
+                  "ເລືອກລະບົບ"
+                ] }),
+                /* @__PURE__ */ jsxs("a", {
+                  href: "index.html",
+                  className: "text-[10px] font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-0.5 transition",
+                  title: "ກັບໄປໜ້າຫຼັກເລືອກລະບົບທັງໝົດ",
+                  children: [
+                    /* @__PURE__ */ jsx("span", { children: "🏠" }),
+                    "ໜ້າຫຼັກ ↗"
+                  ]
+                })
+              ] }),
+              /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 gap-1", children: [
+                /* Switch to Water Quality */
+                /* @__PURE__ */ jsxs("a", {
+                  href: "water-quality.html",
+                  className: "flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] text-slate-300 hover:text-white hover:bg-slate-800 transition",
+                  title: "ປ່ຽນໄປລະບົບຄຸນນະພາບນ້ຳ",
+                  children: [
+                    /* @__PURE__ */ jsxs("span", { className: "flex items-center gap-1.5 truncate", children: [
+                      /* @__PURE__ */ jsx("span", { children: "🧪" }),
+                      /* @__PURE__ */ jsx("span", { className: "truncate", children: "ຄຸນນະພາບນ້ຳ" })
+                    ] }),
+                    /* @__PURE__ */ jsx("span", { className: "text-[10px] text-slate-500", children: "→" })
+                  ]
+                }),
+                /* Switch to Water Usage */
+                /* @__PURE__ */ jsxs("a", {
+                  href: "water-usage.html",
+                  className: "flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] text-slate-300 hover:text-white hover:bg-slate-800 transition",
+                  title: "ປ່ຽນໄປລະບົບຕິດຕາມຂໍ້ມູນການນຳໃຊ້ນ້ຳ",
+                  children: [
+                    /* @__PURE__ */ jsxs("span", { className: "flex items-center gap-1.5 truncate", children: [
+                      /* @__PURE__ */ jsx("span", { children: "💧" }),
+                      /* @__PURE__ */ jsx("span", { className: "truncate", children: "ການນຳໃຊ້ນ້ຳ" })
+                    ] }),
+                    /* @__PURE__ */ jsx("span", { className: "text-[10px] text-slate-500", children: "→" })
+                  ]
+                }),
+                /* Current: ການປ່ອຍນ້ຳເປື້ອນ */
+                /* @__PURE__ */ jsxs("span", {
+                  className: "flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] bg-gradient-to-r from-rose-500/25 to-rose-600/15 text-rose-300 font-bold border border-rose-500/30 cursor-default",
+                  children: [
+                    /* @__PURE__ */ jsxs("span", { className: "flex items-center gap-1.5 truncate", children: [
+                      /* @__PURE__ */ jsx("span", { children: "🏭" }),
+                      /* @__PURE__ */ jsx("span", { className: "truncate", children: "ການປ່ອຍນ້ຳເປື້ອນ" })
+                    ] }),
+                    /* @__PURE__ */ jsx("span", { className: "text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/30 text-rose-200", children: "ປັດຈຸບັນ" })
+                  ]
+                })
+              ] })
+            ] })
+          ] })
+        ] }),
+        /* Sidebar Navigation Menu (ຫົວຂໍ້ຂອງແຕ່ລະຟັງຊັນ) */
+        /* @__PURE__ */ jsxs("div", { className: "flex-1 overflow-y-auto px-3 py-4 space-y-5 text-xs", children: [
+          /* Group 1: ຕິດຕາມ & ວິເຄາະ */
+          /* @__PURE__ */ jsxs("div", { children: [
+            /* @__PURE__ */ jsx("p", { className: "px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5", children: "📊 ຕິດຕາມ & ວິເຄາະ" }),
+            /* @__PURE__ */ jsxs("nav", { className: "space-y-1", children: [
+              /* Map */
+              /* @__PURE__ */ jsxs("button", {
+                type: "button",
+                onClick: () => { setActiveTab("map"); setIsSidebarOpen(!1); },
+                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "map" ? "bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-bold shadow-md shadow-rose-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
+                children: [
+                  /* @__PURE__ */ jsx("span", { className: "text-base", children: "🗺️" }),
+                  /* @__PURE__ */ jsx("span", { className: "flex-1 truncate", children: "ແຜນທີ່ GIS ສະແດງທີ່ຕັ້ງ" }),
+                  /* @__PURE__ */ jsx("span", { className: "text-[9px] px-1.5 py-0.5 rounded-full bg-rose-900/60 text-rose-300 border border-rose-700/50", children: "GIS" })
+                ]
+              }),
+              /* Table */
+              /* @__PURE__ */ jsxs("button", {
+                type: "button",
+                onClick: () => { setActiveTab("table"); setIsSidebarOpen(!1); },
+                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "table" ? "bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-bold shadow-md shadow-rose-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
+                children: [
+                  /* @__PURE__ */ jsx("span", { className: "text-base", children: "📋" }),
+                  /* @__PURE__ */ jsx("span", { className: "flex-1 truncate", children: "ຖານຂໍ້ມູນໂຄງການ" })
+                ]
+              }),
+              /* Stats */
+              /* @__PURE__ */ jsxs("button", {
+                type: "button",
+                onClick: () => { setActiveTab("stats"); setIsSidebarOpen(!1); },
+                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "stats" ? "bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-bold shadow-md shadow-rose-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
+                children: [
+                  /* @__PURE__ */ jsx("span", { className: "text-base", children: "📊" }),
+                  /* @__PURE__ */ jsx("span", { className: "flex-1 truncate", children: "ສະຖິຕິປະຈໍາປີ" })
+                ]
+              })
+            ] })
+          ] }),
+          /* Group 2: ຈັດການ & ລາຍງານ */
+          /* @__PURE__ */ jsxs("div", { children: [
+            /* @__PURE__ */ jsx("p", { className: "px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5", children: "📁 ຈັດການ & ລາຍງານ" }),
+            /* @__PURE__ */ jsxs("nav", { className: "space-y-1", children: [
+              /* Export */
+              /* @__PURE__ */ jsxs("button", {
+                type: "button",
+                onClick: () => { setActiveTab("export"); setIsSidebarOpen(!1); },
+                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-bold transition-all cursor-pointer ${activeTab === "export" ? "bg-gradient-to-r from-rose-500 to-indigo-600 text-white shadow-md shadow-rose-500/20" : "text-rose-300 bg-rose-950/40 border border-rose-800/40 hover:bg-rose-900/50"}`,
+                children: [
+                  /* @__PURE__ */ jsx("span", { className: "text-base", children: "📥" }),
+                  /* @__PURE__ */ jsx("span", { className: "flex-1 truncate", children: "ສູນສົ່ງອອກລາຍງານ" })
+                ]
+              }),
+              /* Backup */
+              /* @__PURE__ */ jsxs("button", {
+                type: "button",
+                onClick: () => { setActiveTab("backup"); setIsSidebarOpen(!1); },
+                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "backup" ? "bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-bold shadow-md shadow-rose-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
+                children: [
+                  /* @__PURE__ */ jsx("span", { className: "text-base", children: "💾" }),
+                  /* @__PURE__ */ jsx("span", { className: "flex-1 truncate", children: "ແບກອັບ & ກູ້ຄືນ" })
+                ]
+              }),
+              /* Settings */
+              /* @__PURE__ */ jsxs("button", {
+                type: "button",
+                onClick: () => { setActiveTab("settings"); setIsSidebarOpen(!1); },
+                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "settings" ? "bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-bold shadow-md shadow-rose-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
+                children: [
+                  /* @__PURE__ */ jsx("span", { className: "text-base", children: "⚙️" }),
+                  /* @__PURE__ */ jsx("span", { className: "flex-1 truncate", children: "ຕັ້ງຄ່າລະບົບ" })
+                ]
+              })
+            ] })
+          ] }),
+          /* Group 3: ລະບົບອື່ນໆ ຂອງກົມ */
+          /* @__PURE__ */ jsxs("div", { children: [
+            /* @__PURE__ */ jsx("p", { className: "px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5", children: "🌊 ລະບົບອື່ນໆ ໃນກົມ" }),
+            /* @__PURE__ */ jsxs("nav", { className: "space-y-1", children: [
+              /* @__PURE__ */ jsxs("a", {
+                href: "water-quality.html",
+                className: "w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 text-slate-400 hover:text-cyan-300 hover:bg-slate-800 transition-all",
+                children: [
+                  /* @__PURE__ */ jsx("span", { children: "🌊" }),
+                  /* @__PURE__ */ jsx("span", { className: "truncate", children: "ລະບົບຄຸນນະພາບນ້ຳ" })
+                ]
+              }),
+              /* @__PURE__ */ jsxs("a", {
+                href: "water-usage.html",
+                className: "w-full text-left px-3 py-2 rounded-xl flex items-center gap-2.5 text-slate-400 hover:text-sky-300 hover:bg-slate-800 transition-all",
+                children: [
+                  /* @__PURE__ */ jsx("span", { children: "💧" }),
+                  /* @__PURE__ */ jsx("span", { className: "truncate", children: "ລະບົບການນຳໃຊ້ນ້ຳ" })
+                ]
+              })
+            ] })
+          ] })
+        ] }),
+        /* Sidebar Footer (User Profile & Session) */
+        /* @__PURE__ */ jsxs("div", { className: "p-3 border-t border-slate-800 bg-slate-950/40 space-y-2 shrink-0", children: [
+          /* @__PURE__ */ jsxs("div", { className: "px-3 py-2 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-between text-xs", children: [
+            /* @__PURE__ */ jsxs("div", { className: "min-w-0 pr-2", children: [
+              /* @__PURE__ */ jsx("p", { className: "text-rose-400 font-semibold text-[11px] truncate", children: currentUser?.fullName || "ຜູ້ໃຊ້ງານ" }),
+              /* @__PURE__ */ jsxs("span", { className: "font-bold text-white text-[11px] truncate", children: [
+                currentUser?.role === "viewer" ? "👁️ " : "👤 ",
+                getRoleLabel(currentUser?.role || "viewer")
+              ] })
+            ] }),
+            currentUser?.role !== "viewer" ? /* @__PURE__ */ jsx("button", {
+              onClick: onLogout,
+              className: "px-2 py-1 rounded-lg bg-slate-700 hover:bg-rose-500/30 hover:text-rose-200 border border-slate-600 text-slate-200 text-[11px] font-semibold transition shrink-0 cursor-pointer",
+              title: "ອອກຈາກລະບົບ",
+              children: "🚪 ອອກ"
+            }) : /* @__PURE__ */ jsx("button", {
+              onClick: onOpenLogin,
+              className: "px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-semibold transition shrink-0 cursor-pointer",
+              children: "🔑 Login"
+            })
+          ] })
+        ] })
+      ]
+    })
+  ] });
+};
+
+var AppTopBar = ({
+  activeTab,
   onAddNewProject,
   onOpenNotifications,
   onOpenSearch,
@@ -1475,316 +1710,177 @@ var Navbar = ({
   users = [],
   onSwitchUser,
   onOpenLogin,
-  onLogout
+  onLogout,
+  onToggleSidebar
 }) => {
-  let [isUserMenuOpen, setIsUserMenuOpen] = useState(!1), [isSystemMenuOpen, setIsSystemMenuOpen] = useState(!1), userMenuRef = useRef(null), systemMenuRef = useRef(null);
-  return useEffect(() => {
+  let [isUserMenuOpen, setIsUserMenuOpen] = useState(!1), userMenuRef = useRef(null);
+
+  useEffect(() => {
     let handleClickOutside = (event) => {
       userMenuRef.current && !userMenuRef.current.contains(event.target) && setIsUserMenuOpen(!1);
-      systemMenuRef.current && !systemMenuRef.current.contains(event.target) && setIsSystemMenuOpen(!1);
     };
     return document.addEventListener("mousedown", handleClickOutside), () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []), /* @__PURE__ */ jsx("header", { className: "sticky top-0 z-[900] bg-slate-900/95 backdrop-blur-xl border-b border-slate-800 text-white shadow-lg", children: /* @__PURE__ */ jsxs("div", { className: "w-full px-3 sm:px-6 lg:px-8", children: [
-    /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between h-16 gap-3 sm:gap-6", children: [
-      /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3 shrink-0", children: [
-        /* @__PURE__ */ jsxs("div", { className: "relative", children: [
-          /* @__PURE__ */ jsx("div", { className: "w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-500/20 ring-2 ring-white/10", children: /* @__PURE__ */ jsx("span", { className: "text-xl", children: "💧" }) }),
-          /* @__PURE__ */ jsx("span", { className: "absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-900 animate-pulse" })
-        ] }),
-        /* @__PURE__ */ jsxs("div", { className: "flex flex-col sm:flex-row sm:items-baseline sm:gap-2", children: [
-          /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
-            /* @__PURE__ */ jsx("h1", { className: "text-sm sm:text-base font-bold text-white tracking-tight leading-tight whitespace-nowrap", children: "ລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ" }),
-            /* @__PURE__ */ jsx("span", { className: "hidden md:inline-block text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-400/30 whitespace-nowrap", children: "GIS Outfall Portal" })
-          ] }),
-          /* @__PURE__ */ jsx("p", { className: "text-[11px] text-slate-400 hidden lg:inline-block whitespace-nowrap", children: "· ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ • ກົມຄວບຄຸມມົນລະພິດ ແລະ ສິ່ງແວດລ້ອມ" })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxs("nav", { className: "hidden lg:flex items-center gap-1 bg-slate-800/80 p-1.5 rounded-2xl border border-slate-700/60 shadow-inner text-xs font-semibold", children: [
-        /* @__PURE__ */ jsxs(
-          "button",
-          {
-            onClick: () => setActiveTab("map"),
-            className: `px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${activeTab === "map" ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25" : "text-slate-300 hover:text-white hover:bg-slate-750"}`,
-            children: [
-              /* @__PURE__ */ jsx(Map2, { size: 14 }),
-              "ແຜນທີ່ GIS"
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxs(
-          "button",
-          {
-            onClick: () => setActiveTab("table"),
-            className: `px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${activeTab === "table" ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25" : "text-slate-300 hover:text-white hover:bg-slate-750"}`,
-            children: [
-              /* @__PURE__ */ jsx(ListFilter, { size: 14 }),
-              "ຖານຂໍ້ມູນໂຄງການ"
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxs(
-          "button",
-          {
-            onClick: () => setActiveTab("stats"),
-            className: `px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${activeTab === "stats" ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25" : "text-slate-300 hover:text-white hover:bg-slate-750"}`,
-            children: [
-              /* @__PURE__ */ jsx(BarChart3, { size: 14 }),
-              "ສະຖິຕິປະຈໍາປີ"
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxs(
-          "button",
-          {
-            onClick: () => setActiveTab("export"),
-            className: `px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${activeTab === "export" ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25" : "text-slate-300 hover:text-white hover:bg-slate-750"}`,
-            children: [
-              /* @__PURE__ */ jsx(Download, { size: 14 }),
-              "ສົ່ງອອກລາຍງານ"
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxs(
-          "button",
-          {
-            onClick: () => setActiveTab("backup"),
-            className: `px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${activeTab === "backup" ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25" : "text-slate-300 hover:text-white hover:bg-slate-750"}`,
-            children: [
-              /* @__PURE__ */ jsx(Database, { size: 14 }),
-              "ແບກອັບ"
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxs(
-          "button",
-          {
-            onClick: () => setActiveTab("settings"),
-            className: `px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${activeTab === "settings" ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/25" : "text-slate-300 hover:text-white hover:bg-slate-750"}`,
-            children: [
-              /* @__PURE__ */ jsx(Settings, { size: 14 }),
-              "ຕັ້ງຄ່າ"
-            ]
-          }
-        )
-      ] }),
-      /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 sm:gap-3", children: [
-        /* @__PURE__ */ jsxs(
-          "button",
-          {
-            onClick: onOpenSearch,
-            className: "flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 text-slate-300 hover:text-white text-xs transition-colors cursor-pointer",
-            title: "ຄົ້ນຫາດ່ວນ (Ctrl + K)",
-            children: [
-              /* @__PURE__ */ jsx(Search, { size: 14, className: "text-slate-400" }),
-              /* @__PURE__ */ jsx("span", { className: "hidden md:inline font-medium text-slate-300", children: "ຄົ້ນຫາດ່ວນ..." }),
-              /* @__PURE__ */ jsx("kbd", { className: "hidden sm:inline-block px-1.5 py-0.5 rounded bg-slate-700 text-slate-300 font-mono text-[10px]", children: "⌘K" })
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxs(
-          "div",
-          {
-            title: "ເຊື່ອມຕໍ່ລະບົບຕິດຕາມມົນລະພິດສິ່ງແວດລ້ອມ",
-            className: "hidden xl:flex items-center gap-2 px-3 py-1 rounded-xl bg-slate-800/80 border border-slate-700 text-[11px] text-slate-300",
-            children: [
-              /* @__PURE__ */ jsx("span", { className: "w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-xs shadow-emerald-400" }),
-              /* @__PURE__ */ jsx("span", { className: "font-mono text-slate-200 font-medium", children: SYSTEM_ACCOUNT_EMAIL })
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxs(
-          "button",
-          {
-            onClick: onOpenNotifications,
-            className: "relative p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 text-slate-300 hover:text-white transition-colors cursor-pointer",
-            title: "ການແຈ້ງເຕືອນໃບອະນຸຍາດ ແລະ ຄຸນນະພາບນໍ້າ",
-            children: [
-              /* @__PURE__ */ jsx(Bell, { size: 16 }),
-              alertCount > 0 && /* @__PURE__ */ jsx("span", { className: "absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-slate-900 shadow-sm animate-pulse", children: alertCount > 9 ? "9+" : alertCount })
-            ]
-          }
-        ),
-        currentUser.role !== "viewer" && /* @__PURE__ */ jsxs(
-          "button",
-          {
-            onClick: onAddNewProject,
-            className: "flex items-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 active:scale-98 text-white px-3 sm:px-4 py-2 rounded-xl text-xs font-bold shadow-md shadow-sky-500/20 transition-all whitespace-nowrap cursor-pointer",
-            children: [
-              /* @__PURE__ */ jsx(Plus, { size: 16 }),
-              /* @__PURE__ */ jsx("span", { className: "hidden sm:inline", children: "ເພີ່ມໂຄງການ" })
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxs("div", { className: "relative", ref: userMenuRef, children: [
-          /* @__PURE__ */ jsxs(
-            "button",
-            {
-              onClick: () => setIsUserMenuOpen(!isUserMenuOpen),
-              className: "flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 transition-colors text-xs text-slate-200 cursor-pointer",
-              title: "ຄຸ້ມຄອງ ແລະ ສະຫຼັບບັນຊີຜູ້ໃຊ້",
+  }, []);
+
+  const tabTitles = {
+    map: { title: "🗺️ ແຜນທີ່ GIS ສະແດງທີ່ຕັ້ງໂຄງການ ແລະ ຈຸດປ່ອຍນໍ້າເປື້ອນ", sub: "Interactive Outfall Geospatial Map ສະແດງທີ່ຕັ້ງໂຄງການ ແລະ ຈຸດປ່ອຍນໍ້າ" },
+    table: { title: "📋 ຖານຂໍ້ມູນໂຄງການປ່ອຍນໍ້າເປື້ອນ", sub: "ຄົ້ນຫາ, ກວດກາ ແລະ ຈັດການໂຄງການທັງໝົດ" },
+    stats: { title: "📊 ສະຖິຕິການປ່ອຍນ້ຳເປື້ອນປະຈໍາປີ", sub: "ວິເຄາະປະລິມານ ແລະ ຄຸນນະພາບນໍ້າເປື້ອນທີ່ປ່ອຍ" },
+    export: { title: "📥 ສູນສົ່ງອອກລາຍງານ", sub: "ດາວໂຫຼດຂໍ້ມູນ Excel, CSV ແລະ ລາຍງານທາງການ" },
+    backup: { title: "💾 ສຳຮອງ ແລະ ກູ້ຄືນຂໍ້ມູນ (Backup & Restore)", sub: "ຈັດການໄຟລ໌ສຳຮອງຖານຂໍ້ມູນໂຄງການ" },
+    settings: { title: "⚙️ ຕັ້ງຄ່າລະບົບ & ບັນຊີຜູ້ໃຊ້", sub: "ຈັດການສິດທິ, ລະຫັດຜ່ານ ແລະ ຂໍ້ມູນລະບົບ" }
+  };
+  const cur = tabTitles[activeTab] || tabTitles.map;
+
+  return /* @__PURE__ */ jsx("header", {
+    className: "sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-4 sm:px-6 py-2.5 shadow-xs",
+    children: /* @__PURE__ */ jsxs("div", {
+      className: "w-full flex items-center justify-between gap-3",
+      children: [
+        /* Left: Mobile Toggle + Active View Title */
+        /* @__PURE__ */ jsxs("div", {
+          className: "flex items-center gap-3 min-w-0",
+          children: [
+            /* @__PURE__ */ jsx("button", {
+              type: "button",
+              onClick: onToggleSidebar,
+              className: "lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition cursor-pointer",
+              title: "ເປີດເມນູຟັງຊັນ",
+              children: /* @__PURE__ */ jsx("svg", {
+                className: "w-5 h-5",
+                fill: "none",
+                stroke: "currentColor",
+                viewBox: "0 0 24 24",
+                children: /* @__PURE__ */ jsx("path", {
+                  strokeLinecap: "round",
+                  strokeLinejoin: "round",
+                  strokeWidth: "2",
+                  d: "M4 6h16M4 12h16M4 18h16"
+                })
+              })
+            }),
+            /* @__PURE__ */ jsxs("div", {
+              className: "min-w-0",
               children: [
-                /* @__PURE__ */ jsx("div", { className: `w-6 h-6 rounded-lg ${currentUser.avatarColor || "bg-sky-600"} text-white flex items-center justify-center font-bold text-[11px]`, children: currentUser.fullName ? currentUser.fullName.charAt(0) : "U" }),
-                /* @__PURE__ */ jsxs("div", { className: "hidden xl:flex flex-col text-left", children: [
-                  /* @__PURE__ */ jsx("span", { className: "font-semibold text-slate-100 max-w-[110px] truncate leading-tight", children: currentUser.fullName }),
-                  /* @__PURE__ */ jsxs("span", { className: "font-mono text-[9px] text-sky-400 font-bold", children: [
-                    "@",
-                    currentUser.username
-                  ] })
-                ] }),
-                /* @__PURE__ */ jsx(ChevronDown, { size: 12, className: `text-slate-400 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}` })
+                /* @__PURE__ */ jsx("h2", { className: "text-sm sm:text-base font-bold text-slate-800 truncate", children: cur.title }),
+                /* @__PURE__ */ jsx("p", { className: "text-[11px] text-slate-500 hidden sm:block truncate", children: cur.sub })
               ]
-            }
-          ),
-          isUserMenuOpen && /* @__PURE__ */ jsxs("div", { className: "absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-3 z-[1100] animate-in fade-in zoom-in-95 duration-150", children: [
-            /* @__PURE__ */ jsxs("div", { className: "p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 mb-2", children: [
-              /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between mb-1", children: [
-                /* @__PURE__ */ jsxs("span", { className: "font-mono font-bold text-[11px] text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md border border-sky-400/20", children: [
-                  "@",
-                  currentUser.username
-                ] }),
-                /* @__PURE__ */ jsx("span", { className: "text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full uppercase", children: currentUser.role })
-              ] }),
-              /* @__PURE__ */ jsx("p", { className: "font-bold text-xs text-white truncate", children: currentUser.fullName }),
-              /* @__PURE__ */ jsxs("p", { className: "text-[10px] text-slate-400 truncate mt-0.5", children: [
-                currentUser.position || "ວິຊາການ",
-                " • ",
-                currentUser.department
-              ] })
-            ] }),
-            /* @__PURE__ */ jsxs("div", { className: "space-y-1 text-xs", children: [
-              /* @__PURE__ */ jsxs(
-                "button",
-                {
-                  onClick: () => {
-                    setActiveTab("settings"), setIsUserMenuOpen(!1);
-                  },
-                  className: "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-slate-200 hover:text-white hover:bg-slate-800 transition-colors text-left cursor-pointer",
+            })
+          ]
+        }),
+        /* Right: Search, System Status, Alert Bell, Add Project, User */
+        /* @__PURE__ */ jsxs("div", {
+          className: "flex items-center gap-2 sm:gap-3 shrink-0",
+          children: [
+            /* Search */
+            /* @__PURE__ */ jsxs("button", {
+              onClick: onOpenSearch,
+              className: "flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs transition-colors cursor-pointer",
+              title: "ຄົ້ນຫາດ່ວນ (Ctrl + K)",
+              children: [
+                /* @__PURE__ */ jsx(Search, { size: 14, className: "text-slate-500" }),
+                /* @__PURE__ */ jsx("span", { className: "hidden md:inline font-medium text-slate-600", children: "ຄົ້ນຫາດ່ວນ..." }),
+                /* @__PURE__ */ jsx("kbd", { className: "hidden sm:inline-block px-1.5 py-0.5 rounded bg-white text-slate-500 font-mono text-[10px] border border-slate-200", children: "⌘K" })
+              ]
+            }),
+            /* System Account status */
+            /* @__PURE__ */ jsxs("div", {
+              title: "ເຊື່ອມຕໍ່ລະບົບຕິດຕາມມົນລະພິດສິ່ງແວດລ້ອມ",
+              className: "hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-100 border border-slate-200 text-[11px] text-slate-600",
+              children: [
+                /* @__PURE__ */ jsx("span", { className: "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-xs shadow-emerald-400" }),
+                /* @__PURE__ */ jsx("span", { className: "font-mono text-slate-700 font-medium text-[10px]", children: SYSTEM_ACCOUNT_EMAIL })
+              ]
+            }),
+            /* Alert Bell */
+            /* @__PURE__ */ jsxs("button", {
+              onClick: onOpenNotifications,
+              className: "relative p-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-colors cursor-pointer",
+              title: "ການແຈ້ງເຕືອນໃບອະນຸຍາດ ແລະ ຄຸນນະພາບນໍ້າ",
+              children: [
+                /* @__PURE__ */ jsx(Bell, { size: 16 }),
+                alertCount > 0 && /* @__PURE__ */ jsx("span", { className: "absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-sm animate-pulse", children: alertCount > 9 ? "9+" : alertCount })
+              ]
+            }),
+            /* Add Project Button (if authorized) */
+            currentUser?.role !== "viewer" && /* @__PURE__ */ jsxs("button", {
+              onClick: onAddNewProject,
+              className: "flex items-center gap-1.5 bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-400 hover:to-indigo-500 active:scale-98 text-white px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold shadow-md shadow-rose-500/20 transition-all whitespace-nowrap cursor-pointer",
+              children: [
+                /* @__PURE__ */ jsx(Plus, { size: 16 }),
+                /* @__PURE__ */ jsx("span", { className: "hidden sm:inline", children: "ເພີ່ມໂຄງການ" })
+              ]
+            }),
+            /* User dropdown */
+            /* @__PURE__ */ jsxs("div", {
+              className: "relative",
+              ref: userMenuRef,
+              children: [
+                /* @__PURE__ */ jsxs("button", {
+                  onClick: () => setIsUserMenuOpen(!isUserMenuOpen),
+                  className: "flex items-center gap-2 pl-1.5 pr-2 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors text-xs text-slate-700 cursor-pointer",
+                  title: "ຄຸ້ມຄອງ ແລະ ສະຫຼັບບັນຊີຜູ້ໃຊ້",
                   children: [
-                    /* @__PURE__ */ jsx(User, { size: 14, className: "text-sky-400" }),
-                    /* @__PURE__ */ jsx("span", { children: "ຕັ້ງຄ່າບັນຊີ & ລະຫັດຜ່ານ" })
+                    /* @__PURE__ */ jsx("div", { className: `w-6 h-6 rounded-lg ${currentUser?.avatarColor || "bg-rose-600"} text-white flex items-center justify-center font-bold text-[11px]`, children: currentUser?.fullName ? currentUser.fullName.charAt(0) : "U" }),
+                    /* @__PURE__ */ jsxs("div", { className: "hidden xl:flex flex-col text-left", children: [
+                      /* @__PURE__ */ jsx("span", { className: "font-semibold text-slate-800 max-w-[100px] truncate leading-tight text-[11px]", children: currentUser?.fullName || "User" }),
+                      /* @__PURE__ */ jsxs("span", { className: "font-mono text-[9px] text-rose-600 font-bold", children: ["@", currentUser?.username || "guest"] })
+                    ] }),
+                    /* @__PURE__ */ jsx(ChevronDown, { size: 12, className: `text-slate-500 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}` })
                   ]
-                }
-              ),
-              /* @__PURE__ */ jsxs(
-                "button",
-                {
-                  onClick: () => {
-                    setActiveTab("settings"), setIsUserMenuOpen(!1);
-                  },
-                  className: "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-slate-200 hover:text-white hover:bg-slate-800 transition-colors text-left cursor-pointer",
+                }),
+                isUserMenuOpen && /* @__PURE__ */ jsxs("div", {
+                  className: "absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-3 z-[1100] text-white animate-in fade-in zoom-in-95 duration-150",
                   children: [
-                    /* @__PURE__ */ jsx(Users, { size: 14, className: "text-emerald-400" }),
-                    /* @__PURE__ */ jsxs("span", { children: [
-                      "ຈັດການບັນຊີທັງໝົດ (",
-                      users.length,
-                      ")"
+                    /* User Info Box */
+                    /* @__PURE__ */ jsxs("div", { className: "p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 mb-2", children: [
+                      /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between mb-1", children: [
+                        /* @__PURE__ */ jsxs("span", { className: "font-mono font-bold text-[11px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-400/20", children: ["@", currentUser?.username] }),
+                        /* @__PURE__ */ jsx("span", { className: "text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full uppercase", children: currentUser?.role })
+                      ] }),
+                      /* @__PURE__ */ jsx("p", { className: "font-bold text-xs text-white truncate", children: currentUser?.fullName }),
+                      /* @__PURE__ */ jsxs("p", { className: "text-[10px] text-slate-400 truncate mt-0.5", children: [currentUser?.position || "ວິຊາການ", " • ", currentUser?.department || "DPC"] })
+                    ] }),
+                    /* Links */
+                    /* @__PURE__ */ jsxs("div", { className: "space-y-1 text-xs", children: [
+                      onOpenLogin && /* @__PURE__ */ jsxs("button", {
+                        onClick: () => { setIsUserMenuOpen(!1), onOpenLogin(); },
+                        className: "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sky-300 hover:text-white hover:bg-slate-800 transition-colors text-left cursor-pointer",
+                        children: [
+                          /* @__PURE__ */ jsx(LogIn, { size: 14, className: "text-sky-400" }),
+                          /* @__PURE__ */ jsx("span", { children: "ເຂົ້າສູ່ລະບົບດ້ວຍບັນຊີອື່ນ" })
+                        ]
+                      }),
+                      /* @__PURE__ */ jsxs("a", {
+                        href: "water-usage.html",
+                        className: "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sky-300 hover:text-white hover:bg-sky-500/10 transition-colors text-left font-medium",
+                        children: [
+                          /* @__PURE__ */ jsx("span", { className: "text-sm", children: "💧" }),
+                          /* @__PURE__ */ jsx("span", { children: "ໄປລະບົບຕິດຕາມຂໍ້ມູນການນໍາໃຊ້ນໍ້າ" })
+                        ]
+                      })
+                    ] }),
+                    onLogout && /* @__PURE__ */ jsx("div", { className: "mt-2 pt-2 border-t border-slate-800", children: [
+                      /* @__PURE__ */ jsxs("button", {
+                        onClick: () => { setIsUserMenuOpen(!1), onLogout(); },
+                        className: "w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors text-left text-xs cursor-pointer",
+                        children: [
+                          /* @__PURE__ */ jsx(LogIn, { size: 13, className: "rotate-180 text-rose-400" }),
+                          /* @__PURE__ */ jsx("span", { children: "ອອກຈາກລະບົບ (Log Out)" })
+                        ]
+                      })
                     ] })
                   ]
-                }
-              ),
-              onOpenLogin && /* @__PURE__ */ jsxs(
-                "button",
-                {
-                  onClick: () => {
-                    setIsUserMenuOpen(!1), onOpenLogin();
-                  },
-                  className: "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sky-300 hover:text-white hover:bg-slate-800 transition-colors text-left cursor-pointer",
-                  children: [
-                    /* @__PURE__ */ jsx(LogIn, { size: 14, className: "text-sky-400" }),
-                    /* @__PURE__ */ jsx("span", { children: "ເຂົ້າສູ່ລະບົບດ້ວຍບັນຊີອື່ນ" })
-                  ]
-                }
-              )
-            ] }),
-            users.length > 1 && /* @__PURE__ */ jsxs("div", { className: "mt-2 pt-2 border-t border-slate-800", children: [
-              /* @__PURE__ */ jsx("p", { className: "text-[10px] font-semibold text-slate-400 px-2 mb-1", children: "ສະຫຼັບບັນຊີດ່ວນ:" }),
-              /* @__PURE__ */ jsx("div", { className: "space-y-1 max-h-36 overflow-y-auto", children: users.filter((u) => u.id !== currentUser.id).slice(0, 3).map((u) => /* @__PURE__ */ jsxs(
-                "button",
-                {
-                  onClick: () => {
-                    onOpenLogin && onOpenLogin(), setIsUserMenuOpen(!1);
-                  },
-                  className: "w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-850 hover:bg-slate-750 transition-colors text-left text-[11px] text-slate-300 hover:text-white cursor-pointer",
-                  children: [
-                    /* @__PURE__ */ jsx("span", { className: "truncate max-w-[130px] font-medium", children: u.fullName }),
-                    /* @__PURE__ */ jsxs("span", { className: "font-mono text-[10px] text-sky-400 bg-slate-800 px-1.5 py-0.5 rounded", children: [
-                      "@",
-                      u.username
-                    ] })
-                  ]
-                },
-                u.id
-              )) })
-            ] }),
-            onLogout && /* @__PURE__ */ jsx("div", { className: "mt-2 pt-2 border-t border-slate-800", children: /* @__PURE__ */ jsxs(
-              "button",
-              {
-                onClick: () => {
-                  setIsUserMenuOpen(!1), onLogout();
-                },
-                className: "w-full flex items-center gap-2 px-3 py-1.5 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors text-left text-xs cursor-pointer",
-                children: [
-                  /* @__PURE__ */ jsx(LogIn, { size: 13, className: "rotate-180 text-rose-400" }),
-                  /* @__PURE__ */ jsx("span", { children: "ອອກຈາກລະບົບ (Log Out)" })
-                ]
-              }
-            ) })
-          ] })
-        ] })
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxs("div", { className: "lg:hidden flex items-center gap-1.5 py-2.5 overflow-x-auto text-xs border-t border-slate-800 font-medium", children: [
-      /* @__PURE__ */ jsx(
-        "button",
-        {
-          onClick: () => setActiveTab("map"),
-          className: `px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${activeTab === "map" ? "bg-sky-500 text-white font-bold" : "text-slate-400 hover:text-white"}`,
-          children: "🗺️ ແຜນທີ່ GIS"
-        }
-      ),
-      /* @__PURE__ */ jsx(
-        "button",
-        {
-          onClick: () => setActiveTab("table"),
-          className: `px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${activeTab === "table" ? "bg-sky-500 text-white font-bold" : "text-slate-400 hover:text-white"}`,
-          children: "📋 ຖານຂໍ້ມູນ"
-        }
-      ),
-      /* @__PURE__ */ jsx(
-        "button",
-        {
-          onClick: () => setActiveTab("stats"),
-          className: `px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${activeTab === "stats" ? "bg-sky-500 text-white font-bold" : "text-slate-400 hover:text-white"}`,
-          children: "📊 ສະຖິຕິ"
-        }
-      ),
-      /* @__PURE__ */ jsx(
-        "button",
-        {
-          onClick: () => setActiveTab("export"),
-          className: `px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${activeTab === "export" ? "bg-sky-500 text-white font-bold" : "text-slate-400 hover:text-white"}`,
-          children: "📥 ສົ່ງອອກ"
-        }
-      ),
-      /* @__PURE__ */ jsx(
-        "button",
-        {
-          onClick: () => setActiveTab("backup"),
-          className: `px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${activeTab === "backup" ? "bg-sky-500 text-white font-bold" : "text-slate-400 hover:text-white"}`,
-          children: "💾 ແບກອັບ"
-        }
-      ),
-      /* @__PURE__ */ jsx(
-        "button",
-        {
-          onClick: () => setActiveTab("settings"),
-          className: `px-3 py-1.5 rounded-xl whitespace-nowrap transition-all cursor-pointer ${activeTab === "settings" ? "bg-sky-500 text-white font-bold" : "text-slate-400 hover:text-white"}`,
-          children: "⚙️ ຕັ້ງຄ່າ"
-        }
-      )
-    ] })
-  ] }) });
+                })
+              ]
+            })
+          ]
+        })
+      ]
+    })
+  });
 };
+var Navbar = AppTopBar;
 
 // src/components/WaterMap.tsx
 import { useEffect as useEffect2, useRef as useRef2, useState as useState2 } from "react";
@@ -12087,29 +12183,42 @@ function App() {
     setPickingMode(type), setIsFormOpen(!1), setActiveTab("map");
   }, handlePickCoordinate = (lat, lng, type) => {
     setPickedCoordinates({ type, lat, lng }), setPickingMode(null), setIsFormOpen(!0);
-  };
-  return /* @__PURE__ */ jsxs15("div", { className: "min-h-screen bg-slate-100/70 text-slate-900 flex flex-col selection:bg-rose-500 selection:text-white", children: [
+  }, [isSidebarOpen, setIsSidebarOpen] = useState15(!1);
+  return /* @__PURE__ */ jsxs15("div", { className: "min-h-screen flex bg-slate-100 text-slate-850 font-sans selection:bg-rose-500 selection:text-white", children: [
     /* @__PURE__ */ jsx15(
-      Navbar,
+      AppSidebar,
       {
         activeTab,
         setActiveTab,
-        onAddNewProject: () => {
-          setEditingProject(null), setIsFormOpen(!0);
-        },
-        onOpenNotifications: () => {
-          setDirectMessageProject(null), setIsDirectMessageOpen(!0);
-        },
-        onOpenSearch: () => setIsSearchOpen(!0),
-        alertCount: alertStats.total,
         currentUser,
-        users,
-        onSwitchUser: handleSwitchUser,
         onOpenLogin: () => window.showSharedLogin ? window.showSharedLogin() : setIsLoginModalOpen(!0),
-        onLogout: handleLogout
+        onLogout: handleLogout,
+        isSidebarOpen,
+        setIsSidebarOpen
       }
     ),
-    /* @__PURE__ */ jsxs15("main", { className: "flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6", children: [
+    /* @__PURE__ */ jsxs15("div", { className: "flex-1 min-w-0 flex flex-col min-h-screen", children: [
+      /* @__PURE__ */ jsx15(
+        AppTopBar,
+        {
+          activeTab,
+          onAddNewProject: () => {
+            setEditingProject(null), setIsFormOpen(!0);
+          },
+          onOpenNotifications: () => {
+            setDirectMessageProject(null), setIsDirectMessageOpen(!0);
+          },
+          onOpenSearch: () => setIsSearchOpen(!0),
+          alertCount: alertStats.total,
+          currentUser,
+          users,
+          onSwitchUser: handleSwitchUser,
+          onOpenLogin: () => window.showSharedLogin ? window.showSharedLogin() : setIsLoginModalOpen(!0),
+          onLogout: handleLogout,
+          onToggleSidebar: () => setIsSidebarOpen(!0)
+        }
+      ),
+      /* @__PURE__ */ jsxs15("main", { className: "flex-1 w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6", children: [
       alertStats.total > 0 && activeTab !== "backup" && activeTab !== "settings" && /* @__PURE__ */ jsxs15("div", { className: "bg-gradient-to-r from-rose-500/15 via-amber-500/10 to-rose-500/15 border border-rose-300/80 rounded-3xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs", children: [
         /* @__PURE__ */ jsxs15("div", { className: "flex items-center gap-3", children: [
           /* @__PURE__ */ jsx15("span", { className: "p-2 rounded-2xl bg-rose-500 text-white shrink-0 shadow-sm", children: /* @__PURE__ */ jsx15(AlertTriangle8, { size: 18 }) }),
@@ -12255,6 +12364,7 @@ function App() {
         ] })
       ] })
     ] }) }),
+  ] }),
     /* @__PURE__ */ jsx15(
       CommandPalette,
       {
@@ -12559,119 +12669,5 @@ async function offerOldDataImport() {
 setTimeout(() => offerOldDataImport(), 2500);
 
   </script>
-<style>
-  body.map-fs #systemSwitcherBar { display: none !important; }
-  #systemSwitcherBar {
-    position: fixed;
-    left: 50%;
-    bottom: 14px;
-    transform: translateX(-50%);
-    z-index: 9000;
-    max-width: calc(100vw - 24px);
-  }
-  .system-switcher-container {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    border-radius: 9999px;
-    background: rgba(15, 23, 42, 0.92);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(51, 65, 85, 0.85);
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
-    font-family: 'Noto Sans Lao', system-ui, -apple-system, sans-serif;
-    white-space: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .system-switcher-container::-webkit-scrollbar {
-    display: none;
-  }
-  .sys-badge-title {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    border-right: 1px solid rgba(51, 65, 85, 0.7);
-    margin-right: 2px;
-  }
-  .sys-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 13px;
-    border-radius: 9999px;
-    font-size: 12.5px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    color: #e2e8f0;
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(71, 85, 105, 0.4);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  }
-  .sys-btn:hover {
-    color: #ffffff;
-    transform: translateY(-1px);
-    border-color: rgba(148, 163, 184, 0.6);
-  }
-  .sys-btn.active-sys {
-    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
-    color: #ffffff;
-    border-color: #f87171;
-    box-shadow: 0 0 14px rgba(248, 113, 113, 0.45), 0 2px 4px rgba(0, 0, 0, 0.2);
-    cursor: default;
-    pointer-events: none;
-  }
-  .sys-btn.btn-home:hover {
-    background: rgba(51, 65, 85, 0.85);
-  }
-  .sys-btn.btn-usage:hover {
-    background: rgba(2, 132, 199, 0.85);
-    border-color: #38bdf8;
-  }
-  .sys-btn.btn-wq:hover {
-    background: rgba(13, 148, 136, 0.85);
-    border-color: #2dd4bf;
-  }
-</style>
-
-<div id="systemSwitcherBar" aria-label="ແຖບເລືອກລະບົບ">
-  <div class="system-switcher-container">
-    <span class="sys-badge-title">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="color: #f87171;">
-        <rect x="3" y="3" width="7" height="7"></rect>
-        <rect x="14" y="3" width="7" height="7"></rect>
-        <rect x="14" y="14" width="7" height="7"></rect>
-        <rect x="3" y="14" width="7" height="7"></rect>
-      </svg>
-      ເລືອກລະບົບ
-    </span>
-    <a href="index.html" class="sys-btn btn-home" title="ກັບໄປໜ້າຫຼັກເລືອກລະບົບ">
-      <span>🏠</span>
-      <span>ໜ້າຫຼັກ</span>
-    </a>
-    <span class="sys-btn active-sys" title="ລະບົບປະຈຸບັນ: ລະບົບຕິດຕາມໂຄງການປ່ອຍນ້ຳເປື້ອນ">
-      <span>🏭</span>
-      <span>ລະບົບປ່ອຍນ້ຳເປື້ອນ</span>
-      <span style="font-size: 9px; padding: 2px 5px; border-radius: 9999px; background: rgba(255,255,255,0.22); margin-left: 2px;">ປັດຈຸບັນ</span>
-    </span>
-    <a href="water-usage.html" class="sys-btn btn-usage" title="ປ່ຽນໄປລະບົບຕິດຕາມຂໍ້ມູນການນໍາໃຊ້ນໍ້າ (ໃຊ້ງານຕໍ່ເນື່ອງໂດຍບໍ່ຕ້ອງ Login ໃໝ່)">
-      <span>💧</span>
-      <span>ລະບົບການນໍາໃຊ້ນໍ້າ</span>
-    </a>
-    <a href="water-quality.html" class="sys-btn btn-wq" title="ປ່ຽນໄປລະບົບຄຸນນະພາບນ້ຳ (ໃຊ້ງານຕໍ່ເນື່ອງໂດຍບໍ່ຕ້ອງ Login ໃໝ່)">
-      <span>🧪</span>
-      <span>ລະບົບຄຸນນະພາບນ້ຳ</span>
-    </a>
-  </div>
-</div>
 </body>
 </html>
