@@ -953,7 +953,7 @@ function _doExportProjectsToWord(projects, title = "ບົດລາຍງານ�
         <hr style="width: 25%; margin: 8px auto; border-top: 1px solid #333;" />
         <div style="text-align: left; font-size: 12px;">
           ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ<br/>
-          ກົມຊັບພະຍາກອນນໍ້າ<br/>
+          ກົມຊັບພະຍາກອນນໍ້າ (DWR)<br/>
           ລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ (Wastewater Discharge Monitoring System)
         </div>
         <div class="doc-title">${escapeHtml(title)}</div>
@@ -1086,7 +1086,7 @@ function _doPrintProjectsToPDF(projects) {
         <div class="motto">ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</div>
         <div style="font-size: 11px; text-align: left;">
           ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ<br/>
-          ກົມຊັບພະຍາກອນນໍ້າ | ລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ
+          ກົມຊັບພະຍາກອນນໍ້າ (DWR) | ລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ
         </div>
         <div class="title">ບົດລາຍງານສະຫຼຸບ ຂໍ້ມູນໂຄງການ ຫຼື ກິດຈະການ ທີ່ປ່ອຍນໍ້າເປື້ອນ</div>
         <div class="sub">ວັນທີອອກລາຍງານ: ${currentDate} | ລວມທັງໝົດ: ${projects.length} ໂຄງການ</div>
@@ -1117,7 +1117,7 @@ function _doPrintProjectsToPDF(projects) {
           <p>(........................................................)</p>
         </div>
         <div style="text-align: center;">
-          <p><b>ຫົວໜ້າກົມ / ພະແນກ ຊັບພະຍາກອນນໍ້າ</b></p>
+          <p><b>ຫົວໜ້າກົມຊັບພະຍາກອນນໍ້າ (DWR)</b></p>
           <div style="height: 50px;"></div>
           <p>(........................................................)</p>
         </div>
@@ -1127,7 +1127,8 @@ function _doPrintProjectsToPDF(projects) {
   `), printWindow.document.close();
 }
 function escapeHtml(text) {
-  return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;") : "";
+  if (text === null || text === undefined) return "";
+  return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 function getStatusLaoText(status) {
   switch (status) {
@@ -1300,7 +1301,7 @@ function exportAuditLogsToWord(logs, title = "ບົດລາຍງານກາ�
         <div>ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</div>
         <div style="text-align: left; margin-top: 15px; font-size: 10pt;">
           <b>ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ</b><br/>
-          <b>ກົມຊັບພະຍາກອນນໍ້າ</b>
+          <b>ກົມຊັບພະຍາກອນນໍ້າ (DWR)</b>
         </div>
         <div class="title">${escapeHtml(title)}</div>
         <div style="font-size: 10pt; color: #64748b;">
@@ -1418,7 +1419,7 @@ function printAuditLogsToPDF(logs, title = "ບົດລາຍງານການ
         <div class="motto">ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</div>
         <div style="font-size: 11px; text-align: left;">
           ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ<br/>
-          ກົມຊັບພະຍາກອນນໍ້າ | ລະບົບຕິດຕາມການດໍາເນີນງານ Real-time
+          ກົມຊັບພະຍາກອນນໍ້າ (DWR) | ລະບົບຕິດຕາມການດໍາເນີນງານ Real-time
         </div>
         <div class="title">${escapeHtml(title)}</div>
         <div style="font-size: 11px; color: #64748b;">
@@ -1456,7 +1457,7 @@ function printAuditLogsToPDF(logs, title = "ບົດລາຍງານການ
           <p>(........................................................)</p>
         </div>
         <div style="text-align: center;">
-          <p><b>ຫົວໜ້າກົມ / ພະແນກ ຊັບພະຍາກອນນໍ້າ</b></p>
+          <p><b>ຫົວໜ້າກົມຊັບພະຍາກອນນໍ້າ (DWR)</b></p>
           <div style="height: 50px;"></div>
           <p>(........................................................)</p>
         </div>
@@ -1509,7 +1510,7 @@ var AppSidebar = ({
             /* @__PURE__ */ jsx("div", { className: "w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-500/20 ring-2 ring-white/10 shrink-0", children: /* @__PURE__ */ jsx("span", { className: "text-xl", children: "🏭" }) }),
             /* @__PURE__ */ jsxs("div", { className: "min-w-0 flex-1", children: [
               /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5", children: [
-                /* @__PURE__ */ jsx("h1", { className: "text-sm font-bold text-white tracking-tight truncate", children: "ການປ່ອຍນ້ຳເປື້ອນ" }),
+                /* @__PURE__ */ jsx("h1", { className: "text-sm font-bold text-white tracking-tight truncate", children: "ລະບົບການປ່ອຍນ້ຳເປື້ອນ" }),
                 /* @__PURE__ */ jsx("span", { className: "text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-400/30", children: "Outfall Portal" })
               ] }),
               /* @__PURE__ */ jsx("p", { className: "text-[11px] text-slate-400 truncate", children: "ກົມຊັບພະຍາກອນນໍ້າ (DWR)" })
@@ -1950,7 +1951,7 @@ var INITIAL_PROJECTS = [
         { id: "param-4", name: "ອົກຊີເຈນລະລາຍ (DO)", value: 5.8, unit: "mg/L", standard: "≥ 4.0", status: "compliant" }
       ]
     },
-    dischargePlan: "ນໍ້າເສຍຈາກຂະບວນການຕົ້ມ, ລ້າງຂວດ ແລະ ອຸປະກອນ ຖືກລໍາລຽງຜ່ານທໍ່ປິດເຂົ້າສູ່ລະບົບ UASB ເພື່ອດັກຈັບກ໊າຊຊີວະພາບ ຈາກນັ້ນເຂົ້າສູ່ລະບົບ Activated Sludge ແລ້ວຜ່ານອ່າງຕົກຕະກອນໃສ ກ່ອນລະບາຍລົງສູ່ແມ່ນໍ້າຂອງ. ມີການຕິດຕັ້ງເຊັນເຊີ Online Monitoring ວັດແທກຄ່າ pH, DO, TSS ແບບ Real-time ສົ່ງຂໍ້ມູນໃຫ້ກົມຊັບພະຍາກອນນໍ້າ.",
+    dischargePlan: "ນໍ້າເສຍຈາກຂະບວນການຕົ້ມ, ລ້າງຂວດ ແລະ ອຸປະກອນ ຖືກລໍາລຽງຜ່ານທໍ່ປິດເຂົ້າສູ່ລະບົບ UASB ເພື່ອດັກຈັບກ໊າຊຊີວະພາບ ຈາກນັ້ນເຂົ້າສູ່ລະບົບ Activated Sludge ແລ້ວຜ່ານອ່າງຕົກຕະກອນໃສ ກ່ອນລະບາຍລົງສູ່ແມ່ນໍ້າຂອງ. ມີການຕິດຕັ້ງເຊັນເຊີ Online Monitoring ວັດແທກຄ່າ pH, DO, TSS ແບບ Real-time ສົ່ງຂໍ້ມູນໃຫ້ກົມຊັບພະຍາກອນນໍ້າ (DWR).",
     dischargePlanExcel: {
       fileName: "ແຜນການບໍາບັດ_ແລະ_ປ່ອຍນໍ້າເປື້ອນ_Beerlao_2025.xlsx",
       fileSize: 48520,
@@ -2115,7 +2116,7 @@ var INITIAL_PROJECTS = [
         previousExpiryDate: "2011-05-15",
         newExpiryDate: "2016-05-15",
         referenceDocNumber: "ຂໍ້ຕົກລົງເລກທີ 0089/ກຊສ",
-        approvedBy: "ກົມຊັບພະຍາກອນນໍ້າ",
+        approvedBy: "ກົມຊັບພະຍາກອນນໍ້າ (DWR)",
         notes: "ຕໍ່ອາຍຸຄັ້ງທີ 1"
       },
       {
@@ -2125,7 +2126,7 @@ var INITIAL_PROJECTS = [
         previousExpiryDate: "2016-05-15",
         newExpiryDate: "2021-05-15",
         referenceDocNumber: "ຂໍ້ຕົກລົງເລກທີ 0312/ກຊສ",
-        approvedBy: "ກົມຊັບພະຍາກອນນໍ້າ",
+        approvedBy: "ກົມຊັບພະຍາກອນນໍ້າ (DWR)",
         notes: "ຕໍ່ອາຍຸຄັ້ງທີ 2 ພ້ອມກວດກາ TSF"
       },
       {
@@ -2135,7 +2136,7 @@ var INITIAL_PROJECTS = [
         previousExpiryDate: "2021-05-15",
         newExpiryDate: "2026-11-15",
         referenceDocNumber: "ຂໍ້ຕົກລົງເລກທີ 0455/ກຊສ.ຄມ",
-        approvedBy: "ກົມຊັບພະຍາກອນນໍ້າ",
+        approvedBy: "ກົມຊັບພະຍາກອນນໍ້າ (DWR)",
         notes: "ຕໍ່ອາຍຸຄັ້ງທີ 3 ຂະຫຍາຍອາຍຸ 5 ປີ"
       }
     ],
@@ -2250,7 +2251,7 @@ var INITIAL_PROJECTS = [
         previousExpiryDate: "2023-01-10",
         newExpiryDate: "2028-01-09",
         referenceDocNumber: "ຂໍ້ຕົກລົງເລກທີ 0034/ກຊສ.ຄມ",
-        approvedBy: "ກົມຊັບພະຍາກອນນໍ້າ",
+        approvedBy: "ກົມຊັບພະຍາກອນນໍ້າ (DWR)",
         feePaid: 3e6,
         notes: "ຕໍ່ອາຍຸໃບອະນຸຍາດຄັ້ງທີ 1 ຫຼັງຕິດຕັ້ງລະບົບ MBR ສຳເລັດ"
       }
@@ -3685,7 +3686,7 @@ function getProject12MonthInspections(project, months = getLast12Months()) {
       dischargeVolume: vol,
       customValues: customVals,
       status,
-      inspectorName: "ວິຊາການກົມຊັບພະຍາກອນນໍ້າ",
+      inspectorName: "ວິຊາການກົມຊັບພະຍາກອນນໍ້າ (DWR)",
       notes: status === "compliant" ? "ຄຸນນະພາບນໍ້າກ່ອນປ່ອຍຜ່ານມາດຕະຖານແຫ່ງຊາດ" : status === "warning" ? "ຄ່າໃກ້ຄຽງຂີດຈໍາກັດມາດຕະຖານ ຄວນກວດກາລະບົບບໍາບັດເພີ່ມເຕີມ" : "ຄ່າເກີນມາດຕະຖານ ໄດ້ອອກໜັງສືແຈ້ງເຕືອນໃຫ້ປັບປຸງ"
     };
   });
@@ -4100,7 +4101,7 @@ var STORAGE_INDICATORS_KEY = "lao_ww_indicators_config_v2", STORAGE_OVERRIDES_KE
       dischargeVolume: pt.dischargeVolume,
       customValues: indicators.reduce((acc, ind) => (pt[ind.id] !== void 0 && (acc[ind.id] = pt[ind.id]), acc), {}),
       status: pt.status,
-      inspectorName: "ວິຊາການກົມຊັບພະຍາກອນນໍ້າ (ປັບປຸງເອງ)",
+      inspectorName: "ວິຊາການກົມຊັບພະຍາກອນນໍ້າ (DWR - ປັບປຸງເອງ)",
       notes: "ຂໍ້ມູນຜົນກວດກາທີ່ໄດ້ຮັບການປັບປຸງດ້ວຍຕົນເອງ"
     })), updatedProject = {
       ...selectedProjectObj,
@@ -5057,7 +5058,7 @@ var STORAGE_INDICATORS_KEY = "lao_ww_indicators_config_v2", STORAGE_OVERRIDES_KE
         /* @__PURE__ */ jsxs4("div", { className: "pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2", children: [
           /* @__PURE__ */ jsxs4("div", { className: "flex items-center gap-2", children: [
             /* @__PURE__ */ jsx4("div", { className: "w-2.5 h-2.5 rounded-full bg-emerald-500" }),
-            /* @__PURE__ */ jsx4("span", { className: "font-bold text-slate-700", children: "ລະບົບຄຸ້ມຄອງການປ່ອຍນໍ້າເປື້ອນ | ກົມຊັບພະຍາກອນນໍ້າ, ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ" })
+            /* @__PURE__ */ jsx4("span", { className: "font-bold text-slate-700", children: "ລະບົບຄຸ້ມຄອງການປ່ອຍນໍ້າເປື້ອນ | ກົມຊັບພະຍາກອນນໍ້າ (DWR), ກະຊວງຊັບພະຍາກອນທຳມະຊາດ ແລະ ສິ່ງແວດລ້ອມ" })
           ] }),
           /* @__PURE__ */ jsxs4("div", { className: "text-[11px] text-slate-400 font-mono", children: [
             "ເອກະສານປະກອບບົດລາຍງານການປະຊຸມ • ອອກວັນທີ: ",
@@ -6230,7 +6231,7 @@ var ExportReports = ({
           /* @__PURE__ */ jsxs6("div", { children: [
             /* @__PURE__ */ jsx6("div", { className: "w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center text-2xl mb-4", children: /* @__PURE__ */ jsx6(FileText, { size: 28 }) }),
             /* @__PURE__ */ jsx6("h4", { className: "text-base font-bold text-slate-900", children: "ສົ່ງອອກເປັນ Microsoft Word (.doc)" }),
-            /* @__PURE__ */ jsx6("p", { className: "text-xs text-slate-500 mt-2 leading-relaxed", children: "ຮູບແບບເອກະສານທາງການ ພ້ອມຫົວຂໍ້ ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ, ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ, ກົມຊັບພະຍາກອນນໍ້າ, ຕາຕະລາງສັງລວມ ແລະ ຊ່ອງລາຍເຊັນ." }),
+            /* @__PURE__ */ jsx6("p", { className: "text-xs text-slate-500 mt-2 leading-relaxed", children: "ຮູບແບບເອກະສານທາງການ ພ້ອມຫົວຂໍ້ ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ, ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ, ກົມຊັບພະຍາກອນນໍ້າ (DWR), ຕາຕະລາງສັງລວມ ແລະ ຊ່ອງລາຍເຊັນ." }),
             /* @__PURE__ */ jsxs6("div", { className: "mt-4 space-y-1.5 text-[11px] text-slate-600", children: [
               /* @__PURE__ */ jsx6("div", { children: "✅ ຮູບແບບເອກະສານທາງການລັດຖະການ" }),
               /* @__PURE__ */ jsx6("div", { children: "✅ ເປີດແກ້ໄຂໄດ້ໃນ MS Word / LibreOffice" }),
@@ -6475,7 +6476,7 @@ var ExportReports = ({
           /* @__PURE__ */ jsxs6("div", { children: [
             /* @__PURE__ */ jsx6("div", { className: "w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center text-2xl mb-4", children: /* @__PURE__ */ jsx6(FileText, { size: 28 }) }),
             /* @__PURE__ */ jsx6("h4", { className: "text-base font-bold text-slate-900", children: "ສົ່ງອອກບົດລາຍງານ Word (.doc)" }),
-            /* @__PURE__ */ jsx6("p", { className: "text-xs text-slate-500 mt-2 leading-relaxed", children: "ຮູບແບບບົດລາຍງານທາງການ ພ້ອມຫົວຂໍ້ ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ, ກົມຊັບພະຍາກອນນໍ້າ, ຕາຕະລາງສະຫຼຸບການເພີ່ມ-ດັດແກ້-ລຶບ ແລະ ຊ່ອງລົງລາຍເຊັນ." }),
+            /* @__PURE__ */ jsx6("p", { className: "text-xs text-slate-500 mt-2 leading-relaxed", children: "ຮູບແບບບົດລາຍງານທາງການ ພ້ອມຫົວຂໍ້ ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ, ກົມຊັບພະຍາກອນນໍ້າ (DWR), ຕາຕະລາງສະຫຼຸບການເພີ່ມ-ດັດແກ້-ລຶບ ແລະ ຊ່ອງລົງລາຍເຊັນ." }),
             /* @__PURE__ */ jsxs6("div", { className: "mt-4 space-y-1.5 text-[11px] text-slate-600", children: [
               /* @__PURE__ */ jsx6("div", { children: "✅ ຮູບແບບເອກະສານທາງການລັດຖະການ" }),
               /* @__PURE__ */ jsx6("div", { children: "✅ ພ້ອມບົດສະຫຼຸບສັງລວມຕົວເລກ" }),
@@ -6856,7 +6857,7 @@ var SecurityAndSettings = ({
     password: "",
     position: "ວິຊາການຕິດຕາມກວດກາສິ່ງແວດລ້ອມ",
     organization: "ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ",
-    department: "ກົມຊັບພະຍາກອນນໍ້າ",
+    department: "ກົມຊັບພະຍາກອນນໍ້າ (DWR)",
     phone: "",
     email: "",
     role: "officer"
@@ -6907,7 +6908,7 @@ var SecurityAndSettings = ({
       fullName: newUserData.fullName.trim(),
       position: newUserData.position || "ວິຊາການ",
       organization: newUserData.organization || "ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ",
-      department: newUserData.department || "ກົມຊັບພະຍາກອນນໍ້າ",
+      department: newUserData.department || "ກົມຊັບພະຍາກອນນໍ້າ (DWR)",
       phone: newUserData.phone || "",
       email: newUserData.email || `${cleanUsername}@lao.gov`,
       role: newUserData.role || "officer",
@@ -6921,7 +6922,7 @@ var SecurityAndSettings = ({
       password: "",
       position: "ວິຊາການຕິດຕາມກວດກາສິ່ງແວດລ້ອມ",
       organization: "ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ",
-      department: "ກົມຊັບພະຍາກອນນໍ້າ",
+      department: "ກົມຊັບພະຍາກອນນໍ້າ (DWR)",
       phone: "",
       email: "",
       role: "officer"
@@ -9517,7 +9518,7 @@ var ProjectFormModal = ({
                     type: "text",
                     value: newRenewal.approvedBy || "",
                     onChange: (e) => setNewRenewal({ ...newRenewal, approvedBy: e.target.value }),
-                    placeholder: "ກົມຊັບພະຍາກອນນໍ້າ / ພະແນກ ຊສ",
+                    placeholder: "ກົມຊັບພະຍາກອນນໍ້າ (DWR)",
                     className: "w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500"
                   }
                 )
@@ -10457,7 +10458,7 @@ var ProjectDetailModal = ({
   onRenewPermit
 }) => {
   if (!isOpen || !project) return null;
-  let expired = isPermitExpired(project.permitExpiryDate), daysLeft = getDaysUntilExpiry(project.permitExpiryDate), issueTime = new Date(project.permitIssueDate).getTime(), expiryTime = new Date(project.permitExpiryDate).getTime(), nowTime = Date.now(), totalDuration = expiryTime - issueTime, elapsed = nowTime - issueTime, permitPercent = totalDuration > 0 ? Math.min(100, Math.max(0, Math.round(elapsed / totalDuration * 100))) : 100, cleanPhone = project.contactPhone.replace(/\D/g, ""), waLink = cleanPhone ? `https://wa.me/856${cleanPhone.startsWith("0") ? cleanPhone.slice(1) : cleanPhone}` : null, [showQuickRenewModal, setShowQuickRenewModal] = useState10(!1), [isRenewing, setIsRenewing] = useState10(!1), [quickRenewalDate, setQuickRenewalDate] = useState10((/* @__PURE__ */ new Date()).toISOString().split("T")[0]), [quickNewExpiry, setQuickNewExpiry] = useState10(""), [quickRefDoc, setQuickRefDoc] = useState10(""), [quickApprovedBy, setQuickApprovedBy] = useState10("ກົມຊັບພະຍາກອນນໍ້າ"), [quickFee, setQuickFee] = useState10(5e6), [quickNotes, setQuickNotes] = useState10(""), modalChartRef = useRef7(null), [isExportingChart, setIsExportingChart] = useState10(!1), handleExportProjectChart = async () => {
+  let expired = isPermitExpired(project.permitExpiryDate), daysLeft = getDaysUntilExpiry(project.permitExpiryDate), issueTime = new Date(project.permitIssueDate).getTime(), expiryTime = new Date(project.permitExpiryDate).getTime(), nowTime = Date.now(), totalDuration = expiryTime - issueTime, elapsed = nowTime - issueTime, permitPercent = totalDuration > 0 ? Math.min(100, Math.max(0, Math.round(elapsed / totalDuration * 100))) : 100, cleanPhone = project.contactPhone.replace(/\D/g, ""), waLink = cleanPhone ? `https://wa.me/856${cleanPhone.startsWith("0") ? cleanPhone.slice(1) : cleanPhone}` : null, [showQuickRenewModal, setShowQuickRenewModal] = useState10(!1), [isRenewing, setIsRenewing] = useState10(!1), [quickRenewalDate, setQuickRenewalDate] = useState10((/* @__PURE__ */ new Date()).toISOString().split("T")[0]), [quickNewExpiry, setQuickNewExpiry] = useState10(""), [quickRefDoc, setQuickRefDoc] = useState10(""), [quickApprovedBy, setQuickApprovedBy] = useState10("ກົມຊັບພະຍາກອນນໍ້າ (DWR)"), [quickFee, setQuickFee] = useState10(5e6), [quickNotes, setQuickNotes] = useState10(""), modalChartRef = useRef7(null), [isExportingChart, setIsExportingChart] = useState10(!1), handleExportProjectChart = async () => {
     if (!(!modalChartRef.current || !project)) {
       setIsExportingChart(!0);
       try {
@@ -10475,7 +10476,7 @@ var ProjectDetailModal = ({
     }
   }, handleOpenQuickRenewal = () => {
     let curExp = project?.permitExpiryDate || (/* @__PURE__ */ new Date()).toISOString().split("T")[0], d = new Date(curExp), newY = isNaN(d.getFullYear()) ? (/* @__PURE__ */ new Date()).getFullYear() + 5 : d.getFullYear() + 5, m = String(isNaN(d.getMonth()) ? 1 : d.getMonth() + 1).padStart(2, "0"), day = String(isNaN(d.getDate()) ? 1 : d.getDate()).padStart(2, "0");
-    setQuickNewExpiry(`${newY}-${m}-${day}`), setQuickRenewalDate((/* @__PURE__ */ new Date()).toISOString().split("T")[0]), setQuickRefDoc(`ຂໍ້ຕົກລົງເລກທີ ${Math.floor(100 + Math.random() * 900)}/ກຊນ`), setQuickApprovedBy("ກົມຊັບພະຍາກອນນໍ້າ"), setQuickFee(5e6), setQuickNotes("ຜ່ານການກວດກາ WWTP ແລະ ຄຸນນະພາບນໍ້າຖືກຕ້ອງຕາມມາດຕະຖານ"), setShowQuickRenewModal(!0);
+    setQuickNewExpiry(`${newY}-${m}-${day}`), setQuickRenewalDate((/* @__PURE__ */ new Date()).toISOString().split("T")[0]), setQuickRefDoc(`ຂໍ້ຕົກລົງເລກທີ ${Math.floor(100 + Math.random() * 900)}/ກຊສ.ຄມ`), setQuickApprovedBy("ກົມຊັບພະຍາກອນນໍ້າ (DWR)"), setQuickFee(5e6), setQuickNotes("ຜ່ານການກວດກາ WWTP ແລະ ຄຸນນະພາບນໍ້າຖືກຕ້ອງຕາມມາດຕະຖານ"), setShowQuickRenewModal(!0);
   }, handleConfirmQuickRenewal = async () => {
     if (!(!quickNewExpiry || !project)) {
       setIsRenewing(!0);
@@ -11158,7 +11159,7 @@ var ProjectDetailModal = ({
                 type: "text",
                 value: quickApprovedBy,
                 onChange: (e) => setQuickApprovedBy(e.target.value),
-                placeholder: "ກົມຊັບພະຍາກອນນໍ້າ",
+                placeholder: "ກົມຊັບພະຍາກອນນໍ້າ (DWR)",
                 className: "w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500"
               }
             )
@@ -11243,12 +11244,12 @@ var DirectMessagingModal = ({
     project ? (setRecipientName(project.ownerName), setRecipientPhone(project.contactPhone), setRecipientEmail(project.contactEmail || ""), new Date(project.permitExpiryDate).getTime() < Date.now() ? (setMessageType("permit_expiry"), setSubject(`ແຈ້ງເຕືອນດ່ວນ: ໃບອະນຸຍາດປ່ອຍນໍ້າເປື້ອນ ${project.permitNumber} ໝົດອາຍຸແລ້ວ`), setMessage(
       `ຮຽນ: ທ່ານ ${project.ownerName},
 
-ອີງຕາມການຕິດຕາມກວດກາຂອງລະບົບຄຸ້ມຄອງຊັບພະຍາກອນນໍ້າ ແລະ ສິ່ງແວດລ້ອມ, ໃບອະນຸຍາດປ່ອຍນໍ້າເປື້ອນເລກທີ: ${project.permitNumber} ຂອງໂຄງການ "${project.projectName}" ໄດ້ໝົດອາຍຸໃນວັນທີ ${project.permitExpiryDate}.
+ອີງຕາມການຕິດຕາມກວດກາຂອງລະບົບຄຸ້ມຄອງສິ່ງແວດລ້ອມ ແລະ ຊັບພະຍາກອນນໍ້າ, ໃບອະນຸຍາດປ່ອຍນໍ້າເປື້ອນເລກທີ: ${project.permitNumber} ຂອງໂຄງການ "${project.projectName}" ໄດ້ໝົດອາຍຸໃນວັນທີ ${project.permitExpiryDate}.
 
-ກະລຸນາພົວພັນມາຍັງ ກົມຊັບພະຍາກອນນໍ້າ ເພື່ອດໍາເນີນການຕໍ່ອາຍຸໃບອະນຸຍາດ ແລະ ກວດກາລະບົບບໍາບັດນໍ້າເສຍໃຫ້ຖືກຕ້ອງຕາມກົດໝາຍ.
+ກະລຸນາພົວພັນມາຍັງ ກົມຊັບພະຍາກອນນໍ້າ (DWR) ເພື່ອດໍາເນີນການຕໍ່ອາຍຸໃບອະນຸຍາດ ແລະ ກວດກາລະບົບບໍາບັດນໍ້າເສຍໃຫ້ຖືກຕ້ອງຕາມກົດໝາຍ.
 
 ດ້ວຍຄວາມນັບຖື,
-ກົມຊັບພະຍາກອນນໍ້າ, ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ`
+ກົມຊັບພະຍາກອນນໍ້າ (DWR), ກະຊວງຊັບພະຍາກອນທຳມະຊາດ ແລະ ສິ່ງແວດລ້ອມ`
     )) : project.waterQuality.status === "exceeded" ? (setMessageType("quality_alert"), setSubject(`ແຈ້ງເຕືອນດ່ວນ: ຄຸນນະພາບນໍ້າເປື້ອນເກີນມາດຕະຖານ (${project.projectName})`), setMessage(
       `ຮຽນ: ທ່ານ ${project.ownerName},
 
@@ -11257,7 +11258,7 @@ var DirectMessagingModal = ({
 ຂໍໃຫ້ໂຄງການດໍາເນີນການປັບປຸງລະບົບບໍາບັດ ${project.treatmentSystem} ຢ່າງຮີບດ່ວນ ແລະ ລາຍງານມາດຕະການແກ້ໄຂໃຫ້ກົມ ຊສ ພາຍໃນ 7 ວັນ.
 
 ດ້ວຍຄວາມນັບຖື,
-ກົມຊັບພະຍາກອນນໍ້າ`
+ກົມຊັບພະຍາກອນນໍ້າ (DWR)`
     )) : (setMessageType("permit_expiry"), setSubject(`ແຈ້ງເຕືອນລ່ວງໜ້າ: ໃບອະນຸຍາດປ່ອຍນໍ້າເປື້ອນໃກ້ໝົດອາຍຸ (${project.permitNumber})`), setMessage(
       `ຮຽນ: ທ່ານ ${project.ownerName},
 
@@ -11266,7 +11267,7 @@ var DirectMessagingModal = ({
 ກະລຸນາກະກຽມເອກະສານ ແລະ ບົດລາຍງານຜົນວິເຄາະຄຸນນະພາບນໍ້າ ເພື່ອຂໍຕໍ່ອາຍຸລ່ວງໜ້າ ຢ່າງໜ້ອຍ 30 ວັນ.
 
 ດ້ວຍຄວາມນັບຖື,
-ກົມຊັບພະຍາກອນນໍ້າ`
+ກົມຊັບພະຍາກອນນໍ້າ (DWR)`
     ))) : (setRecipientName(""), setRecipientPhone(""), setRecipientEmail(""), setSubject("ແຈ້ງເຕືອນຈາກລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ"), setMessage(""), setMessageType("general"));
   }, [project, isOpen]);
   let applyTemplate = (type) => {
@@ -11278,7 +11279,7 @@ var DirectMessagingModal = ({
 ແຈ້ງເຕືອນໃຫ້ກວດກາລະບົບບໍາບັດ ${project.treatmentSystem} ທີ່ຈຸດປ່ອຍນໍ້າບ້ານ ${project.dischargeLocation.village}. ຂໍໃຫ້ຮັກສາຄ່າ BOD, COD, pH, TSS ບໍ່ໃຫ້ເກີນມາດຕະຖານ.`
     )) : type === "inspection" && (setMessageType("inspection"), setSubject(`ແຈ້ງກໍານົດການລົງກວດກາຈຸດປ່ອຍນໍ້າເສຍພາກສະໜາມ: ${project.projectName}`), setMessage(
       `ຮຽນ: ທ່ານ ${project.ownerName},
-ຄະນະວິຊາການກົມຊັບພະຍາກອນນໍ້າ ຈະລົງຕິດຕາມກວດກາຈຸດປ່ອຍນໍ້າເປື້ອນ ແລະ ເກັບຕົວຢ່າງນໍ້າຢູ່ບ້ານ ${project.dischargeLocation.village}, ເມືອງ ${project.dischargeLocation.district}. ຂໍໃຫ້ອໍານວຍຄວາມສະດວກໃນການລົງພາກສະໜາມ.`
+ຄະນະວິຊາການກົມຊັບພະຍາກອນນໍ້າ (DWR) ຈະລົງຕິດຕາມກວດກາຈຸດປ່ອຍນໍ້າເປື້ອນ ແລະ ເກັບຕົວຢ່າງນໍ້າຢູ່ບ້ານ ${project.dischargeLocation.village}, ເມືອງ ${project.dischargeLocation.district}. ຂໍໃຫ້ອໍານວຍຄວາມສະດວກໃນການລົງພາກສະໜາມ.`
     )));
   }, handleSend = async (e) => {
     if (e.preventDefault(), !recipientPhone || !message) {
@@ -12355,7 +12356,7 @@ function App() {
       )
     ] }),
     /* @__PURE__ */ jsx15("footer", { className: "bg-white border-t border-slate-200 mt-16 py-6 text-center text-xs text-slate-500", children: /* @__PURE__ */ jsxs15("div", { className: "max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3", children: [
-      /* @__PURE__ */ jsx15("div", { children: "ລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ • ກົມຊັບພະຍາກອນນໍ້າ, ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ" }),
+      /* @__PURE__ */ jsx15("div", { children: "ລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ • ກົມຊັບພະຍາກອນນໍ້າ (DWR), ກະຊວງຊັບພະຍາກອນທຳມະຊາດ ແລະ ສິ່ງແວດລ້ອມ" }),
       /* @__PURE__ */ jsxs15("div", { className: "flex items-center gap-2", children: [
         /* @__PURE__ */ jsx15("span", { className: "w-2 h-2 rounded-full bg-emerald-500 animate-pulse" }),
         /* @__PURE__ */ jsxs15("span", { children: [
