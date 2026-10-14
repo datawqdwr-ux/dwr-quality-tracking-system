@@ -1019,9 +1019,14 @@
                 <span>🔍</span>
                 <span>ກັ່ນຕອງປະຫວັດການດຳເນີນງານ (Audit Logs)</span>
               </h4>
-              <button onclick="fetchActivityLogsForExport()" class="text-[11px] text-teal-700 hover:text-teal-900 font-semibold underline cursor-pointer">
-                ໂຫລດຂໍ້ມູນໃໝ່
-              </button>
+              <div class="flex items-center gap-2">
+                <button id="expClearLogsSuperBtn" onclick="clearAllActivityLogs()" class="hidden text-[11px] text-rose-700 hover:text-rose-900 font-semibold bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg cursor-pointer transition" title="ສະເພາະ Super Admin: ລົບປະຫວັດການໃຊ້ງານທັງໝົດ">
+                  🗑️ ລົບປະຫວັດທັງໝົດ (Super Admin)
+                </button>
+                <button onclick="fetchActivityLogsForExport()" class="text-[11px] text-teal-700 hover:text-teal-900 font-semibold underline cursor-pointer">
+                  ໂຫລດຂໍ້ມູນໃໝ່
+                </button>
+              </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -1122,6 +1127,10 @@
             <span>📥</span>
             <span>ສົ່ງອອກລາຍງານ</span>
           </button>
+          <button id="clearAllLogsBtn" onclick="clearAllActivityLogs()" class="hidden px-2.5 py-1 text-xs font-semibold rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 flex items-center gap-1 transition cursor-pointer" title="ສະເພາະ Super Admin: ລົບປະຫວັດການໃຊ້ງານທັງໝົດ">
+            <span>🗑️</span>
+            <span>ລົບປະຫວັດທັງໝົດ (Super Admin)</span>
+          </button>
         </div>
         <button onclick="toggleLogsModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
       </div>
@@ -1135,10 +1144,11 @@
               <th class="p-2.5 border-b">ລະຫັດ/ຂໍ້ມູນ</th>
               <th class="p-2.5 border-b">ຜູ້ດຳເນີນການ (Performed By)</th>
               <th class="p-2.5 border-b">ສິດຜູ້ໃຊ້ (Role)</th>
+              <th id="logActionColHeader" class="p-2.5 border-b text-center hidden">ຈັດການ (Super Admin)</th>
             </tr>
           </thead>
           <tbody id="logsTableBody" class="divide-y divide-slate-100">
-            <tr><td colspan="5" class="p-4 text-center text-slate-400">ກຳລັງໂຫລດຂໍ້ມູນ...</td></tr>
+            <tr><td colspan="6" class="p-4 text-center text-slate-400">ກຳລັງໂຫລດຂໍ້ມູນ...</td></tr>
           </tbody>
         </table>
       </div>
@@ -2018,19 +2028,80 @@
       }
     }
 
+    async function deleteSingleActivityLog(logKey) {
+      if (currentUserRole !== 'SUPER_ADMIN') {
+        return Swal.fire({ icon: 'error', title: 'ບໍ່ມີສິດດຳເນີນການ', text: 'ສະເພາະ Super Admin ເທົ່ານັ້ນທີ່ສາມາດລົບຂໍ້ມູນປະຫວັດການໃຊ້ງານໄດ້' });
+      }
+      const confirmResult = await Swal.fire({
+        title: 'ຢືນຢັນການລົບລາຍການ?',
+        text: 'ທ່ານຕ້ອງການລົບລາຍການປະຫວັດການໃຊ້ງານນີ້ແທ້ບໍ່?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'ແມ່ນ, ລົບເລີຍ',
+        cancelButtonText: 'ຍົກເລີກ'
+      });
+      if (confirmResult.isConfirmed) {
+        try {
+          await db.ref('activity_logs/' + logKey).remove();
+          Swal.fire({ icon: 'success', title: 'ລົບລາຍການສຳເລັດ', timer: 1500, showConfirmButton: false });
+          fetchActivityLogs();
+          if (typeof fetchActivityLogsForExport === 'function') fetchActivityLogsForExport();
+        } catch (err) {
+          console.error(err);
+          Swal.fire({ icon: 'error', title: 'ເກີດຂໍ້ຜິດພາດ', text: err.message });
+        }
+      }
+    }
+
+    async function clearAllActivityLogs() {
+      if (currentUserRole !== 'SUPER_ADMIN') {
+        return Swal.fire({ icon: 'error', title: 'ບໍ່ມີສິດດຳເນີນການ', text: 'ສະເພາະ Super Admin ເທົ່ານັ້ນທີ່ສາມາດລົບຂໍ້ມູນປະຫວັດການໃຊ້ງານໄດ້' });
+      }
+      const confirmResult = await Swal.fire({
+        title: 'ຢືນຢັນການລົບປະຫວັດທັງໝົດ?',
+        text: 'ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບຂໍ້ມູນປະຫວັດການໃຊ້ງານທັງໝົດອອກຈາກລະບົບ? ການກະທຳນີ້ບໍ່ສາມາດກູ້ຄືນໄດ້!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'ແມ່ນ, ລົບທັງໝົດ',
+        cancelButtonText: 'ຍົກເລີກ'
+      });
+      if (confirmResult.isConfirmed) {
+        try {
+          await db.ref('activity_logs').remove();
+          Swal.fire({ icon: 'success', title: 'ລົບຂໍ້ມູນປະຫວັດການໃຊ້ງານທັງໝົດສຳເລັດ', timer: 1800, showConfirmButton: false });
+          fetchActivityLogs();
+          if (typeof fetchActivityLogsForExport === 'function') fetchActivityLogsForExport();
+        } catch (err) {
+          console.error(err);
+          Swal.fire({ icon: 'error', title: 'ເກີດຂໍ້ຜິດພາດ', text: err.message });
+        }
+      }
+    }
+
     function fetchActivityLogs() {
       const tbody = document.getElementById('logsTableBody');
-      tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">ກຳລັງໂຫລດຂໍ້ມູນ...</td></tr>';
+      const isSuper = (currentUserRole === 'SUPER_ADMIN');
+      const colHeader = document.getElementById('logActionColHeader');
+      if (colHeader) colHeader.classList.toggle('hidden', !isSuper);
+      const clearBtn = document.getElementById('clearAllLogsBtn');
+      if (clearBtn) clearBtn.classList.toggle('hidden', !isSuper);
 
-      db.ref('activity_logs').limitToLast(50).once('value', snapshot => {
+      const colspan = isSuper ? 6 : 5;
+      tbody.innerHTML = `<tr><td colspan="${colspan}" class="p-4 text-center text-slate-400">ກຳລັງໂຫລດຂໍ້ມູນ...</td></tr>`;
+
+      db.ref('activity_logs').limitToLast(100).once('value', snapshot => {
         const logs = snapshot.val();
         if (!logs) {
-          tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">ບໍ່ມີປະວັດຂໍ້ມູນ</td></tr>';
+          tbody.innerHTML = `<tr><td colspan="${colspan}" class="p-4 text-center text-slate-400">ບໍ່ມີປະວັດຂໍ້ມູນ</td></tr>`;
           return;
         }
 
         let logsList = [];
-        Object.keys(logs).forEach(k => logsList.push(logs[k]));
+        Object.keys(logs).forEach(k => logsList.push({ ...logs[k], _key: k }));
         logsList.reverse();
 
         tbody.innerHTML = '';
@@ -2052,15 +2123,26 @@
             actionBadge = '<span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded font-bold">✏️ ແກ້ໄຂຂໍ້ມູນຫຼັກ</span>';
           } else if (log.action === 'CLEAR_ALL') {
             actionBadge = '<span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-bold">💣 ລ້າງທັງໝົດ</span>';
+          } else {
+            actionBadge = `<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold">${escapeHtml(log.action || '-')}</span>`;
           }
+
+          const deleteColHtml = isSuper ? `
+            <td class="p-2.5 text-center">
+              <button onclick="deleteSingleActivityLog('${log._key}')" class="px-2 py-1 text-[11px] font-semibold text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-300 rounded-lg transition cursor-pointer" title="ສະເພາະ Super Admin: ລົບລາຍການປະຫວັດນີ້">
+                🗑️ ລົບ
+              </button>
+            </td>
+          ` : '';
 
           tbody.innerHTML += `
             <tr class="hover:bg-slate-50">
-              <td class="p-2.5 font-mono text-slate-500">${log.timestamp || '-'}</td>
+              <td class="p-2.5 font-mono text-slate-500">${escapeHtml(log.timestamp || '-')}</td>
               <td class="p-2.5">${actionBadge}</td>
-              <td class="p-2.5 font-mono font-bold text-slate-700">${log.itemCode || '-'}</td>
-              <td class="p-2.5 font-bold text-amber-900">${log.performedBy || 'ບໍ່ລະບຸ'}</td>
-              <td class="p-2.5 text-slate-500">${log.userRole || '-'}</td>
+              <td class="p-2.5 font-mono font-bold text-slate-700">${escapeHtml(log.itemCode || '-')}</td>
+              <td class="p-2.5 font-bold text-amber-900">${escapeHtml(log.performedBy || 'ບໍ່ລະບຸ')}</td>
+              <td class="p-2.5 text-slate-500">${escapeHtml(log.userRole || '-')}</td>
+              ${deleteColHtml}
             </tr>
           `;
         });
@@ -2117,6 +2199,13 @@
         applyRecorderLock();
         applyImportLock();
       }
+
+      const clearLogsBtn = document.getElementById('clearAllLogsBtn');
+      if (clearLogsBtn) clearLogsBtn.classList.toggle('hidden', currentUserRole !== 'SUPER_ADMIN');
+      const logColHeader = document.getElementById('logActionColHeader');
+      if (logColHeader) logColHeader.classList.toggle('hidden', currentUserRole !== 'SUPER_ADMIN');
+      const expClearBtn = document.getElementById('expClearLogsSuperBtn');
+      if (expClearBtn) expClearBtn.classList.toggle('hidden', currentUserRole !== 'SUPER_ADMIN');
     }
 
     // ຖ້າເຂົ້າລະບົບດ້ວຍບັນຊີສ່ວນຕົວ → ໃສ່ຊື່ຜູ້ບັນທຶກໃຫ້ອັດຕະໂນມັດ ແລະ ລັອກບໍ່ໃຫ້ປ່ຽນ
