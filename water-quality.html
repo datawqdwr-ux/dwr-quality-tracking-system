@@ -241,10 +241,6 @@
               <span class="text-base">📑</span>
               <span class="flex-1 truncate">ບົດວິເຄາະສະຖິຕິປະຈຳປີ</span>
             </button>
-            <button type="button" onclick="toggleLogsModal(); if(window.innerWidth<1024)closeSidebarMobile();" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all cursor-pointer">
-              <span class="text-base">📜</span>
-              <span class="flex-1 truncate">ປະຫວັດການໃຊ້ງານ</span>
-            </button>
             <button type="button" onclick="openExportModal(); if(window.innerWidth<1024)closeSidebarMobile();" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-bold text-teal-300 bg-teal-950/40 border border-teal-800/40 hover:bg-teal-900/50 transition-all cursor-pointer shadow-xs">
               <span class="text-base">📥</span>
               <span class="flex-1 truncate">ສູນສົ່ງອອກລາຍງານ</span>
@@ -1117,128 +1113,209 @@
     </div>
   </div>
 
-  <!-- Modal Activity Logs -->
-  <div id="logsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
-      <div class="flex justify-between items-center border-b pb-3">
-        <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
-          <h3 class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">📜 ປະຫວັດການບັນທຶກ ແລະ ລົບຂໍ້ມູນ (Activity Logs)</h3>
-          <button onclick="toggleLogsModal(); openExportModal('logs');" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 flex items-center gap-1 transition cursor-pointer" title="ສົ່ງອອກບົດລາຍງານປະຫວັດການໃຊ້ງານ">
-            <span>📥</span>
-            <span>ສົ່ງອອກລາຍງານ</span>
+  <!-- Settings Modal (Redesigned in Wastewater System Style with Audit Logs) -->
+  <div id="settingsModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5 z-50 animate-in fade-in duration-150">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full p-5 sm:p-7 shadow-2xl text-slate-100 max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+      
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center pb-4 border-b border-slate-800 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-400/20 text-sky-400 flex items-center justify-center text-xl shadow-xs">
+            ⚙️
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              ຕັ້ງຄ່າລະບົບ (System Administration & Security)
+            </h3>
+            <p class="text-xs text-slate-400">ກຳນົດດັດຊະນີ, ເກນເຕືອນໄພ, ບັນຊີຜູ້ໃຊ້, ປະຫວັດການໃຊ້ງານ ແລະ ຄວາມປອດໄພ</p>
+          </div>
+        </div>
+        <button type="button" onclick="toggleSettingsModal()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition text-lg font-bold cursor-pointer" title="ປິດໜ້າຕ່າງ">&times;</button>
+      </div>
+
+      <!-- Navigation Tabs (Wastewater style) -->
+      <div class="flex items-center gap-2 pt-2 border-b border-slate-800/80 overflow-x-auto text-xs font-semibold shrink-0 pb-3">
+        <button type="button" onclick="switchConfigTab('indicators')" id="tabBtn-indicators" class="flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer bg-sky-500 text-white shadow-md shadow-sky-500/25 font-bold shrink-0">
+          <span>🧪</span>
+          <span>1. ດັດຊະນີ (Indicators)</span>
+        </button>
+        <button type="button" onclick="switchConfigTab('thresholds')" id="tabBtn-thresholds" class="flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 shrink-0">
+          <span>⚠️</span>
+          <span>2. ເກນເຕືອນໄພ (Thresholds)</span>
+        </button>
+        <button type="button" onclick="switchConfigTab('users')" id="tabBtn-users" class="flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 shrink-0">
+          <span>👤</span>
+          <span>3. ບັນຊີຜູ້ໃຊ້ (Users)</span>
+        </button>
+        <button type="button" onclick="switchConfigTab('logs')" id="tabBtn-logs" class="flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 shrink-0">
+          <span>📜</span>
+          <span>4. ປະຫວັດການດໍາເນີນງານ (Audit Logs)</span>
+        </button>
+        <button type="button" onclick="switchConfigTab('exportSecurity')" id="tabBtn-exportSecurity" class="flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 shrink-0">
+          <span>🔒</span>
+          <span>5. ຄວາມປອດໄພ & ດາວໂຫຼດ</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: Indicators -->
+      <div id="tabContent-indicators" class="space-y-4 overflow-y-auto flex-1 pr-1 pt-1">
+        <div class="p-4 rounded-2xl bg-slate-850 border border-slate-800 space-y-3">
+          <div class="flex items-center gap-2 text-xs font-bold text-sky-300">
+            <span>🧪</span>
+            <span>ເພີ່ມດັດຊະນີຄຸນນະພາບນ້ຳໃໝ່ (Add Custom Indicator)</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input type="text" id="newIndName" autocomplete="off" placeholder="ຊື່ດັດຊະນີ (ເຊັ່ນ: pH, BOD, DO, TSS)" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-sky-500">
+            <input type="text" id="newIndUnit" autocomplete="off" placeholder="ຫົວໜ່ວຍ (ເຊັ່ນ: mg/L, °C, NTU)" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-sky-500">
+          </div>
+          <button type="button" onclick="addCustomIndicator()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-md shadow-sky-600/25 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>➕</span>
+            <span>ເພີ່ມ Indicator ເຂົ້າລະບົບ</span>
           </button>
-          <button id="clearAllLogsBtn" onclick="clearAllActivityLogs()" class="hidden px-2.5 py-1 text-xs font-semibold rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 flex items-center gap-1 transition cursor-pointer" title="ສະເພາະ Super Admin: ລົບປະຫວັດການໃຊ້ງານທັງໝົດ">
-            <span>🗑️</span>
-            <span>ລົບປະຫວັດທັງໝົດ (Super Admin)</span>
-          </button>
         </div>
-        <button onclick="toggleLogsModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
-      </div>
-
-      <div class="overflow-y-auto flex-1 border rounded-xl">
-        <table class="w-full text-left text-xs border-collapse">
-          <thead class="bg-slate-100 sticky top-0 text-slate-700">
-            <tr>
-              <th class="p-2.5 border-b">ເວລາ</th>
-              <th class="p-2.5 border-b">ການກະທຳ (Action)</th>
-              <th class="p-2.5 border-b">ລະຫັດ/ຂໍ້ມູນ</th>
-              <th class="p-2.5 border-b">ຜູ້ດຳເນີນການ (Performed By)</th>
-              <th class="p-2.5 border-b">ສິດຜູ້ໃຊ້ (Role)</th>
-              <th id="logActionColHeader" class="p-2.5 border-b text-center hidden">ຈັດການ (Super Admin)</th>
-            </tr>
-          </thead>
-          <tbody id="logsTableBody" class="divide-y divide-slate-100">
-            <tr><td colspan="6" class="p-4 text-center text-slate-400">ກຳລັງໂຫລດຂໍ້ມູນ...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Settings Modal -->
-  <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="text-lg font-bold text-slate-800">⚙️ ຕັ້ງຄ່າລະບົບ (Administrator Config)</h3>
-        <button onclick="toggleSettingsModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
-      </div>
-
-      <div class="flex border-b text-xs font-bold gap-2">
-        <button onclick="switchConfigTab('indicators')" id="tabBtn-indicators" class="py-2 px-3 border-b-2 border-sky-600 text-sky-600">🧪 ເພີ່ມ Indicators</button>
-        <button onclick="switchConfigTab('thresholds')" id="tabBtn-thresholds" class="py-2 px-3 border-b-2 border-transparent text-slate-500">⚠️ ເກນເຕືອນໄພ (Thresholds)</button>
-        <button onclick="switchConfigTab('users')" id="tabBtn-users" class="py-2 px-3 border-b-2 border-transparent text-slate-500">👤 ຜູ້ໃຊ້ (Users)</button>
-        <button onclick="switchConfigTab('exportSecurity')" id="tabBtn-exportSecurity" class="py-2 px-3 border-b-2 border-transparent text-slate-500">🔒 ລະຫັດດາວໂຫຼດ (Export Passcode)</button>
-      </div>
-
-      <div id="tabContent-indicators" class="space-y-3">
-        <div class="flex gap-2">
-          <input type="text" id="newIndName" autocomplete="off" placeholder="ຊື່ດັດຊະນີ (ເຊັ່ນ: pH, BOD)" class="border p-2 rounded-lg text-sm w-1/2 outline-none">
-          <input type="text" id="newIndUnit" autocomplete="off" placeholder="ຫົວໜ່ວຍ (ເຊັ່ນ: mg/L)" class="border p-2 rounded-lg text-sm w-1/2 outline-none">
-        </div>
-        <button onclick="addCustomIndicator()" class="w-full bg-emerald-700 text-white font-medium py-2 rounded-lg text-sm shadow">➕ ເພີ່ມ Indicator</button>
-        <div class="border-t pt-2">
-          <div id="customIndicatorsList" class="text-xs"></div>
+        <div class="pt-2">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-300">ລາຍການດັດຊະນີທັງໝົດໃນລະບົບ</span>
+          </div>
+          <div id="customIndicatorsList" class="text-xs space-y-2 max-h-72 overflow-y-auto p-1 bg-slate-850/60 border border-slate-800 rounded-2xl"></div>
         </div>
       </div>
 
-      <div id="tabContent-thresholds" class="space-y-3 hidden">
-        <div id="dynamicThresholdsContainer" class="grid grid-cols-2 gap-3 text-xs max-h-60 overflow-y-auto p-1"></div>
-        <button onclick="saveThresholdConfig()" class="w-full bg-sky-700 text-white font-medium py-2 rounded-lg text-sm shadow">💾 ບັນທຶກເກນເຕືອນໄພ</button>
+      <!-- Tab 2: Thresholds -->
+      <div id="tabContent-thresholds" class="space-y-4 hidden overflow-y-auto flex-1 pr-1 pt-1">
+        <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs">
+          ⚠️ <b>ເກນເຕືອນໄພຄຸນນະພາບນ້ຳ:</b> ຄ່າທີ່ເກີນ ຫຼື ຕ່ຳກວ່າເກນນີ້ ຈະຖືກໝາຍເປັນສະຖານະແຈ້ງເຕືອນ (Alert) ໃນຕາຕະລາງ ແລະ ແຜນທີ່ໂດຍອັດຕະໂນມັດ.
+        </div>
+        <div id="dynamicThresholdsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs max-h-80 overflow-y-auto p-2 bg-slate-850/60 border border-slate-800 rounded-2xl"></div>
+        <button type="button" onclick="saveThresholdConfig()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-md shadow-sky-600/25 transition cursor-pointer flex items-center justify-center gap-1.5">
+          <span>💾</span>
+          <span>ບັນທຶກເກນເຕືອນໄພ</span>
+        </button>
       </div>
 
-      <div id="tabContent-users" class="space-y-3 hidden">
-        <p class="text-[11px] text-slate-500">ບັນຊີນີ້ໃຊ້ໄດ້ທັງ <b>ລະບົບຄຸນນະພາບນ້ຳ</b> ແລະ <b>ລະບົບການນຳໃຊ້ນ້ຳ</b>. Login ດ້ວຍ <b>ຊື່ເຂົ້າລະບົບ</b> + <b>ລະຫັດຜ່ານ</b>; <b>ຊື່ເຕັມ</b> ຈະສະແດງໃນລະບົບ ແລະ ປະຫວັດ.</p>
-        <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-1">⚠️ ບັນຊີເລີ່ມຕົ້ນ (admin / 9999 ແລະ staff / 1234) ຈະໃຊ້ບໍ່ໄດ້ອີກ ເມື່ອສ້າງຜູ້ໃຊ້ຂອງສິດນັ້ນແລ້ວ. ກະລຸນາສ້າງຜູ້ໃຊ້ Super Admin ໃຫ້ຕົນເອງກ່ອນ ແລະ ຈື່ລະຫັດໄວ້.</p>
-        <div class="flex flex-col gap-2">
-          <div class="flex gap-2">
-            <div class="flex-1">
-              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">🔤 ຊື່ເຂົ້າລະບົບ (ສັ້ນໆ, ໃຊ້ Login)</label>
-              <input type="text" id="newUserName" autocomplete="off" placeholder="ເຊັ່ນ: palami" class="border p-2 rounded-lg text-sm w-full outline-none">
+      <!-- Tab 3: Users -->
+      <div id="tabContent-users" class="space-y-4 hidden overflow-y-auto flex-1 pr-1 pt-1">
+        <p class="text-[11px] text-slate-400">ບັນຊີນີ້ໃຊ້ໄດ້ທັງ <b>ລະບົບຄຸນນະພາບນ້ຳ</b> ແລະ <b>ລະບົບການນຳໃຊ້ນ້ຳ</b>. Login ດ້ວຍ <b>ຊື່ເຂົ້າລະບົບ</b> + <b>ລະຫັດຜ່ານ</b>; <b>ຊື່ເຕັມ</b> ຈະສະແດງໃນລະບົບ ແລະ ປະຫວັດ.</p>
+        <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs">
+          ⚠️ <b>ບັນຊີເລີ່ມຕົ້ນ</b> (admin / 9999 ແລະ staff / 1234) ຈະໃຊ້ບໍ່ໄດ້ອີກ ເມື່ອສ້າງຜູ້ໃຊ້ຂອງສິດນັ້ນແລ້ວ. ກະລຸນາສ້າງຜູ້ໃຊ້ Super Admin ໃຫ້ຕົນເອງກ່ອນ ແລະ ຈື່ລະຫັດໄວ້.
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-850 border border-slate-800 space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-300 mb-1">🔤 ຊື່ເຂົ້າລະບົບ (Username ໃຊ້ Login)</label>
+              <input type="text" id="newUserName" autocomplete="off" placeholder="ເຊັ່ນ: palami" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 w-full outline-none focus:ring-2 focus:ring-sky-500">
             </div>
-            <div class="flex-1">
-              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">🔑 ລະຫັດຜ່ານ</label>
-              <input type="password" id="newUserPass" autocomplete="new-password" placeholder="ຢ່າງນ້ອຍ 4 ໂຕ" class="border p-2 rounded-lg text-sm w-full outline-none">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-300 mb-1">🔑 ລະຫັດຜ່ານ (Password)</label>
+              <input type="password" id="newUserPass" autocomplete="new-password" placeholder="ຢ່າງນ້ອຍ 4 ຕົວອັກສອນ" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 w-full outline-none focus:ring-2 focus:ring-sky-500">
             </div>
           </div>
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 mb-0.5">👤 ຊື່ເຕັມ / ຕຳແໜ່ງ (ສະແດງໃນລະບົບ ແລະ ປະຫວັດ)</label>
-            <input type="text" id="newUserFullName" autocomplete="off" placeholder="ເຊັ່ນ: ນ. ປາລະມີ ແສງບົວພາ, ພະແນກຄຸ້ມຄອງການນຳໃຊ້ນ້ຳ" class="border p-2 rounded-lg text-sm w-full outline-none">
+            <label class="block text-[10px] font-bold text-slate-300 mb-1">👤 ຊື່ເຕັມ / ຕຳແໜ່ງ (ສະແດງໃນລະບົບ ແລະ ປະຫວັດ)</label>
+            <input type="text" id="newUserFullName" autocomplete="off" placeholder="ເຊັ່ນ: ນ. ປາລະມີ ແສງບົວພາ, ວິຊາການຄຸ້ມຄອງຄຸນນະພາບນ້ຳ" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 w-full outline-none focus:ring-2 focus:ring-sky-500">
           </div>
-          <select id="newUserRole" class="border p-2 rounded-lg text-sm outline-none bg-white">
-            <option value="STAFF">🛠️ Staff (ບັນທຶກ/ແກ້ໄຂໄດ້)</option>
-            <option value="SUPER_ADMIN">👑 Super Admin (ທຸກຢ່າງ + ຈັດການຜູ້ໃຊ້)</option>
-            <option value="VIEWER">👁️ ເບິ່ງຢ່າງດຽວ</option>
-          </select>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-300 mb-1">🛡️ ສິດການນຳໃຊ້ (Role)</label>
+            <select id="newUserRole" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white w-full outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
+              <option value="STAFF">🛠️ Staff (ບັນທຶກ/ແກ້ໄຂໄດ້)</option>
+              <option value="SUPER_ADMIN">👑 Super Admin (ທຸກຢ່າງ + ຈັດການຜູ້ໃຊ້ + ລົບປະຫວັດ)</option>
+              <option value="VIEWER">👁️ Viewer (ເບິ່ງຢ່າງດຽວ)</option>
+            </select>
+          </div>
+          <button type="button" onclick="addSystemUser()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-md shadow-indigo-600/25 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>➕</span>
+            <span>ເພີ່ມບັນຊີຜູ້ໃຊ້</span>
+          </button>
         </div>
-        <button onclick="addSystemUser()" class="w-full bg-indigo-700 text-white font-medium py-2 rounded-lg text-sm shadow">➕ ເພີ່ມຜູ້ໃຊ້</button>
-        <div class="border-t pt-2">
-          <ul id="systemUsersList" class="space-y-1 max-h-72 overflow-y-auto"></ul>
+        <div class="pt-2">
+          <ul id="systemUsersList" class="space-y-2 max-h-72 overflow-y-auto"></ul>
         </div>
       </div>
 
-      <div id="tabContent-exportSecurity" class="space-y-4 hidden">
-        <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs space-y-1.5 leading-relaxed">
-          <p class="font-bold flex items-center gap-1.5">
+      <!-- Tab 4: Audit Logs (Wastewater System Design) -->
+      <div id="tabContent-logs" class="space-y-4 hidden flex-1 flex flex-col overflow-hidden min-h-0 pt-1">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800 gap-3 shrink-0">
+          <div>
+            <h4 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+              <span class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-400/20 text-sky-400 flex items-center justify-center text-sm font-bold">📜</span>
+              <span>ປະຫວັດການດໍາເນີນງານໃນລະບົບ (Audit Trail)</span>
+            </h4>
+            <p class="text-xs text-slate-400 mt-0.5">ບັນທຶກທຸກການເຄື່ອນໄຫວ ເຊັ່ນ ການເພີ່ມ, ແກ້ໄຂ, ລຶບຂໍ້ມູນ ຫຼື ການເຂົ້າລະບົບ</p>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button type="button" onclick="toggleSettingsModal(); openExportModal('logs');" class="px-3 py-1.5 rounded-xl bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/30 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer" title="ສົ່ງອອກບົດລາຍງານປະຫວັດການໃຊ້ງານ">
+              <span>📥</span>
+              <span>ສົ່ງອອກລາຍງານ</span>
+            </button>
+            <button type="button" id="clearAllLogsBtn" onclick="clearAllActivityLogs()" class="hidden px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer" title="ສະເພາະ Super Admin: ລົບປະຫວັດການດຳເນີນງານທັງໝົດ">
+              <span>🗑️</span>
+              <span>ລົບປະຫວັດທັງໝົດ (Super Admin)</span>
+            </button>
+            <span id="logCountBadge" class="px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-mono font-bold">0 ລາຍການ</span>
+            <button type="button" onclick="fetchActivityLogs()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 border border-slate-700 text-xs font-semibold cursor-pointer transition" title="ໂຫຼດຂໍ້ມູນໃໝ່">
+              🔄 ໂຫຼດໃໝ່
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="flex flex-col sm:flex-row items-center gap-2 shrink-0">
+          <div class="w-full sm:w-48">
+            <select id="logActionFilter" onchange="filterActivityLogsDisplay()" class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
+              <option value="ALL">ທຸກປະເພດການກະທຳ (ທັງໝົດ)</option>
+              <option value="CREATE">➕ ເພີ່ມຂໍ້ມູນ (Create)</option>
+              <option value="UPDATE">✏️ ແກ້ໄຂຂໍ້ມູນ (Update)</option>
+              <option value="DELETE">🗑️ ລົບຂໍ້ມູນ (Delete)</option>
+              <option value="EXPORT">📥 ສົ່ງອອກລາຍງານ (Export)</option>
+              <option value="IMPORT">📂 ນຳເຂົ້າຂໍ້ມູນ (Import)</option>
+            </select>
+          </div>
+          <div class="w-full sm:flex-1 relative">
+            <input type="text" id="logSearchQuery" oninput="filterActivityLogsDisplay()" placeholder="🔍 ຄົ້ນຫາປະຫວັດ (ຊື່ສະຖານີ, ລະຫັດ, ຜູ້ດຳເນີນການ...)" class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl pl-3 pr-8 py-2 outline-none focus:ring-2 focus:ring-sky-500 placeholder:text-slate-500">
+            <button type="button" onclick="document.getElementById('logSearchQuery').value=''; filterActivityLogsDisplay();" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 text-xs font-bold cursor-pointer">&times;</button>
+          </div>
+        </div>
+
+        <!-- Wastewater style Audit Logs Feed Container -->
+        <div id="logsWastewaterListContainer" class="flex-1 overflow-y-auto divide-y divide-slate-800/80 pr-1 min-h-[220px] max-h-[460px]">
+          <div class="text-center py-12 text-slate-500 text-xs">ກຳລັງໂຫລດຂໍ້ມູນປະຫວັດ...</div>
+        </div>
+
+        <!-- Hidden backward-compatible table for legacy references -->
+        <table class="hidden">
+          <thead>
+            <tr>
+              <th id="logActionColHeader">Action</th>
+            </tr>
+          </thead>
+          <tbody id="logsTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Tab 5: Export Security -->
+      <div id="tabContent-exportSecurity" class="space-y-4 hidden overflow-y-auto flex-1 pr-1 pt-1">
+        <div class="p-4 bg-sky-950/40 border border-sky-800/40 rounded-2xl text-sky-200 text-xs space-y-1.5 leading-relaxed">
+          <p class="font-bold flex items-center gap-1.5 text-sky-300">
             <span>🛡️</span> ນະໂຍບາຍຄວາມປອດໄພການດາວໂຫຼດຂໍ້ມູນ (Data Export Protection):
           </p>
-          <p>
+          <p class="text-slate-300">
             ຜູ້ນຳໃຊ້ທົ່ວໄປ (Viewer) ຫຼື ການເຂົ້າລະບົບທີ່ບໍ່ໄດ້ຜ່ານການລັອກອິນ (Guest) <b>ຈະບໍ່ສາມາດດາວໂຫຼດ ຫຼື ເອົາຂໍ້ມູນອອກຈາກລະບົບໄດ້</b> (ເຊັ່ນ: CSV, Excel, PDF, Word, ຮູບກຣາຟ). ຖ້າຕ້ອງການດາວໂຫຼດ ຕ້ອງໃສ່ລະຫັດທີ່ Super Admin ກຳນົດໄວ້ຢູ່ລຸ່ມນີ້ກ່ອນ.
           </p>
         </div>
 
-        <div class="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <div class="space-y-3 bg-slate-850 p-4 rounded-2xl border border-slate-800">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">🔑 ລະຫັດອະນຸຍາດດາວໂຫຼດຂໍ້ມູນ (Export Passcode)</label>
+            <label class="block text-xs font-bold text-slate-200 mb-1">🔑 ລະຫັດອະນຸຍາດດາວໂຫຼດຂໍ້ມູນ (Export Passcode)</label>
             <div class="flex gap-2">
-              <input type="text" id="exportPasscodeInput" autocomplete="off" placeholder="ກຳນົດລະຫັດດາວໂຫຼດ ເຊັ່ນ: 8888" class="flex-1 border border-slate-300 p-2.5 rounded-lg text-sm font-mono font-bold text-slate-800 outline-none focus:ring-2 focus:ring-sky-500 bg-white">
-              <button type="button" onclick="copyExportPasscode()" class="cursor-pointer px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition" title="ສຳເນົາລະຫັດ">📋 ສຳເນົາ</button>
+              <input type="text" id="exportPasscodeInput" autocomplete="off" placeholder="ກຳນົດລະຫັດດາວໂຫຼດ ເຊັ່ນ: 8888" class="flex-1 border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-sm font-mono font-bold text-sky-300 outline-none focus:ring-2 focus:ring-sky-500">
+              <button type="button" onclick="copyExportPasscode()" class="cursor-pointer px-3.5 py-2 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl transition" title="ສຳເນົາລະຫັດ">📋 ສຳເນົາ</button>
             </div>
-            <p class="text-[11px] text-slate-500 mt-1">ລະຫັດນີ້ຈະຖືກນຳໃຊ້ຮ່ວມກັນທັງ 3 ລະບົບ (ຄຸນນະພາບນ້ຳ, ການນຳໃຊ້ນ້ຳ ແລະ ນ້ຳເປື້ອນ).</p>
+            <p class="text-[11px] text-slate-400 mt-1">ລະຫັດນີ້ຈະຖືກນຳໃຊ້ຮ່ວມກັນທັງ 3 ລະບົບ (ຄຸນນະພາບນ້ຳ, ການນຳໃຊ້ນ້ຳ ແລະ ນ້ຳເປື້ອນ).</p>
           </div>
 
           <div class="pt-2 flex items-center justify-between">
-            <span id="exportSecurityStatusText" class="text-xs text-slate-500"></span>
-            <button onclick="saveExportSecurityConfig()" class="cursor-pointer bg-sky-700 hover:bg-sky-600 text-white font-bold px-5 py-2.5 rounded-lg text-xs shadow transition">
+            <span id="exportSecurityStatusText" class="text-xs text-slate-400"></span>
+            <button type="button" onclick="saveExportSecurityConfig()" class="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md shadow-sky-600/25 transition">
               💾 ບັນທຶກລະຫັດດາວໂຫຼດ
             </button>
           </div>
@@ -1248,6 +1325,22 @@
   </div>
 
   <script>
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    function escAttr(v) {
+      if (v === null || v === undefined) return '';
+      return String(v).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    window.escapeHtml = escapeHtml;
+    window.escAttr = escAttr;
+
     // Header Navigation Dropdown Helpers
     function toggleWqMenu(menuId) {
       const menu = document.getElementById(menuId);
@@ -1992,7 +2085,7 @@
       const list = document.getElementById('systemUsersList');
       if (!list) return;
       if (systemUsers.length === 0) {
-        list.innerHTML = `<p class="text-xs text-slate-400 text-center py-2 bg-slate-50 rounded-lg border border-dashed border-slate-200">ຍັງບໍ່ມີຜູ້ໃຊ້ (ໃຊ້ລະຫັດເລີ່ມຕົ້ນໄປກ່ອນ)</p>`;
+        list.innerHTML = `<p class="text-xs text-slate-400 text-center py-4 bg-slate-800/50 rounded-2xl border border-dashed border-slate-700">ຍັງບໍ່ມີຜູ້ໃຊ້ (ໃຊ້ລະຫັດເລີ່ມຕົ້ນໄປກ່ອນ)</p>`;
         return;
       }
       const saved = JSON.parse(getSharedSessionRaw() || 'null');
@@ -2003,29 +2096,27 @@
           const long = login.length > 30;
           const me = saved && saved.key === u.fbKey;
           return `
-        <li class="flex justify-between items-center gap-2 bg-slate-50 p-2 rounded border text-xs ${long ? 'border-amber-300 bg-amber-50' : ''}">
+        <li class="flex justify-between items-center gap-3 bg-slate-800/80 p-3 rounded-2xl border border-slate-700/80 text-xs ${long ? 'border-amber-500/50 bg-amber-950/20' : ''} hover:border-slate-600 transition">
           <div class="min-w-0">
-            <div class="font-bold text-slate-800 truncate">${escAttr(u.fullName || u.name)}${me ? ' <span class="text-emerald-600">(ທ່ານ)</span>' : ''}</div>
-            <div class="flex flex-wrap items-center gap-1.5 mt-0.5">
-              <span class="font-mono text-[11px] text-indigo-700 truncate max-w-[200px]" title="ຊື່ເຂົ້າລະບົບ">🔤 ${escAttr(login)}</span>
-              <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold ${ROLE_CLASS[u.role] || ROLE_CLASS.VIEWER}">${ROLE_LABEL[u.role] || ROLE_LABEL.VIEWER}</span>
+            <div class="font-bold text-white truncate text-sm">${escAttr(u.fullName || u.name)}${me ? ' <span class="text-emerald-400 text-xs font-semibold">(ທ່ານ)</span>' : ''}</div>
+            <div class="flex flex-wrap items-center gap-2 mt-1">
+              <span class="font-mono text-[11px] text-sky-300 truncate max-w-[220px] bg-slate-900/60 px-2 py-0.5 rounded-lg border border-slate-700" title="ຊື່ເຂົ້າລະບົບ">🔤 @${escAttr(login)}</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${ROLE_CLASS[u.role] || ROLE_CLASS.VIEWER}">${ROLE_LABEL[u.role] || ROLE_LABEL.VIEWER}</span>
             </div>
-            ${long ? '<div class="text-[10px] text-amber-700 mt-0.5">⚠️ ຊື່ເຂົ້າລະບົບຍາວເກີນ — ກົດ ✏️ ແລ້ວຕັ້ງຊື່ສັ້ນໆ</div>' : ''}
+            ${long ? '<div class="text-[10px] text-amber-300 mt-1">⚠️ ຊື່ເຂົ້າລະບົບຍາວເກີນ — ກົດ ✏️ ແກ້ໄຂແລ້ວຕັ້ງຊື່ສັ້ນໆ</div>' : ''}
           </div>
           <div class="flex items-center gap-2 shrink-0">
-            <button onclick="editSystemUser('${u.fbKey}')" class="px-2 py-1 rounded border border-indigo-200 bg-white text-indigo-700 font-bold hover:bg-indigo-50">✏️ ແກ້ໄຂ</button>
-            ${me ? '' : `<button data-name="${escAttr(u.fullName || u.name)}" onclick="removeSystemUser('${u.fbKey}', this.dataset.name)" class="text-rose-600 font-bold">ລົບ</button>`}
+            <button type="button" onclick="editSystemUser('${u.fbKey}')" class="px-2.5 py-1.5 rounded-xl border border-sky-500/30 bg-sky-500/10 text-sky-300 font-bold hover:bg-sky-500/20 text-xs cursor-pointer transition">✏️ ແກ້ໄຂ</button>
+            ${me ? '' : `<button type="button" data-name="${escAttr(u.fullName || u.name)}" onclick="removeSystemUser('${u.fbKey}', this.dataset.name)" class="px-2.5 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 font-bold hover:bg-rose-500/20 text-xs cursor-pointer transition">🗑️ ລົບ</button>`}
           </div>
         </li>`;
         }).join('');
     }
 
+    let cachedActivityLogsList = [];
+
     function toggleLogsModal() {
-      const modal = document.getElementById('logsModal');
-      modal.classList.toggle('hidden');
-      if (!modal.classList.contains('hidden')) {
-        fetchActivityLogs();
-      }
+      toggleSettingsModal('logs');
     }
 
     async function deleteSingleActivityLog(logKey) {
@@ -2061,7 +2152,7 @@
       }
       const confirmResult = await Swal.fire({
         title: 'ຢືນຢັນການລົບປະຫວັດທັງໝົດ?',
-        text: 'ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບຂໍ້ມູນປະຫວັດການໃຊ້ງານທັງໝົດອອກຈາກລະບົບ? ການກະທຳນີ້ບໍ່ສາມາດກູ້ຄືນໄດ້!',
+        text: 'ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບຂໍ້ມູນປະຫວັດການໃຊ້ງານທັງໝົດອອກຈາກລະບົບ? ການກະທຳນີ້ສະເພາະ Super Admin ເທົ່ານັ້ນ ແລະ ບໍ່ສາມາດກູ້ຄືນໄດ້!',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#e11d48',
@@ -2083,70 +2174,154 @@
     }
 
     function fetchActivityLogs() {
+      const container = document.getElementById('logsWastewaterListContainer');
       const tbody = document.getElementById('logsTableBody');
       const isSuper = (currentUserRole === 'SUPER_ADMIN');
-      const colHeader = document.getElementById('logActionColHeader');
-      if (colHeader) colHeader.classList.toggle('hidden', !isSuper);
       const clearBtn = document.getElementById('clearAllLogsBtn');
       if (clearBtn) clearBtn.classList.toggle('hidden', !isSuper);
 
-      const colspan = isSuper ? 6 : 5;
-      tbody.innerHTML = `<tr><td colspan="${colspan}" class="p-4 text-center text-slate-400">ກຳລັງໂຫລດຂໍ້ມູນ...</td></tr>`;
+      if (container) {
+        container.innerHTML = '<div class="text-center py-12 text-slate-400 text-xs">ກຳລັງໂຫລດຂໍ້ມູນປະຫວັດ...</div>';
+      }
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">ກຳລັງໂຫລດຂໍ້ມູນ...</td></tr>';
+      }
 
-      db.ref('activity_logs').limitToLast(100).once('value', snapshot => {
+      db.ref('activity_logs').limitToLast(200).once('value', snapshot => {
         const logs = snapshot.val();
-        if (!logs) {
-          tbody.innerHTML = `<tr><td colspan="${colspan}" class="p-4 text-center text-slate-400">ບໍ່ມີປະວັດຂໍ້ມູນ</td></tr>`;
-          return;
+        cachedActivityLogsList = [];
+        if (logs) {
+          Object.keys(logs).forEach(k => cachedActivityLogsList.push({ ...logs[k], _key: k }));
+          cachedActivityLogsList.reverse();
+        }
+        filterActivityLogsDisplay();
+      }).catch(err => {
+        console.error('Error fetching logs:', err);
+        if (container) container.innerHTML = `<div class="text-center py-12 text-rose-400 text-xs">ເກີດຂໍ້ຜິດພາດໃນການໂຫລດຂໍ້ມູນ: ${escapeHtml(err.message)}</div>`;
+      });
+    }
+
+    function filterActivityLogsDisplay() {
+      const container = document.getElementById('logsWastewaterListContainer');
+      const tbody = document.getElementById('logsTableBody');
+      const isSuper = (currentUserRole === 'SUPER_ADMIN');
+      const actFilter = document.getElementById('logActionFilter')?.value || 'ALL';
+      const search = (document.getElementById('logSearchQuery')?.value || '').toLowerCase().trim();
+
+      const clearBtn = document.getElementById('clearAllLogsBtn');
+      if (clearBtn) clearBtn.classList.toggle('hidden', !isSuper || cachedActivityLogsList.length === 0);
+
+      const filtered = cachedActivityLogsList.filter(log => {
+        const act = String(log.action || '').toUpperCase();
+        if (actFilter === 'CREATE' && !(act.includes('CREATE') || act.includes('ADD') || act.includes('ເພີ່ມ'))) return false;
+        if (actFilter === 'UPDATE' && !(act.includes('UPDATE') || act.includes('EDIT') || act.includes('ແກ້ໄຂ') || act.includes('ບັນທຶກ'))) return false;
+        if (actFilter === 'DELETE' && !(act.includes('DELETE') || act.includes('REMOVE') || act.includes('ລົບ') || act.includes('CLEAR'))) return false;
+        if (actFilter === 'EXPORT' && !(act.includes('EXPORT') || act.includes('ສົ່ງອອກ') || act.includes('REPORT'))) return false;
+        if (actFilter === 'IMPORT' && !(act.includes('IMPORT') || act.includes('ນຳເຂົ້າ') || act.includes('MERGE'))) return false;
+
+        if (search) {
+          const matchUser = String(log.performedBy || '').toLowerCase().includes(search);
+          const matchCode = String(log.itemCode || '').toLowerCase().includes(search);
+          const matchAct = String(log.action || '').toLowerCase().includes(search);
+          const matchRole = String(log.userRole || '').toLowerCase().includes(search);
+          const matchDetails = String(log.details || '').toLowerCase().includes(search);
+          if (!matchUser && !matchCode && !matchAct && !matchRole && !matchDetails) return false;
+        }
+        return true;
+      });
+
+      const countBadge = document.getElementById('logCountBadge');
+      if (countBadge) countBadge.innerText = `${filtered.length} / ${cachedActivityLogsList.length} ລາຍການ`;
+
+      if (!container) return;
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="text-center py-12 text-slate-500 text-xs">ຍັງບໍ່ມີປະຫວັດການເຄື່ອນໄຫວທີ່ກົງກັບເງື່ອນໄຂ</div>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">ບໍ່ພົບຂໍ້ມູນ</td></tr>';
+        return;
+      }
+
+      // Render wastewater-styled cards list
+      container.innerHTML = filtered.map(log => {
+        const act = String(log.action || '').toUpperCase();
+        let iconHtml = '📜';
+        let iconBadgeClass = 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+        let actionLabel = escapeHtml(log.action || 'ດຳເນີນການ');
+
+        if (act.includes('DELETE') || act.includes('REMOVE') || act.includes('ລົບ') || act.includes('CLEAR')) {
+          iconHtml = '🗑️';
+          iconBadgeClass = 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
+          if (log.action === 'DELETE_INDICATOR') actionLabel = 'ລົບໂຕຊີ້ວັດ';
+          else if (log.action === 'DELETE_STATION') actionLabel = 'ລົບສະຖານີຍ່ອຍ';
+          else if (log.action === 'DELETE') actionLabel = 'ລົບຊຸດຂໍ້ມູນ';
+          else if (log.action === 'CLEAR_ALL') actionLabel = 'ລ້າງຂໍ້ມູນທັງໝົດ';
+        } else if (act.includes('CREATE') || act.includes('ADD') || act.includes('ເພີ່ມ')) {
+          iconHtml = '➕';
+          iconBadgeClass = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+          actionLabel = 'ບັນທຶກຂໍ້ມູນໃໝ່';
+        } else if (act.includes('UPDATE') || act.includes('EDIT') || act.includes('ແກ້ໄຂ') || act.includes('ບັນທຶກ')) {
+          iconHtml = '✏️';
+          iconBadgeClass = 'bg-sky-500/10 text-sky-400 border border-sky-500/20';
+          if (log.action === 'EDIT_STATION') actionLabel = 'ແກ້ໄຂສະຖານີ';
+          else if (log.action === 'EDIT_MASTER') actionLabel = 'ແກ້ໄຂຂໍ້ມູນຫຼັກ';
+        } else if (act.includes('MERGE') || act.includes('IMPORT') || act.includes('ນຳເຂົ້າ')) {
+          iconHtml = '📂';
+          iconBadgeClass = 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
+          actionLabel = 'ລວມ / ນຳເຂົ້າຂໍ້ມູນ';
+        } else if (act.includes('EXPORT') || act.includes('ສົ່ງອອກ') || act.includes('REPORT')) {
+          iconHtml = '📥';
+          iconBadgeClass = 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
+          actionLabel = 'ສົ່ງອອກລາຍງານ';
         }
 
-        let logsList = [];
-        Object.keys(logs).forEach(k => logsList.push({ ...logs[k], _key: k }));
-        logsList.reverse();
+        const deleteBtnHtml = isSuper ? `
+          <button type="button" onclick="deleteSingleActivityLog('${log._key}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/15 border border-transparent hover:border-rose-500/30 transition cursor-pointer" title="ລົບລາຍການນີ້ (Super Admin)">
+            🗑️
+          </button>
+        ` : '';
 
-        tbody.innerHTML = '';
-        logsList.forEach(log => {
-          let actionBadge = '';
-          if (log.action === 'DELETE_INDICATOR') {
-            actionBadge = '<span class="bg-rose-200 text-rose-900 px-2 py-0.5 rounded font-bold">🗑️ ລົບໂຕຊີ້ວັດຖາວອນ</span>';
-          } else if (log.action === 'MERGE') {
-            actionBadge = '<span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded font-bold">🔗 ລວມຂໍ້ມູນ</span>';
-          } else if (log.action === 'CREATE') {
-            actionBadge = '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">🟢 ບັນທຶກ (CREATE)</span>';
-          } else if (log.action === 'DELETE') {
-            actionBadge = '<span class="bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-bold">🔴 ລົບທັງໝົດ</span>';
-          } else if (log.action === 'DELETE_STATION') {
-            actionBadge = '<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold">🟠 ລົບສະຖານີຍ່ອຍ</span>';
-          } else if (log.action === 'EDIT_STATION') {
-            actionBadge = '<span class="bg-sky-100 text-sky-800 px-2 py-0.5 rounded font-bold">✏️ ແກ້ໄຂສະຖານີ</span>';
-          } else if (log.action === 'EDIT_MASTER') {
-            actionBadge = '<span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded font-bold">✏️ ແກ້ໄຂຂໍ້ມູນຫຼັກ</span>';
-          } else if (log.action === 'CLEAR_ALL') {
-            actionBadge = '<span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-bold">💣 ລ້າງທັງໝົດ</span>';
-          } else {
-            actionBadge = `<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold">${escapeHtml(log.action || '-')}</span>`;
-          }
+        return `
+          <div class="py-3 flex items-start justify-between gap-3 text-xs hover:bg-slate-850/50 px-2.5 rounded-2xl transition">
+            <div class="flex items-start gap-3 min-w-0 flex-1">
+              <div class="w-8 h-8 rounded-xl ${iconBadgeClass} flex items-center justify-center shrink-0 mt-0.5 text-sm font-bold shadow-xs">
+                ${iconHtml}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="font-semibold text-slate-200 flex items-center gap-2 flex-wrap">
+                  <span>${actionLabel}</span>
+                  ${log.itemCode ? `<span class="font-mono text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-sky-300 border border-slate-700/80">${escapeHtml(log.itemCode)}</span>` : ''}
+                </div>
+                <div class="text-[11px] text-slate-400 mt-1 flex items-center gap-2 flex-wrap">
+                  <span>ຜູ້ດຳເນີນການ: <strong class="text-slate-300 font-medium">${escapeHtml(log.performedBy || 'ບໍ່ລະບຸ')}</strong></span>
+                  <span>•</span>
+                  <span>ສິດ: <span class="text-sky-300 font-medium">${escapeHtml(log.userRole || '-')}</span></span>
+                  ${log.details ? `<span>•</span><span class="text-slate-300">${escapeHtml(log.details)}</span>` : ''}
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <div class="text-[10px] text-slate-400 font-mono text-right whitespace-nowrap">
+                ${escapeHtml(log.timestamp || '-')}
+              </div>
+              ${deleteBtnHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
 
-          const deleteColHtml = isSuper ? `
-            <td class="p-2.5 text-center">
-              <button onclick="deleteSingleActivityLog('${log._key}')" class="px-2 py-1 text-[11px] font-semibold text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-300 rounded-lg transition cursor-pointer" title="ສະເພາະ Super Admin: ລົບລາຍການປະຫວັດນີ້">
-                🗑️ ລົບ
-              </button>
-            </td>
-          ` : '';
-
-          tbody.innerHTML += `
-            <tr class="hover:bg-slate-50">
-              <td class="p-2.5 font-mono text-slate-500">${escapeHtml(log.timestamp || '-')}</td>
-              <td class="p-2.5">${actionBadge}</td>
-              <td class="p-2.5 font-mono font-bold text-slate-700">${escapeHtml(log.itemCode || '-')}</td>
-              <td class="p-2.5 font-bold text-amber-900">${escapeHtml(log.performedBy || 'ບໍ່ລະບຸ')}</td>
-              <td class="p-2.5 text-slate-500">${escapeHtml(log.userRole || '-')}</td>
-              ${deleteColHtml}
-            </tr>
-          `;
-        });
-      });
+      // Also update hidden tbody if needed
+      if (tbody) {
+        tbody.innerHTML = filtered.map(log => `
+          <tr class="hover:bg-slate-50">
+            <td class="p-2.5 font-mono text-slate-500">${escapeHtml(log.timestamp || '-')}</td>
+            <td class="p-2.5">${escapeHtml(log.action || '-')}</td>
+            <td class="p-2.5 font-mono font-bold text-slate-700">${escapeHtml(log.itemCode || '-')}</td>
+            <td class="p-2.5 font-bold text-amber-900">${escapeHtml(log.performedBy || 'ບໍ່ລະບຸ')}</td>
+            <td class="p-2.5 text-slate-500">${escapeHtml(log.userRole || '-')}</td>
+            ${isSuper ? `<td class="p-2.5 text-center"><button onclick="deleteSingleActivityLog('${log._key}')">ລົບ</button></td>` : ''}
+          </tr>
+        `).join('');
+      }
     }
 
     function updateRBACUI() {
@@ -2323,28 +2498,40 @@
     });
 
     function switchConfigTab(tabName) {
-      ['indicators', 'thresholds', 'users', 'exportSecurity'].forEach(t => {
+      const allTabs = ['indicators', 'thresholds', 'users', 'logs', 'exportSecurity'];
+      allTabs.forEach(t => {
         const c = document.getElementById(`tabContent-${t}`);
         const b = document.getElementById(`tabBtn-${t}`);
         if (c) c.classList.add('hidden');
-        if (b) b.className = "py-2 px-3 border-b-2 border-transparent text-slate-500";
+        if (b) b.className = "flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 shrink-0 font-semibold";
       });
       const activeC = document.getElementById(`tabContent-${tabName}`);
       const activeB = document.getElementById(`tabBtn-${tabName}`);
       if (activeC) activeC.classList.remove('hidden');
-      if (activeB) activeB.className = "py-2 px-3 border-b-2 border-sky-600 text-sky-600 font-bold";
+      if (activeB) activeB.className = "flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer bg-sky-500 text-white shadow-md shadow-sky-500/25 font-bold shrink-0";
+      
+      if (tabName === 'indicators') renderSettingsList();
       if (tabName === 'thresholds') renderThresholdFields();
       if (tabName === 'users') renderSystemUsersList();
+      if (tabName === 'logs') fetchActivityLogs();
       if (tabName === 'exportSecurity') renderExportSecuritySettings();
     }
 
-    function toggleSettingsModal() {
-      if (currentUserRole !== 'SUPER_ADMIN') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
-      document.getElementById('settingsModal').classList.toggle('hidden');
-      renderSettingsList();
-      renderThresholdFields();
-      renderSystemUsersList();
-      renderExportSecuritySettings();
+    function toggleSettingsModal(tabName) {
+      if (currentUserRole !== 'SUPER_ADMIN' && currentUserRole !== 'STAFF') {
+        return Swal.fire({ 
+          icon: 'warning', 
+          title: 'ກະລຸນາເຂົ້າສູ່ລະບົບ', 
+          text: 'ຫ້ອງຕັ້ງຄ່າລະບົບ ແລະ ປະຫວັດການໃຊ້ງານ ສະຫງວນໄວ້ສະເພາະເຈົ້າໜ້າທີ່ ຫຼື Super Admin ເທົ່ານັ້ນ' 
+        });
+      }
+      const modal = document.getElementById('settingsModal');
+      if (!modal) return;
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        const initialTab = tabName || 'indicators';
+        switchConfigTab(initialTab);
+      }
     }
 
     function renderExportSecuritySettings() {
@@ -2403,7 +2590,7 @@
       let html = '';
 
       if (customIndicators.length === 0) {
-        container.innerHTML = `<p class="col-span-2 text-center text-slate-400 py-4">ກະລຸນາເພີ່ມ Indicator ໃນແທັບທຳອິດກ່ອນ</p>`;
+        container.innerHTML = `<p class="col-span-2 text-center text-slate-400 py-6">ກະລຸນາເພີ່ມ Indicator ໃນແທັບທຳອິດກ່ອນ</p>`;
         return;
       }
 
@@ -2413,13 +2600,18 @@
         const displayName = i.name + (i.unit ? ` (${i.unit})` : '');
 
         html += `
-          <div>
-            <label class="block font-semibold mb-1">${displayName} ຕ່ຳສຸດ (Min)</label>
-            <input type="number" step="any" id="cfg_${i.key}_min" autocomplete="off" value="${minVal}" class="w-full border p-2 rounded">
-          </div>
-          <div>
-            <label class="block font-semibold mb-1">${displayName} ສູງສຸດ (Max)</label>
-            <input type="number" step="any" id="cfg_${i.key}_max" autocomplete="off" value="${maxVal}" class="w-full border p-2 rounded">
+          <div class="p-3 bg-slate-800/80 rounded-2xl border border-slate-700/80 space-y-2">
+            <div class="font-bold text-sky-300 text-xs truncate">🧪 ${escAttr(displayName)}</div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-400 mb-1">ຕ່ຳສຸດ (Min)</label>
+                <input type="number" step="any" id="cfg_${i.key}_min" autocomplete="off" value="${minVal}" placeholder="ບໍ່ກຳນົດ" class="w-full border border-slate-700 bg-slate-900 text-white p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-400 mb-1">ສູງສຸດ (Max)</label>
+                <input type="number" step="any" id="cfg_${i.key}_max" autocomplete="off" value="${maxVal}" placeholder="ບໍ່ກຳນົດ" class="w-full border border-slate-700 bg-slate-900 text-white p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500">
+              </div>
+            </div>
           </div>
         `;
       });
@@ -2713,15 +2905,15 @@
       const selArc = archivedInds().filter(i => indSel.has(i.key)).length;
 
       const pill = (on, onTxt, offTxt, click, title) =>
-        `<button type="button" onclick="${click}" title="${title}" class="px-1.5 py-0.5 rounded-md border text-[10px] font-bold whitespace-nowrap ${on ? 'bg-emerald-50 border-emerald-300 text-emerald-700' : 'bg-slate-100 border-slate-300 text-slate-400 line-through'}">${on ? onTxt : offTxt}</button>`;
+        `<button type="button" onclick="${click}" title="${title}" class="px-2 py-0.5 rounded-lg border text-[10px] font-bold whitespace-nowrap cursor-pointer transition ${on ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'bg-slate-800 border-slate-700 text-slate-500 line-through'}">${on ? onTxt : offTxt}</button>`;
 
       const row = (i, archivedRow) => {
         const n = countValuesFor(i.key);
         return `
-          <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg border ${indSel.has(i.key) ? 'bg-indigo-50 border-indigo-300' : archivedRow ? 'bg-white border-dashed' : 'bg-slate-50'} cursor-pointer">
-            <input type="checkbox" ${indSel.has(i.key) ? 'checked' : ''} onchange="toggleIndSel('${i.key}', this.checked)">
-            <span class="flex-1 min-w-0 truncate ${archivedRow ? 'text-slate-400' : ''}"><b>${escAttr(i.name)}</b> <span class="text-slate-400">(${escAttr(i.unit || '-')})</span></span>
-            <span class="text-[10px] ${n ? 'text-emerald-700' : 'text-slate-300'} shrink-0">${n} ຄ່າ</span>
+          <label class="flex items-center gap-2 px-2.5 py-2 rounded-xl border ${indSel.has(i.key) ? 'bg-sky-950/50 border-sky-500/60 text-white' : archivedRow ? 'bg-slate-900/60 border-slate-800 text-slate-400 border-dashed' : 'bg-slate-800/80 border-slate-700/80 text-slate-200'} cursor-pointer hover:border-slate-600 transition">
+            <input type="checkbox" class="accent-sky-500" ${indSel.has(i.key) ? 'checked' : ''} onchange="toggleIndSel('${i.key}', this.checked)">
+            <span class="flex-1 min-w-0 truncate ${archivedRow ? 'text-slate-400' : ''}"><b>${escAttr(i.name)}</b> <span class="text-slate-400 text-xs">(${escAttr(i.unit || '-')})</span></span>
+            <span class="text-[10px] ${n ? 'text-emerald-400 font-bold' : 'text-slate-500'} shrink-0">${n} ຄ່າ</span>
             ${archivedRow ? '' : `
               ${pill(!i.noForm, '✏️ ຟອມ', '✏️ ຟອມ', `event.preventDefault(); setIndFlag('${i.key}', 'noForm', ${!i.noForm})`, i.noForm ? 'ຊ່ອງປ້ອນຄ່າຖືກເຊື່ອງ — ກົດເພື່ອສະແດງ' : 'ມີຊ່ອງປ້ອນຄ່າໃນຟອມ — ກົດເພື່ອເຊື່ອງ')}
               ${pill(!i.noTable, '📋 ຕາຕະລາງ', '📋 ຕາຕະລາງ', `event.preventDefault(); setIndFlag('${i.key}', 'noTable', ${!i.noTable})`, i.noTable ? 'ເຊື່ອງຈາກຕາຕະລາງ/ແຜນທີ່/Export — ກົດເພື່ອສະແດງ' : 'ສະແດງໃນຕາຕະລາງ — ກົດເພື່ອເຊື່ອງ')}
@@ -2730,21 +2922,21 @@
       };
 
       const groupHead = (g, label, count) => `
-        <button type="button" onclick="toggleIndCollapse('${g}')" class="w-full flex items-center gap-1.5 text-left font-bold text-slate-700 py-1.5 hover:text-indigo-700">
-          <span class="inline-block w-3 text-slate-400">${indCollapsed[g] ? '▶' : '▼'}</span> ${label} <span class="font-normal text-slate-400">(${count})</span>
+        <button type="button" onclick="toggleIndCollapse('${g}')" class="w-full flex items-center gap-1.5 text-left font-bold text-slate-200 py-1.5 hover:text-sky-400 transition cursor-pointer">
+          <span class="inline-block w-3 text-slate-400">${indCollapsed[g] ? '▶' : '▼'}</span> ${label} <span class="font-normal text-slate-400 text-xs">(${count})</span>
         </button>`;
 
       box.innerHTML = `
         <div class="flex flex-wrap items-center gap-2 mb-2">
-          <div class="relative flex items-center border rounded-lg bg-white">
-            <input type="checkbox" class="m-2" title="ເລືອກທັງໝົດ" ${selN && selN === allCount ? 'checked' : ''} onclick="toggleSelectAllInds()" ${selN && selN < allCount ? 'data-partial="1"' : ''}>
-            <button type="button" onclick="toggleIndSelMenu()" class="pr-2 text-slate-500" title="ເລືອກຕາມເງື່ອນໄຂ">▾</button>
-            <div id="indSelMenu" class="hidden absolute left-0 top-full mt-1 z-50 w-48 bg-white border rounded-lg shadow-xl py-1">
+          <div class="relative flex items-center border border-slate-700 rounded-xl bg-slate-800">
+            <input type="checkbox" class="m-2 accent-sky-500" title="ເລືອກທັງໝົດ" ${selN && selN === allCount ? 'checked' : ''} onclick="toggleSelectAllInds()" ${selN && selN < allCount ? 'data-partial="1"' : ''}>
+            <button type="button" onclick="toggleIndSelMenu()" class="pr-2.5 text-slate-400 hover:text-white" title="ເລືອກຕາມເງື່ອນໄຂ">▾</button>
+            <div id="indSelMenu" class="hidden absolute left-0 top-full mt-1 z-50 w-48 bg-slate-800 border border-slate-700 rounded-xl shadow-xl py-1 text-slate-200">
               ${[['all','ທັງໝົດ'],['','ບໍ່ເລືອກ'],['active','ທີ່ໃຊ້ຢູ່'],['chartOn','ທີ່ສະແດງໃນກຣາຟ'],['chartOff','ທີ່ເຊື່ອງຈາກກຣາຟ'],['formOff','ທີ່ເຊື່ອງຈາກຟອມ'],['formOn','ທີ່ມີຊ່ອງໃນຟອມ'],['excel','ທີ່ເພີ່ມຈາກ Excel'],['tableOff','ທີ່ເຊື່ອງຈາກຕາຕະລາງ'],['empty','ທີ່ບໍ່ມີຂໍ້ມູນ (0 ຄ່າ)'],['archived','ທີ່ເກັບໄວ້']]
-                .map(([m, t]) => `<button type="button" onclick="selectInds('${m}')" class="block w-full text-left px-3 py-1.5 hover:bg-indigo-50">${t}</button>`).join('')}
+                .map(([m, t]) => `<button type="button" onclick="selectInds('${m}')" class="block w-full text-left px-3 py-1.5 hover:bg-slate-700 text-xs">${t}</button>`).join('')}
             </div>
           </div>
-          <input id="indSearchBox" type="text" value="${escAttr(indSearch)}" oninput="setIndSearch(this.value)" placeholder="🔍 ຄົ້ນຫາໂຕຊີ້ວັດ..." class="flex-1 min-w-[120px] border rounded-lg px-2 py-1.5 outline-none">
+          <input id="indSearchBox" type="text" value="${escAttr(indSearch)}" oninput="setIndSearch(this.value)" placeholder="🔍 ຄົ້ນຫາໂຕຊີ້ວັດ..." class="flex-1 min-w-[120px] border border-slate-700 bg-slate-800 text-white placeholder-slate-500 rounded-xl px-3 py-2 outline-none text-xs focus:ring-2 focus:ring-sky-500">
         </div>
 
         ${selN ? `
