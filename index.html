@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ກົມຊັບພະຍາກອນນ້ຳ — ລະບົບຂໍ້ມູນຊັບພະຍາກອນນ້ຳ</title>
-  <meta name="description" content="ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ, ຂໍ້ມູນການນຳໃຊ້ນ້ຳ ແລະ ໂຄງການປ່ອຍນ້ຳເປື້ອນ - Department of Water Resources">
+  <title id="pageTitle">ກົມຊັບພະຍາກອນນ້ຳ — ລະບົບຂໍ້ມູນຊັບພະຍາກອນນ້ຳ</title>
+  <meta id="metaDesc" name="description" content="ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ, ຂໍ້ມູນການນຳໃຊ້ນ້ຳ ແລະ ໂຄງການປ່ອຍນ້ຳເປື້ອນ - Department of Water Resources">
   <meta property="og:title" content="ກົມຊັບພະຍາກອນນ້ຳ — ລະບົບຂໍ້ມູນຊັບພະຍາກອນນ້ຳ">
   <meta property="og:description" content="ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ, ຂໍ້ມູນການນຳໃຊ້ນ້ຳ ແລະ ໂຄງການປ່ອຍນ້ຳເປື້ອນ - Department of Water Resources">
   <meta property="og:type" content="website">
@@ -46,51 +46,67 @@
     <div class="absolute -bottom-40 right-1/4 w-[40rem] h-[40rem] bg-rose-900/20 rounded-full blur-3xl"></div>
   </div>
 
-  <!-- Top Navigation Header with Larger Clear Text -->
+  <!-- Top Navigation Header with Language Switcher -->
   <header class="border-b border-slate-800/90 bg-slate-900/85 backdrop-blur-xl sticky top-0 z-40 transition-all shadow-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex items-center justify-between gap-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4.5 flex items-center justify-between gap-4">
       <!-- Brand & Organization -->
-      <div class="flex items-center gap-4 min-w-0">
-        <div class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-rose-500 via-indigo-600 to-rose-400 p-0.5 shadow-lg shadow-rose-500/25 shrink-0 flex items-center justify-center">
+      <div class="flex items-center gap-3.5 sm:gap-4 min-w-0">
+        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-rose-500 via-indigo-600 to-rose-400 p-0.5 shadow-lg shadow-rose-500/25 shrink-0 flex items-center justify-center">
           <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-            <span class="text-3xl">🌊</span>
+            <span class="text-2xl sm:text-3xl">🌊</span>
           </div>
         </div>
         <div class="min-w-0">
-          <div class="flex items-center gap-2.5 flex-wrap">
-            <span class="text-sm sm:text-base font-bold text-slate-300 tracking-wide uppercase">ກະຊວງກະສິກຳ ແລະ ສິ່ງແວດລ້ອມ</span>
-            <span class="inline-block text-xs sm:text-sm px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 font-mono font-bold">DWR-PORTAL</span>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span data-i18n="ministry" class="text-xs sm:text-base font-bold text-slate-300 tracking-wide uppercase">ກະຊວງກະສິກຳ ແລະ ສິ່ງແວດລ້ອມ</span>
+            <span class="inline-block text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 font-mono font-bold">DWR-PORTAL</span>
           </div>
-          <h1 class="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight truncate mt-0.5">
+          <h1 data-i18n="department" class="text-lg sm:text-2xl lg:text-3xl font-black text-white tracking-tight truncate mt-0.5">
             ກົມຊັບພະຍາກອນນ້ຳ
           </h1>
         </div>
       </div>
 
-      <!-- User Session & Quick Status -->
-      <div class="flex items-center gap-3 shrink-0">
-        <div id="sessionBox" class="flex items-center gap-3 bg-slate-850/90 border border-slate-700/80 px-4 py-2 sm:py-2.5 rounded-2xl text-sm sm:text-base shadow-sm">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="sessionUserInfo" class="text-slate-200 font-semibold">ກຳລັງກວດສອບບັນຊີ...</span>
+      <!-- Controls: Language Switcher & User Session -->
+      <div class="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+        
+        <!-- Language Switcher Component (Persisted in localStorage) -->
+        <div class="flex items-center p-1 bg-slate-950/80 border border-slate-700/80 rounded-2xl shadow-inner text-xs sm:text-sm font-bold" role="group" aria-label="Language Switcher">
+          <button type="button" id="langBtnLo" onclick="setLanguage('lo')" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer" title="ສະຫຼັບເປັນພາສາລາວ (Lao)">
+            <span class="text-base leading-none">🇱🇦</span>
+            <span class="hidden sm:inline">ລາວ</span>
+            <span class="sm:hidden text-xs">LO</span>
+          </button>
+          <button type="button" id="langBtnEn" onclick="setLanguage('en')" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer" title="Switch to English (EN)">
+            <span class="text-base leading-none">🇬🇧</span>
+            <span class="hidden sm:inline">English</span>
+            <span class="sm:hidden text-xs">EN</span>
+          </button>
+        </div>
+
+        <!-- User Session Box -->
+        <div id="sessionBox" class="flex items-center gap-2 sm:gap-3 bg-slate-850/90 border border-slate-700/80 px-3 sm:px-4 py-2 sm:py-2 rounded-2xl text-xs sm:text-base shadow-sm">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+          <span id="sessionUserInfo" class="text-slate-200 font-semibold truncate max-w-[140px] sm:max-w-none">ກຳລັງກວດສອບບັນຊີ...</span>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Main Hero Area with Larger, Distinct Lao Typography -->
+  <!-- Main Hero Area with Larger, Distinct Typography -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-14">
     <!-- Hero Title Box -->
     <div class="text-center max-w-4xl mx-auto space-y-5">
       <div class="inline-flex items-center gap-2.5 px-4.5 py-2 rounded-full bg-rose-500/10 border border-rose-400/25 text-rose-300 text-sm sm:text-base font-bold shadow-xs">
         <span class="w-2.5 h-2.5 rounded-full bg-rose-400 animate-ping"></span>
-        <span>ລະບົບຂໍ້ມູນຂ່າວສານຊັບພະຍາກອນນ້ຳແຫ່ງຊາດ (National Water Portal)</span>
+        <span data-i18n="heroBadge">ລະບົບຂໍ້ມູນຂ່າວສານຊັບພະຍາກອນນ້ຳແຫ່ງຊາດ (National Water Portal)</span>
       </div>
 
-      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight drop-shadow-sm">
+      <h1 data-i18n="heroTitle" class="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight drop-shadow-sm">
         ລະບົບຂໍ້ມູນຊັບພະຍາກອນນ້ຳ
       </h1>
 
-      <p class="text-base sm:text-lg lg:text-xl text-slate-300 leading-relaxed max-w-3xl mx-auto font-medium">
+      <p data-i18n="heroDesc" class="text-base sm:text-lg lg:text-xl text-slate-300 leading-relaxed max-w-3xl mx-auto font-medium">
         ສູນລວມການຕິດຕາມກວດກາ ແລະ ຄຸ້ມຄອງຂໍ້ມູນຄຸນນະພາບນ້ຳ, ການນຳໃຊ້ນ້ຳ ແລະ ໂຄງການປ່ອຍນ້ຳເປື້ອນ ຂອງບັນດາໂຄງການ ຫຼື ກິດຈະການ ພາຍໃຕ້ການຊີ້ນຳຂອງ ກົມຊັບພະຍາກອນນ້ຳ.
       </p>
     </div>
@@ -109,14 +125,14 @@
             <div class="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-rose-500/10 border border-rose-400/25 text-rose-400 flex items-center justify-center text-3xl sm:text-4xl shadow-inner group-hover:scale-105 group-hover:bg-rose-500/20 transition-all">
               🧪
             </div>
-            <span class="px-3.5 py-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-xs sm:text-sm font-extrabold text-rose-300">
+            <span data-i18n="system1Badge" class="px-3.5 py-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-xs sm:text-sm font-extrabold text-rose-300">
               ຄຸນນະພາບນ້ຳ
             </span>
           </div>
 
           <!-- System Title / Name Only -->
           <div>
-            <h2 class="text-2xl sm:text-3xl lg:text-3.5xl font-black text-white group-hover:text-rose-300 transition-colors leading-tight">
+            <h2 data-i18n="system1Title" class="text-2xl sm:text-3xl lg:text-3.5xl font-black text-white group-hover:text-rose-300 transition-colors leading-tight">
               ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ
             </h2>
           </div>
@@ -127,16 +143,16 @@
           <div class="flex items-center justify-between text-slate-400 text-xs sm:text-sm font-semibold">
             <span class="flex items-center gap-1.5">
               <span>🔐</span>
-              <span>ຊ່ອງເຂົ້າສູ່ລະບົບ</span>
+              <span data-i18n="loginSlot">ຊ່ອງເຂົ້າສູ່ລະບົບ</span>
             </span>
             <span class="text-emerald-400 text-xs flex items-center gap-1.5 font-medium">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>ພ້ອມໃຊ້ງານ</span>
+              <span data-i18n="readyStatus">ພ້ອມໃຊ້ງານ</span>
             </span>
           </div>
 
           <a href="water-quality.html" class="w-full inline-flex items-center justify-center gap-3 py-4 sm:py-4.5 px-6 rounded-2xl bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-400 hover:to-indigo-500 text-white text-base sm:text-lg lg:text-xl font-bold shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 transition-all duration-200 cursor-pointer group-hover:scale-[1.02]">
-            <span>🔑 ເຂົ້າສູ່ລະບົບ</span>
+            <span data-i18n="enterSystemBtn">🔑 ເຂົ້າສູ່ລະບົບ</span>
             <span class="text-xl sm:text-2xl">→</span>
           </a>
         </div>
@@ -153,14 +169,14 @@
             <div class="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-rose-500/10 border border-rose-400/25 text-rose-400 flex items-center justify-center text-3xl sm:text-4xl shadow-inner group-hover:scale-105 group-hover:bg-rose-500/20 transition-all">
               💧
             </div>
-            <span class="px-3.5 py-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-xs sm:text-sm font-extrabold text-rose-300">
+            <span data-i18n="system2Badge" class="px-3.5 py-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-xs sm:text-sm font-extrabold text-rose-300">
               ການນຳໃຊ້ນ້ຳ
             </span>
           </div>
 
           <!-- System Title / Name Only -->
           <div>
-            <h2 class="text-2xl sm:text-3xl lg:text-3.5xl font-black text-white group-hover:text-rose-300 transition-colors leading-tight">
+            <h2 data-i18n="system2Title" class="text-2xl sm:text-3xl lg:text-3.5xl font-black text-white group-hover:text-rose-300 transition-colors leading-tight">
               ລະບົບຕິດຕາມຂໍ້ມູນການນຳໃຊ້ນ້ຳ
             </h2>
           </div>
@@ -171,16 +187,16 @@
           <div class="flex items-center justify-between text-slate-400 text-xs sm:text-sm font-semibold">
             <span class="flex items-center gap-1.5">
               <span>🔐</span>
-              <span>ຊ່ອງເຂົ້າສູ່ລະບົບ</span>
+              <span data-i18n="loginSlot">ຊ່ອງເຂົ້າສູ່ລະບົບ</span>
             </span>
             <span class="text-emerald-400 text-xs flex items-center gap-1.5 font-medium">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>ພ້ອມໃຊ້ງານ</span>
+              <span data-i18n="readyStatus">ພ້ອມໃຊ້ງານ</span>
             </span>
           </div>
 
           <a href="water-usage.html" class="w-full inline-flex items-center justify-center gap-3 py-4 sm:py-4.5 px-6 rounded-2xl bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-400 hover:to-indigo-500 text-white text-base sm:text-lg lg:text-xl font-bold shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 transition-all duration-200 cursor-pointer group-hover:scale-[1.02]">
-            <span>🔑 ເຂົ້າສູ່ລະບົບ</span>
+            <span data-i18n="enterSystemBtn">🔑 ເຂົ້າສູ່ລະບົບ</span>
             <span class="text-xl sm:text-2xl">→</span>
           </a>
         </div>
@@ -197,14 +213,14 @@
             <div class="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-rose-500/10 border border-rose-400/25 text-rose-400 flex items-center justify-center text-3xl sm:text-4xl shadow-inner group-hover:scale-110 group-hover:bg-rose-500/20 transition-all">
               🏭
             </div>
-            <span class="px-3.5 py-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-xs sm:text-sm font-extrabold text-rose-300">
+            <span data-i18n="system3Badge" class="px-3.5 py-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-xs sm:text-sm font-extrabold text-rose-300">
               ການປ່ອຍນ້ຳເປື້ອນ
             </span>
           </div>
 
           <!-- System Title / Name Only -->
           <div>
-            <h2 class="text-2xl sm:text-3xl lg:text-3.5xl font-black text-white group-hover:text-rose-300 transition-colors leading-tight">
+            <h2 data-i18n="system3Title" class="text-2xl sm:text-3xl lg:text-3.5xl font-black text-white group-hover:text-rose-300 transition-colors leading-tight">
               ລະບົບຕິດຕາມໂຄງການປ່ອຍນ້ຳເປື້ອນ
             </h2>
           </div>
@@ -215,16 +231,16 @@
           <div class="flex items-center justify-between text-slate-400 text-xs sm:text-sm font-semibold">
             <span class="flex items-center gap-1.5">
               <span>🔐</span>
-              <span>ຊ່ອງເຂົ້າສູ່ລະບົບ</span>
+              <span data-i18n="loginSlot">ຊ່ອງເຂົ້າສູ່ລະບົບ</span>
             </span>
             <span class="text-emerald-400 text-xs flex items-center gap-1.5 font-medium">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>ພ້ອມໃຊ້ງານ</span>
+              <span data-i18n="readyStatus">ພ້ອມໃຊ້ງານ</span>
             </span>
           </div>
 
           <a href="wastewater.html" class="w-full inline-flex items-center justify-center gap-3 py-4 sm:py-4.5 px-6 rounded-2xl bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-400 hover:to-indigo-500 text-white text-base sm:text-lg lg:text-xl font-bold shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 transition-all duration-200 cursor-pointer group-hover:scale-[1.02]">
-            <span>🔑 ເຂົ້າສູ່ລະບົບ</span>
+            <span data-i18n="enterSystemBtn">🔑 ເຂົ້າສູ່ລະບົບ</span>
             <span class="text-xl sm:text-2xl">→</span>
           </a>
         </div>
@@ -240,8 +256,8 @@
             🔄
           </div>
           <div>
-            <h4 class="text-sm sm:text-base font-extrabold text-white uppercase tracking-wider">ຖານຂໍ້ມູນດຽວກັນ</h4>
-            <p class="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
+            <h4 data-i18n="feat1Title" class="text-sm sm:text-base font-extrabold text-white uppercase tracking-wider">ຖານຂໍ້ມູນດຽວກັນ</h4>
+            <p data-i18n="feat1Desc" class="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
               ທຸກລະບົບເຊື່ອມຕໍ່ຖານຂໍ້ມູນ Firebase Realtime & Firestore ແບບ Real-time ອັດຕະໂນມັດ
             </p>
           </div>
@@ -252,8 +268,8 @@
             👑
           </div>
           <div>
-            <h4 class="text-sm sm:text-base font-extrabold text-white uppercase tracking-wider">ລະບົບບັນຊີດຽວ (SSO)</h4>
-            <p class="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
+            <h4 data-i18n="feat2Title" class="text-sm sm:text-base font-extrabold text-white uppercase tracking-wider">ລະບົບບັນຊີດຽວ (SSO)</h4>
+            <p data-i18n="feat2Desc" class="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
               Login ຄັ້ງດຽວ ໃຊ້ໄດ້ທັງ 3 ລະບົບ (Super Admin, Staff, Viewer) ພ້ອມ Session Sync
             </p>
           </div>
@@ -264,8 +280,8 @@
             🗺️
           </div>
           <div>
-            <h4 class="text-sm sm:text-base font-extrabold text-white uppercase tracking-wider">ພິກັດພູມສາດ GIS</h4>
-            <p class="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
+            <h4 data-i18n="feat3Title" class="text-sm sm:text-base font-extrabold text-white uppercase tracking-wider">ພິກັດພູມສາດ GIS</h4>
+            <p data-i18n="feat3Desc" class="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
               ແຜນທີ່ Interactive Geospatial ສະແດງສະຖານີ, ບ່ອນດູດນ້ຳ ແລະ ຈຸດລະບາຍນ້ຳເປື້ອນ
             </p>
           </div>
@@ -276,8 +292,8 @@
             🔒
           </div>
           <div>
-            <h4 class="text-sm sm:text-base font-extrabold text-white uppercase tracking-wider">ປ້ອງກັນການດາວໂຫຼດ</h4>
-            <p class="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
+            <h4 data-i18n="feat4Title" class="text-sm sm:text-base font-extrabold text-white uppercase tracking-wider">ປ້ອງກັນການດາວໂຫຼດ</h4>
+            <p data-i18n="feat4Desc" class="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
               Export Passcode ກຳນົດໂດຍ Super Admin ເພື່ອປ້ອງກັນການດາວໂຫຼດຂໍ້ມູນໂດຍບໍ່ໄດ້ຮັບອະນຸຍາດ
             </p>
           </div>
@@ -291,25 +307,167 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-5">
       <div class="flex items-center gap-3">
         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span class="font-medium">ກົມຊັບພະຍາກອນນ້ຳ, ກະຊວງກະສິກຳ ແລະ ສິ່ງແວດລ້ອມ (Department of Water Resources)</span>
+        <span data-i18n="footerDept" class="font-medium">ກົມຊັບພະຍາກອນນ້ຳ, ກະຊວງກະສິກຳ ແລະ ສິ່ງແວດລ້ອມ (Department of Water Resources)</span>
       </div>
       <div class="flex items-center gap-5 text-slate-300 font-semibold">
-        <a href="water-quality.html" class="hover:text-rose-400 transition">ຄຸນນະພາບນ້ຳ</a>
+        <a href="water-quality.html" data-i18n="footerLink1" class="hover:text-rose-400 transition">ຄຸນນະພາບນ້ຳ</a>
         <span>•</span>
-        <a href="water-usage.html" class="hover:text-rose-400 transition">ການນຳໃຊ້ນ້ຳ</a>
+        <a href="water-usage.html" data-i18n="footerLink2" class="hover:text-rose-400 transition">ການນຳໃຊ້ນ້ຳ</a>
         <span>•</span>
-        <a href="wastewater.html" class="hover:text-rose-400 transition">ການປ່ອຍນ້ຳເປື້ອນ</a>
+        <a href="wastewater.html" data-i18n="footerLink3" class="hover:text-rose-400 transition">ການປ່ອຍນ້ຳເປື້ອນ</a>
       </div>
     </div>
   </footer>
 
-  <!-- Session Sync & Quick Actions Script -->
+  <!-- Internationalization (I18N) & Session Sync Script -->
   <script>
     (function () {
+      const STORAGE_KEY = 'dwr_lang';
+      const BACKUP_KEY = 'lang';
+
+      const I18N = {
+        lo: {
+          pageTitle: "ກົມຊັບພະຍາກອນນ້ຳ — ລະບົບຂໍ້ມູນຊັບພະຍາກອນນ້ຳ",
+          metaDesc: "ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ, ຂໍ້ມູນການນຳໃຊ້ນ້ຳ ແລະ ໂຄງການປ່ອຍນ້ຳເປື້ອນ - Department of Water Resources",
+          ministry: "ກະຊວງກະສິກຳ ແລະ ສິ່ງແວດລ້ອມ",
+          department: "ກົມຊັບພະຍາກອນນ້ຳ",
+          checkingAccount: "ກຳລັງກວດສອບບັນຊີ...",
+          guestMode: "👁️ ໂໝດທົ່ວໄປ (Guest Mode)",
+          signInBtn: "🔑 ເຂົ້າສູ່ລະບົບ",
+          signOutBtn: "🚪 ອອກ",
+          heroBadge: "ລະບົບຂໍ້ມູນຂ່າວສານຊັບພະຍາກອນນ້ຳແຫ່ງຊາດ (National Water Portal)",
+          heroTitle: "ລະບົບຂໍ້ມູນຊັບພະຍາກອນນ້ຳ",
+          heroDesc: "ສູນລວມການຕິດຕາມກວດກາ ແລະ ຄຸ້ມຄອງຂໍ້ມູນຄຸນນະພາບນ້ຳ, ການນຳໃຊ້ນ້ຳ ແລະ ໂຄງການປ່ອຍນ້ຳເປື້ອນ ຂອງບັນດາໂຄງການ ຫຼື ກິດຈະການ ພາຍໃຕ້ການຊີ້ນຳຂອງ ກົມຊັບພະຍາກອນນ້ຳ.",
+          system1Badge: "ຄຸນນະພາບນ້ຳ",
+          system1Title: "ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ",
+          system2Badge: "ການນຳໃຊ້ນ້ຳ",
+          system2Title: "ລະບົບຕິດຕາມຂໍ້ມູນການນຳໃຊ້ນ້ຳ",
+          system3Badge: "ການປ່ອຍນ້ຳເປື້ອນ",
+          system3Title: "ລະບົບຕິດຕາມໂຄງການປ່ອຍນ້ຳເປື້ອນ",
+          loginSlot: "ຊ່ອງເຂົ້າສູ່ລະບົບ",
+          readyStatus: "ພ້ອມໃຊ້ງານ",
+          enterSystemBtn: "🔑 ເຂົ້າສູ່ລະບົບ",
+          feat1Title: "ຖານຂໍ້ມູນດຽວກັນ",
+          feat1Desc: "ທຸກລະບົບເຊື່ອມຕໍ່ຖານຂໍ້ມູນ Firebase Realtime & Firestore ແບບ Real-time ອັດຕະໂນມັດ",
+          feat2Title: "ລະບົບບັນຊີດຽວ (SSO)",
+          feat2Desc: "Login ຄັ້ງດຽວ ໃຊ້ໄດ້ທັງ 3 ລະບົບ (Super Admin, Staff, Viewer) ພ້ອມ Session Sync",
+          feat3Title: "ພິກັດພູມສາດ GIS",
+          feat3Desc: "ແຜນທີ່ Interactive Geospatial ສະແດງສະຖານີ, ບ່ອນດູດນ້ຳ ແລະ ຈຸດລະບາຍນ້ຳເປື້ອນ",
+          feat4Title: "ປ້ອງກັນການດາວໂຫຼດ",
+          feat4Desc: "Export Passcode ກຳນົດໂດຍ Super Admin ເພື່ອປ້ອງກັນການດາວໂຫຼດຂໍ້ມູນໂດຍບໍ່ໄດ້ຮັບອະນຸຍາດ",
+          footerDept: "ກົມຊັບພະຍາກອນນ້ຳ, ກະຊວງກະສິກຳ ແລະ ສິ່ງແວດລ້ອມ (Department of Water Resources)",
+          footerLink1: "ຄຸນນະພາບນ້ຳ",
+          footerLink2: "ການນຳໃຊ້ນ້ຳ",
+          footerLink3: "ການປ່ອຍນ້ຳເປື້ອນ",
+          logoutSuccess: "ອອກຈາກລະບົບສຳເລັດ"
+        },
+        en: {
+          pageTitle: "Department of Water Resources — Water Resources Information System",
+          metaDesc: "Integrated portal for water quality, water usage, and wastewater discharge tracking - Department of Water Resources",
+          ministry: "Ministry of Agriculture and Environment",
+          department: "Department of Water Resources",
+          checkingAccount: "Verifying account...",
+          guestMode: "👁️ Guest Mode",
+          signInBtn: "🔑 Sign In",
+          signOutBtn: "🚪 Sign Out",
+          heroBadge: "National Water Resources Information System (National Water Portal)",
+          heroTitle: "Water Resources Information System",
+          heroDesc: "Centralized monitoring and management portal for water quality, water resources utilization, and wastewater discharge projects under the Department of Water Resources.",
+          system1Badge: "Water Quality",
+          system1Title: "Water Quality Monitoring System",
+          system2Badge: "Water Usage",
+          system2Title: "Water Usage Monitoring System",
+          system3Badge: "Wastewater",
+          system3Title: "Wastewater Project Monitoring System",
+          loginSlot: "System Access Channel",
+          readyStatus: "Ready / Online",
+          enterSystemBtn: "🔑 Enter System",
+          feat1Title: "Unified Database",
+          feat1Desc: "All systems automatically synchronize with Firebase Realtime & Firestore in real-time",
+          feat2Title: "Single Sign-On (SSO)",
+          feat2Desc: "One login credential works across all 3 systems (Super Admin, Staff, Viewer) with synced sessions",
+          feat3Title: "Geospatial GIS Mapping",
+          feat3Desc: "Interactive GIS map pinpointing water sampling stations, intake points, and discharge outfalls",
+          feat4Title: "Export Security",
+          feat4Desc: "Export passcode configured by Super Admin to protect sensitive environmental data",
+          footerDept: "Department of Water Resources, Ministry of Agriculture and Environment",
+          footerLink1: "Water Quality",
+          footerLink2: "Water Usage",
+          footerLink3: "Wastewater",
+          logoutSuccess: "Signed out successfully"
+        }
+      };
+
+      function getCurrentLanguage() {
+        return localStorage.getItem(STORAGE_KEY) || localStorage.getItem(BACKUP_KEY) || 'lo';
+      }
+
+      function updateSwitcherUI(lang) {
+        const btnLo = document.getElementById('langBtnLo');
+        const btnEn = document.getElementById('langBtnEn');
+        if (!btnLo || !btnEn) return;
+
+        const activeClasses = ['bg-gradient-to-r', 'from-rose-500', 'to-indigo-600', 'text-white', 'shadow-sm', 'shadow-rose-500/25'];
+        const inactiveClasses = ['text-slate-400', 'hover:text-slate-200'];
+
+        if (lang === 'en') {
+          btnLo.classList.remove(...activeClasses);
+          btnLo.classList.add(...inactiveClasses);
+          btnLo.setAttribute('aria-pressed', 'false');
+
+          btnEn.classList.remove(...inactiveClasses);
+          btnEn.classList.add(...activeClasses);
+          btnEn.setAttribute('aria-pressed', 'true');
+        } else {
+          btnEn.classList.remove(...activeClasses);
+          btnEn.classList.add(...inactiveClasses);
+          btnEn.setAttribute('aria-pressed', 'false');
+
+          btnLo.classList.remove(...inactiveClasses);
+          btnLo.classList.add(...activeClasses);
+          btnLo.setAttribute('aria-pressed', 'true');
+        }
+      }
+
+      window.setLanguage = function (lang) {
+        if (lang !== 'lo' && lang !== 'en') lang = 'lo';
+        try {
+          localStorage.setItem(STORAGE_KEY, lang);
+          localStorage.setItem(BACKUP_KEY, lang);
+        } catch (e) {}
+
+        document.documentElement.lang = lang;
+
+        const dict = I18N[lang] || I18N.lo;
+
+        // Update Page Title and Meta Description
+        if (dict.pageTitle) {
+          document.title = dict.pageTitle;
+        }
+        const metaTag = document.getElementById('metaDesc');
+        if (metaTag && dict.metaDesc) {
+          metaTag.setAttribute('content', dict.metaDesc);
+        }
+
+        // Update all tagged elements
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+          const key = el.getAttribute('data-i18n');
+          if (dict[key]) {
+            el.textContent = dict[key];
+          }
+        });
+
+        updateSwitcherUI(lang);
+        refreshSessionUI();
+      };
+
       function refreshSessionUI() {
         const box = document.getElementById('sessionBox');
         const info = document.getElementById('sessionUserInfo');
         if (!box || !info) return;
+
+        const lang = getCurrentLanguage();
+        const dict = I18N[lang] || I18N.lo;
 
         let user = null;
         try {
@@ -325,7 +483,7 @@
             if (rawS) {
               const parsed = JSON.parse(rawS);
               user = {
-                fullName: parsed.name || 'ຜູ້ໃຊ້',
+                fullName: parsed.name || (lang === 'en' ? 'User' : 'ຜູ້ໃຊ້'),
                 username: parsed.username || parsed.name || 'user',
                 role: parsed.role || 'VIEWER'
               };
@@ -341,16 +499,16 @@
             admin: '👑 Super Admin',
             officer: '🛠️ Staff',
             viewer: '👁️ Viewer'
-          }[user.role] || user.role || 'ຜູ້ໃຊ້ງານ';
+          }[user.role] || user.role || (lang === 'en' ? 'User' : 'ຜູ້ໃຊ້ງານ');
 
-          const displayName = user.fullName || user.name || user.username || 'ຜູ້ໃຊ້ງານ';
+          const displayName = user.fullName || user.name || user.username || (lang === 'en' ? 'User' : 'ຜູ້ໃຊ້ງານ');
 
           info.innerHTML = `
-            <div class="flex items-center gap-3">
-              <span class="text-white font-bold text-sm sm:text-base truncate max-w-[160px] sm:max-w-none">${displayName}</span>
-              <span class="px-2.5 py-0.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs sm:text-sm font-bold">${roleLabel}</span>
-              <button type="button" id="logoutBtn" class="ml-1 text-xs sm:text-sm text-rose-400 hover:text-rose-300 hover:underline cursor-pointer transition font-bold">
-                🚪 ອອກ
+            <div class="flex items-center gap-2 sm:gap-3">
+              <span class="text-white font-bold text-xs sm:text-base truncate max-w-[120px] sm:max-w-none">${displayName}</span>
+              <span class="px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[11px] sm:text-sm font-bold">${roleLabel}</span>
+              <button type="button" id="logoutBtn" class="ml-1 text-[11px] sm:text-sm text-rose-400 hover:text-rose-300 hover:underline cursor-pointer transition font-bold whitespace-nowrap">
+                ${dict.signOutBtn}
               </button>
             </div>
           `;
@@ -365,7 +523,7 @@
               sessionStorage.removeItem('guestMode');
               Swal.fire({
                 icon: 'success',
-                title: 'ອອກຈາກລະບົບສຳເລັດ',
+                title: dict.logoutSuccess,
                 timer: 1200,
                 showConfirmButton: false,
                 background: '#0f172a',
@@ -377,10 +535,10 @@
           }
         } else {
           info.innerHTML = `
-            <div class="flex items-center gap-2.5">
-              <span class="text-slate-300 text-sm sm:text-base font-medium">👁️ ໂໝດທົ່ວໄປ (Guest Mode)</span>
-              <button type="button" id="loginBtn" class="px-3 py-1 rounded-xl bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-400 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-sm cursor-pointer transition">
-                🔑 ເຂົ້າສູ່ລະບົບ
+            <div class="flex items-center gap-2 sm:gap-2.5">
+              <span class="text-slate-300 text-xs sm:text-base font-medium">${dict.guestMode}</span>
+              <button type="button" id="loginBtn" class="px-2.5 sm:px-3 py-1 rounded-xl bg-gradient-to-r from-rose-500 to-indigo-600 hover:from-rose-400 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-sm cursor-pointer transition whitespace-nowrap">
+                ${dict.signInBtn}
               </button>
             </div>
           `;
@@ -394,9 +552,17 @@
         }
       }
 
-      window.addEventListener('DOMContentLoaded', refreshSessionUI);
-      window.addEventListener('storage', refreshSessionUI);
-      refreshSessionUI();
+      // Initial boot
+      const initialLang = getCurrentLanguage();
+      setLanguage(initialLang);
+
+      window.addEventListener('storage', function (e) {
+        if (e.key === STORAGE_KEY || e.key === BACKUP_KEY) {
+          setLanguage(e.newValue || 'lo');
+        } else if (e.key === 'waterSession' || e.key === 'lao_water_current_user_v2') {
+          refreshSessionUI();
+        }
+      });
     })();
   </script>
 </body>
