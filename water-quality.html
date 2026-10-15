@@ -161,13 +161,13 @@
       <!-- Sidebar Header & DWR Identity -->
       <div class="p-4 border-b border-slate-800 shrink-0">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 via-teal-600 to-blue-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/20 ring-2 ring-white/10 shrink-0">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-500/20 ring-2 ring-white/10 shrink-0">
             <span class="text-xl">🌊</span>
           </div>
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-1.5">
               <h1 class="text-sm font-bold text-white tracking-tight truncate">ຄຸນນະພາບນ້ຳ</h1>
-              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300 border border-teal-400/30">Enterprise</span>
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-400/30">Enterprise</span>
             </div>
             <p class="text-[11px] text-slate-400 truncate">ກົມຊັບພະຍາກອນນ້ຳ (DWR)</p>
           </div>
@@ -180,14 +180,14 @@
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                 <span>🔄</span> ເລືອກລະບົບ
               </span>
-              <a href="index.html" class="text-[10px] font-semibold text-teal-400 hover:text-teal-300 flex items-center gap-0.5 transition" title="ກັບໄປໜ້າຫຼັກເລືອກລະບົບທັງໝົດ">
+              <a href="index.html" class="text-[10px] font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-0.5 transition" title="ກັບໄປໜ້າຫຼັກເລືອກລະບົບທັງໝົດ">
                 <span>🏠</span> ໜ້າຫຼັກ ↗
               </a>
             </div>
             <div class="grid grid-cols-1 gap-1">
-              <span class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] bg-gradient-to-r from-teal-500/25 to-teal-600/15 text-teal-300 font-bold border border-teal-500/30 cursor-default">
+              <span class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] bg-gradient-to-r from-rose-500/25 to-rose-600/15 text-rose-300 font-bold border border-rose-500/30 cursor-default">
                 <span class="flex items-center gap-1.5 truncate"><span>🧪</span> <span class="truncate">ຄຸນນະພາບນ້ຳ</span></span>
-                <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-teal-500/30 text-teal-200">ປັດຈຸບັນ</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/30 text-rose-200">ປັດຈຸບັນ</span>
               </span>
               <a href="water-usage.html" class="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] text-slate-300 hover:text-white hover:bg-slate-800 transition" title="ປ່ຽນໄປລະບົບຕິດຕາມຂໍ້ມູນການນຳໃຊ້ນ້ຳ">
                 <span class="flex items-center gap-1.5 truncate"><span>💧</span> <span class="truncate">ການນຳໃຊ້ນ້ຳ</span></span>
@@ -212,7 +212,7 @@
             <button type="button" data-nav-view="map" onclick="setAppView('map')" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer">
               <span class="text-base">📍</span>
               <span class="flex-1 truncate">ແຜນທີ່ GIS ສະພາບນ້ຳ</span>
-              <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-sky-900/60 text-sky-300 border border-sky-700/50">GIS</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-900/60 text-rose-300 border border-rose-700/50">GIS</span>
             </button>
             <button type="button" data-nav-view="chart" onclick="setAppView('chart')" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer">
               <span class="text-base">📈</span>
@@ -241,9 +241,13 @@
               <span class="text-base">📑</span>
               <span class="flex-1 truncate">ບົດວິເຄາະສະຖິຕິປະຈຳປີ</span>
             </button>
-            <button type="button" onclick="openExportModal(); if(window.innerWidth<1024)closeSidebarMobile();" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-bold text-teal-300 bg-teal-950/40 border border-teal-800/40 hover:bg-teal-900/50 transition-all cursor-pointer shadow-xs">
+            <button type="button" onclick="openExportModal(); if(window.innerWidth<1024)closeSidebarMobile();" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-bold text-rose-300 bg-rose-950/40 border border-rose-800/40 hover:bg-rose-900/50 transition-all cursor-pointer shadow-xs">
               <span class="text-base">📥</span>
               <span class="flex-1 truncate">ສູນສົ່ງອອກລາຍງານ</span>
+            </button>
+            <button type="button" onclick="toggleSettingsModal(); if(window.innerWidth<1024)closeSidebarMobile();" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all cursor-pointer">
+              <span class="text-base">⚙️</span>
+              <span class="flex-1 truncate">ຕັ້ງຄ່າລະບົບ & ປະຫວັດ</span>
             </button>
           </nav>
         </div>
@@ -304,7 +308,7 @@
         <!-- Right: Quick Actions -->
         <div class="flex items-center gap-2 shrink-0">
           <!-- Quick Export Action Button -->
-          <button type="button" onclick="openExportModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold text-xs shadow-sm shadow-teal-500/20 hover:from-teal-400 hover:to-emerald-500 transition cursor-pointer" title="ສູນສົ່ງອອກບົດລາຍງານ">
+          <button type="button" onclick="openExportModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold text-xs shadow-sm shadow-rose-500/20 hover:from-teal-400 hover:to-emerald-500 transition cursor-pointer" title="ສູນສົ່ງອອກບົດລາຍງານ">
             <span>📥</span>
             <span class="hidden md:inline">ສົ່ງອອກລາຍງານ</span>
           </button>
@@ -321,7 +325,7 @@
           <p class="text-xs text-slate-500 font-medium">ຊຸດຂໍ້ມູນບໍລິສັດ/ຫົວຂໍ້ຫຼັກ</p>
           <h3 class="text-2xl font-bold text-slate-800" id="kpiTotal">0</h3>
         </div>
-        <div class="bg-sky-50 p-3 rounded-lg text-sky-600 text-xl">📍</div>
+        <div class="bg-rose-50 p-3 rounded-lg text-rose-600 text-xl">📍</div>
       </div>
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
         <div>
@@ -366,12 +370,12 @@
           <div>
             <div class="flex flex-wrap items-center gap-2">
               <h2 class="text-base font-bold text-slate-800">ແຜນທີ່ GIS ສະພາບນ້ຳ (Water Quality GIS Map)</h2>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200">Google Maps / GIS</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-sky-800 border border-rose-200">Google Maps / GIS</span>
             </div>
             <p class="text-xs text-slate-500">ສະແດງຕຳແໜ່ງພິກັດສະຖານີເກັບຕົວຢ່າງນ້ຳ, ລະດັບຄຸນນະພາບນ້ຳ ແລະ ສະຖານະມາດຕະຖານຕາມແຜນທີ່ພູມສາດ</p>
           </div>
         </div>
-        <span class="text-xs bg-sky-100 text-sky-800 px-3 py-1 rounded-full font-bold self-start sm:self-auto border border-sky-200" id="stationCount">0 Batch Records</span>
+        <span class="text-xs bg-rose-100 text-sky-800 px-3 py-1 rounded-full font-bold self-start sm:self-auto border border-rose-200" id="stationCount">0 Batch Records</span>
       </div>
 
       <div class="flex flex-wrap items-center gap-2 text-xs">
@@ -382,12 +386,12 @@
           <option value="">📍 ເລືອກສະຖານີ...</option>
         </select>
         <label class="flex items-center gap-1.5 border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-600 cursor-pointer hover:bg-slate-50" title="ເຊື່ອງໝຸດຂອງບໍລິສັດອື່ນ">
-          <input type="checkbox" id="mapOnlyChk" onchange="setMapOnly(this.checked)" class="rounded text-sky-600 focus:ring-sky-400"> ສະເພາະບໍລິສັດນີ້
+          <input type="checkbox" id="mapOnlyChk" onchange="setMapOnly(this.checked)" class="rounded text-rose-600 focus:ring-sky-400"> ສະເພາະບໍລິສັດນີ້
         </label>
         <button type="button" onclick="mapResetView()" class="border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition" title="ເບິ່ງທັງໝົດ">🌐 ທັງໝົດ</button>
         <div class="flex w-full md:w-auto md:flex-1 gap-1 min-w-[260px]">
           <input type="text" id="mapGoto" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();mapGotoCoord()}" placeholder="🧭 ໄປຫາພິກັດ: 17°58'13.0&quot;N 102°35'48.1&quot;E ຫຼື 17.9703, 102.5967" class="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-mono text-xs outline-none focus:ring-2 focus:ring-sky-400">
-          <button type="button" onclick="mapGotoCoord()" class="border border-sky-300 rounded-lg px-3.5 py-1.5 bg-sky-50 font-bold text-sky-700 hover:bg-sky-100 transition">ໄປ</button>
+          <button type="button" onclick="mapGotoCoord()" class="border border-rose-300 rounded-lg px-3.5 py-1.5 bg-rose-50 font-bold text-rose-700 hover:bg-rose-100 transition">ໄປ</button>
         </div>
       </div>
       <div id="map" class="rounded-xl border border-slate-200 w-full shadow-inner"></div>
@@ -645,7 +649,7 @@
         <form id="waterForm" autocomplete="off" onsubmit="addTempStation(event)" class="space-y-3 border-t pt-3">
           <p class="text-xs font-bold text-slate-600 flex justify-between items-center">
             <span>📍 ປ້ອນຂໍ້ມູນສະຖານີ (ແອດເພີ່ມທີລະສະຖານີ)</span>
-            <button type="button" id="gpsBtn" onclick="getCurrentLocation()" class="bg-sky-600 hover:bg-sky-500 text-white text-[10px] px-2 py-1 rounded-lg font-bold transition flex items-center gap-1 shadow-sm">
+            <button type="button" id="gpsBtn" onclick="getCurrentLocation()" class="bg-rose-600 hover:bg-rose-500 text-white text-[10px] px-2 py-1 rounded-lg font-bold transition flex items-center gap-1 shadow-sm">
               🎯 ດຶງ GPS
             </button>
           </p>
@@ -653,27 +657,27 @@
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block text-[11px] font-semibold text-slate-600 mb-1">ລະຫັດສະຖານີ</label>
-              <input type="text" id="code" required autocomplete="off" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-sky-500" placeholder="ST-101">
+              <input type="text" id="code" required autocomplete="off" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-rose-500" placeholder="ST-101">
             </div>
             <div>
               <label class="block text-[11px] font-semibold text-slate-600 mb-1">ແຂວງ/ເມືອງ</label>
-              <input type="text" id="province" required autocomplete="off" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-sky-500" placeholder="ນະຄອນຫຼວງ">
+              <input type="text" id="province" required autocomplete="off" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-rose-500" placeholder="ນະຄອນຫຼວງ">
             </div>
           </div>
 
           <div>
             <label class="block text-[11px] font-semibold text-slate-600 mb-1">📅 ວັນທີເກັບຕົວຢ່າງ (ວັນ/ເດືອນ/ປີ ຂອງຂໍ້ມູນ)</label>
-            <input type="date" id="sampleDate" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-sky-500">
+            <input type="date" id="sampleDate" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-rose-500">
           </div>
 
           <div>
             <label class="block text-[11px] font-semibold text-slate-600 mb-1">ຊື່ສະຖານີ / ສະຖານທີ່ກວດວັດ</label>
-            <input type="text" id="name" required autocomplete="off" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-sky-500" placeholder="ສະຖານີທີ 1...">
+            <input type="text" id="name" required autocomplete="off" class="w-full border p-2 rounded-lg text-xs outline-none focus:ring-2 focus:ring-rose-500" placeholder="ສະຖານີທີ 1...">
           </div>
 
           <div class="rounded-lg border border-slate-200 p-2 space-y-1.5 bg-slate-50/60">
             <label class="block text-[11px] font-semibold text-slate-600">🧭 ພິກັດ GPS — ໃສ່ແບບໃດກໍ່ໄດ້ (ອີກແບບຈະແປງໃຫ້ເອງ)</label>
-            <input type="text" id="gpsDms" autocomplete="off" class="w-full border p-2 rounded text-xs outline-none focus:ring-2 focus:ring-sky-500 bg-white" placeholder="ແບບອົງສາ: 17°58'13.0&quot;N 102°35'48.1&quot;E">
+            <input type="text" id="gpsDms" autocomplete="off" class="w-full border p-2 rounded text-xs outline-none focus:ring-2 focus:ring-rose-500 bg-white" placeholder="ແບບອົງສາ: 17°58'13.0&quot;N 102°35'48.1&quot;E">
             <div class="grid grid-cols-2 gap-2">
               <input type="text" inputmode="decimal" id="lat" required autocomplete="off" class="w-full border p-2 rounded text-xs outline-none bg-white" placeholder="Lat (ເຊັ່ນ 17.9757)" value="17.9757" title="Latitude ແບບທົດສະນິຍົມ">
               <input type="text" inputmode="decimal" id="lng" required autocomplete="off" class="w-full border p-2 rounded text-xs outline-none bg-white" placeholder="Lng (ເຊັ່ນ 102.6331)" value="102.6331" title="Longitude ແບບທົດສະນິຍົມ">
@@ -681,25 +685,25 @@
           </div>
 
           <!-- 🌊 ຫ້ອງ QWI (Water Quality Index) ພ້ອມການແປຄ່າ -->
-          <div class="rounded-xl border border-sky-200 bg-sky-50/70 p-2.5 space-y-2">
+          <div class="rounded-xl border border-rose-200 bg-rose-50/70 p-2.5 space-y-2">
             <div class="flex items-center justify-between">
               <label class="block text-[11px] font-bold text-sky-950 flex items-center gap-1.5">
                 <span>🌊 ດັດຊະນີຄຸນນະພາບນໍ້າ (QWI / WQI)</span>
               </label>
-              <button type="button" onclick="autoCalculateQWIForm()" class="bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm transition flex items-center gap-1" title="ຄິດໄລ່ຄ່າ QWI ຈາກຄ່າໂຕຊີ້ວັດ (pH, DO, BOD, COD, Turbidity...) ອັດຕະໂນມັດ">
+              <button type="button" onclick="autoCalculateQWIForm()" class="bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm transition flex items-center gap-1" title="ຄິດໄລ່ຄ່າ QWI ຈາກຄ່າໂຕຊີ້ວັດ (pH, DO, BOD, COD, Turbidity...) ອັດຕະໂນມັດ">
                 ⚡ ຄິດໄລ່ອັດຕະໂນມັດ
               </button>
             </div>
             <div class="grid grid-cols-2 gap-2 items-center">
               <div>
-                <input type="text" id="qwi" oninput="updateFormQWIPreview()" placeholder="ຄ່າ QWI (0 - 100)" class="w-full border border-sky-300 p-2 rounded-lg text-xs outline-none bg-white font-mono font-bold text-slate-800 focus:ring-2 focus:ring-sky-500" autocomplete="off">
+                <input type="text" id="qwi" oninput="updateFormQWIPreview()" placeholder="ຄ່າ QWI (0 - 100)" class="w-full border border-rose-300 p-2 rounded-lg text-xs outline-none bg-white font-mono font-bold text-slate-800 focus:ring-2 focus:ring-rose-500" autocomplete="off">
               </div>
               <div id="qwiPreviewBadge" class="text-[11px] px-2 py-1.5 rounded-lg border border-dashed border-slate-300 bg-white text-slate-400 font-semibold text-center whitespace-nowrap overflow-hidden text-ellipsis">
                 ລໍຖ້າປ້ອນຄ່າ QWI...
               </div>
             </div>
             <!-- ການແປຄ່າລະອຽດ (Interpretation Detail) -->
-            <div id="qwiInterpretationBox" class="hidden text-[11px] p-2 rounded-lg bg-white border border-sky-200 space-y-1">
+            <div id="qwiInterpretationBox" class="hidden text-[11px] p-2 rounded-lg bg-white border border-rose-200 space-y-1">
               <div class="flex items-center justify-between">
                 <span class="font-bold text-slate-700">ການແປຜົນຄ່າ QWI:</span>
                 <span id="qwiInterpRating" class="font-bold text-xs"></span>
@@ -753,10 +757,10 @@
         <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
           <h2 class="text-lg font-bold text-slate-800">📋 ຖານຂໍ້ມູນຜົນການກວດວັດ (ລາຍບໍລິສັດ)</h2>
           <div class="flex gap-2">
-          <button id="coordFixBtn" onclick="convertDegreeCoords()" class="bg-sky-50 hover:bg-sky-100 text-sky-700 text-xs px-3 py-1.5 rounded-lg border border-sky-200 hidden" title="ສະຖານີທີ່ບໍ່ມີ Lat/Lng ແຕ່ມີພິກັດອົງສາ → ແປງໃຫ້ສະແດງໃນແຜນທີ່">
+          <button id="coordFixBtn" onclick="convertDegreeCoords()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs px-3 py-1.5 rounded-lg border border-rose-200 hidden" title="ສະຖານີທີ່ບໍ່ມີ Lat/Lng ແຕ່ມີພິກັດອົງສາ → ແປງໃຫ້ສະແດງໃນແຜນທີ່">
             🧭 ແປງພິກັດອົງສາ
           </button>
-          <button id="mergeDupBtn" onclick="mergeDuplicateDatasets()" class="bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs px-3 py-1.5 rounded-lg border border-teal-200 hidden">
+          <button id="mergeDupBtn" onclick="mergeDuplicateDatasets()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs px-3 py-1.5 rounded-lg border border-rose-200 hidden">
             🔗 ລວມຊຸດຂອງບໍລິສັດດຽວກັນ
           </button>
           <button id="adminClearAllBtn" onclick="clearAllData()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs px-3 py-1.5 rounded-lg border border-rose-200 hidden">
@@ -774,7 +778,7 @@
           </select>
         </div>
 
-        <div id="dragHint" class="hidden mb-2 text-xs font-bold text-teal-800 bg-teal-50 border border-teal-300 rounded-lg px-3 py-2">
+        <div id="dragHint" class="hidden mb-2 text-xs font-bold text-teal-800 bg-rose-50 border border-rose-300 rounded-lg px-3 py-2">
           🔗 ວາງໃສ່ຊຸດຂໍ້ມູນທີ່ຕ້ອງການລວມເຂົ້າ
         </div>
         <div id="mergeBanner" class="no-print hidden mb-2"></div>
@@ -809,13 +813,13 @@
       <!-- Modal Header -->
       <div class="bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 text-white p-5 sm:p-6 border-b border-teal-800/40 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-500 flex items-center justify-center text-white text-xl shadow-lg shadow-teal-500/25 ring-2 ring-white/10">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-500 flex items-center justify-center text-white text-xl shadow-lg shadow-rose-500/25 ring-2 ring-white/10">
             📥
           </div>
           <div>
             <div class="flex items-center gap-2">
               <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">ຫ້ອງສົ່ງອອກບົດລາຍງານ (Export Reports Hub)</h3>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-400/30">Official</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30">Official</span>
             </div>
             <p class="text-xs text-slate-300 mt-0.5">ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ · ກົມຊັບພະຍາກອນນ້ຳ</p>
           </div>
@@ -863,7 +867,7 @@
                 <span>🔍</span>
                 <span>ກັ່ນຕອງເງື່ອນໄຂບົດລາຍງານ</span>
               </h4>
-              <button onclick="resetExportFilters()" class="text-[11px] text-teal-700 hover:text-teal-900 font-semibold underline cursor-pointer">
+              <button onclick="resetExportFilters()" class="text-[11px] text-rose-700 hover:text-teal-900 font-semibold underline cursor-pointer">
                 ລ້າງຕົວກອງທັງໝົດ
               </button>
             </div>
@@ -871,13 +875,13 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               <div>
                 <label class="block text-[11px] font-bold text-slate-700 mb-1">ກອງຕາມແຂວງ (Province)</label>
-                <select id="expFilterProvince" onchange="updateExportPreview()" class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-teal-500 outline-none">
+                <select id="expFilterProvince" onchange="updateExportPreview()" class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-rose-500 outline-none">
                   <option value="ALL">ທຸກແຂວງ (ທັງໝົດ)</option>
                 </select>
               </div>
               <div>
                 <label class="block text-[11px] font-bold text-slate-700 mb-1">ກອງຕາມສະຖານະ (Status)</label>
-                <select id="expFilterStatus" onchange="updateExportPreview()" class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-teal-500 outline-none">
+                <select id="expFilterStatus" onchange="updateExportPreview()" class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-rose-500 outline-none">
                   <option value="ALL">ທຸກສະຖານະ (Normal & Alert)</option>
                   <option value="NORMAL">✅ Normal (ປົກກະຕິ)</option>
                   <option value="ALERT">🚨 Alert (ເຕືອນໄພເກີນເກນ)</option>
@@ -885,21 +889,21 @@
               </div>
               <div>
                 <label class="block text-[11px] font-bold text-slate-700 mb-1">ຄົ້ນຫາຊື່ບໍລິສັດ/ສະຖານີ</label>
-                <input type="text" id="expFilterSearch" oninput="updateExportPreview()" placeholder="ພິມຊື່ ຫຼື ລະຫັດ..." class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-teal-500 outline-none">
+                <input type="text" id="expFilterSearch" oninput="updateExportPreview()" placeholder="ພິມຊື່ ຫຼື ລະຫັດ..." class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-rose-500 outline-none">
               </div>
             </div>
 
             <!-- Custom Report Title Input -->
             <div>
               <label class="block text-[11px] font-bold text-slate-700 mb-1">ຫົວຂໍ້ບົດລາຍງານທາງການ (Title Header ສໍາລັບ Word/PDF)</label>
-              <input type="text" id="expReportTitle" value="ບົດລາຍງານຜົນການກວດກາ ແລະ ວິເຄາະຄຸນນະພາບນ້ຳ" class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3.5 py-2 font-semibold text-slate-800 focus:ring-2 focus:ring-teal-500 outline-none">
+              <input type="text" id="expReportTitle" value="ບົດລາຍງານຜົນການກວດກາ ແລະ ວິເຄາະຄຸນນະພາບນ້ຳ" class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3.5 py-2 font-semibold text-slate-800 focus:ring-2 focus:ring-rose-500 outline-none">
             </div>
           </div>
 
           <!-- Preview & Count Badge -->
           <div class="flex items-center justify-between px-2 text-xs">
             <span class="text-slate-600 font-medium">
-              ຈຳນວນຂໍ້ມູນທີ່ເລືອກ: <b id="expMatchedRecordsCount" class="text-teal-700 font-bold">0</b> ສະຖານີ 
+              ຈຳນວນຂໍ້ມູນທີ່ເລືອກ: <b id="expMatchedRecordsCount" class="text-rose-700 font-bold">0</b> ສະຖານີ 
               (ຈາກ <b id="expMatchedDatasetsCount" class="text-slate-800">0</b> ຊຸດຂໍ້ມູນບໍລິສັດ)
             </span>
             <span class="text-slate-400 text-[11px]">ພ້ອມສົ່ງອອກທຸກຮູບແບບ</span>
@@ -1019,7 +1023,7 @@
                 <button id="expClearLogsSuperBtn" onclick="clearAllActivityLogs()" class="hidden text-[11px] text-rose-700 hover:text-rose-900 font-semibold bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg cursor-pointer transition" title="ສະເພາະ Super Admin: ລົບປະຫວັດການໃຊ້ງານທັງໝົດ">
                   🗑️ ລົບປະຫວັດທັງໝົດ (Super Admin)
                 </button>
-                <button onclick="fetchActivityLogsForExport()" class="text-[11px] text-teal-700 hover:text-teal-900 font-semibold underline cursor-pointer">
+                <button onclick="fetchActivityLogsForExport()" class="text-[11px] text-rose-700 hover:text-teal-900 font-semibold underline cursor-pointer">
                   ໂຫລດຂໍ້ມູນໃໝ່
                 </button>
               </div>
@@ -1028,7 +1032,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label class="block text-[11px] font-bold text-slate-700 mb-1">ປະເພດການດຳເນີນງານ (Action)</label>
-                <select id="expLogActionFilter" onchange="filterAndRenderLogsExport()" class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-teal-500 outline-none">
+                <select id="expLogActionFilter" onchange="filterAndRenderLogsExport()" class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-rose-500 outline-none">
                   <option value="ALL">ທຸກການກະທຳ (All Actions)</option>
                   <option value="CREATE">🟢 ເພີ່ມຂໍ້ມູນ (CREATE)</option>
                   <option value="EDIT">✏️ ແກ້ໄຂຂໍ້ມູນ (EDIT)</option>
@@ -1038,7 +1042,7 @@
               </div>
               <div>
                 <label class="block text-[11px] font-bold text-slate-700 mb-1">ຄົ້ນຫາຜູ້ບັນທຶກ ຫຼື ລະຫັດ</label>
-                <input type="text" id="expLogSearch" oninput="filterAndRenderLogsExport()" placeholder="ພິມຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດລາຍການ..." class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-teal-500 outline-none">
+                <input type="text" id="expLogSearch" oninput="filterAndRenderLogsExport()" placeholder="ພິມຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດລາຍການ..." class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-rose-500 outline-none">
               </div>
             </div>
           </div>
@@ -1077,7 +1081,7 @@
           <!-- Logs Preview Table -->
           <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-xs">
             <div class="p-3 bg-slate-100/90 border-b border-slate-200 flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-700">📜 ຕົວຢ່າງລາຍການປະຫວັດ (<span id="expLogsMatchedCount" class="font-bold text-teal-700">0</span> ລາຍການ)</span>
+              <span class="text-xs font-bold text-slate-700">📜 ຕົວຢ່າງລາຍການປະຫວັດ (<span id="expLogsMatchedCount" class="font-bold text-rose-700">0</span> ລາຍການ)</span>
             </div>
             <div class="overflow-x-auto max-h-56">
               <table class="w-full text-left text-xs border-collapse">
@@ -1120,7 +1124,7 @@
       <!-- Modal Header -->
       <div class="flex justify-between items-center pb-4 border-b border-slate-800 shrink-0">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-400/20 text-sky-400 flex items-center justify-center text-xl shadow-xs">
+          <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-400/20 text-rose-400 flex items-center justify-center text-xl shadow-xs">
             ⚙️
           </div>
           <div>
@@ -1135,7 +1139,7 @@
 
       <!-- Navigation Tabs (Wastewater style) -->
       <div class="flex items-center gap-2 pt-2 border-b border-slate-800/80 overflow-x-auto text-xs font-semibold shrink-0 pb-3">
-        <button type="button" onclick="switchConfigTab('indicators')" id="tabBtn-indicators" class="flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer bg-sky-500 text-white shadow-md shadow-sky-500/25 font-bold shrink-0">
+        <button type="button" onclick="switchConfigTab('indicators')" id="tabBtn-indicators" class="flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer bg-rose-500 text-white shadow-md shadow-rose-500/25 font-bold shrink-0">
           <span>🧪</span>
           <span>1. ດັດຊະນີ (Indicators)</span>
         </button>
@@ -1160,15 +1164,15 @@
       <!-- Tab 1: Indicators -->
       <div id="tabContent-indicators" class="space-y-4 overflow-y-auto flex-1 pr-1 pt-1">
         <div class="p-4 rounded-2xl bg-slate-850 border border-slate-800 space-y-3">
-          <div class="flex items-center gap-2 text-xs font-bold text-sky-300">
+          <div class="flex items-center gap-2 text-xs font-bold text-rose-300">
             <span>🧪</span>
             <span>ເພີ່ມດັດຊະນີຄຸນນະພາບນ້ຳໃໝ່ (Add Custom Indicator)</span>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input type="text" id="newIndName" autocomplete="off" placeholder="ຊື່ດັດຊະນີ (ເຊັ່ນ: pH, BOD, DO, TSS)" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-sky-500">
-            <input type="text" id="newIndUnit" autocomplete="off" placeholder="ຫົວໜ່ວຍ (ເຊັ່ນ: mg/L, °C, NTU)" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-sky-500">
+            <input type="text" id="newIndName" autocomplete="off" placeholder="ຊື່ດັດຊະນີ (ເຊັ່ນ: pH, BOD, DO, TSS)" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-rose-500">
+            <input type="text" id="newIndUnit" autocomplete="off" placeholder="ຫົວໜ່ວຍ (ເຊັ່ນ: mg/L, °C, NTU)" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-rose-500">
           </div>
-          <button type="button" onclick="addCustomIndicator()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-md shadow-sky-600/25 transition cursor-pointer flex items-center justify-center gap-1.5">
+          <button type="button" onclick="addCustomIndicator()" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-md shadow-rose-600/25 transition cursor-pointer flex items-center justify-center gap-1.5">
             <span>➕</span>
             <span>ເພີ່ມ Indicator ເຂົ້າລະບົບ</span>
           </button>
@@ -1187,7 +1191,7 @@
           ⚠️ <b>ເກນເຕືອນໄພຄຸນນະພາບນ້ຳ:</b> ຄ່າທີ່ເກີນ ຫຼື ຕ່ຳກວ່າເກນນີ້ ຈະຖືກໝາຍເປັນສະຖານະແຈ້ງເຕືອນ (Alert) ໃນຕາຕະລາງ ແລະ ແຜນທີ່ໂດຍອັດຕະໂນມັດ.
         </div>
         <div id="dynamicThresholdsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs max-h-80 overflow-y-auto p-2 bg-slate-850/60 border border-slate-800 rounded-2xl"></div>
-        <button type="button" onclick="saveThresholdConfig()" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-md shadow-sky-600/25 transition cursor-pointer flex items-center justify-center gap-1.5">
+        <button type="button" onclick="saveThresholdConfig()" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-md shadow-rose-600/25 transition cursor-pointer flex items-center justify-center gap-1.5">
           <span>💾</span>
           <span>ບັນທຶກເກນເຕືອນໄພ</span>
         </button>
@@ -1203,20 +1207,20 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-[10px] font-bold text-slate-300 mb-1">🔤 ຊື່ເຂົ້າລະບົບ (Username ໃຊ້ Login)</label>
-              <input type="text" id="newUserName" autocomplete="off" placeholder="ເຊັ່ນ: palami" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 w-full outline-none focus:ring-2 focus:ring-sky-500">
+              <input type="text" id="newUserName" autocomplete="off" placeholder="ເຊັ່ນ: palami" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 w-full outline-none focus:ring-2 focus:ring-rose-500">
             </div>
             <div>
               <label class="block text-[10px] font-bold text-slate-300 mb-1">🔑 ລະຫັດຜ່ານ (Password)</label>
-              <input type="password" id="newUserPass" autocomplete="new-password" placeholder="ຢ່າງນ້ອຍ 4 ຕົວອັກສອນ" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 w-full outline-none focus:ring-2 focus:ring-sky-500">
+              <input type="password" id="newUserPass" autocomplete="new-password" placeholder="ຢ່າງນ້ອຍ 4 ຕົວອັກສອນ" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 w-full outline-none focus:ring-2 focus:ring-rose-500">
             </div>
           </div>
           <div>
             <label class="block text-[10px] font-bold text-slate-300 mb-1">👤 ຊື່ເຕັມ / ຕຳແໜ່ງ (ສະແດງໃນລະບົບ ແລະ ປະຫວັດ)</label>
-            <input type="text" id="newUserFullName" autocomplete="off" placeholder="ເຊັ່ນ: ນ. ປາລະມີ ແສງບົວພາ, ວິຊາການຄຸ້ມຄອງຄຸນນະພາບນ້ຳ" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 w-full outline-none focus:ring-2 focus:ring-sky-500">
+            <input type="text" id="newUserFullName" autocomplete="off" placeholder="ເຊັ່ນ: ນ. ປາລະມີ ແສງບົວພາ, ວິຊາການຄຸ້ມຄອງຄຸນນະພາບນ້ຳ" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white placeholder-slate-500 w-full outline-none focus:ring-2 focus:ring-rose-500">
           </div>
           <div>
             <label class="block text-[10px] font-bold text-slate-300 mb-1">🛡️ ສິດການນຳໃຊ້ (Role)</label>
-            <select id="newUserRole" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white w-full outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
+            <select id="newUserRole" class="border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-xs text-white w-full outline-none focus:ring-2 focus:ring-rose-500 cursor-pointer">
               <option value="STAFF">🛠️ Staff (ບັນທຶກ/ແກ້ໄຂໄດ້)</option>
               <option value="SUPER_ADMIN">👑 Super Admin (ທຸກຢ່າງ + ຈັດການຜູ້ໃຊ້ + ລົບປະຫວັດ)</option>
               <option value="VIEWER">👁️ Viewer (ເບິ່ງຢ່າງດຽວ)</option>
@@ -1237,13 +1241,13 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800 gap-3 shrink-0">
           <div>
             <h4 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-              <span class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-400/20 text-sky-400 flex items-center justify-center text-sm font-bold">📜</span>
+              <span class="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-400/20 text-rose-400 flex items-center justify-center text-sm font-bold">📜</span>
               <span>ປະຫວັດການດໍາເນີນງານໃນລະບົບ (Audit Trail)</span>
             </h4>
             <p class="text-xs text-slate-400 mt-0.5">ບັນທຶກທຸກການເຄື່ອນໄຫວ ເຊັ່ນ ການເພີ່ມ, ແກ້ໄຂ, ລຶບຂໍ້ມູນ ຫຼື ການເຂົ້າລະບົບ</p>
           </div>
           <div class="flex items-center gap-2 flex-wrap">
-            <button type="button" onclick="toggleSettingsModal(); openExportModal('logs');" class="px-3 py-1.5 rounded-xl bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/30 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer" title="ສົ່ງອອກບົດລາຍງານປະຫວັດການໃຊ້ງານ">
+            <button type="button" onclick="toggleSettingsModal(); openExportModal('logs');" class="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer" title="ສົ່ງອອກບົດລາຍງານປະຫວັດການໃຊ້ງານ">
               <span>📥</span>
               <span>ສົ່ງອອກລາຍງານ</span>
             </button>
@@ -1261,7 +1265,7 @@
         <!-- Filter & Search Toolbar -->
         <div class="flex flex-col sm:flex-row items-center gap-2 shrink-0">
           <div class="w-full sm:w-48">
-            <select id="logActionFilter" onchange="filterActivityLogsDisplay()" class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer">
+            <select id="logActionFilter" onchange="filterActivityLogsDisplay()" class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-rose-500 cursor-pointer">
               <option value="ALL">ທຸກປະເພດການກະທຳ (ທັງໝົດ)</option>
               <option value="CREATE">➕ ເພີ່ມຂໍ້ມູນ (Create)</option>
               <option value="UPDATE">✏️ ແກ້ໄຂຂໍ້ມູນ (Update)</option>
@@ -1271,7 +1275,7 @@
             </select>
           </div>
           <div class="w-full sm:flex-1 relative">
-            <input type="text" id="logSearchQuery" oninput="filterActivityLogsDisplay()" placeholder="🔍 ຄົ້ນຫາປະຫວັດ (ຊື່ສະຖານີ, ລະຫັດ, ຜູ້ດຳເນີນການ...)" class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl pl-3 pr-8 py-2 outline-none focus:ring-2 focus:ring-sky-500 placeholder:text-slate-500">
+            <input type="text" id="logSearchQuery" oninput="filterActivityLogsDisplay()" placeholder="🔍 ຄົ້ນຫາປະຫວັດ (ຊື່ສະຖານີ, ລະຫັດ, ຜູ້ດຳເນີນການ...)" class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-xl pl-3 pr-8 py-2 outline-none focus:ring-2 focus:ring-rose-500 placeholder:text-slate-500">
             <button type="button" onclick="document.getElementById('logSearchQuery').value=''; filterActivityLogsDisplay();" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 text-xs font-bold cursor-pointer">&times;</button>
           </div>
         </div>
@@ -1294,8 +1298,8 @@
 
       <!-- Tab 5: Export Security -->
       <div id="tabContent-exportSecurity" class="space-y-4 hidden overflow-y-auto flex-1 pr-1 pt-1">
-        <div class="p-4 bg-sky-950/40 border border-sky-800/40 rounded-2xl text-sky-200 text-xs space-y-1.5 leading-relaxed">
-          <p class="font-bold flex items-center gap-1.5 text-sky-300">
+        <div class="p-4 bg-sky-950/40 border border-sky-800/40 rounded-2xl text-rose-200 text-xs space-y-1.5 leading-relaxed">
+          <p class="font-bold flex items-center gap-1.5 text-rose-300">
             <span>🛡️</span> ນະໂຍບາຍຄວາມປອດໄພການດາວໂຫຼດຂໍ້ມູນ (Data Export Protection):
           </p>
           <p class="text-slate-300">
@@ -1307,7 +1311,7 @@
           <div>
             <label class="block text-xs font-bold text-slate-200 mb-1">🔑 ລະຫັດອະນຸຍາດດາວໂຫຼດຂໍ້ມູນ (Export Passcode)</label>
             <div class="flex gap-2">
-              <input type="text" id="exportPasscodeInput" autocomplete="off" placeholder="ກຳນົດລະຫັດດາວໂຫຼດ ເຊັ່ນ: 8888" class="flex-1 border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-sm font-mono font-bold text-sky-300 outline-none focus:ring-2 focus:ring-sky-500">
+              <input type="text" id="exportPasscodeInput" autocomplete="off" placeholder="ກຳນົດລະຫັດດາວໂຫຼດ ເຊັ່ນ: 8888" class="flex-1 border border-slate-700 bg-slate-800 p-2.5 rounded-xl text-sm font-mono font-bold text-rose-300 outline-none focus:ring-2 focus:ring-rose-500">
               <button type="button" onclick="copyExportPasscode()" class="cursor-pointer px-3.5 py-2 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700 text-xs font-bold rounded-xl transition" title="ສຳເນົາລະຫັດ">📋 ສຳເນົາ</button>
             </div>
             <p class="text-[11px] text-slate-400 mt-1">ລະຫັດນີ້ຈະຖືກນຳໃຊ້ຮ່ວມກັນທັງ 3 ລະບົບ (ຄຸນນະພາບນ້ຳ, ການນຳໃຊ້ນ້ຳ ແລະ ນ້ຳເປື້ອນ).</p>
@@ -1315,7 +1319,7 @@
 
           <div class="pt-2 flex items-center justify-between">
             <span id="exportSecurityStatusText" class="text-xs text-slate-400"></span>
-            <button type="button" onclick="saveExportSecurityConfig()" class="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md shadow-sky-600/25 transition">
+            <button type="button" onclick="saveExportSecurityConfig()" class="cursor-pointer bg-rose-600 hover:bg-rose-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md shadow-rose-600/25 transition">
               💾 ບັນທຶກລະຫັດດາວໂຫຼດ
             </button>
           </div>
@@ -1390,12 +1394,12 @@
       document.querySelectorAll('[data-nav-view]').forEach(btn => {
         const isAct = btn.dataset.navView === currentAppView;
         btn.classList.toggle('bg-gradient-to-r', isAct);
-        btn.classList.toggle('from-sky-500', isAct);
+        btn.classList.toggle('from-rose-500', isAct);
         btn.classList.toggle('to-indigo-600', isAct);
         btn.classList.toggle('text-white', isAct);
         btn.classList.toggle('font-bold', isAct);
         btn.classList.toggle('shadow-md', isAct);
-        btn.classList.toggle('shadow-sky-500/20', isAct);
+        btn.classList.toggle('shadow-rose-500/20', isAct);
 
         btn.classList.toggle('text-slate-300', !isAct);
         btn.classList.toggle('hover:bg-slate-800', !isAct);
@@ -1972,7 +1976,7 @@
     /* --- USER MANAGEMENT (per-user password instead of one shared code) --- */
     const loginOf = u => u.username || u.name || '';
     const ROLE_LABEL = { SUPER_ADMIN: '👑 Super Admin', STAFF: '🛠️ Staff', VIEWER: '👁️ ເບິ່ງຢ່າງດຽວ' };
-    const ROLE_CLASS = { SUPER_ADMIN: 'bg-amber-100 text-amber-800', STAFF: 'bg-sky-100 text-sky-800', VIEWER: 'bg-purple-100 text-purple-800' };
+    const ROLE_CLASS = { SUPER_ADMIN: 'bg-amber-100 text-amber-800', STAFF: 'bg-rose-100 text-sky-800', VIEWER: 'bg-purple-100 text-purple-800' };
 
     function validateLogin(login, exceptKey) {
       if (!login) return 'ກະລຸນາລະບຸຊື່ເຂົ້າລະບົບ!';
@@ -2100,13 +2104,13 @@
           <div class="min-w-0">
             <div class="font-bold text-white truncate text-sm">${escAttr(u.fullName || u.name)}${me ? ' <span class="text-emerald-400 text-xs font-semibold">(ທ່ານ)</span>' : ''}</div>
             <div class="flex flex-wrap items-center gap-2 mt-1">
-              <span class="font-mono text-[11px] text-sky-300 truncate max-w-[220px] bg-slate-900/60 px-2 py-0.5 rounded-lg border border-slate-700" title="ຊື່ເຂົ້າລະບົບ">🔤 @${escAttr(login)}</span>
+              <span class="font-mono text-[11px] text-rose-300 truncate max-w-[220px] bg-slate-900/60 px-2 py-0.5 rounded-lg border border-slate-700" title="ຊື່ເຂົ້າລະບົບ">🔤 @${escAttr(login)}</span>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${ROLE_CLASS[u.role] || ROLE_CLASS.VIEWER}">${ROLE_LABEL[u.role] || ROLE_LABEL.VIEWER}</span>
             </div>
             ${long ? '<div class="text-[10px] text-amber-300 mt-1">⚠️ ຊື່ເຂົ້າລະບົບຍາວເກີນ — ກົດ ✏️ ແກ້ໄຂແລ້ວຕັ້ງຊື່ສັ້ນໆ</div>' : ''}
           </div>
           <div class="flex items-center gap-2 shrink-0">
-            <button type="button" onclick="editSystemUser('${u.fbKey}')" class="px-2.5 py-1.5 rounded-xl border border-sky-500/30 bg-sky-500/10 text-sky-300 font-bold hover:bg-sky-500/20 text-xs cursor-pointer transition">✏️ ແກ້ໄຂ</button>
+            <button type="button" onclick="editSystemUser('${u.fbKey}')" class="px-2.5 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 font-bold hover:bg-rose-500/20 text-xs cursor-pointer transition">✏️ ແກ້ໄຂ</button>
             ${me ? '' : `<button type="button" data-name="${escAttr(u.fullName || u.name)}" onclick="removeSystemUser('${u.fbKey}', this.dataset.name)" class="px-2.5 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 font-bold hover:bg-rose-500/20 text-xs cursor-pointer transition">🗑️ ລົບ</button>`}
           </div>
         </li>`;
@@ -2261,7 +2265,7 @@
           actionLabel = 'ບັນທຶກຂໍ້ມູນໃໝ່';
         } else if (act.includes('UPDATE') || act.includes('EDIT') || act.includes('ແກ້ໄຂ') || act.includes('ບັນທຶກ')) {
           iconHtml = '✏️';
-          iconBadgeClass = 'bg-sky-500/10 text-sky-400 border border-sky-500/20';
+          iconBadgeClass = 'bg-rose-500/10 text-rose-400 border border-rose-500/20';
           if (log.action === 'EDIT_STATION') actionLabel = 'ແກ້ໄຂສະຖານີ';
           else if (log.action === 'EDIT_MASTER') actionLabel = 'ແກ້ໄຂຂໍ້ມູນຫຼັກ';
         } else if (act.includes('MERGE') || act.includes('IMPORT') || act.includes('ນຳເຂົ້າ')) {
@@ -2289,12 +2293,12 @@
               <div class="min-w-0 flex-1">
                 <div class="font-semibold text-slate-200 flex items-center gap-2 flex-wrap">
                   <span>${actionLabel}</span>
-                  ${log.itemCode ? `<span class="font-mono text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-sky-300 border border-slate-700/80">${escapeHtml(log.itemCode)}</span>` : ''}
+                  ${log.itemCode ? `<span class="font-mono text-[11px] px-2 py-0.5 rounded-md bg-slate-800 text-rose-300 border border-slate-700/80">${escapeHtml(log.itemCode)}</span>` : ''}
                 </div>
                 <div class="text-[11px] text-slate-400 mt-1 flex items-center gap-2 flex-wrap">
                   <span>ຜູ້ດຳເນີນການ: <strong class="text-slate-300 font-medium">${escapeHtml(log.performedBy || 'ບໍ່ລະບຸ')}</strong></span>
                   <span>•</span>
-                  <span>ສິດ: <span class="text-sky-300 font-medium">${escapeHtml(log.userRole || '-')}</span></span>
+                  <span>ສິດ: <span class="text-rose-300 font-medium">${escapeHtml(log.userRole || '-')}</span></span>
                   ${log.details ? `<span>•</span><span class="text-slate-300">${escapeHtml(log.details)}</span>` : ''}
                 </div>
               </div>
@@ -2508,7 +2512,7 @@
       const activeC = document.getElementById(`tabContent-${tabName}`);
       const activeB = document.getElementById(`tabBtn-${tabName}`);
       if (activeC) activeC.classList.remove('hidden');
-      if (activeB) activeB.className = "flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer bg-sky-500 text-white shadow-md shadow-sky-500/25 font-bold shrink-0";
+      if (activeB) activeB.className = "flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all cursor-pointer bg-rose-500 text-white shadow-md shadow-rose-500/25 font-bold shrink-0";
       
       if (tabName === 'indicators') renderSettingsList();
       if (tabName === 'thresholds') renderThresholdFields();
@@ -2567,7 +2571,7 @@
       Swal.fire({
         icon: 'success',
         title: 'ບັນທຶກລະຫັດດາວໂຫຼດສຳເລັດ!',
-        html: `ລະຫັດອະນຸຍາດດາວໂຫຼດໃໝ່ສຳລັບຜູ້ໃຊ້ທົ່ວໄປແມ່ນ: <b class="font-mono text-sky-600">${escAttr(val)}</b>`,
+        html: `ລະຫັດອະນຸຍາດດາວໂຫຼດໃໝ່ສຳລັບຜູ້ໃຊ້ທົ່ວໄປແມ່ນ: <b class="font-mono text-rose-600">${escAttr(val)}</b>`,
         timer: 2000,
         showConfirmButton: false
       });
@@ -2601,15 +2605,15 @@
 
         html += `
           <div class="p-3 bg-slate-800/80 rounded-2xl border border-slate-700/80 space-y-2">
-            <div class="font-bold text-sky-300 text-xs truncate">🧪 ${escAttr(displayName)}</div>
+            <div class="font-bold text-rose-300 text-xs truncate">🧪 ${escAttr(displayName)}</div>
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="block text-[10px] font-semibold text-slate-400 mb-1">ຕ່ຳສຸດ (Min)</label>
-                <input type="number" step="any" id="cfg_${i.key}_min" autocomplete="off" value="${minVal}" placeholder="ບໍ່ກຳນົດ" class="w-full border border-slate-700 bg-slate-900 text-white p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500">
+                <input type="number" step="any" id="cfg_${i.key}_min" autocomplete="off" value="${minVal}" placeholder="ບໍ່ກຳນົດ" class="w-full border border-slate-700 bg-slate-900 text-white p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-rose-500">
               </div>
               <div>
                 <label class="block text-[10px] font-semibold text-slate-400 mb-1">ສູງສຸດ (Max)</label>
-                <input type="number" step="any" id="cfg_${i.key}_max" autocomplete="off" value="${maxVal}" placeholder="ບໍ່ກຳນົດ" class="w-full border border-slate-700 bg-slate-900 text-white p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-sky-500">
+                <input type="number" step="any" id="cfg_${i.key}_max" autocomplete="off" value="${maxVal}" placeholder="ບໍ່ກຳນົດ" class="w-full border border-slate-700 bg-slate-900 text-white p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-rose-500">
               </div>
             </div>
           </div>
@@ -2910,7 +2914,7 @@
       const row = (i, archivedRow) => {
         const n = countValuesFor(i.key);
         return `
-          <label class="flex items-center gap-2 px-2.5 py-2 rounded-xl border ${indSel.has(i.key) ? 'bg-sky-950/50 border-sky-500/60 text-white' : archivedRow ? 'bg-slate-900/60 border-slate-800 text-slate-400 border-dashed' : 'bg-slate-800/80 border-slate-700/80 text-slate-200'} cursor-pointer hover:border-slate-600 transition">
+          <label class="flex items-center gap-2 px-2.5 py-2 rounded-xl border ${indSel.has(i.key) ? 'bg-sky-950/50 border-rose-500/60 text-white' : archivedRow ? 'bg-slate-900/60 border-slate-800 text-slate-400 border-dashed' : 'bg-slate-800/80 border-slate-700/80 text-slate-200'} cursor-pointer hover:border-slate-600 transition">
             <input type="checkbox" class="accent-sky-500" ${indSel.has(i.key) ? 'checked' : ''} onchange="toggleIndSel('${i.key}', this.checked)">
             <span class="flex-1 min-w-0 truncate ${archivedRow ? 'text-slate-400' : ''}"><b>${escAttr(i.name)}</b> <span class="text-slate-400 text-xs">(${escAttr(i.unit || '-')})</span></span>
             <span class="text-[10px] ${n ? 'text-emerald-400 font-bold' : 'text-slate-500'} shrink-0">${n} ຄ່າ</span>
@@ -2922,7 +2926,7 @@
       };
 
       const groupHead = (g, label, count) => `
-        <button type="button" onclick="toggleIndCollapse('${g}')" class="w-full flex items-center gap-1.5 text-left font-bold text-slate-200 py-1.5 hover:text-sky-400 transition cursor-pointer">
+        <button type="button" onclick="toggleIndCollapse('${g}')" class="w-full flex items-center gap-1.5 text-left font-bold text-slate-200 py-1.5 hover:text-rose-400 transition cursor-pointer">
           <span class="inline-block w-3 text-slate-400">${indCollapsed[g] ? '▶' : '▼'}</span> ${label} <span class="font-normal text-slate-400 text-xs">(${count})</span>
         </button>`;
 
@@ -2936,7 +2940,7 @@
                 .map(([m, t]) => `<button type="button" onclick="selectInds('${m}')" class="block w-full text-left px-3 py-1.5 hover:bg-slate-700 text-xs">${t}</button>`).join('')}
             </div>
           </div>
-          <input id="indSearchBox" type="text" value="${escAttr(indSearch)}" oninput="setIndSearch(this.value)" placeholder="🔍 ຄົ້ນຫາໂຕຊີ້ວັດ..." class="flex-1 min-w-[120px] border border-slate-700 bg-slate-800 text-white placeholder-slate-500 rounded-xl px-3 py-2 outline-none text-xs focus:ring-2 focus:ring-sky-500">
+          <input id="indSearchBox" type="text" value="${escAttr(indSearch)}" oninput="setIndSearch(this.value)" placeholder="🔍 ຄົ້ນຫາໂຕຊີ້ວັດ..." class="flex-1 min-w-[120px] border border-slate-700 bg-slate-800 text-white placeholder-slate-500 rounded-xl px-3 py-2 outline-none text-xs focus:ring-2 focus:ring-rose-500">
         </div>
 
         ${selN ? `
@@ -2997,7 +3001,7 @@
           <div data-indname="${escAttr(normHeader(i.name + ' ' + (i.unit || '')))}">
             <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">${i.name} ${i.unit ? '(' + i.unit + ')' : ''}</label>
             <div class="flex gap-1.5">
-              <input type="text" id="input_${i.key}" ${isDisabled} autocomplete="off" placeholder="ຕົວເລກ, <0.01, >100" class="flex-1 min-w-0 border p-1.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-sky-500">
+              <input type="text" id="input_${i.key}" ${isDisabled} autocomplete="off" placeholder="ຕົວເລກ, <0.01, >100" class="flex-1 min-w-0 border p-1.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-rose-500">
               <button type="button" onclick="toggleNDInput('${i.key}')" id="ndBtn_${i.key}" ${isDisabled} class="shrink-0 px-2.5 rounded-lg text-[11px] font-bold border transition bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200" title="ND = Not Detected (ບໍ່ພົບ/ຕ່ຳກວ່າຄ່າຕ່ຳສຸດທີ່ວັດແທກໄດ້)">ND</button>
             </div>
           </div>
@@ -3080,7 +3084,7 @@
             label: 'ດີ',
             color: '#0284c7',
             dot: '🟢',
-            badgeClass: 'bg-sky-100 text-sky-800 border-sky-300',
+            badgeClass: 'bg-rose-100 text-sky-800 border-rose-300',
             desc: 'ຄຸນນະພາບນໍ້າດີ: ເໝາະສຳລັບການກະສິກຳ, ລ້ຽງສັດນ້ຳ ແລະ ນຳໃຊ້ທົ່ວໄປຫຼັງບຳບັດ'
           };
         } else if (num >= 51) {
@@ -3123,7 +3127,7 @@
         return { score: '-', level: 'EXCELLENT', text: 'ດີຫຼາຍ (Very Good)', label: 'ດີຫຼາຍ', dot: '🟢', badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300', desc: 'ຄຸນນະພາບນໍ້າດີຫຼາຍ' };
       }
       if (/ດີ|good/i.test(s)) {
-        return { score: '-', level: 'GOOD', text: 'ດີ (Good)', label: 'ດີ', dot: '🟢', badgeClass: 'bg-sky-100 text-sky-800 border-sky-300', desc: 'ຄຸນນະພາບນໍ້າດີ' };
+        return { score: '-', level: 'GOOD', text: 'ດີ (Good)', label: 'ດີ', dot: '🟢', badgeClass: 'bg-rose-100 text-sky-800 border-rose-300', desc: 'ຄຸນນະພາບນໍ້າດີ' };
       }
       if (/ປານກາງ|moderate|fair/i.test(s)) {
         return { score: '-', level: 'MODERATE', text: 'ປານກາງ (Moderate)', label: 'ປານກາງ', dot: '🟡', badgeClass: 'bg-amber-100 text-amber-800 border-amber-300', desc: 'ຄຸນນະພາບນໍ້າປານກາງ' };
@@ -3272,7 +3276,7 @@
       const qwiScores = [];
       const distribution = {
         EXCELLENT: { count: 0, label: 'ດີຫຼາຍ', range: '91 — 100', dot: '🟢', class: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
-        GOOD:      { count: 0, label: 'ດີ',     range: '71 — 90',  dot: '🟢', class: 'bg-sky-100 text-sky-800 border-sky-300' },
+        GOOD:      { count: 0, label: 'ດີ',     range: '71 — 90',  dot: '🟢', class: 'bg-rose-100 text-sky-800 border-rose-300' },
         MODERATE:  { count: 0, label: 'ປານກາງ', range: '51 — 70',  dot: '🟡', class: 'bg-amber-100 text-amber-800 border-amber-300' },
         POOR:      { count: 0, label: 'ບໍ່ດີ/ຕ່ຳ', range: '31 — 50',  dot: '🟠', class: 'bg-orange-100 text-orange-800 border-orange-300' },
         VERY_POOR: { count: 0, label: 'ເສື່ອມໂຊມຫຼາຍ', range: '< 31', dot: '🔴', class: 'bg-rose-100 text-rose-800 border-rose-300' }
@@ -3418,7 +3422,7 @@
                         <span class="text-[10.5px] font-semibold text-slate-600">${pct}%</span>
                       </div>
                       <div class="w-full bg-slate-100 rounded-full h-1.5 mt-1.5 overflow-hidden">
-                        <div class="h-full rounded-full transition-all duration-300 ${key === 'EXCELLENT' ? 'bg-emerald-500' : key === 'GOOD' ? 'bg-sky-500' : key === 'MODERATE' ? 'bg-amber-500' : key === 'POOR' ? 'bg-orange-500' : 'bg-rose-500'}" style="width: ${pct}%"></div>
+                        <div class="h-full rounded-full transition-all duration-300 ${key === 'EXCELLENT' ? 'bg-emerald-500' : key === 'GOOD' ? 'bg-rose-500' : key === 'MODERATE' ? 'bg-amber-500' : key === 'POOR' ? 'bg-orange-500' : 'bg-rose-500'}" style="width: ${pct}%"></div>
                       </div>
                     </div>
                   `;
@@ -3462,7 +3466,7 @@
                               <td class="p-2.5 text-slate-600 font-medium">${escAttr(comp)}</td>
                               <td class="p-2.5 text-slate-600">${escAttr(st.province || '-')}</td>
                               <td class="p-2.5 text-center text-slate-500">${st.sampleDate ? fmtSampleDate(st.sampleDate) : '-'}</td>
-                              <td class="p-2.5 text-center font-bold font-mono text-base ${qi ? (qi.level === 'EXCELLENT' ? 'text-emerald-700' : qi.level === 'GOOD' ? 'text-sky-700' : qi.level === 'MODERATE' ? 'text-amber-700' : 'text-rose-700') : 'text-slate-400'}">
+                              <td class="p-2.5 text-center font-bold font-mono text-base ${qi ? (qi.level === 'EXCELLENT' ? 'text-emerald-700' : qi.level === 'GOOD' ? 'text-rose-700' : qi.level === 'MODERATE' ? 'text-amber-700' : 'text-rose-700') : 'text-slate-400'}">
                                 ${qi && qi.score !== '-' ? qi.score : (st.qwi || '-')}
                               </td>
                               <td class="p-2.5 text-center">
@@ -3725,13 +3729,13 @@
                 <span class="text-[10px] text-amber-700 font-medium">ມີຈຸດວັດແທກທີ່ຜິດປົກກະຕິ</span>
               </div>
 
-              <div class="bg-gradient-to-br from-sky-50 to-white p-3.5 rounded-xl border border-sky-200 flex flex-col justify-between">
+              <div class="bg-gradient-to-br from-sky-50 to-white p-3.5 rounded-xl border border-rose-200 flex flex-col justify-between">
                 <span class="text-slate-500 font-semibold text-[11px]">ພາຣາມິເຕີທີ່ເກີນເກນ</span>
                 <div class="my-1 flex items-baseline gap-1.5">
-                  <span class="text-2xl md:text-3xl font-extrabold text-sky-700">${topViolatedParams.length}</span>
+                  <span class="text-2xl md:text-3xl font-extrabold text-rose-700">${topViolatedParams.length}</span>
                   <span class="text-xs text-slate-400">ຕົວຊີ້ວັດ</span>
                 </div>
-                <span class="text-[10px] text-sky-700 font-medium">ຖືກລະບຸວ່າມີຄ່າຜິດມາດຕະຖານ</span>
+                <span class="text-[10px] text-rose-700 font-medium">ຖືກລະບຸວ່າມີຄ່າຜິດມາດຕະຖານ</span>
               </div>
 
               <div class="bg-gradient-to-br from-violet-50 to-white p-3.5 rounded-xl border border-violet-200 flex flex-col justify-between">
@@ -3916,13 +3920,13 @@
                     <span class="font-bold text-slate-800 text-sm">${escAttr(name)}</span>
                     ${renderOrgBadge(comp)}
                     ${item.section ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600">📂 ${escAttr(item.section)}</span>` : ''}
-                    ${province && province !== '-' ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-100">📍 ${escAttr(province)}</span>` : ''}
+                    ${province && province !== '-' ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 text-rose-700 border border-sky-100">📍 ${escAttr(province)}</span>` : ''}
                   </div>
 
                   <!-- Quick Action Buttons -->
                   <div class="flex items-center gap-1.5 flex-wrap">
                     ${coordsValid ? `
-                      <button type="button" onclick="jumpFromAlertToMap('${rec.fbKey}', ${stIdx})" class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 font-bold text-[11px] transition" title="ເບິ່ງຈຸດນີ້ໃນແຜນທີ່ Google Maps GIS">
+                      <button type="button" onclick="jumpFromAlertToMap('${rec.fbKey}', ${stIdx})" class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-[11px] transition" title="ເບິ່ງຈຸດນີ້ໃນແຜນທີ່ Google Maps GIS">
                         🗺️ <span>ແຜນທີ່</span>
                       </button>
                     ` : `
@@ -4682,12 +4686,12 @@
       const others = waterData.filter(d => d.fbKey !== item.fbKey);
       if (!others.length) return '';
       return `
-        <div class="mt-2 flex flex-wrap items-center gap-2 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2 text-[11px]">
+        <div class="mt-2 flex flex-wrap items-center gap-2 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2 text-[11px]">
           <span class="font-bold text-teal-800">🔗 ລວມຊຸດນີ້ເຂົ້າກັບ:</span>
           <select id="mergeInto_${item.fbKey}" class="flex-1 min-w-[160px] border rounded px-2 py-1 bg-white">
             ${others.map(d => `<option value="${d.fbKey}">${escAttr(d.companyName || d.name)} (${stationsOf(d).length})</option>`).join('')}
           </select>
-          <button onclick="mergeDatasetInto('${item.fbKey}', document.getElementById('mergeInto_${item.fbKey}').value)" class="bg-teal-600 hover:bg-teal-500 text-white font-bold px-3 py-1 rounded">ລວມ</button>
+          <button onclick="mergeDatasetInto('${item.fbKey}', document.getElementById('mergeInto_${item.fbKey}').value)" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1 rounded">ລວມ</button>
           <span class="text-slate-400 w-full">💡 ຢູ່ຄອມ: ລາກແຖວຊຸດຂໍ້ມູນ (⠿) ໄປວາງໃສ່ອີກຊຸດໜຶ່ງກໍ່ລວມໄດ້</span>
         </div>`;
     }
@@ -5743,10 +5747,10 @@
       { bg: 'bg-indigo-100',  text: 'text-indigo-800',  dot: 'bg-indigo-500' },
       { bg: 'bg-emerald-100', text: 'text-emerald-800', dot: 'bg-emerald-500' },
       { bg: 'bg-amber-100',   text: 'text-amber-800',   dot: 'bg-amber-500' },
-      { bg: 'bg-sky-100',     text: 'text-sky-800',     dot: 'bg-sky-500' },
+      { bg: 'bg-rose-100',     text: 'text-sky-800',     dot: 'bg-rose-500' },
       { bg: 'bg-rose-100',    text: 'text-rose-800',    dot: 'bg-rose-500' },
       { bg: 'bg-violet-100',  text: 'text-violet-800',  dot: 'bg-violet-500' },
-      { bg: 'bg-teal-100',    text: 'text-teal-800',    dot: 'bg-teal-500' },
+      { bg: 'bg-rose-100',    text: 'text-teal-800',    dot: 'bg-rose-500' },
       { bg: 'bg-orange-100',  text: 'text-orange-800',  dot: 'bg-orange-500' },
     ];
 
@@ -5830,10 +5834,10 @@
       if (!dup.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
       box.classList.remove('hidden');
       box.innerHTML = `
-        <div class="flex flex-wrap items-center gap-3 bg-teal-50 border border-teal-300 rounded-xl px-3 py-2 text-xs">
+        <div class="flex flex-wrap items-center gap-3 bg-rose-50 border border-rose-300 rounded-xl px-3 py-2 text-xs">
           <span class="font-bold text-teal-900">🔗 ພົບ ${dup.length} ບໍລິສັດ ທີ່ຍັງແຍກເປັນຫຼາຍຊຸດ</span>
           <span class="text-teal-800">${dup.slice(0, 3).map(g => `${escAttr(parseCompanyTitle(g[0].companyName || g[0].name).company)} (${g.length} ຊຸດ)`).join(' · ')}${dup.length > 3 ? ' …' : ''}</span>
-          <button onclick="mergeDuplicateDatasets()" class="ml-auto bg-teal-600 hover:bg-teal-500 text-white font-bold px-3 py-1.5 rounded-lg shadow-sm">🔗 ລວມເປັນບໍລິສັດດຽວ</button>
+          <button onclick="mergeDuplicateDatasets()" class="ml-auto bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1.5 rounded-lg shadow-sm">🔗 ລວມເປັນບໍລິສັດດຽວ</button>
         </div>`;
     }
 
@@ -6039,7 +6043,7 @@
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            ${card(`ບໍລິສັດ / ໂຄງການ ທີ່ກວດໃນປີ ${y}`, '🏢', `<span class="text-3xl font-extrabold text-slate-800">${cur.companies}</span>`, '<span class="text-xs text-slate-500">ບໍລິສັດ</span>', `ປີກ່ອນ (${y - 1}): <b class="text-slate-700">${prev.companies}</b> ບໍລິສັດ`, 'bg-sky-50 text-sky-600')}
+            ${card(`ບໍລິສັດ / ໂຄງການ ທີ່ກວດໃນປີ ${y}`, '🏢', `<span class="text-3xl font-extrabold text-slate-800">${cur.companies}</span>`, '<span class="text-xs text-slate-500">ບໍລິສັດ</span>', `ປີກ່ອນ (${y - 1}): <b class="text-slate-700">${prev.companies}</b> ບໍລິສັດ`, 'bg-rose-50 text-rose-600')}
             ${card('ການປ່ຽນແປງ (ເພີ່ມ / ຫຼຸດ)', diff >= 0 ? '↗' : '↘', `<span class="text-3xl font-extrabold ${diff > 0 ? 'text-emerald-600' : diff < 0 ? 'text-rose-600' : 'text-slate-700'}">${diff > 0 ? '+' : ''}${diff}</span>`, `<span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${diff >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${diff > 0 ? '+' : ''}${diffPct}%</span>`, diff === 0 ? 'ຈຳນວນບໍລິສັດ ເທົ່າກັບປີກ່ອນ' : `${diff > 0 ? 'ເພີ່ມຂຶ້ນ' : 'ຫຼຸດລົງ'} ທຽບກັບປີ ${y - 1}`, 'bg-emerald-50 text-emerald-600')}
             ${card('ຈຳນວນຕົວຢ່າງທີ່ກວດ', '🧪', `<span class="text-3xl font-extrabold text-slate-800">${cur.n.toLocaleString()}</span>`, '<span class="text-xs text-slate-500">ຕົວຢ່າງ</span>', `ຈາກ <b class="text-slate-700">${cur.points}</b> ຈຸດກວດ · ປີກ່ອນ ${prev.n.toLocaleString()} ຕົວຢ່າງ`, 'bg-indigo-50 text-indigo-600')}
             ${card('ອັດຕາຜ່ານມາດຕະຖານ', '🛡️', `<span class="text-3xl font-extrabold ${passTone}">${cur.pass}%</span>`, `<span class="text-xs text-slate-500">(${cur.n - cur.alerts}/${cur.n})</span>`, `ເກີນມາດຕະຖານ: <b class="text-rose-600">${cur.alerts}</b> ຕົວຢ່າງ · ປີກ່ອນ ${prev.pass}%`, 'bg-emerald-50 text-emerald-600')}
@@ -6225,7 +6229,7 @@
             <td class="p-3 text-xs font-semibold text-slate-700">${item.recordedBy || 'ບໍ່ລະບຸ'}</td>
             <td class="p-3 text-center no-print" onclick="event.stopPropagation()">
               <div class="flex flex-col items-center gap-1.5">
-                <button onclick="toggleRow('${item.fbKey}')" class="bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs px-2.5 py-1 rounded-lg border border-sky-200 transition w-full">👁️ ລາຍລະອຽດ</button>
+                <button onclick="toggleRow('${item.fbKey}')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs px-2.5 py-1 rounded-lg border border-rose-200 transition w-full">👁️ ລາຍລະອຽດ</button>
                 ${canDelete ? `
                   <button data-name="${escAttr(company)}" onclick="deleteItem('${item.fbKey}', this.dataset.name)" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs px-2.5 py-1 rounded-lg border border-rose-200 transition w-full">🗑️ ລົບທັງໝົດ</button>
                 ` : ''}
@@ -6305,7 +6309,7 @@
         <div>
           <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">${label}</label>
           <input type="text" id="${id}" data-edit-field value="${escAttr(value)}" ${extra} autocomplete="off"
-            class="w-full border border-slate-300 p-1.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-sky-500 bg-white">
+            class="w-full border border-slate-300 p-1.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-rose-500 bg-white">
         </div>`;
     }
 
@@ -6657,7 +6661,7 @@
         </td>`;
 
         return `
-          <tr class="${isEditing ? 'bg-amber-50' : zebra} hover:bg-sky-50">
+          <tr class="${isEditing ? 'bg-amber-50' : zebra} hover:bg-rose-50">
             <td class="${td} bg-slate-200 text-slate-500 font-bold text-center sticky left-0">${pos + 1}</td>
             ${dateCell}
             <td class="${td} !whitespace-normal break-words min-w-[70px] max-w-[180px] font-mono font-bold text-indigo-700">${st.code || '-'}</td>
@@ -7253,7 +7257,7 @@
       }).join('');
 
       const rows = stations.map((st, k) => `
-        <tr class="${k % 2 ? 'bg-slate-50' : 'bg-white'} hover:bg-sky-50">
+        <tr class="${k % 2 ? 'bg-slate-50' : 'bg-white'} hover:bg-rose-50">
           <td class="${td} sticky left-0 ${k % 2 ? 'bg-slate-50' : 'bg-white'} font-medium text-slate-800 !whitespace-normal min-w-[120px] max-w-[200px]">
             ${escAttr(st.name || '-')} <span class="font-mono text-[10px] text-indigo-600">(${escAttr(st.code || '-')})</span>${st.sampleDate ? `<div class="text-[10px] text-slate-500">📅 ${escAttr(fmtSampleDate(st.sampleDate))}</div>` : ''}
           </td>
@@ -8582,7 +8586,7 @@
           trendClass = 'text-indigo-700 bg-indigo-50 border border-indigo-200';
         } else if (trendPct < -5) {
           trendText = `📉 ຫຼຸດລົງ ${trendPct.toFixed(1)}%`;
-          trendClass = 'text-sky-700 bg-sky-50 border border-sky-200';
+          trendClass = 'text-rose-700 bg-rose-50 border border-rose-200';
         }
       }
 
@@ -9351,7 +9355,7 @@
           <tr class="hover:bg-slate-50 transition">
             <td class="p-2 text-center text-slate-500 font-mono">${idx + 1}</td>
             <td class="p-2 font-bold text-slate-800">${escAttr(st.companyName)}</td>
-            <td class="p-2"><span class="font-mono text-teal-700 font-bold">${escAttr(st.code || '-')}</span> ${escAttr(st.name || '')}</td>
+            <td class="p-2"><span class="font-mono text-rose-700 font-bold">${escAttr(st.code || '-')}</span> ${escAttr(st.name || '')}</td>
             <td class="p-2 text-slate-600">${escAttr(st.province || '-')}</td>
             <td class="p-2 text-center text-slate-500 font-mono">${escAttr(st.sampleDate || '-')}</td>
             <td class="p-2 text-center font-bold font-mono text-indigo-700">${qScore}</td>
@@ -9727,7 +9731,7 @@
         <tr class="hover:bg-slate-50">
           <td class="p-2 font-mono text-slate-500">${log.timestamp || '-'}</td>
           <td class="p-2 font-bold text-slate-700">${log.action || '-'}</td>
-          <td class="p-2 font-mono text-teal-700">${log.itemCode || '-'}</td>
+          <td class="p-2 font-mono text-rose-700">${log.itemCode || '-'}</td>
           <td class="p-2 font-bold text-slate-800">${log.performedBy || 'ບໍ່ລະບຸ'}</td>
           <td class="p-2 text-slate-500">${log.userRole || '-'}</td>
         </tr>

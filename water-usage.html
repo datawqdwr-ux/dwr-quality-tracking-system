@@ -1264,7 +1264,7 @@ var UtmCoordField = ({
   lat,
   lng,
   onChange,
-  ring = "focus:ring-sky-500",
+  ring = "focus:ring-rose-500",
   pointIdx = 0,
   label = null
 }) => {
@@ -1359,22 +1359,22 @@ var UtmCoordField = ({
   };
 
   return /* @__PURE__ */ jsxs8("div", {
-    className: "col-span-full md:col-span-3 w-full p-4 sm:p-5 bg-gradient-to-br from-sky-50/90 via-blue-50/50 to-indigo-50/40 border-2 border-sky-200/90 rounded-2xl space-y-3.5 shadow-sm",
+    className: "col-span-full md:col-span-3 w-full p-4 sm:p-5 bg-gradient-to-br from-sky-50/90 via-blue-50/50 to-indigo-50/40 border-2 border-rose-200/90 rounded-2xl space-y-3.5 shadow-sm",
     children: [
       /* Top row with Title, Zone Pill, Copy button, Google Maps button */
       /* @__PURE__ */ jsxs8("div", {
-        className: "flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-sky-200/80",
+        className: "flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-rose-200/80",
         children: [
           /* @__PURE__ */ jsxs8("div", {
             className: "flex items-center gap-2 flex-wrap",
             children: [
               /* @__PURE__ */ jsx8("span", { className: "text-lg", children: "🌐" }),
               /* @__PURE__ */ jsx8("span", {
-                className: "text-xs sm:text-sm font-bold text-sky-950 tracking-tight",
+                className: "text-xs sm:text-sm font-bold text-rose-950 tracking-tight",
                 children: label || "🌐 ພິກັດທີ່ຕັ້ງໂຄງການໃນຮູບແບບ UTM (Zone 48N / 47N, X / Y ແມັດ)"
               }),
               /* @__PURE__ */ jsxs8("span", {
-                className: "text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-sky-600 text-white shadow-2xs tracking-wide",
+                className: "text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-rose-600 text-white shadow-2xs tracking-wide",
                 children: ["ໂຊນ ", zone, "N"]
               })
             ]
@@ -1391,7 +1391,7 @@ var UtmCoordField = ({
                     const q = `${lat},${lng}`;
                     window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`, "_blank");
                   },
-                  className: "text-xs font-semibold px-3 py-1.5 rounded-xl border border-sky-300 bg-white hover:bg-sky-50 text-sky-700 flex items-center gap-1.5 cursor-pointer transition shadow-2xs",
+                  className: "text-xs font-semibold px-3 py-1.5 rounded-xl border border-rose-300 bg-white hover:bg-rose-50 text-rose-700 flex items-center gap-1.5 cursor-pointer transition shadow-2xs",
                   title: "ກວດເບິ່ງຈຸດພິກັດນີ້ໃນ Google Maps",
                   children: [
                     /* @__PURE__ */ jsx8("span", { children: "🗺️" }),
@@ -1408,7 +1408,7 @@ var UtmCoordField = ({
                   className: `text-xs font-semibold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 cursor-pointer shadow-2xs ${
                     copyFeedback
                       ? "bg-emerald-100 text-emerald-800 border-emerald-300"
-                      : "bg-white text-sky-700 hover:bg-sky-50 border-sky-300"
+                      : "bg-white text-rose-700 hover:bg-rose-50 border-rose-300"
                   }`,
                   title: "ສຳເນົາຄ່າ UTM",
                   children: [
@@ -1427,13 +1427,13 @@ var UtmCoordField = ({
         children: [
           /* UTM Zone selector */
           /* @__PURE__ */ jsxs8("div", {
-            className: "bg-white p-3 rounded-xl border border-sky-200/80 shadow-2xs",
+            className: "bg-white p-3 rounded-xl border border-rose-200/80 shadow-2xs",
             children: [
               /* @__PURE__ */ jsxs8("label", {
                 className: "block text-xs font-bold text-slate-800 mb-1.5 flex items-center justify-between",
                 children: [
                   /* @__PURE__ */ jsx8("span", { children: "1. ໂຊນ UTM (Zone) *" }),
-                  /* @__PURE__ */ jsx8("span", { className: "text-[10px] text-sky-700 bg-sky-100 px-1.5 py-0.5 rounded font-bold", children: "ລາວ 47N / 48N" })
+                  /* @__PURE__ */ jsx8("span", { className: "text-[10px] text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded font-bold", children: "ລາວ 47N / 48N" })
                 ]
               }),
               /* @__PURE__ */ jsxs8(
@@ -1454,14 +1454,14 @@ var UtmCoordField = ({
           /* Easting (X) input */
           /* @__PURE__ */ jsxs8("div", {
             className: `p-3 rounded-xl border shadow-2xs transition bg-white ${
-              status === "bad" ? "border-rose-300 bg-rose-50/30" : "border-sky-200/80"
+              status === "bad" ? "border-rose-300 bg-rose-50/30" : "border-rose-200/80"
             }`,
             children: [
               /* @__PURE__ */ jsxs8("label", {
                 className: "block text-xs font-bold text-slate-800 mb-1.5 flex items-center justify-between",
                 children: [
                   /* @__PURE__ */ jsx8("span", { children: "2. ຄ່າແກນ X (Easting) *" }),
-                  /* @__PURE__ */ jsx8("span", { className: "text-[10px] text-sky-700 font-mono font-bold bg-sky-100 px-1.5 py-0.5 rounded", children: "ແມັດ (6 ຕົວເລກ)" })
+                  /* @__PURE__ */ jsx8("span", { className: "text-[10px] text-rose-700 font-mono font-bold bg-rose-100 px-1.5 py-0.5 rounded", children: "ແມັດ (6 ຕົວເລກ)" })
                 ]
               }),
               /* @__PURE__ */ jsx8(
@@ -1485,14 +1485,14 @@ var UtmCoordField = ({
           /* Northing (Y) input */
           /* @__PURE__ */ jsxs8("div", {
             className: `p-3 rounded-xl border shadow-2xs transition bg-white ${
-              status === "bad" ? "border-rose-300 bg-rose-50/30" : "border-sky-200/80"
+              status === "bad" ? "border-rose-300 bg-rose-50/30" : "border-rose-200/80"
             }`,
             children: [
               /* @__PURE__ */ jsxs8("label", {
                 className: "block text-xs font-bold text-slate-800 mb-1.5 flex items-center justify-between",
                 children: [
                   /* @__PURE__ */ jsx8("span", { children: "3. ຄ່າແກນ Y (Northing) *" }),
-                  /* @__PURE__ */ jsx8("span", { className: "text-[10px] text-sky-700 font-mono font-bold bg-sky-100 px-1.5 py-0.5 rounded", children: "ແມັດ (7 ຕົວເລກ)" })
+                  /* @__PURE__ */ jsx8("span", { className: "text-[10px] text-rose-700 font-mono font-bold bg-rose-100 px-1.5 py-0.5 rounded", children: "ແມັດ (7 ຕົວເລກ)" })
                 ]
               }),
               /* @__PURE__ */ jsx8(
@@ -1526,11 +1526,11 @@ var UtmCoordField = ({
               value: quickText,
               onChange: (e) => handleQuickPaste(e.target.value),
               placeholder: `⌨️ ຫຼື ວາງພິກັດ UTM ຂໍ້ຄວາມ: ເຊັ່ນ ${zone}N 249341 1989096 ຫຼື X: 249341, Y: 1989096 ຫຼື ລິ້ງ Google Maps`,
-              className: "flex-1 px-3.5 py-2 text-xs border border-dashed border-sky-300 rounded-xl bg-white font-mono text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-sky-500 shadow-2xs"
+              className: "flex-1 px-3.5 py-2 text-xs border border-dashed border-rose-300 rounded-xl bg-white font-mono text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-rose-500 shadow-2xs"
             }
           ),
           /* @__PURE__ */ jsx8("span", {
-            className: "text-[11px] text-sky-800 font-bold bg-sky-100 px-2.5 py-1.5 rounded-lg whitespace-nowrap text-center",
+            className: "text-[11px] text-rose-800 font-bold bg-rose-100 px-2.5 py-1.5 rounded-lg whitespace-nowrap text-center",
             children: "ແປງອັດຕະໂນມັດ ⚡"
           })
         ]
@@ -1597,7 +1597,7 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
   const setMonth = (m, v) => setRow({ ...row, months: { ...row.months, [m]: v } });
   const monthNums = Object.entries(row.months || {}).filter(([, v]) => v !== "" && v !== null && isFinite(Number(v)));
   const monthSum = monthNums.reduce((t, [, v]) => t + Number(v), 0);
-  const inp = "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500";
+  const inp = "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500";
   const lab = "block text-xs font-semibold text-slate-700 mb-1";
   const fillMonthsFromDaily = () => {
     const d = perDayFrom();
@@ -1672,14 +1672,14 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
       /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center justify-between gap-2 mb-2", children: [
         /* @__PURE__ */ jsx8("span", { className: "text-xs font-bold text-slate-700", children: `🗓️ ປະລິມານລາຍເດືອນ ປີ ${row.year} (m³)` }),
         /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap gap-2 text-[11px] font-bold", children: [
-          /* @__PURE__ */ jsx8("button", { type: "button", onClick: fillMonthsFromDaily, className: "text-blue-600 hover:underline", children: "🔄 ຕໍ່ວັນ × ມື້ຂອງເດືອນ" }),
-          /* @__PURE__ */ jsx8("button", { type: "button", onClick: splitYearly, className: "text-blue-600 hover:underline", children: "➗ ແບ່ງຈາກລວມ/ປີ" }),
+          /* @__PURE__ */ jsx8("button", { type: "button", onClick: fillMonthsFromDaily, className: "text-rose-600 hover:underline", children: "🔄 ຕໍ່ວັນ × ມື້ຂອງເດືອນ" }),
+          /* @__PURE__ */ jsx8("button", { type: "button", onClick: splitYearly, className: "text-rose-600 hover:underline", children: "➗ ແບ່ງຈາກລວມ/ປີ" }),
           /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => set("months", blankMonths()), className: "text-slate-500 hover:underline", children: "ລ້າງ" })
         ] })
       ] }),
       /* @__PURE__ */ jsx8("div", { className: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2", children: LAO_MONTHS_SHORT.map((mn, i) => /* @__PURE__ */ jsxs8("div", { children: [
         /* @__PURE__ */ jsx8("label", { className: "block text-[10px] font-semibold text-slate-500 mb-0.5", children: `${i + 1}. ${mn}` }),
-        /* @__PURE__ */ jsx8("input", { type: "number", min: "0", step: "any", value: row.months?.[i + 1] ?? "", onChange: (e) => setMonth(i + 1, e.target.value), className: "w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-right" })
+        /* @__PURE__ */ jsx8("input", { type: "number", min: "0", step: "any", value: row.months?.[i + 1] ?? "", onChange: (e) => setMonth(i + 1, e.target.value), className: "w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-rose-500 text-right" })
       ] }, i)) }),
       /* @__PURE__ */ jsx8("p", { className: "text-[11px] text-slate-500 mt-2 text-right", children: monthNums.length ? `ປ້ອນແລ້ວ ${monthNums.length}/12 ເດືອນ · ລວມ ${fmtVol(Math.round(monthSum * 100) / 100)} m³` : "ບໍ່ບັງຄັບ — ປ້ອນສະເພາະເດືອນທີ່ມີຂໍ້ມູນກໍ່ໄດ້" })
     ] }),
@@ -1710,10 +1710,10 @@ var YearlyRecordsEditor = ({ formData, setFormData }) => {
           /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-right font-semibold", children: fmtVol(r.yearly) || "-" }),
           /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-right font-semibold text-emerald-700 whitespace-nowrap", children: r.waterFee == null || r.waterFee === "" ? "-" : Number(r.waterFee).toLocaleString("lo-LA") + " ກີບ" }),
           /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b", children: mcount ? /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => setOpenYear(openYear === r.year ? null : r.year), className: "text-indigo-600 font-bold hover:underline", children: `${openYear === r.year ? "▼" : "▶"} ${mcount}/12 ເດືອນ` }) : "-" }),
-          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b", children: r.sourceName ? [r.sourceType, /* @__PURE__ */ jsx8("div", { className: "font-bold text-sky-700", children: "💧 " + r.sourceName }, "sn")] : (r.sourceType || "-") }),
+          /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b", children: r.sourceName ? [r.sourceType, /* @__PURE__ */ jsx8("div", { className: "font-bold text-rose-700", children: "💧 " + r.sourceName }, "sn")] : (r.sourceType || "-") }),
           /* @__PURE__ */ jsx8("td", { className: "px-2 py-1.5 border-b text-slate-500", children: r.note || "" }),
           /* @__PURE__ */ jsxs8("td", { className: "px-2 py-1.5 border-b whitespace-nowrap text-right", children: [
-            /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => editRow(r), className: "text-blue-600 font-bold mr-2", children: "✏️" }),
+            /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => editRow(r), className: "text-rose-600 font-bold mr-2", children: "✏️" }),
             /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => delRow(r.year), className: "text-rose-600 font-bold", children: "🗑️" })
           ] })
         ] }, r.year);
@@ -1786,7 +1786,7 @@ var ExcelLikeTable = ({ table }) => {
         header.map((h, k) => /* @__PURE__ */ jsx8("th", { className: th, children: h }, k))
       ] })
     ] }),
-    /* @__PURE__ */ jsx8("tbody", { children: rows.map((r, i) => /* @__PURE__ */ jsxs8("tr", { className: i % 2 ? "bg-slate-50 hover:bg-sky-50" : "bg-white hover:bg-sky-50", children: [
+    /* @__PURE__ */ jsx8("tbody", { children: rows.map((r, i) => /* @__PURE__ */ jsxs8("tr", { className: i % 2 ? "bg-slate-50 hover:bg-rose-50" : "bg-white hover:bg-rose-50", children: [
       /* @__PURE__ */ jsx8("td", { className: td + " bg-slate-200 text-slate-500 font-bold text-center sticky left-0", children: i + 1 }),
       r.map((v, k) => /* @__PURE__ */ jsx8("td", { className: td + (isNum(v) ? " text-right tabular-nums" : "") + (v === "" ? " text-slate-300" : ""), children: v === "" ? "" : v }, k))
     ] }, i)) })
@@ -2944,11 +2944,11 @@ var AppSidebar = ({
         /* Sidebar Header & Identity */
         /* @__PURE__ */ jsxs("div", { className: "p-4 border-b border-slate-800 shrink-0", children: [
           /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
-            /* @__PURE__ */ jsx("div", { className: "w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-sky-500/20 ring-2 ring-white/10 shrink-0", children: /* @__PURE__ */ jsx("span", { className: "text-xl", children: "💧" }) }),
+            /* @__PURE__ */ jsx("div", { className: "w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 via-pink-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-rose-500/20 ring-2 ring-white/10 shrink-0", children: /* @__PURE__ */ jsx("span", { className: "text-xl", children: "💧" }) }),
             /* @__PURE__ */ jsxs("div", { className: "min-w-0 flex-1", children: [
               /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5", children: [
                 /* @__PURE__ */ jsx("h1", { className: "text-sm font-bold text-white tracking-tight truncate", children: "ການນຳໃຊ້ນ້ຳ" }),
-                /* @__PURE__ */ jsx("span", { className: "text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30", children: "GIS Portal" })
+                /* @__PURE__ */ jsx("span", { className: "text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-400/30", children: "GIS Portal" })
               ] }),
               /* @__PURE__ */ jsx("p", { className: "text-[11px] text-slate-400 truncate", children: "ກົມຊັບພະຍາກອນນ້ຳ (DWR)" })
             ] })
@@ -2963,7 +2963,7 @@ var AppSidebar = ({
                 ] }),
                 /* @__PURE__ */ jsxs("a", {
                   href: "index.html",
-                  className: "text-[10px] font-semibold text-sky-400 hover:text-sky-300 flex items-center gap-0.5 transition",
+                  className: "text-[10px] font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-0.5 transition",
                   title: "ກັບໄປໜ້າຫຼັກເລືອກລະບົບທັງໝົດ",
                   children: [
                     /* @__PURE__ */ jsx("span", { children: "🏠" }),
@@ -2987,13 +2987,13 @@ var AppSidebar = ({
                 }),
                 /* Current: ການນຳໃຊ້ນ້ຳ */
                 /* @__PURE__ */ jsxs("span", {
-                  className: "flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] bg-gradient-to-r from-sky-500/25 to-blue-600/15 text-sky-300 font-bold border border-sky-500/30 cursor-default",
+                  className: "flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[11px] bg-gradient-to-r from-rose-500/25 to-rose-600/15 text-rose-300 font-bold border border-rose-500/30 cursor-default",
                   children: [
                     /* @__PURE__ */ jsxs("span", { className: "flex items-center gap-1.5 truncate", children: [
                       /* @__PURE__ */ jsx("span", { children: "💧" }),
                       /* @__PURE__ */ jsx("span", { className: "truncate", children: "ການນຳໃຊ້ນ້ຳ" })
                     ] }),
-                    /* @__PURE__ */ jsx("span", { className: "text-[9px] px-1.5 py-0.5 rounded-full bg-sky-500/30 text-sky-200", children: "ປັດຈຸບັນ" })
+                    /* @__PURE__ */ jsx("span", { className: "text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/30 text-rose-200", children: "ປັດຈຸບັນ" })
                   ]
                 }),
                 /* Switch to Wastewater */
@@ -3023,18 +3023,18 @@ var AppSidebar = ({
               /* @__PURE__ */ jsxs("button", {
                 type: "button",
                 onClick: () => { setActiveTab("map"); setIsSidebarOpen(false); },
-                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "map" ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold shadow-md shadow-sky-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
+                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "map" ? "bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-bold shadow-md shadow-rose-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
                 children: [
                   /* @__PURE__ */ jsx("span", { className: "text-base", children: "🗺️" }),
                   /* @__PURE__ */ jsx("span", { className: "flex-1 truncate", children: "ແຜນທີ່ GIS ສະແດງທີ່ຕັ້ງ" }),
-                  /* @__PURE__ */ jsx("span", { className: "text-[9px] px-1.5 py-0.5 rounded-full bg-sky-900/60 text-sky-300 border border-sky-700/50", children: "GIS" })
+                  /* @__PURE__ */ jsx("span", { className: "text-[9px] px-1.5 py-0.5 rounded-full bg-rose-900/60 text-rose-300 border border-rose-700/50", children: "GIS" })
                 ]
               }),
               /* Table */
               /* @__PURE__ */ jsxs("button", {
                 type: "button",
                 onClick: () => { setActiveTab("table"); setIsSidebarOpen(false); },
-                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "table" ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold shadow-md shadow-sky-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
+                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "table" ? "bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-bold shadow-md shadow-rose-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
                 children: [
                   /* @__PURE__ */ jsx("span", { className: "text-base", children: "📋" }),
                   /* @__PURE__ */ jsx("span", { className: "flex-1 truncate", children: "ຖານຂໍ້ມູນໂຄງການ" })
@@ -3044,7 +3044,7 @@ var AppSidebar = ({
               /* @__PURE__ */ jsxs("button", {
                 type: "button",
                 onClick: () => { setActiveTab("stats"); setIsSidebarOpen(false); },
-                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "stats" ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold shadow-md shadow-sky-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
+                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "stats" ? "bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-bold shadow-md shadow-rose-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
                 children: [
                   /* @__PURE__ */ jsx("span", { className: "text-base", children: "📊" }),
                   /* @__PURE__ */ jsx("span", { className: "flex-1 truncate", children: "ສະຖິຕິປະຈໍາປີ" })
@@ -3060,7 +3060,7 @@ var AppSidebar = ({
               /* @__PURE__ */ jsxs("button", {
                 type: "button",
                 onClick: () => { setActiveTab("export"); setIsSidebarOpen(false); },
-                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-bold transition-all cursor-pointer ${activeTab === "export" ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md shadow-sky-500/20" : "text-sky-300 bg-sky-950/40 border border-sky-800/40 hover:bg-sky-900/50"}`,
+                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-bold transition-all cursor-pointer ${activeTab === "export" ? "bg-gradient-to-r from-rose-500 to-indigo-600 text-white shadow-md shadow-rose-500/20" : "text-rose-300 bg-rose-950/40 border border-rose-800/40 hover:bg-rose-900/50"}`,
                 children: [
                   /* @__PURE__ */ jsx("span", { className: "text-base", children: "📥" }),
                   /* @__PURE__ */ jsx("span", { className: "flex-1 truncate", children: "ສູນສົ່ງອອກລາຍງານ" })
@@ -3070,7 +3070,7 @@ var AppSidebar = ({
               /* @__PURE__ */ jsxs("button", {
                 type: "button",
                 onClick: () => { setActiveTab("backup"); setIsSidebarOpen(false); },
-                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "backup" ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold shadow-md shadow-sky-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
+                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "backup" ? "bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-bold shadow-md shadow-rose-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
                 children: [
                   /* @__PURE__ */ jsx("span", { className: "text-base", children: "💾" }),
                   /* @__PURE__ */ jsx("span", { className: "flex-1 truncate", children: "ແບກອັບ & ກູ້ຄືນ" })
@@ -3080,7 +3080,7 @@ var AppSidebar = ({
               /* @__PURE__ */ jsxs("button", {
                 type: "button",
                 onClick: () => { setActiveTab("settings"); setIsSidebarOpen(false); },
-                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "settings" ? "bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold shadow-md shadow-sky-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
+                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "settings" ? "bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-bold shadow-md shadow-rose-500/20" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
                 children: [
                   /* @__PURE__ */ jsx("span", { className: "text-base", children: "⚙️" }),
                   /* @__PURE__ */ jsx("span", { className: "flex-1 truncate", children: "ຕັ້ງຄ່າລະບົບ" })
@@ -3115,7 +3115,7 @@ var AppSidebar = ({
         /* @__PURE__ */ jsxs("div", { className: "p-3 border-t border-slate-800 bg-slate-950/40 space-y-2 shrink-0", children: [
           /* @__PURE__ */ jsxs("div", { className: "px-3 py-2 rounded-xl bg-slate-800/70 border border-slate-700/60 flex items-center justify-between text-xs", children: [
             /* @__PURE__ */ jsxs("div", { className: "min-w-0 pr-2", children: [
-              /* @__PURE__ */ jsx("p", { className: "text-sky-400 font-semibold text-[11px] truncate", children: currentUser?.fullName || "ຜູ້ໃຊ້ງານ" }),
+              /* @__PURE__ */ jsx("p", { className: "text-rose-400 font-semibold text-[11px] truncate", children: currentUser?.fullName || "ຜູ້ໃຊ້ງານ" }),
               /* @__PURE__ */ jsxs("span", { className: "font-bold text-white text-[11px] truncate", children: [
                 currentUser?.role === "viewer" ? "👁️ " : "👤 ",
                 getRoleLabel(currentUser?.role || "viewer")
@@ -3128,7 +3128,7 @@ var AppSidebar = ({
               children: "🚪 ອອກ"
             }) : /* @__PURE__ */ jsx("button", {
               onClick: onOpenLogin,
-              className: "px-2 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-[11px] font-semibold transition shrink-0 cursor-pointer",
+              className: "px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-semibold transition shrink-0 cursor-pointer",
               children: "🔑 Login"
             })
           ] })
@@ -3248,7 +3248,7 @@ var AppTopBar = ({
             /* Add project button */
             currentUser?.role !== "viewer" && /* @__PURE__ */ jsxs("button", {
               onClick: onAddNewProject,
-              className: "flex items-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 active:scale-98 text-white px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold shadow-md shadow-sky-500/20 transition-all whitespace-nowrap cursor-pointer",
+              className: "flex items-center gap-1.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 active:scale-98 text-white px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold shadow-md shadow-rose-500/20 transition-all whitespace-nowrap cursor-pointer",
               children: [
                 /* @__PURE__ */ jsx(Plus, { size: 16 }),
                 /* @__PURE__ */ jsx("span", { className: "hidden sm:inline", children: "ເພີ່ມໂຄງການ" })
@@ -3264,10 +3264,10 @@ var AppTopBar = ({
                   className: "flex items-center gap-2 pl-1.5 pr-2 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors text-xs text-slate-700 cursor-pointer",
                   title: "ຄຸ້ມຄອງ ແລະ ສະຫຼັບບັນຊີຜູ້ໃຊ້",
                   children: [
-                    /* @__PURE__ */ jsx("div", { className: `w-6 h-6 rounded-lg ${currentUser?.avatarColor || "bg-sky-600"} text-white flex items-center justify-center font-bold text-[11px]`, children: currentUser?.fullName ? currentUser.fullName.charAt(0) : "U" }),
+                    /* @__PURE__ */ jsx("div", { className: `w-6 h-6 rounded-lg ${currentUser?.avatarColor || "bg-rose-600"} text-white flex items-center justify-center font-bold text-[11px]`, children: currentUser?.fullName ? currentUser.fullName.charAt(0) : "U" }),
                     /* @__PURE__ */ jsxs("div", { className: "hidden xl:flex flex-col text-left", children: [
                       /* @__PURE__ */ jsx("span", { className: "font-semibold text-slate-800 max-w-[100px] truncate leading-tight text-[11px]", children: currentUser?.fullName || "User" }),
-                      /* @__PURE__ */ jsxs("span", { className: "font-mono text-[9px] text-sky-600 font-bold", children: ["@", currentUser?.username || "guest"] })
+                      /* @__PURE__ */ jsxs("span", { className: "font-mono text-[9px] text-rose-600 font-bold", children: ["@", currentUser?.username || "guest"] })
                     ] }),
                     /* @__PURE__ */ jsx(ChevronDown, { size: 12, className: `text-slate-500 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}` })
                   ]
@@ -3277,7 +3277,7 @@ var AppTopBar = ({
                   children: [
                     /* @__PURE__ */ jsxs("div", { className: "p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 mb-2", children: [
                       /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between mb-1", children: [
-                        /* @__PURE__ */ jsxs("span", { className: "font-mono font-bold text-[11px] text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md border border-sky-400/20", children: ["@", currentUser?.username] }),
+                        /* @__PURE__ */ jsxs("span", { className: "font-mono font-bold text-[11px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-400/20", children: ["@", currentUser?.username] }),
                         /* @__PURE__ */ jsx("span", { className: "text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full uppercase", children: currentUser?.role })
                       ] }),
                       /* @__PURE__ */ jsx("p", { className: "font-bold text-xs text-white truncate", children: currentUser?.fullName }),
@@ -3286,9 +3286,9 @@ var AppTopBar = ({
                     /* @__PURE__ */ jsxs("div", { className: "space-y-1 text-xs", children: [
                       onOpenLogin && /* @__PURE__ */ jsxs("button", {
                         onClick: () => { setIsUserMenuOpen(false); onOpenLogin(); },
-                        className: "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sky-300 hover:text-white hover:bg-slate-800 transition-colors text-left cursor-pointer",
+                        className: "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-rose-300 hover:text-white hover:bg-slate-800 transition-colors text-left cursor-pointer",
                         children: [
-                          /* @__PURE__ */ jsx(LogIn, { size: 14, className: "text-sky-400" }),
+                          /* @__PURE__ */ jsx(LogIn, { size: 14, className: "text-rose-400" }),
                           /* @__PURE__ */ jsx("span", { children: "ເຂົ້າສູ່ລະບົບດ້ວຍບັນຊີອື່ນ" })
                         ]
                       }),
@@ -3681,7 +3681,7 @@ var WaterMap = ({
             "button",
             {
               onClick: () => changeTileLayer("streets"),
-              className: `px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${currentLayer === "streets" ? "bg-sky-500 text-white shadow-xs" : "text-slate-400 hover:text-white"}`,
+              className: `px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${currentLayer === "streets" ? "bg-rose-500 text-white shadow-xs" : "text-slate-400 hover:text-white"}`,
               children: "🛣️ ຖະໜົນ"
             }
           ),
@@ -3689,7 +3689,7 @@ var WaterMap = ({
             "button",
             {
               onClick: () => changeTileLayer("satellite"),
-              className: `px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${currentLayer === "satellite" ? "bg-sky-500 text-white shadow-xs" : "text-slate-400 hover:text-white"}`,
+              className: `px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${currentLayer === "satellite" ? "bg-rose-500 text-white shadow-xs" : "text-slate-400 hover:text-white"}`,
               children: "🛰️ ດາວທຽມ"
             }
           ),
@@ -3697,7 +3697,7 @@ var WaterMap = ({
             "button",
             {
               onClick: () => changeTileLayer("terrain"),
-              className: `px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${currentLayer === "terrain" ? "bg-sky-500 text-white shadow-xs" : "text-slate-400 hover:text-white"}`,
+              className: `px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${currentLayer === "terrain" ? "bg-rose-500 text-white shadow-xs" : "text-slate-400 hover:text-white"}`,
               children: "⛰️ ພູມມີສາດ"
             }
           )
@@ -3810,7 +3810,7 @@ var WaterMap = ({
             className: "flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-xl px-3.5 py-2 rounded-2xl border border-slate-700/80 shadow-xl text-slate-200 hover:text-white hover:bg-slate-800 transition-all font-semibold text-xs",
             title: "ເຕັມຈໍ",
             children: [
-              isFullscreen ? /* @__PURE__ */ jsx2(Minimize2, { size: 16, className: "text-sky-400" }) : /* @__PURE__ */ jsx2(Maximize2, { size: 16, className: "text-sky-400" }),
+              isFullscreen ? /* @__PURE__ */ jsx2(Minimize2, { size: 16, className: "text-rose-400" }) : /* @__PURE__ */ jsx2(Maximize2, { size: 16, className: "text-rose-400" }),
               /* @__PURE__ */ jsx2("span", { className: "hidden sm:inline", children: isFullscreen ? "ອອກເຕັມຈໍ" : "ເຕັມຈໍ" })
             ]
           }
@@ -3837,7 +3837,7 @@ var WaterMap = ({
           /* @__PURE__ */ jsxs2("div", { children: [
             /* @__PURE__ */ jsx2("span", { className: "text-[10px] text-slate-400 font-medium", children: "ປະລິມານນໍ້າ" }),
             /* @__PURE__ */ jsx2("p", { className: "font-bold text-slate-900 text-sm", children: previewProject.waterVolume.toLocaleString() }),
-            /* @__PURE__ */ jsx2("span", { className: "text-[10px] text-sky-600 font-semibold", children: previewProject.waterVolumeUnit })
+            /* @__PURE__ */ jsx2("span", { className: "text-[10px] text-rose-600 font-semibold", children: previewProject.waterVolumeUnit })
           ] }),
           /* @__PURE__ */ jsxs2("div", { children: [
             /* @__PURE__ */ jsx2("span", { className: "text-[10px] text-slate-400 font-medium", children: "ສາຍນໍ້າ / ແຫຼ່ງນໍ້າ" }),
@@ -3872,21 +3872,21 @@ var WaterMap = ({
               : [{ name: "ບ່ອນດູດນໍ້າ", latitude: previewProject.intakeLocation.latitude, longitude: previewProject.intakeLocation.longitude }];
             return /* @__PURE__ */ jsxs2("div", { className: "space-y-1.5", children: [
               /* @__PURE__ */ jsxs2("div", { className: "flex items-center justify-between px-1", children: [
-                /* @__PURE__ */ jsxs2("span", { className: "font-semibold text-sky-900 text-[11px] flex items-center gap-1.5", children: [
-                  /* @__PURE__ */ jsx2("span", { className: "w-2.5 h-2.5 rounded-full bg-sky-600" }),
+                /* @__PURE__ */ jsxs2("span", { className: "font-semibold text-rose-900 text-[11px] flex items-center gap-1.5", children: [
+                  /* @__PURE__ */ jsx2("span", { className: "w-2.5 h-2.5 rounded-full bg-rose-600" }),
                   "ບ່ອນດູດນໍ້າ (ສີຟ້າ 💧)"
                 ] }),
-                previewIntakePts.length > 1 && /* @__PURE__ */ jsxs2("span", { className: "bg-sky-100 text-sky-800 text-[10px] font-bold px-1.5 py-0.2 rounded-full", children: [previewIntakePts.length, " ຈຸດ"] })
+                previewIntakePts.length > 1 && /* @__PURE__ */ jsxs2("span", { className: "bg-rose-100 text-rose-800 text-[10px] font-bold px-1.5 py-0.2 rounded-full", children: [previewIntakePts.length, " ຈຸດ"] })
               ] }),
-              previewIntakePts.map((ipt, iIdx) => /* @__PURE__ */ jsxs2("div", { className: "flex items-center justify-between p-1.5 rounded-xl bg-sky-50/70 border border-sky-200/60 text-[11px]", children: [
+              previewIntakePts.map((ipt, iIdx) => /* @__PURE__ */ jsxs2("div", { className: "flex items-center justify-between p-1.5 rounded-xl bg-rose-50/70 border border-rose-200/60 text-[11px]", children: [
                 /* @__PURE__ */ jsxs2("div", { className: "flex items-center gap-1.5 truncate max-w-[170px]", children: [
-                  /* @__PURE__ */ jsxs2("span", { className: `text-[10px] ${iIdx === 0 ? "bg-sky-600 text-white font-bold" : "bg-sky-200 text-sky-800"} px-1.5 py-0.2 rounded`, children: [iIdx + 1] }),
+                  /* @__PURE__ */ jsxs2("span", { className: `text-[10px] ${iIdx === 0 ? "bg-rose-600 text-white font-bold" : "bg-rose-200 text-rose-800"} px-1.5 py-0.2 rounded`, children: [iIdx + 1] }),
                   /* @__PURE__ */ jsx2("span", { className: "truncate text-slate-700 font-medium", children: ipt.name || `ຈຸດທີ ${iIdx + 1}` })
                 ] }),
                 /* @__PURE__ */ jsxs2("button", {
                   type: "button",
                   onClick: () => copyGps(`${ipt.latitude}, ${ipt.longitude}`),
-                  className: "font-mono text-[10px] text-sky-700 hover:text-sky-950 flex items-center gap-1 font-semibold",
+                  className: "font-mono text-[10px] text-rose-700 hover:text-rose-950 flex items-center gap-1 font-semibold",
                   title: "ຄັດລອກພິກັດ",
                   children: [
                     /* @__PURE__ */ jsx2(Copy, { size: 11 }),
@@ -3921,7 +3921,7 @@ var WaterMap = ({
           "button",
           {
             onClick: () => onOpenDirectMessage(previewProject),
-            className: "py-2 px-3 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl font-bold text-xs flex items-center gap-1 transition-colors",
+            className: "py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl font-bold text-xs flex items-center gap-1 transition-colors",
             title: "ສົ່ງຂໍ້ຄວາມແຈ້ງເຕືອນ",
             children: /* @__PURE__ */ jsx2(Send, { size: 14 })
           }
@@ -3947,13 +3947,13 @@ var WaterMap = ({
           /* @__PURE__ */ jsx2("span", { className: "font-semibold text-emerald-300", children: "ທີ່ຕັ້ງໂຄງການ (ສີຂຽວ)" })
         ] }),
         /* @__PURE__ */ jsxs2("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ jsx2("span", { className: "w-3.5 h-3.5 rounded-full bg-sky-500 border-2 border-white shadow-xs inline-flex items-center justify-center text-[7px] text-white", children: "💧" }),
-          /* @__PURE__ */ jsx2("span", { className: "font-semibold text-sky-300", children: "ບ່ອນດູດນໍ້າ (ສີຟ້າ)" })
+          /* @__PURE__ */ jsx2("span", { className: "w-3.5 h-3.5 rounded-full bg-rose-500 border-2 border-white shadow-xs inline-flex items-center justify-center text-[7px] text-white", children: "💧" }),
+          /* @__PURE__ */ jsx2("span", { className: "font-semibold text-rose-300", children: "ບ່ອນດູດນໍ້າ (ສີຟ້າ)" })
         ] })
       ] }),
       cursorCoords && /* @__PURE__ */ jsxs2("div", { className: "hidden md:flex items-center gap-2 bg-slate-900/90 backdrop-blur-xl px-3 py-1.5 rounded-xl border border-slate-700/80 shadow-xl text-[11px] font-mono text-slate-300 pointer-events-auto", children: [
         /* @__PURE__ */ jsx2("span", { children: "📍 ພິກັດ Cursor:" }),
-        /* @__PURE__ */ jsxs2("span", { className: "text-sky-300 font-bold", children: [
+        /* @__PURE__ */ jsxs2("span", { className: "text-rose-300 font-bold", children: [
           cursorCoords.lat,
           ", ",
           cursorCoords.lng
@@ -4052,7 +4052,7 @@ var ProjectTable = ({
               value: searchQuery,
               onChange: (e) => setSearchQuery(e.target.value),
               placeholder: "ຄົ້ນຫາຊື່ໂຄງການ, ເຈົ້າຂອງ, ເລກທີໃບອະນຸຍາດ, ສາຍນໍ້າ, ບ້ານ...",
-              className: "w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200/80 rounded-2xl focus:outline-hidden focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all text-slate-800"
+              className: "w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200/80 rounded-2xl focus:outline-hidden focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all text-slate-800"
             }
           ),
           searchQuery && /* @__PURE__ */ jsx3(
@@ -4083,7 +4083,7 @@ var ProjectTable = ({
             "button",
             {
               onClick: onAddNew,
-              className: "flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 active:scale-98 text-white px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold shadow-md shadow-sky-500/20 transition-all whitespace-nowrap",
+              className: "flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 active:scale-98 text-white px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold shadow-md shadow-rose-500/20 transition-all whitespace-nowrap",
               children: [
                 /* @__PURE__ */ jsx3(Plus2, { size: 16 }),
                 "ເພີ່ມໂຄງການໃໝ່"
@@ -4211,11 +4211,11 @@ var ProjectTable = ({
           "tr",
           {
             onClick: () => onSelectProject(p),
-            className: "hover:bg-sky-50/40 transition-colors cursor-pointer group",
+            className: "hover:bg-rose-50/40 transition-colors cursor-pointer group",
             children: [
               /* @__PURE__ */ jsx3("td", { className: "py-3.5 px-4 text-center font-mono text-slate-400", children: index + 1 }),
               /* @__PURE__ */ jsxs3("td", { className: "py-3.5 px-4", children: [
-                /* @__PURE__ */ jsx3("div", { className: "font-bold text-slate-900 group-hover:text-sky-600 transition-colors line-clamp-1", children: p.projectName }),
+                /* @__PURE__ */ jsx3("div", { className: "font-bold text-slate-900 group-hover:text-rose-600 transition-colors line-clamp-1", children: p.projectName }),
                 /* @__PURE__ */ jsxs3("div", { className: "text-[11px] text-slate-500 mt-0.5", children: [
                   p.projectCategory,
                   " • ເຈົ້າຂອງ: ",
@@ -4242,9 +4242,9 @@ var ProjectTable = ({
               ] }),
               /* @__PURE__ */ jsxs3("td", { className: "py-3.5 px-4", children: [
                 /* @__PURE__ */ jsxs3("div", { className: "flex items-center gap-1.5 text-slate-900 font-semibold", children: [
-                  /* @__PURE__ */ jsx3("span", { className: "w-2.5 h-2.5 rounded-full bg-sky-500 shrink-0" }),
+                  /* @__PURE__ */ jsx3("span", { className: "w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" }),
                   /* @__PURE__ */ jsx3("span", { children: p.waterSourceName }),
-                  ((Array.isArray(p.intakeLocation?.points) && p.intakeLocation.points.length > 1) || (Array.isArray(p.intakeLocation?.intakePoints) && p.intakeLocation.intakePoints.length > 1)) && /* @__PURE__ */ jsxs3("span", { className: "text-[10px] bg-sky-100 text-sky-800 font-bold px-1.5 py-0.2 rounded-full border border-sky-300", children: [
+                  ((Array.isArray(p.intakeLocation?.points) && p.intakeLocation.points.length > 1) || (Array.isArray(p.intakeLocation?.intakePoints) && p.intakeLocation.intakePoints.length > 1)) && /* @__PURE__ */ jsxs3("span", { className: "text-[10px] bg-rose-100 text-rose-800 font-bold px-1.5 py-0.2 rounded-full border border-rose-300", children: [
                     (p.intakeLocation.points || p.intakeLocation.intakePoints).length,
                     " ຈຸດດູດ"
                   ] })
@@ -4261,7 +4261,7 @@ var ProjectTable = ({
               ] }),
               /* @__PURE__ */ jsxs3("td", { className: "py-3.5 px-4 text-right", children: [
                 /* @__PURE__ */ jsx3("div", { className: "font-black text-slate-900 text-sm", children: p.waterVolume.toLocaleString() }),
-                /* @__PURE__ */ jsx3("div", { className: "text-[10px] text-sky-600 font-bold", children: p.waterVolumeUnit })
+                /* @__PURE__ */ jsx3("div", { className: "text-[10px] text-rose-600 font-bold", children: p.waterVolumeUnit })
               ] }),
               /* @__PURE__ */ jsxs3("td", { className: "py-3.5 px-4", children: [
                 /* @__PURE__ */ jsx3("div", { className: "font-mono font-bold text-slate-800", children: p.permitNumber }),
@@ -4286,7 +4286,7 @@ var ProjectTable = ({
                   "button",
                   {
                     onClick: () => onOpenDirectMessage(p),
-                    className: "p-1.5 rounded-lg text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-colors",
+                    className: "p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors",
                     title: "ສົ່ງຂໍ້ຄວາມແຈ້ງເຕືອນ",
                     children: /* @__PURE__ */ jsx3(Send2, { size: 15 })
                   }
@@ -4443,8 +4443,8 @@ var YearlyStatistics = ({ projects }) => {
     /* @__PURE__ */ jsxs4("div", { className: "bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white p-6 sm:p-8 rounded-3xl border border-slate-700/80 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6", children: [
       /* @__PURE__ */ jsxs4("div", { children: [
         /* @__PURE__ */ jsxs4("div", { className: "flex items-center gap-2.5", children: [
-          /* @__PURE__ */ jsx4("span", { className: "p-2 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-400/30", children: /* @__PURE__ */ jsx4(BarChart32, { size: 20 }) }),
-          /* @__PURE__ */ jsx4("span", { className: "text-xs font-bold text-sky-400 uppercase tracking-wider", children: "Executive Analytics Dashboard" })
+          /* @__PURE__ */ jsx4("span", { className: "p-2 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-400/30", children: /* @__PURE__ */ jsx4(BarChart32, { size: 20 }) }),
+          /* @__PURE__ */ jsx4("span", { className: "text-xs font-bold text-rose-400 uppercase tracking-wider", children: "Executive Analytics Dashboard" })
         ] }),
         /* @__PURE__ */ jsxs4("h2", { className: "text-xl sm:text-2xl font-bold mt-2 tracking-tight", children: [
           "ບົດວິເຄາະສະຖິຕິການນໍາໃຊ້ນໍ້າແຫ່ງຊາດ ປະຈໍາປີ ",
@@ -4458,7 +4458,7 @@ var YearlyStatistics = ({ projects }) => {
           "button",
           {
             onClick: () => setSelectedYear(yr),
-            className: `px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all ${selectedYear === yr ? "bg-sky-500 text-white shadow-md shadow-sky-500/30" : "text-slate-300 hover:text-white hover:bg-slate-700"}`,
+            className: `px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all ${selectedYear === yr ? "bg-rose-500 text-white shadow-md shadow-sky-500/30" : "text-slate-300 hover:text-white hover:bg-slate-700"}`,
             children: [
               "ຄ.ສ ",
               yr
@@ -4475,7 +4475,7 @@ var YearlyStatistics = ({ projects }) => {
             "ໂຄງການທັງໝົດໃນປີ ",
             selectedYear
           ] }),
-          /* @__PURE__ */ jsx4("span", { className: "p-2 rounded-xl bg-blue-50 text-blue-600", children: /* @__PURE__ */ jsx4(Building2, { size: 16 }) })
+          /* @__PURE__ */ jsx4("span", { className: "p-2 rounded-xl bg-rose-50 text-rose-600", children: /* @__PURE__ */ jsx4(Building2, { size: 16 }) })
         ] }),
         /* @__PURE__ */ jsxs4("div", { className: "mt-3 flex items-baseline gap-2", children: [
           /* @__PURE__ */ jsx4("span", { className: "text-3xl font-black text-slate-900 tracking-tight", children: stats.currentCount }),
@@ -4510,10 +4510,10 @@ var YearlyStatistics = ({ projects }) => {
       /* @__PURE__ */ jsxs4("div", { className: "bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow", children: [
         /* @__PURE__ */ jsxs4("div", { className: "flex items-center justify-between text-xs text-slate-500 font-semibold", children: [
           /* @__PURE__ */ jsx4("span", { children: "ໂຄງການເລີ່ມດໍາເນີນງານໃໝ່" }),
-          /* @__PURE__ */ jsx4("span", { className: "p-2 rounded-xl bg-sky-50 text-sky-600", children: /* @__PURE__ */ jsx4(CheckCircle, { size: 16 }) })
+          /* @__PURE__ */ jsx4("span", { className: "p-2 rounded-xl bg-rose-50 text-rose-600", children: /* @__PURE__ */ jsx4(CheckCircle, { size: 16 }) })
         ] }),
         /* @__PURE__ */ jsxs4("div", { className: "mt-3 flex items-baseline gap-2", children: [
-          /* @__PURE__ */ jsxs4("span", { className: "text-3xl font-black text-sky-700 tracking-tight", children: [
+          /* @__PURE__ */ jsxs4("span", { className: "text-3xl font-black text-rose-700 tracking-tight", children: [
             "+",
             stats.newInSelectedYear
           ] }),
@@ -4546,7 +4546,7 @@ var YearlyStatistics = ({ projects }) => {
           /* @__PURE__ */ jsx4("h3", { className: "text-base font-bold text-slate-900", children: "ຕາຕະລາງວິເຄາະແນວໂນ້ມ ການເພີ່ມ ແລະ ຫຼຸດ 5 ປີຍ້ອນຫຼັງ" }),
           /* @__PURE__ */ jsx4("p", { className: "text-xs text-slate-500 mt-0.5", children: "ປຽບທຽບການເຕີບໂຕຂອງຈໍານວນໂຄງການ ແລະ ໃບອະນຸຍາດທີ່ໝົດອາຍຸ" })
         ] }),
-        /* @__PURE__ */ jsxs4("span", { className: "text-xs font-bold text-sky-600 bg-sky-50 border border-sky-200 px-3 py-1 rounded-xl self-start", children: [
+        /* @__PURE__ */ jsxs4("span", { className: "text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 px-3 py-1 rounded-xl self-start", children: [
           "ໄລຍະ: ",
           selectedYear - 4,
           " - ",
@@ -4565,11 +4565,11 @@ var YearlyStatistics = ({ projects }) => {
         /* @__PURE__ */ jsx4("tbody", { className: "divide-y divide-slate-100 font-medium", children: stats.multiYearTimeline.map((item) => {
           const maxInTimeline = Math.max(...stats.multiYearTimeline.map((t) => t.total), 1);
           const barPercent = Math.min(100, Math.round(item.total / maxInTimeline * 100));
-          return /* @__PURE__ */ jsxs4("tr", { className: `transition-colors ${item.year === selectedYear ? "bg-sky-50/60 font-bold" : "hover:bg-slate-50"}`, children: [
+          return /* @__PURE__ */ jsxs4("tr", { className: `transition-colors ${item.year === selectedYear ? "bg-rose-50/60 font-bold" : "hover:bg-slate-50"}`, children: [
             /* @__PURE__ */ jsxs4("td", { className: "py-3.5 px-4 font-mono font-bold text-slate-900 text-sm", children: [
               item.year,
               " ",
-              item.year === selectedYear && /* @__PURE__ */ jsx4("span", { className: "text-sky-600 text-xs ml-1", children: "(ປີເລືອກ)" })
+              item.year === selectedYear && /* @__PURE__ */ jsx4("span", { className: "text-rose-600 text-xs ml-1", children: "(ປີເລືອກ)" })
             ] }),
             /* @__PURE__ */ jsx4("td", { className: "py-3.5 px-4 text-center font-bold text-slate-900 text-sm", children: item.total }),
             /* @__PURE__ */ jsxs4("td", { className: "py-3.5 px-4 text-center text-emerald-600 font-bold", children: [
@@ -4599,7 +4599,7 @@ var YearlyStatistics = ({ projects }) => {
       /* @__PURE__ */ jsxs4("div", { className: "bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4", children: [
         /* @__PURE__ */ jsxs4("div", { className: "flex items-center justify-between pb-2 border-b border-slate-100", children: [
           /* @__PURE__ */ jsx4("h4", { className: "text-sm font-bold text-slate-900", children: "ຈໍາແນກຕາມປະເພດກິດຈະການ" }),
-          /* @__PURE__ */ jsxs4("span", { className: "text-xs text-sky-600 font-bold", children: [
+          /* @__PURE__ */ jsxs4("span", { className: "text-xs text-rose-600 font-bold", children: [
             Object.keys(stats.categoryCounts).length,
             " ປະເພດ"
           ] })
@@ -4629,7 +4629,7 @@ var YearlyStatistics = ({ projects }) => {
       /* @__PURE__ */ jsxs4("div", { className: "bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4", children: [
         /* @__PURE__ */ jsxs4("div", { className: "flex items-center justify-between pb-2 border-b border-slate-100", children: [
           /* @__PURE__ */ jsx4("h4", { className: "text-sm font-bold text-slate-900", children: "ຈໍາແນກຕາມແຂວງ / ນະຄອນຫຼວງ" }),
-          /* @__PURE__ */ jsxs4("span", { className: "text-xs text-sky-600 font-bold", children: [
+          /* @__PURE__ */ jsxs4("span", { className: "text-xs text-rose-600 font-bold", children: [
             Object.keys(stats.provinceCounts).length,
             " ແຂວງ"
           ] })
@@ -4829,7 +4829,7 @@ var ExportReports = ({
           "button",
           {
             onClick: () => setActiveReportTab("projects"),
-            className: `flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${activeReportTab === "projects" ? "bg-sky-600 text-white shadow-md shadow-sky-600/25" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`,
+            className: `flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${activeReportTab === "projects" ? "bg-rose-600 text-white shadow-md shadow-rose-600/25" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`,
             children: [
               /* @__PURE__ */ jsx5(Layers4, { size: 16 }),
               /* @__PURE__ */ jsx5("span", { children: "1. ບົດລາຍງານຂໍ້ມູນໂຄງການນໍາໃຊ້ນໍ້າ" }),
@@ -4852,7 +4852,7 @@ var ExportReports = ({
       ] }),
       /* @__PURE__ */ jsx5("div", { className: "text-xs text-slate-500 font-medium px-2", children: activeReportTab === "projects" ? /* @__PURE__ */ jsxs5("span", { children: [
         "ຖານຂໍ້ມູນທັງໝົດ: ",
-        /* @__PURE__ */ jsx5("b", { className: "text-sky-700 font-mono", children: projects.length }),
+        /* @__PURE__ */ jsx5("b", { className: "text-rose-700 font-mono", children: projects.length }),
         " ໂຄງການ"
       ] }) : /* @__PURE__ */ jsxs5("span", { children: [
         "ປະຫວັດການດໍາເນີນງານ: ",
@@ -4863,7 +4863,7 @@ var ExportReports = ({
     activeReportTab === "projects" && /* @__PURE__ */ jsxs5("div", { className: "space-y-6", children: [
       /* @__PURE__ */ jsxs5("div", { className: "bg-white p-6 rounded-2xl border border-slate-200 shadow-xs", children: [
         /* @__PURE__ */ jsxs5("h3", { className: "text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2", children: [
-          /* @__PURE__ */ jsx5(Download2, { className: "text-sky-600", size: 20 }),
+          /* @__PURE__ */ jsx5(Download2, { className: "text-rose-600", size: 20 }),
           "ສູນສົ່ງອອກບົດລາຍງານຂໍ້ມູນໂຄງການ ຫຼື ກິດຈະການນໍາໃຊ້ນໍ້າ"
         ] }),
         /* @__PURE__ */ jsx5("p", { className: "text-xs text-slate-500 mt-1", children: "ເລືອກຮູບແບບໄຟລ໌ທີ່ຕ້ອງການສົ່ງອອກ (Excel, Word, PDF) ພ້ອມກອງຂໍ້ມູນຕາມເງື່ອນໄຂ ເພື່ອນໍາໃຊ້ເຂົ້າໃນບົດລາຍງານທາງການ" }),
@@ -4952,7 +4952,7 @@ var ExportReports = ({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxs5("div", { className: "mt-3 text-xs text-sky-700 bg-sky-50/70 p-2.5 rounded-xl border border-sky-100 flex items-center gap-2", children: [
+        /* @__PURE__ */ jsxs5("div", { className: "mt-3 text-xs text-rose-700 bg-rose-50/70 p-2.5 rounded-xl border border-rose-100 flex items-center gap-2", children: [
           /* @__PURE__ */ jsx5(CheckCircle23, { size: 16, className: "shrink-0" }),
           /* @__PURE__ */ jsxs5("span", { children: [
             "ຂໍ້ມູນທີ່ພ້ອມສົ່ງອອກໃນຕອນນີ້: ",
@@ -4990,7 +4990,7 @@ var ExportReports = ({
         ] }),
         /* @__PURE__ */ jsxs5("div", { className: "bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow", children: [
           /* @__PURE__ */ jsxs5("div", { children: [
-            /* @__PURE__ */ jsx5("div", { className: "w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center text-2xl mb-4", children: /* @__PURE__ */ jsx5(FileText, { size: 28 }) }),
+            /* @__PURE__ */ jsx5("div", { className: "w-12 h-12 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center text-2xl mb-4", children: /* @__PURE__ */ jsx5(FileText, { size: 28 }) }),
             /* @__PURE__ */ jsx5("h4", { className: "text-base font-bold text-slate-900", children: "ສົ່ງອອກເປັນ Microsoft Word (.doc)" }),
             /* @__PURE__ */ jsx5("p", { className: "text-xs text-slate-500 mt-2 leading-relaxed", children: "ຮູບແບບເອກະສານທາງການ ພ້ອມຫົວຂໍ້ ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ, ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ, ຕາຕະລາງສັງລວມ ແລະ ຊ່ອງລາຍເຊັນ." }),
             /* @__PURE__ */ jsxs5("div", { className: "mt-4 space-y-1.5 text-[11px] text-slate-600", children: [
@@ -5004,7 +5004,7 @@ var ExportReports = ({
             {
               onClick: handleExportWord,
               disabled: isExporting === "word" || exportData.length === 0,
-              className: "mt-6 w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-98 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer",
+              className: "mt-6 w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 active:scale-98 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer",
               children: [
                 /* @__PURE__ */ jsx5(FileText, { size: 16 }),
                 isExporting === "word" ? "ກໍາລັງສົ່ງອອກ..." : "ດາວໂຫຼດ Word (.doc)"
@@ -5090,13 +5090,13 @@ var ExportReports = ({
           /* @__PURE__ */ jsx5("div", { className: "mt-2 text-2xl font-bold text-emerald-600 font-mono", children: auditStats.creates }),
           /* @__PURE__ */ jsx5("div", { className: "text-[11px] text-emerald-700/80 mt-0.5", children: "ລາຍການທີ່ຖືກສ້າງຂຶ້ນໃໝ່" })
         ] }),
-        /* @__PURE__ */ jsxs5("div", { className: "bg-white p-4 rounded-2xl border border-blue-200 shadow-xs bg-gradient-to-br from-white to-blue-50/30", children: [
+        /* @__PURE__ */ jsxs5("div", { className: "bg-white p-4 rounded-2xl border border-rose-200 shadow-xs bg-gradient-to-br from-white to-blue-50/30", children: [
           /* @__PURE__ */ jsxs5("div", { className: "flex items-center justify-between", children: [
-            /* @__PURE__ */ jsx5("span", { className: "text-xs font-semibold text-blue-800", children: "ແກ້ໄຂຂໍ້ມູນ (Update)" }),
-            /* @__PURE__ */ jsx5("span", { className: "p-2 rounded-xl bg-blue-100 text-blue-700", children: /* @__PURE__ */ jsx5(Save, { size: 16 }) })
+            /* @__PURE__ */ jsx5("span", { className: "text-xs font-semibold text-rose-800", children: "ແກ້ໄຂຂໍ້ມູນ (Update)" }),
+            /* @__PURE__ */ jsx5("span", { className: "p-2 rounded-xl bg-rose-100 text-rose-700", children: /* @__PURE__ */ jsx5(Save, { size: 16 }) })
           ] }),
-          /* @__PURE__ */ jsx5("div", { className: "mt-2 text-2xl font-bold text-blue-600 font-mono", children: auditStats.updates }),
-          /* @__PURE__ */ jsx5("div", { className: "text-[11px] text-blue-700/80 mt-0.5", children: "ລາຍການທີ່ມີການດັດແກ້" })
+          /* @__PURE__ */ jsx5("div", { className: "mt-2 text-2xl font-bold text-rose-600 font-mono", children: auditStats.updates }),
+          /* @__PURE__ */ jsx5("div", { className: "text-[11px] text-rose-700/80 mt-0.5", children: "ລາຍການທີ່ມີການດັດແກ້" })
         ] }),
         /* @__PURE__ */ jsxs5("div", { className: "bg-white p-4 rounded-2xl border border-rose-200 shadow-xs bg-gradient-to-br from-white to-rose-50/30", children: [
           /* @__PURE__ */ jsxs5("div", { className: "flex items-center justify-between", children: [
@@ -5252,7 +5252,7 @@ var ExportReports = ({
         ] }),
         /* @__PURE__ */ jsxs5("div", { className: "bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow", children: [
           /* @__PURE__ */ jsxs5("div", { children: [
-            /* @__PURE__ */ jsx5("div", { className: "w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center text-2xl mb-4", children: /* @__PURE__ */ jsx5(FileText, { size: 28 }) }),
+            /* @__PURE__ */ jsx5("div", { className: "w-12 h-12 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center text-2xl mb-4", children: /* @__PURE__ */ jsx5(FileText, { size: 28 }) }),
             /* @__PURE__ */ jsx5("h4", { className: "text-base font-bold text-slate-900", children: "ສົ່ງອອກບົດລາຍງານ Word (.doc)" }),
             /* @__PURE__ */ jsx5("p", { className: "text-xs text-slate-500 mt-2 leading-relaxed", children: "ຮູບແບບບົດລາຍງານທາງການ ພ້ອມຫົວຂໍ້ ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ, ກົມຊັບພະຍາກອນນໍ້າ, ຕາຕະລາງສະຫຼຸບການເພີ່ມ-ດັດແກ້-ລຶບ ແລະ ຊ່ອງລົງລາຍເຊັນ." }),
             /* @__PURE__ */ jsxs5("div", { className: "mt-4 space-y-1.5 text-[11px] text-slate-600", children: [
@@ -5266,7 +5266,7 @@ var ExportReports = ({
             {
               onClick: handleExportAuditWord,
               disabled: isExporting === "audit-word" || filteredAuditLogs.length === 0,
-              className: "mt-6 w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-98 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer",
+              className: "mt-6 w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 active:scale-98 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer",
               children: [
                 /* @__PURE__ */ jsx5(FileText, { size: 16 }),
                 isExporting === "audit-word" ? "ກໍາລັງສົ່ງອອກ..." : `ດາວໂຫຼດ Word (${filteredAuditLogs.length} ລາຍການ)`
@@ -5331,7 +5331,7 @@ var ExportReports = ({
                 /* @__PURE__ */ jsx5("span", { children: new Date(log.timestamp).toLocaleDateString("lo-LA") }),
                 /* @__PURE__ */ jsx5("span", { className: "text-slate-400", children: new Date(log.timestamp).toLocaleTimeString("lo-LA") })
               ] }) }),
-              /* @__PURE__ */ jsx5("td", { className: "p-3 text-center", children: /* @__PURE__ */ jsxs5("span", { className: `inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold ${isCreate ? "bg-emerald-100 text-emerald-800 border border-emerald-200" : isUpdate ? "bg-blue-100 text-blue-800 border border-blue-200" : isDelete ? "bg-rose-100 text-rose-800 border border-rose-200" : "bg-slate-100 text-slate-700 border border-slate-200"}`, children: [
+              /* @__PURE__ */ jsx5("td", { className: "p-3 text-center", children: /* @__PURE__ */ jsxs5("span", { className: `inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold ${isCreate ? "bg-emerald-100 text-emerald-800 border border-emerald-200" : isUpdate ? "bg-rose-100 text-rose-800 border border-rose-200" : isDelete ? "bg-rose-100 text-rose-800 border border-rose-200" : "bg-slate-100 text-slate-700 border border-slate-200"}`, children: [
                 isCreate && /* @__PURE__ */ jsx5(Plus3, { size: 11 }),
                 isUpdate && /* @__PURE__ */ jsx5(Save, { size: 11 }),
                 isDelete && /* @__PURE__ */ jsx5(Trash22, { size: 11 }),
@@ -5458,7 +5458,7 @@ var BackupManager = ({
   return /* @__PURE__ */ jsxs6("div", { className: "space-y-6", children: [
     /* @__PURE__ */ jsxs6("div", { className: "bg-white p-6 rounded-2xl border border-slate-200 shadow-xs", children: [
       /* @__PURE__ */ jsxs6("h3", { className: "text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2", children: [
-        /* @__PURE__ */ jsx6(Database2, { className: "text-blue-600", size: 20 }),
+        /* @__PURE__ */ jsx6(Database2, { className: "text-rose-600", size: 20 }),
         "ລະບົບແບກອັບ ແລະ ຟື້ນຟູຖານຂໍ້ມູນ (Backup & Restore)"
       ] }),
       /* @__PURE__ */ jsx6("p", { className: "text-xs text-slate-500 mt-1", children: "ສາມາດດາວໂຫຼດໄຟລ໌ສໍາຮອງຂໍ້ມູນ (JSON) ເກັບໄວ້ໃນຄອມພິວເຕີ, ຫຼື ນໍາເຂົ້າໄຟລ໌ເພື່ອຟື້ນຟູຂໍ້ມູນທັງໝົດໄດ້ທຸກເວລາ" })
@@ -5480,7 +5480,7 @@ var BackupManager = ({
     /* @__PURE__ */ jsxs6("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-6", children: [
       /* @__PURE__ */ jsxs6("div", { className: "bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between", children: [
         /* @__PURE__ */ jsxs6("div", { children: [
-          /* @__PURE__ */ jsx6("div", { className: "w-12 h-12 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center text-2xl mb-4", children: /* @__PURE__ */ jsx6(Download3, { size: 26 }) }),
+          /* @__PURE__ */ jsx6("div", { className: "w-12 h-12 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center text-2xl mb-4", children: /* @__PURE__ */ jsx6(Download3, { size: 26 }) }),
           /* @__PURE__ */ jsx6("h4", { className: "text-base font-bold text-slate-900", children: "1. ແບກອັບຂໍ້ມູນລະບົບ (Download Backup)" }),
           /* @__PURE__ */ jsxs6("p", { className: "text-xs text-slate-500 mt-2 leading-relaxed", children: [
             "ລະບົບຈະສັງລວມຂໍ້ມູນໂຄງການນໍາໃຊ້ນໍ້າທັງໝົດ (",
@@ -5510,7 +5510,7 @@ var BackupManager = ({
           {
             onClick: handleCreateBackup,
             disabled: isBackingUp,
-            className: "mt-6 w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-98 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all disabled:opacity-50",
+            className: "mt-6 w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 active:scale-98 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all disabled:opacity-50",
             children: [
               /* @__PURE__ */ jsx6(Download3, { size: 16 }),
               isBackingUp ? "ກໍາລັງສ້າງ Backup..." : "ສ້າງ ແລະ ດາວໂຫຼດ Backup JSON"
@@ -5535,7 +5535,7 @@ var BackupManager = ({
                     value: "replace",
                     checked: restoreMode === "replace",
                     onChange: () => setRestoreMode("replace"),
-                    className: "text-blue-600"
+                    className: "text-rose-600"
                   }
                 ),
                 /* @__PURE__ */ jsx6("span", { children: "ຂຽນທັບທັງໝົດ (Replace)" })
@@ -5549,7 +5549,7 @@ var BackupManager = ({
                     value: "merge",
                     checked: restoreMode === "merge",
                     onChange: () => setRestoreMode("merge"),
-                    className: "text-blue-600"
+                    className: "text-rose-600"
                   }
                 ),
                 /* @__PURE__ */ jsx6("span", { children: "ຮວມຂໍ້ມູນເກົ່າ ແລະ ໃໝ່ (Merge)" })
@@ -5620,7 +5620,7 @@ var BackupManager = ({
             if (e.key === "Enter") handleConfirmPasswordAction();
           },
           placeholder: "ປ້ອນລະຫັດຜ່ານ (Password)",
-          className: "w-full text-center text-sm bg-slate-50 border border-slate-300 rounded-xl py-2.5 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+          className: "w-full text-center text-sm bg-slate-50 border border-slate-300 rounded-xl py-2.5 font-medium focus:ring-2 focus:ring-rose-500 focus:outline-hidden"
         }
       ) }),
       /* @__PURE__ */ jsxs6("div", { className: "flex gap-2", children: [
@@ -5641,7 +5641,7 @@ var BackupManager = ({
           {
             type: "button",
             onClick: handleConfirmPasswordAction,
-            className: "flex-1 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs cursor-pointer",
+            className: "flex-1 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs cursor-pointer",
             children: "ຢືນຢັນ"
           }
         )
@@ -5908,11 +5908,11 @@ var SecurityAndSettings = ({
       /* @__PURE__ */ jsx7("div", { className: "absolute right-0 top-0 w-80 h-full bg-gradient-to-l from-sky-500/10 to-transparent pointer-events-none" }),
       /* @__PURE__ */ jsxs7("div", { className: "flex flex-col md:flex-row md:items-center justify-between gap-5 relative z-10", children: [
         /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-4", children: [
-          /* @__PURE__ */ jsx7("div", { className: `w-16 h-16 rounded-2xl ${currentUser.avatarColor || "bg-sky-600"} flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-sky-500/20 ring-4 ring-slate-800`, children: currentUser.fullName ? currentUser.fullName.charAt(0) : "U" }),
+          /* @__PURE__ */ jsx7("div", { className: `w-16 h-16 rounded-2xl ${currentUser.avatarColor || "bg-rose-600"} flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-rose-500/20 ring-4 ring-slate-800`, children: currentUser.fullName ? currentUser.fullName.charAt(0) : "U" }),
           /* @__PURE__ */ jsxs7("div", { children: [
             /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-2.5 flex-wrap", children: [
               /* @__PURE__ */ jsx7("h2", { className: "text-xl font-bold text-white tracking-wide", children: currentUser.fullName }),
-              /* @__PURE__ */ jsxs7("span", { className: "font-mono text-xs px-2.5 py-0.5 rounded-full font-bold bg-sky-500/20 text-sky-300 border border-sky-400/30", children: [
+              /* @__PURE__ */ jsxs7("span", { className: "font-mono text-xs px-2.5 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30", children: [
                 "@",
                 currentUser.username
               ] }),
@@ -5932,7 +5932,7 @@ var SecurityAndSettings = ({
             "button",
             {
               onClick: () => setActiveSubTab("profile"),
-              className: "px-4 py-2 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 text-white shadow-md shadow-sky-600/30 transition-all flex items-center gap-1.5 cursor-pointer",
+              className: "px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-sky-600/30 transition-all flex items-center gap-1.5 cursor-pointer",
               children: [
                 /* @__PURE__ */ jsx7(User2, { size: 14 }),
                 /* @__PURE__ */ jsx7("span", { children: "ຕັ້ງຄ່າບັນຊີຂອງຂ້າພະເຈົ້າ" })
@@ -5961,7 +5961,7 @@ var SecurityAndSettings = ({
           "button",
           {
             onClick: () => setActiveSubTab("profile"),
-            className: `flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer ${activeSubTab === "profile" ? "bg-sky-500 text-white shadow-md shadow-sky-500/25" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"}`,
+            className: `flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer ${activeSubTab === "profile" ? "bg-rose-500 text-white shadow-md shadow-rose-500/25" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"}`,
             children: [
               /* @__PURE__ */ jsx7(User2, { size: 14 }),
               /* @__PURE__ */ jsx7("span", { children: "1. ຕັ້ງຄ່າບັນຊີ & ລະຫັດຜ່ານເຂົ້າລະບົບ" })
@@ -5972,7 +5972,7 @@ var SecurityAndSettings = ({
           "button",
           {
             onClick: () => setActiveSubTab("directory"),
-            className: `flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer ${activeSubTab === "directory" ? "bg-sky-500 text-white shadow-md shadow-sky-500/25" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"}`,
+            className: `flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer ${activeSubTab === "directory" ? "bg-rose-500 text-white shadow-md shadow-rose-500/25" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"}`,
             children: [
               /* @__PURE__ */ jsx7(Users2, { size: 14 }),
               /* @__PURE__ */ jsxs7("span", { children: [
@@ -5987,7 +5987,7 @@ var SecurityAndSettings = ({
           "button",
           {
             onClick: () => setActiveSubTab("logs"),
-            className: `flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer ${activeSubTab === "logs" ? "bg-sky-500 text-white shadow-md shadow-sky-500/25" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"}`,
+            className: `flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer ${activeSubTab === "logs" ? "bg-rose-500 text-white shadow-md shadow-rose-500/25" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"}`,
             children: [
               /* @__PURE__ */ jsx7(History2, { size: 14 }),
               /* @__PURE__ */ jsx7("span", { children: "3. ປະຫວັດການດໍາເນີນງານ (Audit Logs)" })
@@ -6001,7 +6001,7 @@ var SecurityAndSettings = ({
               setExportPasscodeVal(getExportPasscode());
               setActiveSubTab("exportSecurity");
             },
-            className: `flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer ${activeSubTab === "exportSecurity" ? "bg-sky-500 text-white shadow-md shadow-sky-500/25" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"}`,
+            className: `flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer ${activeSubTab === "exportSecurity" ? "bg-rose-500 text-white shadow-md shadow-rose-500/25" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"}`,
             children: [
               /* @__PURE__ */ jsx7(Shield, { size: 14 }),
               /* @__PURE__ */ jsx7("span", { children: "4. 🔒 ລະຫັດດາວໂຫຼດ (Export Passcode)" })
@@ -6014,7 +6014,7 @@ var SecurityAndSettings = ({
       /* @__PURE__ */ jsxs7("div", { className: "lg:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl", children: [
         /* @__PURE__ */ jsxs7("div", { className: "flex items-center justify-between pb-4 mb-6 border-b border-slate-800", children: [
           /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-3", children: [
-            /* @__PURE__ */ jsx7("div", { className: "w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-400/20 text-sky-400 flex items-center justify-center", children: /* @__PURE__ */ jsx7(User2, { size: 20 }) }),
+            /* @__PURE__ */ jsx7("div", { className: "w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-400/20 text-rose-400 flex items-center justify-center", children: /* @__PURE__ */ jsx7(User2, { size: 20 }) }),
             /* @__PURE__ */ jsxs7("div", { children: [
               /* @__PURE__ */ jsx7("h3", { className: "text-base font-bold text-white", children: "ຕັ້ງຄ່າບັນຊີຜູ້ໃຊ້ດ້ວຍຕົນເອງ" }),
               /* @__PURE__ */ jsx7("p", { className: "text-xs text-slate-400", children: "ກໍານົດຊື່ຜູ້ໃຊ້ ແລະ ລະຫັດຜ່ານ ເພື່ອໃຊ້ໃນການເຂົ້າສູ່ລະບົບ" })
@@ -6027,7 +6027,7 @@ var SecurityAndSettings = ({
         ] }),
         /* @__PURE__ */ jsxs7("form", { onSubmit: handleSaveSelfProfile, className: "space-y-5", children: [
           /* @__PURE__ */ jsxs7("div", { className: "p-4 rounded-2xl bg-gradient-to-r from-sky-950/40 via-slate-850 to-slate-850 border border-sky-800/30 space-y-4", children: [
-            /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-2 text-xs font-bold text-sky-300", children: [
+            /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-2 text-xs font-bold text-rose-300", children: [
               /* @__PURE__ */ jsx7(Lock, { size: 14 }),
               /* @__PURE__ */ jsx7("span", { children: "ຂໍ້ມູນສໍາລັບເຂົ້າສູ່ລະບົບ (Login Credentials)" })
             ] }),
@@ -6035,10 +6035,10 @@ var SecurityAndSettings = ({
               /* @__PURE__ */ jsxs7("div", { className: "space-y-1.5", children: [
                 /* @__PURE__ */ jsxs7("label", { className: "text-xs font-bold text-slate-200 flex items-center justify-between", children: [
                   /* @__PURE__ */ jsx7("span", { children: "ຊື່ຜູ້ໃຊ້ (Username) *" }),
-                  /* @__PURE__ */ jsx7("span", { className: "text-[10px] text-sky-400", children: "ໃຊ້ສໍາລັບເຂົ້າລະບົບ" })
+                  /* @__PURE__ */ jsx7("span", { className: "text-[10px] text-rose-400", children: "ໃຊ້ສໍາລັບເຂົ້າລະບົບ" })
                 ] }),
                 /* @__PURE__ */ jsxs7("div", { className: "relative", children: [
-                  /* @__PURE__ */ jsx7("div", { className: "absolute left-3 top-1/2 -translate-y-1/2 text-sky-400 font-mono font-bold text-sm", children: "@" }),
+                  /* @__PURE__ */ jsx7("div", { className: "absolute left-3 top-1/2 -translate-y-1/2 text-rose-400 font-mono font-bold text-sm", children: "@" }),
                   /* @__PURE__ */ jsx7(
                     "input",
                     {
@@ -6049,7 +6049,7 @@ var SecurityAndSettings = ({
                         setUsernameDuplicateWarning(false);
                       },
                       placeholder: "ເຊັ່ນ: somsak, manivone",
-                      className: "w-full pl-8 pr-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-sm focus:outline-hidden focus:border-sky-500 focus:ring-1 focus:ring-sky-500",
+                      className: "w-full pl-8 pr-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-sm focus:outline-hidden focus:border-rose-500 focus:ring-1 focus:ring-rose-500",
                       required: true
                     }
                   )
@@ -6072,7 +6072,7 @@ var SecurityAndSettings = ({
                       value: passwordInput,
                       onChange: (e) => setPasswordInput(e.target.value),
                       placeholder: "ປ້ອນລະຫັດຜ່ານເຂົ້າລະບົບ",
-                      className: "w-full px-3.5 pr-10 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-hidden focus:border-sky-500 focus:ring-1 focus:ring-sky-500",
+                      className: "w-full px-3.5 pr-10 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-hidden focus:border-rose-500 focus:ring-1 focus:ring-rose-500",
                       required: true
                     }
                   ),
@@ -6101,7 +6101,7 @@ var SecurityAndSettings = ({
                     value: profile.fullName || "",
                     onChange: (e) => setProfile({ ...profile, fullName: e.target.value }),
                     placeholder: "ທ່ານ / ທ່ານ ນາງ ...",
-                    className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-sky-500",
+                    className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-rose-500",
                     required: true
                   }
                 )
@@ -6115,7 +6115,7 @@ var SecurityAndSettings = ({
                     value: profile.position || "",
                     onChange: (e) => setProfile({ ...profile, position: e.target.value }),
                     placeholder: "ເຊັ່ນ: ຫົວໜ້າກົມ, ວິຊາການກວດກາ",
-                    className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-sky-500"
+                    className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-rose-500"
                   }
                 )
               ] }),
@@ -6127,7 +6127,7 @@ var SecurityAndSettings = ({
                     type: "text",
                     value: profile.organization || "",
                     onChange: (e) => setProfile({ ...profile, organization: e.target.value }),
-                    className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-sky-500"
+                    className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-rose-500"
                   }
                 )
               ] }),
@@ -6139,7 +6139,7 @@ var SecurityAndSettings = ({
                     type: "text",
                     value: profile.department || "",
                     onChange: (e) => setProfile({ ...profile, department: e.target.value }),
-                    className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-sky-500"
+                    className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-rose-500"
                   }
                 )
               ] }),
@@ -6152,7 +6152,7 @@ var SecurityAndSettings = ({
                     value: profile.phone || "",
                     onChange: (e) => setProfile({ ...profile, phone: e.target.value }),
                     placeholder: "020 xxxx xxxx",
-                    className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-sky-500"
+                    className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-rose-500"
                   }
                 )
               ] }),
@@ -6165,7 +6165,7 @@ var SecurityAndSettings = ({
                     value: profile.email || "",
                     onChange: (e) => setProfile({ ...profile, email: e.target.value }),
                     placeholder: "user@example.la",
-                    className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-sky-500"
+                    className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-rose-500"
                   }
                 )
               ] })
@@ -6177,7 +6177,7 @@ var SecurityAndSettings = ({
                 {
                   value: profile.role,
                   onChange: (e) => setProfile({ ...profile, role: e.target.value }),
-                  className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-sky-500 cursor-pointer",
+                  className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-rose-500 cursor-pointer",
                   children: [
                     /* @__PURE__ */ jsx7("option", { value: "admin", children: "👑 Super Admin (ຈັດການທຸກຢ່າງ ແລະ ບັນຊີຜູ້ໃຊ້)" }),
                     /* @__PURE__ */ jsx7("option", { value: "officer", children: "🛠️ Staff (ເພີ່ມ, ແກ້ໄຂ ແລະ ລຶບຂໍ້ມູນ)" }),
@@ -6195,7 +6195,7 @@ var SecurityAndSettings = ({
                   value: profile.notes || "",
                   onChange: (e) => setProfile({ ...profile, notes: e.target.value }),
                   placeholder: "ບັນທຶກເພີ່ມເຕີມກ່ຽວກັບໜ້າທີ່ຮັບຜິດຊອບ...",
-                  className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-sky-500 resize-none"
+                  className: "w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:outline-hidden focus:border-rose-500 resize-none"
                 }
               )
             ] })
@@ -6204,7 +6204,7 @@ var SecurityAndSettings = ({
             "button",
             {
               type: "submit",
-              className: "px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white text-xs font-bold shadow-lg shadow-sky-500/25 active:scale-98 transition-all flex items-center gap-2 cursor-pointer",
+              className: "px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white text-xs font-bold shadow-lg shadow-rose-500/25 active:scale-98 transition-all flex items-center gap-2 cursor-pointer",
               children: [
                 /* @__PURE__ */ jsx7(Save2, { size: 15 }),
                 /* @__PURE__ */ jsx7("span", { children: "ບັນທຶກການຕັ້ງຄ່າບັນຊີ" })
@@ -6215,20 +6215,20 @@ var SecurityAndSettings = ({
       ] }),
       /* @__PURE__ */ jsx7("div", { className: "space-y-6", children: /* @__PURE__ */ jsxs7("div", { className: "bg-gradient-to-b from-slate-900 to-slate-850 border border-slate-800 rounded-3xl p-6 shadow-xl relative overflow-hidden", children: [
         /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-2 text-xs font-bold text-slate-300 mb-4 pb-3 border-b border-slate-800", children: [
-          /* @__PURE__ */ jsx7(IdCard, { size: 16, className: "text-sky-400" }),
+          /* @__PURE__ */ jsx7(IdCard, { size: 16, className: "text-rose-400" }),
           /* @__PURE__ */ jsx7("span", { children: "ບັດປະຈໍາຕົວດິຈິຕອນ (Digital ID)" })
         ] }),
         /* @__PURE__ */ jsxs7("div", { className: "rounded-2xl bg-gradient-to-br from-slate-800 via-slate-850 to-slate-900 border border-slate-700/80 p-5 shadow-2xl relative overflow-hidden", children: [
-          /* @__PURE__ */ jsx7("div", { className: "absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-2xl pointer-events-none" }),
+          /* @__PURE__ */ jsx7("div", { className: "absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl pointer-events-none" }),
           /* @__PURE__ */ jsxs7("div", { className: "flex items-start justify-between mb-4", children: [
             /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-2", children: [
-              /* @__PURE__ */ jsx7("div", { className: "w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 font-bold text-sm", children: "💧" }),
+              /* @__PURE__ */ jsx7("div", { className: "w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-rose-400 font-bold text-sm", children: "💧" }),
               /* @__PURE__ */ jsxs7("div", { children: [
-                /* @__PURE__ */ jsx7("div", { className: "text-[10px] text-sky-400 font-semibold uppercase tracking-wider", children: "ລະບົບຕິດຕາມການນໍາໃຊ້ນໍ້າ" }),
+                /* @__PURE__ */ jsx7("div", { className: "text-[10px] text-rose-400 font-semibold uppercase tracking-wider", children: "ລະບົບຕິດຕາມການນໍາໃຊ້ນໍ້າ" }),
                 /* @__PURE__ */ jsx7("div", { className: "text-[11px] font-bold text-white", children: "DWR MON-SYS" })
               ] })
             ] }),
-            /* @__PURE__ */ jsxs7("span", { className: "font-mono text-xs px-2.5 py-0.5 rounded-full font-bold bg-sky-500/20 text-sky-300 border border-sky-400/30", children: [
+            /* @__PURE__ */ jsxs7("span", { className: "font-mono text-xs px-2.5 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-400/30", children: [
               "@",
               profile.username || "username"
             ] })
@@ -6256,7 +6256,7 @@ var SecurityAndSettings = ({
           ] })
         ] }),
         /* @__PURE__ */ jsxs7("div", { className: "mt-5 p-4 rounded-2xl bg-sky-950/30 border border-sky-800/30 text-xs space-y-2", children: [
-          /* @__PURE__ */ jsxs7("div", { className: "font-bold text-sky-300 flex items-center gap-1.5", children: [
+          /* @__PURE__ */ jsxs7("div", { className: "font-bold text-rose-300 flex items-center gap-1.5", children: [
             /* @__PURE__ */ jsx7(Shield, { size: 14 }),
             /* @__PURE__ */ jsx7("span", { children: "ວິທີເຂົ້າສູ່ລະບົບ (How to Log In)" })
           ] }),
@@ -6304,9 +6304,9 @@ var SecurityAndSettings = ({
         return /* @__PURE__ */ jsxs7(
           "div",
           {
-            className: `rounded-3xl p-5 border transition-all relative ${isCurrent ? "bg-slate-850/90 border-sky-500/50 shadow-xl ring-2 ring-sky-500/20" : "bg-slate-900/90 border-slate-800 hover:border-slate-700 shadow-md"}`,
+            className: `rounded-3xl p-5 border transition-all relative ${isCurrent ? "bg-slate-850/90 border-rose-500/50 shadow-xl ring-2 ring-rose-500/20" : "bg-slate-900/90 border-slate-800 hover:border-slate-700 shadow-md"}`,
             children: [
-              isCurrent && /* @__PURE__ */ jsxs7("div", { className: "absolute top-4 right-4 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30 text-[10px] font-bold", children: [
+              isCurrent && /* @__PURE__ */ jsxs7("div", { className: "absolute top-4 right-4 flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30 text-[10px] font-bold", children: [
                 /* @__PURE__ */ jsx7(Check, { size: 12 }),
                 /* @__PURE__ */ jsx7("span", { children: "ບັນຊີປະຈຸບັນ" })
               ] }),
@@ -6315,7 +6315,7 @@ var SecurityAndSettings = ({
                 /* @__PURE__ */ jsxs7("div", { children: [
                   /* @__PURE__ */ jsx7("h4", { className: "font-bold text-sm text-white truncate max-w-[150px]", children: usr.fullName }),
                   /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-1.5 mt-0.5", children: [
-                    /* @__PURE__ */ jsxs7("span", { className: `font-mono text-xs font-bold truncate max-w-[150px] ${(usr.username || "").length > 30 ? "text-amber-400" : "text-sky-400"}`, title: (usr.username || "").length > 30 ? "ຊື່ເຂົ້າລະບົບຍາວເກີນ — ກົດ ✏️ ແກ້ໄຂ ແລ້ວຕັ້ງຊື່ສັ້ນໆ" : "ຊື່ເຂົ້າລະບົບ", children: [
+                    /* @__PURE__ */ jsxs7("span", { className: `font-mono text-xs font-bold truncate max-w-[150px] ${(usr.username || "").length > 30 ? "text-amber-400" : "text-rose-400"}`, title: (usr.username || "").length > 30 ? "ຊື່ເຂົ້າລະບົບຍາວເກີນ — ກົດ ✏️ ແກ້ໄຂ ແລ້ວຕັ້ງຊື່ສັ້ນໆ" : "ຊື່ເຂົ້າລະບົບ", children: [
                       "@",
                       usr.username
                     ] }),
@@ -6342,7 +6342,7 @@ var SecurityAndSettings = ({
                     },
                     className: "flex-1 py-1.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer",
                     children: [
-                      /* @__PURE__ */ jsx7(LogIn2, { size: 13, className: "text-sky-400" }),
+                      /* @__PURE__ */ jsx7(LogIn2, { size: 13, className: "text-rose-400" }),
                       /* @__PURE__ */ jsx7("span", { children: "ສະຫຼັບມາໃຊ້ນີ້" })
                     ]
                   }
@@ -6352,7 +6352,7 @@ var SecurityAndSettings = ({
                   {
                     type: "button",
                     onClick: () => openUserEditor(usr, currentUser, users),
-                    className: "py-1.5 px-3 rounded-xl bg-slate-800 hover:bg-sky-600 text-sky-300 hover:text-white text-xs font-bold transition-colors cursor-pointer",
+                    className: "py-1.5 px-3 rounded-xl bg-slate-800 hover:bg-rose-600 text-rose-300 hover:text-white text-xs font-bold transition-colors cursor-pointer",
                     title: "ແກ້ໄຂ ຊື່ເຂົ້າລະບົບ / ຊື່ເຕັມ / ສິດ / ຕັ້ງລະຫັດໃໝ່",
                     children: "✏️ ແກ້ໄຂ"
                   }
@@ -6378,7 +6378,7 @@ var SecurityAndSettings = ({
       /* @__PURE__ */ jsxs7("div", { className: "flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-3", children: [
         /* @__PURE__ */ jsxs7("div", { children: [
           /* @__PURE__ */ jsxs7("h3", { className: "text-base font-bold text-white flex items-center gap-2", children: [
-            /* @__PURE__ */ jsx7(History2, { size: 18, className: "text-sky-400" }),
+            /* @__PURE__ */ jsx7(History2, { size: 18, className: "text-rose-400" }),
             /* @__PURE__ */ jsx7("span", { children: "ປະຫວັດການດໍາເນີນງານໃນລະບົບ (Audit Trail)" })
           ] }),
           /* @__PURE__ */ jsx7("p", { className: "text-xs text-slate-400 mt-0.5", children: "ບັນທຶກທຸກການເຄື່ອນໄຫວ ເຊັ່ນ ການເພີ່ມ, ແກ້ໄຂ, ລຶບຂໍ້ມູນ ຫຼື ການເຂົ້າລະບົບ" })
@@ -6411,7 +6411,7 @@ var SecurityAndSettings = ({
         /* @__PURE__ */ jsxs7("div", { className: "flex items-start gap-2.5", children: [
           /* @__PURE__ */ jsxs7("div", { className: "mt-0.5", children: [
             log.action === "create" && /* @__PURE__ */ jsx7(Plus4, { size: 14, className: "text-emerald-400" }),
-            log.action === "update" && /* @__PURE__ */ jsx7(Save2, { size: 14, className: "text-sky-400" }),
+            log.action === "update" && /* @__PURE__ */ jsx7(Save2, { size: 14, className: "text-rose-400" }),
             log.action === "delete" && /* @__PURE__ */ jsx7(Trash23, { size: 14, className: "text-rose-400" }),
             log.action === "export" && /* @__PURE__ */ jsx7(FileText2, { size: 14, className: "text-purple-400" }),
             !["create", "update", "delete", "export"].includes(log.action) && /* @__PURE__ */ jsx7(History2, { size: 14, className: "text-amber-400" })
@@ -6694,7 +6694,7 @@ var SecurityAndSettings = ({
     ] }) }),
     switchTargetUser && /* @__PURE__ */ jsx7("div", { className: "fixed inset-0 z-[1300] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-150", children: /* @__PURE__ */ jsxs7("div", { className: "bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-150", children: [
       /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-3", children: [
-        /* @__PURE__ */ jsx7("div", { className: "w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center", children: /* @__PURE__ */ jsx7(LogIn2, { size: 22 }) }),
+        /* @__PURE__ */ jsx7("div", { className: "w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center", children: /* @__PURE__ */ jsx7(LogIn2, { size: 22 }) }),
         /* @__PURE__ */ jsxs7("div", { children: [
           /* @__PURE__ */ jsx7("h3", { className: "text-sm font-bold text-white", children: "ສະຫຼັບບັນຊີຜູ້ໃຊ້" }),
           /* @__PURE__ */ jsx7("p", { className: "text-xs text-slate-400", children: "ເຂົ້າສູ່ລະບົບດ້ວຍບັນຊີອື່ນ" })
@@ -6704,7 +6704,7 @@ var SecurityAndSettings = ({
         /* @__PURE__ */ jsx7("div", { className: `w-10 h-10 rounded-xl ${switchTargetUser.avatarColor || "bg-slate-700"} flex items-center justify-center text-white font-bold`, children: switchTargetUser.fullName ? switchTargetUser.fullName.charAt(0) : "U" }),
         /* @__PURE__ */ jsxs7("div", { className: "truncate", children: [
           /* @__PURE__ */ jsx7("div", { className: "font-bold text-xs text-white truncate", children: switchTargetUser.fullName }),
-          /* @__PURE__ */ jsxs7("div", { className: "font-mono text-[11px] text-sky-400", children: [
+          /* @__PURE__ */ jsxs7("div", { className: "font-mono text-[11px] text-rose-400", children: [
             "@",
             switchTargetUser.username
           ] })
@@ -6754,7 +6754,7 @@ var SecurityAndSettings = ({
             "button",
             {
               type: "submit",
-              className: "flex-1 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold shadow-md shadow-sky-600/30 flex items-center justify-center gap-1.5 cursor-pointer",
+              className: "flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold shadow-md shadow-sky-600/30 flex items-center justify-center gap-1.5 cursor-pointer",
               children: [
                 /* @__PURE__ */ jsx7(LogIn2, { size: 14 }),
                 /* @__PURE__ */ jsx7("span", { children: "ຢັ້ງຢືນສະຫຼັບ" })
@@ -6796,7 +6796,7 @@ var SecurityAndSettings = ({
           /* @__PURE__ */ jsxs7("div", { className: "min-w-0 flex-1", children: [
             /* @__PURE__ */ jsx7("h4", { className: "font-bold text-sm text-white truncate", children: userToDelete.fullName }),
             /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-2 mt-0.5", children: [
-              /* @__PURE__ */ jsxs7("span", { className: "font-mono text-xs text-sky-400 font-semibold", children: [
+              /* @__PURE__ */ jsxs7("span", { className: "font-mono text-xs text-rose-400 font-semibold", children: [
                 "@",
                 userToDelete.username
               ] }),
@@ -7015,7 +7015,7 @@ var IntakeMapPickerModal = ({
                       className: "text-sm font-bold flex items-center gap-2",
                       children: [
                         "ເລືອກຈຸດພິກັດບ່ອນດູດນໍ້າ: ",
-                        /* @__PURE__ */ jsx8("span", { className: "text-sky-200", children: pointName || `ຈຸດທີ ${pointNumber}` })
+                        /* @__PURE__ */ jsx8("span", { className: "text-rose-200", children: pointName || `ຈຸດທີ ${pointNumber}` })
                       ]
                     }),
                     /* @__PURE__ */ jsx8("p", { className: "text-[11px] text-sky-100", children: "ກົດໃສ່ແຜນທີ່ ຫຼື ລາກໝຸດສີຟ້າ 💧 ໄປໃສ່ຈຸດດູດນໍ້າແຄມແມ່ນໍ້າ/ແຫຼ່ງນໍ້າ" })
@@ -7052,15 +7052,15 @@ var IntakeMapPickerModal = ({
               className: "flex flex-wrap items-center gap-2 text-xs",
               children: [
                 /* @__PURE__ */ jsxs8("div", {
-                  className: "bg-sky-100 text-sky-900 px-3 py-1.5 rounded-xl font-mono font-bold flex items-center gap-1.5 border border-sky-300",
+                  className: "bg-rose-100 text-rose-900 px-3 py-1.5 rounded-xl font-mono font-bold flex items-center gap-1.5 border border-rose-300",
                   children: [
                     /* @__PURE__ */ jsxs8("span", { children: ["💧 Lat: ", /* @__PURE__ */ jsx8("b", { children: Number(currentLat).toFixed(6) })] }),
-                    /* @__PURE__ */ jsx8("span", { className: "text-sky-400", children: "|" }),
+                    /* @__PURE__ */ jsx8("span", { className: "text-rose-400", children: "|" }),
                     /* @__PURE__ */ jsxs8("span", { children: ["Long: ", /* @__PURE__ */ jsx8("b", { children: Number(currentLng).toFixed(6) })] })
                   ]
                 }),
                 validLL(currentLat, currentLng) && /* @__PURE__ */ jsxs8("div", {
-                  className: "bg-blue-50 text-blue-900 px-2.5 py-1.5 rounded-xl font-mono font-semibold flex items-center gap-1 border border-blue-200 text-[11px]",
+                  className: "bg-rose-50 text-rose-900 px-2.5 py-1.5 rounded-xl font-mono font-semibold flex items-center gap-1 border border-rose-200 text-[11px]",
                   children: [
                     /* @__PURE__ */ jsx8("span", { children: "🌐 UTM: " }),
                     /* @__PURE__ */ jsx8("b", { children: formatUtm(currentLat, currentLng) })
@@ -7087,7 +7087,7 @@ var IntakeMapPickerModal = ({
                     onConfirm(Number(currentLat), Number(currentLng));
                     onClose();
                   },
-                  className: "px-5 py-2 text-xs font-bold text-white bg-sky-600 hover:bg-sky-500 rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer",
+                  className: "px-5 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer",
                   children: [
                     /* @__PURE__ */ jsx8(Save3, { size: 14 }),
                     "✅ ຢືນຢັນຈຸດພິກັດນີ້"
@@ -7489,7 +7489,7 @@ var ProjectFormModal = ({
         /* @__PURE__ */ jsx8("div", { className: "w-10 h-10 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center text-xl", children: "💧" }),
         /* @__PURE__ */ jsxs8("div", { children: [
           /* @__PURE__ */ jsx8("h3", { className: "text-lg font-bold", children: initialData ? "ແກ້ໄຂຂໍ້ມູນໂຄງການນໍາໃຊ້ນໍ້າ" : "ເພີ່ມຂໍ້ມູນໂຄງການ ຫຼື ກິດຈະການ ທີ່ນໍາໃຊ້ນໍ້າ" }),
-          /* @__PURE__ */ jsx8("p", { className: "text-xs text-blue-100", children: "ກະລຸນາປ້ອນຂໍ້ມູນລະອຽດ, ຈຸດພິກັດທີ່ຕັ້ງ ແລະ ແຜນການນໍາໃຊ້ນໍ້າ" })
+          /* @__PURE__ */ jsx8("p", { className: "text-xs text-rose-100", children: "ກະລຸນາປ້ອນຂໍ້ມູນລະອຽດ, ຈຸດພິກັດທີ່ຕັ້ງ ແລະ ແຜນການນໍາໃຊ້ນໍ້າ" })
         ] })
       ] }),
       /* @__PURE__ */ jsx8(
@@ -7507,7 +7507,7 @@ var ProjectFormModal = ({
         {
           type: "button",
           onClick: () => setActiveTab("general"),
-          className: `py-3 px-3 border-b-2 transition-all whitespace-nowrap ${activeTab === "general" ? "border-blue-600 text-blue-700 font-bold" : "border-transparent text-slate-600 hover:text-slate-900"}`,
+          className: `py-3 px-3 border-b-2 transition-all whitespace-nowrap ${activeTab === "general" ? "border-rose-600 text-rose-700 font-bold" : "border-transparent text-slate-600 hover:text-slate-900"}`,
           children: "🏢 1. ຂໍ້ມູນທົ່ວໄປ & ເຈົ້າຂອງ"
         }
       ),
@@ -7516,7 +7516,7 @@ var ProjectFormModal = ({
         {
           type: "button",
           onClick: () => setActiveTab("permit"),
-          className: `py-3 px-3 border-b-2 transition-all whitespace-nowrap ${activeTab === "permit" ? "border-blue-600 text-blue-700 font-bold" : "border-transparent text-slate-600 hover:text-slate-900"}`,
+          className: `py-3 px-3 border-b-2 transition-all whitespace-nowrap ${activeTab === "permit" ? "border-rose-600 text-rose-700 font-bold" : "border-transparent text-slate-600 hover:text-slate-900"}`,
           children: "📜 2. ໃບອະນຸຍາດ & ປະລິມານນໍ້າ"
         }
       ),
@@ -7534,11 +7534,11 @@ var ProjectFormModal = ({
         {
           type: "button",
           onClick: () => setActiveTab("intake"),
-          className: `py-3 px-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 ${activeTab === "intake" ? "border-sky-600 text-sky-700 font-bold" : "border-transparent text-slate-600 hover:text-slate-900"}`,
+          className: `py-3 px-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 ${activeTab === "intake" ? "border-sky-600 text-rose-700 font-bold" : "border-transparent text-slate-600 hover:text-slate-900"}`,
           children: [
             /* @__PURE__ */ jsx8("span", { children: "💧 4. ບ່ອນດູດນໍ້າ (ສີຟ້າ)" }),
             intakePoints.length > 0 && /* @__PURE__ */ jsxs8("span", {
-              className: `text-[10px] px-1.5 py-0.2 rounded-full font-bold ${activeTab === "intake" ? "bg-sky-600 text-white" : "bg-sky-100 text-sky-800 border border-sky-200"}`,
+              className: `text-[10px] px-1.5 py-0.2 rounded-full font-bold ${activeTab === "intake" ? "bg-rose-600 text-white" : "bg-rose-100 text-rose-800 border border-rose-200"}`,
               children: [intakePoints.length, " ຈຸດ"]
             })
           ]
@@ -7549,7 +7549,7 @@ var ProjectFormModal = ({
         {
           type: "button",
           onClick: () => setActiveTab("plan"),
-          className: `py-3 px-3 border-b-2 transition-all whitespace-nowrap ${activeTab === "plan" ? "border-blue-600 text-blue-700 font-bold" : "border-transparent text-slate-600 hover:text-slate-900"}`,
+          className: `py-3 px-3 border-b-2 transition-all whitespace-nowrap ${activeTab === "plan" ? "border-rose-600 text-rose-700 font-bold" : "border-transparent text-slate-600 hover:text-slate-900"}`,
           children: "📝 5. ແຜນການນໍາໃຊ້ນໍ້າ"
         }
       )
@@ -7557,7 +7557,7 @@ var ProjectFormModal = ({
     /* @__PURE__ */ jsxs8("form", { onSubmit: handleSubmit, className: "flex-1 overflow-y-auto p-6 space-y-6", children: [
       activeTab === "general" && /* @__PURE__ */ jsxs8("div", { className: "space-y-4", children: [
         /* @__PURE__ */ jsxs8("h4", { className: "text-sm font-bold text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-2", children: [
-          /* @__PURE__ */ jsx8(Building22, { size: 16, className: "text-blue-600" }),
+          /* @__PURE__ */ jsx8(Building22, { size: 16, className: "text-rose-600" }),
           "ຊື່ໂຄງການ ແລະ ຂໍ້ມູນຜູ້ລົງທຶນ"
         ] }),
         /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4", children: [
@@ -7571,7 +7571,7 @@ var ProjectFormModal = ({
                 value: formData.projectName || "",
                 onChange: (e) => setFormData({ ...formData, projectName: e.target.value }),
                 placeholder: "ຕົວຢ່າງ: ໂຄງການຜະລິດນໍ້າປະປາ ນະຄອນຫຼວງວຽງຈັນ (ດົງບັງ)",
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
               }
             )
           ] }),
@@ -7593,7 +7593,7 @@ var ProjectFormModal = ({
                       setCustomCategoryInput("");
                     }
                   },
-                  className: "text-xs font-semibold px-2 py-0.5 rounded-lg border transition-all flex items-center gap-1 " + (isCustomCategory ? "text-slate-600 bg-slate-100 border-slate-300 hover:bg-slate-200" : "text-sky-700 bg-sky-50 border-sky-200 hover:bg-sky-100"),
+                  className: "text-xs font-semibold px-2 py-0.5 rounded-lg border transition-all flex items-center gap-1 " + (isCustomCategory ? "text-slate-600 bg-slate-100 border-slate-300 hover:bg-slate-200" : "text-rose-700 bg-rose-50 border-rose-200 hover:bg-rose-100"),
                   title: isCustomCategory ? "ກັບຄືນເລືອກຈາກລາຍການ" : "ກຳນົດປະເພດກິດຈະການໃໝ່ຂຶ້ນດ້ວຍຕົນເອງ",
                   children: isCustomCategory
                     ? "📋 ເລືອກຈາກລາຍການ"
@@ -7615,7 +7615,7 @@ var ProjectFormModal = ({
                         setFormData({ ...formData, projectCategory: e.target.value });
                       }
                     },
-                    className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white",
+                    className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 bg-white",
                     children: [
                       /* @__PURE__ */ jsx8("optgroup", {
                         label: "📋 ປະເພດມາດຕະຖານ",
@@ -7627,7 +7627,7 @@ var ProjectFormModal = ({
                       }),
                       /* @__PURE__ */ jsx8("option", {
                         value: "__NEW_CUSTOM__",
-                        className: "font-semibold text-sky-600",
+                        className: "font-semibold text-rose-600",
                         children: "➕ + ກຳນົດປະເພດໃໝ່ດ້ວຍຕົນເອງ..."
                       })
                     ]
@@ -7654,8 +7654,8 @@ var ProjectFormModal = ({
                 })
               ] })
             ) : (
-              /* @__PURE__ */ jsxs8("div", { className: "p-3 bg-gradient-to-br from-sky-50 to-blue-50/50 border border-sky-200 rounded-2xl space-y-2 shadow-xs", children: [
-                /* @__PURE__ */ jsxs8("div", { className: "flex items-center justify-between text-xs text-sky-900 font-semibold", children: [
+              /* @__PURE__ */ jsxs8("div", { className: "p-3 bg-gradient-to-br from-sky-50 to-blue-50/50 border border-rose-200 rounded-2xl space-y-2 shadow-xs", children: [
+                /* @__PURE__ */ jsxs8("div", { className: "flex items-center justify-between text-xs text-rose-900 font-semibold", children: [
                   /* @__PURE__ */ jsx8("span", { children: "✏️ ປ້ອນຊື່ປະເພດກິດຈະການທີ່ຕ້ອງການກຳນົດເອງ:" }),
                   /* @__PURE__ */ jsx8("button", {
                     type: "button",
@@ -7687,7 +7687,7 @@ var ProjectFormModal = ({
                         }
                       },
                       placeholder: "ຕົວຢ່າງ: ໂຮງງານປຸງແຕ່ງໄມ້, ສະໜາມກ໊ອຟ, ຟາມລ້ຽງກົບ...",
-                      className: "flex-1 px-3 py-2 text-sm border border-sky-300 bg-white rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-slate-800 font-medium"
+                      className: "flex-1 px-3 py-2 text-sm border border-rose-300 bg-white rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 text-slate-800 font-medium"
                     }
                   ),
                   /* @__PURE__ */ jsx8(
@@ -7707,12 +7707,12 @@ var ProjectFormModal = ({
                         setIsCustomCategory(false);
                         setCustomCategoryInput("");
                       },
-                      className: "px-3.5 py-2 text-xs font-bold text-white bg-sky-600 hover:bg-sky-700 active:scale-95 rounded-xl transition-all shadow-xs shrink-0 flex items-center gap-1",
+                      className: "px-3.5 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-95 rounded-xl transition-all shadow-xs shrink-0 flex items-center gap-1",
                       children: "✓ ນໍາໃຊ້"
                     }
                   )
                 ] }),
-                /* @__PURE__ */ jsxs8("div", { className: "flex items-center justify-between text-[11px] text-sky-700", children: [
+                /* @__PURE__ */ jsxs8("div", { className: "flex items-center justify-between text-[11px] text-rose-700", children: [
                   /* @__PURE__ */ jsx8("span", { children: "💡 ລະບົບຈະບັນທຶກປະເພດໃໝ່ນີ້ໄວ້ໃນລາຍການໃຫ້ເລືອກໃຊ້ໄດ້ຕະຫຼອດ" }),
                   /* @__PURE__ */ jsx8("button", {
                     type: "button",
@@ -7731,7 +7731,7 @@ var ProjectFormModal = ({
               {
                 value: formData.status || "active",
                 onChange: (e) => setFormData({ ...formData, status: e.target.value }),
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-medium",
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 font-medium",
                 children: [
                   /* @__PURE__ */ jsx8("option", { value: "active", children: "🟢 ດໍາເນີນການປົກກະຕິ (Active)" }),
                   /* @__PURE__ */ jsx8("option", { value: "suspended", children: "🟡 ຢຸດຊົ່ວຄາວ (Suspended)" }),
@@ -7751,7 +7751,7 @@ var ProjectFormModal = ({
                 value: formData.ownerName || "",
                 onChange: (e) => setFormData({ ...formData, ownerName: e.target.value }),
                 placeholder: "ຊື່ບໍລິສັດ ຫຼື ບຸກຄົນຜູ້ຮັບຜິດຊອບ",
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500"
               }
             )
           ] }),
@@ -7765,7 +7765,7 @@ var ProjectFormModal = ({
                 value: formData.contactPhone || "",
                 onChange: (e) => setFormData({ ...formData, contactPhone: e.target.value }),
                 placeholder: "ຕົວຢ່າງ: 021 412345 ຫຼື 020 55556666",
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500"
               }
             )
           ] }),
@@ -7778,7 +7778,7 @@ var ProjectFormModal = ({
                 value: formData.contactEmail || "",
                 onChange: (e) => setFormData({ ...formData, contactEmail: e.target.value }),
                 placeholder: "email@example.com",
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500"
               }
             )
           ] }),
@@ -7791,7 +7791,7 @@ var ProjectFormModal = ({
                 required: true,
                 value: formData.startDate || "",
                 onChange: (e) => setFormData({ ...formData, startDate: e.target.value }),
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500"
               }
             )
           ] })
@@ -7799,7 +7799,7 @@ var ProjectFormModal = ({
       ] }),
       activeTab === "permit" && /* @__PURE__ */ jsxs8("div", { className: "space-y-4", children: [
         /* @__PURE__ */ jsxs8("h4", { className: "text-sm font-bold text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-2", children: [
-          /* @__PURE__ */ jsx8(FileText3, { size: 16, className: "text-blue-600" }),
+          /* @__PURE__ */ jsx8(FileText3, { size: 16, className: "text-rose-600" }),
           "ໃບອະນຸຍາດນໍາໃຊ້ນໍ້າ ແລະ ປະລິມານນໍ້າ"
         ] }),
         /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-4", children: [
@@ -7813,7 +7813,7 @@ var ProjectFormModal = ({
                 value: formData.permitNumber || "",
                 onChange: (e) => setFormData({ ...formData, permitNumber: e.target.value }),
                 placeholder: "ຕົວຢ່າງ: WTR-VTE-2022/014",
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-mono"
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 font-mono"
               }
             )
           ] }),
@@ -7826,7 +7826,7 @@ var ProjectFormModal = ({
                 required: true,
                 value: formData.permitIssueDate || "",
                 onChange: (e) => setFormData({ ...formData, permitIssueDate: e.target.value }),
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500"
               }
             )
           ] }),
@@ -7839,7 +7839,7 @@ var ProjectFormModal = ({
                 required: true,
                 value: formData.permitExpiryDate || "",
                 onChange: (e) => setFormData({ ...formData, permitExpiryDate: e.target.value }),
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-bold text-red-700"
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 font-bold text-red-700"
               }
             )
           ] })
@@ -7857,7 +7857,7 @@ var ProjectFormModal = ({
                 value: formData.waterVolume ?? 0,
                 onChange: (e) => setFormData({ ...formData, waterVolume: parseFloat(e.target.value) || 0 }),
                 placeholder: "ຕົວຢ່າງ: 35000",
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold"
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 font-semibold"
               }
             )
           ] }),
@@ -7868,7 +7868,7 @@ var ProjectFormModal = ({
               {
                 value: formData.waterVolumeUnit || "m3/day",
                 onChange: (e) => setFormData({ ...formData, waterVolumeUnit: e.target.value }),
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-medium",
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 font-medium",
                 children: [
                   /* @__PURE__ */ jsx8("option", { value: "m3/day", children: "ມ³ / ວັນ (m³/day)" }),
                   /* @__PURE__ */ jsx8("option", { value: "m3/month", children: "ມ³ / ເດືອນ (m³/month)" }),
@@ -7885,7 +7885,7 @@ var ProjectFormModal = ({
               {
                 value: formData.waterSourceType || WATER_SOURCE_TYPES[0],
                 onChange: (e) => setFormData({ ...formData, waterSourceType: e.target.value }),
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500",
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500",
                 children: WATER_SOURCE_TYPES.map((st) => /* @__PURE__ */ jsx8("option", { value: st, children: st }, st))
               }
             )
@@ -7893,7 +7893,7 @@ var ProjectFormModal = ({
           /* @__PURE__ */ jsxs8("div", { children: [
             /* @__PURE__ */ jsxs8("label", { className: "flex items-center justify-between text-xs font-semibold text-slate-700 mb-1", children: [
               /* @__PURE__ */ jsx8("span", { children: "ປະລິມານນໍ້າທີ່ໃຊ້ / ເດືອນ" }),
-              /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => setFormData({ ...formData, waterVolumeMonth: calcMonthVolume(formData) }), className: "text-[10px] font-bold text-blue-600 hover:underline", title: "ຄິດໄລ່ = ຕໍ່ວັນ × 30", children: "🔄 ຄິດໄລ່ຈາກຂ້າງເທິງ" })
+              /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => setFormData({ ...formData, waterVolumeMonth: calcMonthVolume(formData) }), className: "text-[10px] font-bold text-rose-600 hover:underline", title: "ຄິດໄລ່ = ຕໍ່ວັນ × 30", children: "🔄 ຄິດໄລ່ຈາກຂ້າງເທິງ" })
             ] }),
             /* @__PURE__ */ jsx8(
               "input",
@@ -7904,7 +7904,7 @@ var ProjectFormModal = ({
                 value: formData.waterVolumeMonth ?? "",
                 onChange: (e) => setFormData({ ...formData, waterVolumeMonth: e.target.value === "" ? null : parseFloat(e.target.value) || 0 }),
                 placeholder: `ຄິດໄລ່ໄດ້: ${fmtVol(calcMonthVolume(formData))}`,
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold"
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 font-semibold"
               }
             )
           ] }),
@@ -7919,7 +7919,7 @@ var ProjectFormModal = ({
               {
                 value: formData.waterSourceTypeMonth || formData.waterSourceType || WATER_SOURCE_TYPES[0],
                 onChange: (e) => setFormData({ ...formData, waterSourceTypeMonth: e.target.value }),
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500",
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500",
                 children: WATER_SOURCE_TYPES.map((st) => /* @__PURE__ */ jsx8("option", { value: st, children: st }, st))
               }
             )
@@ -7927,7 +7927,7 @@ var ProjectFormModal = ({
           /* @__PURE__ */ jsxs8("div", { children: [
             /* @__PURE__ */ jsxs8("label", { className: "flex items-center justify-between text-xs font-semibold text-slate-700 mb-1", children: [
               /* @__PURE__ */ jsx8("span", { children: "ປະລິມານນໍ້າທີ່ໃຊ້ / ປີ" }),
-              /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => setFormData({ ...formData, waterVolumeYear: calcYearVolume(formData) }), className: "text-[10px] font-bold text-blue-600 hover:underline", title: "ຄິດໄລ່ = ຕໍ່ວັນ × 365", children: "🔄 ຄິດໄລ່ຈາກຂ້າງເທິງ" })
+              /* @__PURE__ */ jsx8("button", { type: "button", onClick: () => setFormData({ ...formData, waterVolumeYear: calcYearVolume(formData) }), className: "text-[10px] font-bold text-rose-600 hover:underline", title: "ຄິດໄລ່ = ຕໍ່ວັນ × 365", children: "🔄 ຄິດໄລ່ຈາກຂ້າງເທິງ" })
             ] }),
             /* @__PURE__ */ jsx8(
               "input",
@@ -7938,7 +7938,7 @@ var ProjectFormModal = ({
                 value: formData.waterVolumeYear ?? "",
                 onChange: (e) => setFormData({ ...formData, waterVolumeYear: e.target.value === "" ? null : parseFloat(e.target.value) || 0 }),
                 placeholder: `ຄິດໄລ່ໄດ້: ${fmtVol(calcYearVolume(formData))}`,
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold"
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 font-semibold"
               }
             )
           ] }),
@@ -7953,7 +7953,7 @@ var ProjectFormModal = ({
               {
                 value: formData.waterSourceTypeYear || formData.waterSourceType || WATER_SOURCE_TYPES[0],
                 onChange: (e) => setFormData({ ...formData, waterSourceTypeYear: e.target.value }),
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500",
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500",
                 children: WATER_SOURCE_TYPES.map((st) => /* @__PURE__ */ jsx8("option", { value: st, children: st }, st))
               }
             )
@@ -7967,7 +7967,7 @@ var ProjectFormModal = ({
                 value: formData.waterSourceName || "",
                 onChange: (e) => setFormData({ ...formData, waterSourceName: e.target.value }),
                 placeholder: "ຕົວຢ່າງ: ແມ່ນໍ້າງື່ມ, ແມ່ນໍ້າຂອງ, ແມ່ນໍ້າຄານ, ອ່າງນໍ້າ...",
-                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500"
               }
             )
           ] })
@@ -8111,12 +8111,12 @@ var ProjectFormModal = ({
       ] }),
       activeTab === "intake" && /* @__PURE__ */ jsxs8("div", { className: "space-y-5", children: [
         /* Header of intake section */
-        /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center justify-between gap-3 p-4 bg-gradient-to-r from-sky-50 via-blue-50 to-indigo-50 border border-sky-200/80 rounded-2xl shadow-xs", children: [
+        /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center justify-between gap-3 p-4 bg-gradient-to-r from-sky-50 via-blue-50 to-indigo-50 border border-rose-200/80 rounded-2xl shadow-xs", children: [
           /* @__PURE__ */ jsxs8("div", { children: [
-            /* @__PURE__ */ jsxs8("h4", { className: "text-sm font-bold text-sky-900 flex items-center gap-2", children: [
-              /* @__PURE__ */ jsx8("span", { className: "w-3.5 h-3.5 rounded-full bg-sky-600 inline-block shadow-xs" }),
+            /* @__PURE__ */ jsxs8("h4", { className: "text-sm font-bold text-rose-900 flex items-center gap-2", children: [
+              /* @__PURE__ */ jsx8("span", { className: "w-3.5 h-3.5 rounded-full bg-rose-600 inline-block shadow-xs" }),
               "ສະຖານທີ່ຕັ້ງບ່ອນດູດນໍ້າ (ສະແດງໃນແຜນທີ່ເປັນ ສີຟ້າ 💧)",
-              /* @__PURE__ */ jsxs8("span", { className: "bg-sky-600 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-xs", children: [intakePoints.length, " ຈຸດພິກັດ"] })
+              /* @__PURE__ */ jsxs8("span", { className: "bg-rose-600 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-xs", children: [intakePoints.length, " ຈຸດພິກັດ"] })
             ] }),
             /* @__PURE__ */ jsx8("p", { className: "text-xs text-slate-600 mt-1", children: "ກໍານົດທີ່ຕັ້ງພື້ນທີ່, ແຫຼ່ງນ້ຳ ແລະ ສາມາດເພີ່ມຫ້ອງຈຸດພິກັດດູດນໍ້າໄດ້ຫຼາຍຈຸດຕາມຕົວຈິງ (ພ້ອມລະບົບແປງພິກັດ GPS/DMS)" })
           ] }),
@@ -8126,7 +8126,7 @@ var ProjectFormModal = ({
               {
                 type: "button",
                 onClick: () => handleAddIntakePoint(),
-                className: "text-xs bg-sky-600 hover:bg-sky-500 active:scale-98 text-white font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm transition cursor-pointer",
+                className: "text-xs bg-rose-600 hover:bg-rose-500 active:scale-98 text-white font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm transition cursor-pointer",
                 title: "ເພີ່ມຫ້ອງຈຸດພິກັດບ່ອນດູດນໍ້າໃໝ່ອີກ 1 ຈຸດ",
                 children: [
                   /* @__PURE__ */ jsx8(PlusF, { size: 15 }),
@@ -8139,7 +8139,7 @@ var ProjectFormModal = ({
               {
                 type: "button",
                 onClick: () => setIsBulkOpen(!isBulkOpen),
-                className: `text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 border transition cursor-pointer ${isBulkOpen ? "bg-sky-100 text-sky-800 border-sky-300" : "bg-white text-slate-700 hover:bg-slate-50 border-slate-300"}`,
+                className: `text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 border transition cursor-pointer ${isBulkOpen ? "bg-rose-100 text-rose-800 border-rose-300" : "bg-white text-slate-700 hover:bg-slate-50 border-slate-300"}`,
                 title: "ວາງພິກັດຫຼາຍຈຸດພ້ອມກັນແບບ Bulk Import",
                 children: [
                   /* @__PURE__ */ jsx8(LayersF, { size: 14 }),
@@ -8151,10 +8151,10 @@ var ProjectFormModal = ({
         ] }),
 
         /* Bulk Paste Drawer (Collapsible) */
-        isBulkOpen && /* @__PURE__ */ jsxs8("div", { className: "bg-sky-50 border border-sky-300 p-4 rounded-2xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-150", children: [
+        isBulkOpen && /* @__PURE__ */ jsxs8("div", { className: "bg-rose-50 border border-rose-300 p-4 rounded-2xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-150", children: [
           /* @__PURE__ */ jsxs8("div", { className: "flex items-center justify-between", children: [
-            /* @__PURE__ */ jsxs8("h5", { className: "text-xs font-bold text-sky-900 flex items-center gap-1.5", children: [
-              /* @__PURE__ */ jsx8(LayersF, { size: 14, className: "text-sky-700" }),
+            /* @__PURE__ */ jsxs8("h5", { className: "text-xs font-bold text-rose-900 flex items-center gap-1.5", children: [
+              /* @__PURE__ */ jsx8(LayersF, { size: 14, className: "text-rose-700" }),
               "📋 ວາງພິກັດຫຼາຍຈຸດພ້ອມກັນ (Bulk Coordinate Import)"
             ] }),
             /* @__PURE__ */ jsx8("button", {
@@ -8170,7 +8170,7 @@ var ProjectFormModal = ({
             value: bulkText,
             onChange: (e) => { setBulkText(e.target.value); setBulkError(""); },
             placeholder: "ຕົວຢ່າງ:\n17.9620, 102.6150\n48N 249341 1989096\nຫຼື: ທໍ່ດູດ 3: 48N 250100 1989500",
-            className: "w-full px-3 py-2 text-xs font-mono border border-sky-300 rounded-xl bg-white focus:ring-2 focus:ring-sky-500 outline-none"
+            className: "w-full px-3 py-2 text-xs font-mono border border-rose-300 rounded-xl bg-white focus:ring-2 focus:ring-rose-500 outline-none"
           }),
           bulkError && /* @__PURE__ */ jsx8("p", { className: "text-xs text-rose-600 font-semibold", children: bulkError }),
           /* @__PURE__ */ jsxs8("div", { className: "flex items-center justify-end gap-2", children: [
@@ -8183,7 +8183,7 @@ var ProjectFormModal = ({
             /* @__PURE__ */ jsx8("button", {
               type: "button",
               onClick: handleBulkImport,
-              className: "px-4 py-1.5 text-xs font-bold text-white bg-sky-600 hover:bg-sky-500 rounded-xl shadow-xs transition cursor-pointer",
+              className: "px-4 py-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 rounded-xl shadow-xs transition cursor-pointer",
               children: "📥 ນໍາເຂົ້າຈຸດພິກັດທັງໝົດ"
             })
           ] })
@@ -8192,7 +8192,7 @@ var ProjectFormModal = ({
         /* Area Location: Village, District, Province */
         /* @__PURE__ */ jsxs8("div", { className: "bg-slate-50/90 p-4 rounded-2xl border border-slate-200/90 space-y-3", children: [
           /* @__PURE__ */ jsxs8("p", { className: "text-xs font-bold text-slate-700 flex items-center gap-1.5", children: [
-            /* @__PURE__ */ jsx8(MapPin3, { size: 14, className: "text-sky-600" }),
+            /* @__PURE__ */ jsx8(MapPin3, { size: 14, className: "text-rose-600" }),
             "📍 ຂໍ້ມູນພື້ນທີ່ບ່ອນດູດນໍ້າ"
           ] }),
           /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-3", children: [
@@ -8209,7 +8209,7 @@ var ProjectFormModal = ({
                     intakeLocation: { ...formData.intakeLocation, village: e.target.value }
                   }),
                   placeholder: "ຕົວຢ່າງ: ບ້ານ ປາກງື່ມ",
-                  className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 bg-white"
+                  className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 bg-white"
                 }
               )
             ] }),
@@ -8226,7 +8226,7 @@ var ProjectFormModal = ({
                     intakeLocation: { ...formData.intakeLocation, district: e.target.value }
                   }),
                   placeholder: "ຕົວຢ່າງ: ເມືອງປາກງື່ມ",
-                  className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 bg-white"
+                  className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 bg-white"
                 }
               )
             ] }),
@@ -8240,7 +8240,7 @@ var ProjectFormModal = ({
                     ...formData,
                     intakeLocation: { ...formData.intakeLocation, province: e.target.value }
                   }),
-                  className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 font-medium bg-white",
+                  className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 font-medium bg-white",
                   children: LAO_PROVINCES.map((prov) => /* @__PURE__ */ jsx8("option", { value: prov, children: prov }, prov))
                 }
               )
@@ -8253,7 +8253,7 @@ var ProjectFormModal = ({
           /* Section Header with Quick Add presets */
           /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center justify-between gap-2 pb-1", children: [
             /* @__PURE__ */ jsxs8("div", { className: "flex items-center gap-2", children: [
-              /* @__PURE__ */ jsx8(Droplets3, { size: 16, className: "text-sky-600" }),
+              /* @__PURE__ */ jsx8(Droplets3, { size: 16, className: "text-rose-600" }),
               /* @__PURE__ */ jsxs8("h5", { className: "text-xs font-bold text-slate-800 uppercase tracking-wide", children: [
                 "ຫ້ອງຈຸດພິກັດບ່ອນດູດນໍ້າ (",
                 intakePoints.length,
@@ -8265,19 +8265,19 @@ var ProjectFormModal = ({
               /* @__PURE__ */ jsx8("button", {
                 type: "button",
                 onClick: () => handleAddMultiplePoints(1),
-                className: "text-[11px] font-semibold bg-sky-50 hover:bg-sky-100 text-sky-700 px-2 py-1 rounded-lg border border-sky-200 transition cursor-pointer",
+                className: "text-[11px] font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 px-2 py-1 rounded-lg border border-rose-200 transition cursor-pointer",
                 children: "+ 1 ຈຸດ"
               }),
               /* @__PURE__ */ jsx8("button", {
                 type: "button",
                 onClick: () => handleAddMultiplePoints(2),
-                className: "text-[11px] font-semibold bg-sky-50 hover:bg-sky-100 text-sky-700 px-2 py-1 rounded-lg border border-sky-200 transition cursor-pointer",
+                className: "text-[11px] font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 px-2 py-1 rounded-lg border border-rose-200 transition cursor-pointer",
                 children: "+ 2 ຈຸດ"
               }),
               /* @__PURE__ */ jsx8("button", {
                 type: "button",
                 onClick: () => handleAddMultiplePoints(3),
-                className: "text-[11px] font-semibold bg-sky-50 hover:bg-sky-100 text-sky-700 px-2 py-1 rounded-lg border border-sky-200 transition cursor-pointer",
+                className: "text-[11px] font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 px-2 py-1 rounded-lg border border-rose-200 transition cursor-pointer",
                 children: "+ 3 ຈຸດ"
               })
             ] })
@@ -8289,13 +8289,13 @@ var ProjectFormModal = ({
             return /* @__PURE__ */ jsxs8(
               "div",
               {
-                className: "border-2 border-sky-200/90 hover:border-sky-400/90 bg-gradient-to-br from-sky-50/60 via-white to-slate-50/50 rounded-2xl p-4 space-y-3.5 shadow-xs transition-all",
+                className: "border-2 border-rose-200/90 hover:border-rose-400/90 bg-gradient-to-br from-sky-50/60 via-white to-slate-50/50 rounded-2xl p-4 space-y-3.5 shadow-xs transition-all",
                 children: [
                   /* Row 1: Point label & actions */
-                  /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-sky-200/60", children: [
+                  /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-rose-200/60", children: [
                     /* @__PURE__ */ jsxs8("div", { className: "flex items-center gap-2 flex-1 min-w-[240px]", children: [
                       /* @__PURE__ */ jsxs8("span", {
-                        className: `text-[11px] font-bold px-2.5 py-1 rounded-xl border flex items-center gap-1 shrink-0 ${idx === 0 ? "bg-sky-600 text-white border-sky-600 shadow-xs" : "bg-sky-100 text-sky-800 border-sky-300"}`,
+                        className: `text-[11px] font-bold px-2.5 py-1 rounded-xl border flex items-center gap-1 shrink-0 ${idx === 0 ? "bg-rose-600 text-white border-sky-600 shadow-xs" : "bg-rose-100 text-rose-800 border-rose-300"}`,
                         children: [
                           "💧 ຈຸດທີ ",
                           idx + 1,
@@ -8309,7 +8309,7 @@ var ProjectFormModal = ({
                           value: pt.name || "",
                           onChange: (e) => handleUpdateIntakePoint(idx, { name: e.target.value }),
                           placeholder: `ຊື່ / ໝາຍເຫດຈຸດດູດນໍ້າ ${idx + 1} (ເຊັ່ນ: ທໍ່ດູດ 1, ຈັກດູດແຄມຂອງ, ສະຖານີສູບສຳຮອງ)`,
-                          className: "flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-sky-500 font-semibold text-slate-800 shadow-2xs"
+                          className: "flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-rose-500 font-semibold text-slate-800 shadow-2xs"
                         }
                       )
                     ] }),
@@ -8320,10 +8320,10 @@ var ProjectFormModal = ({
                         {
                           type: "button",
                           onClick: () => setPickerPointIdx(idx),
-                          className: "text-[11px] bg-white text-sky-700 hover:bg-sky-50 border border-sky-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1 font-bold transition shadow-xs cursor-pointer",
+                          className: "text-[11px] bg-white text-rose-700 hover:bg-rose-50 border border-rose-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1 font-bold transition shadow-xs cursor-pointer",
                           title: `ເປີດແຜນທີ່ເລືອກພິກັດສຳລັບຈຸດທີ ${idx + 1}`,
                           children: [
-                            /* @__PURE__ */ jsx8(Droplets3, { size: 13, className: "text-sky-600" }),
+                            /* @__PURE__ */ jsx8(Droplets3, { size: 13, className: "text-rose-600" }),
                             "🗺️ ເລືອກຈາກແຜນທີ່"
                           ]
                         }
@@ -8377,7 +8377,7 @@ var ProjectFormModal = ({
                             latitude: unpackDMSNumber(parseFloat(e.target.value) || 0, 90)
                           }),
                           placeholder: "17.962000",
-                          className: "w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 font-mono bg-white font-semibold text-slate-900 shadow-2xs"
+                          className: "w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 font-mono bg-white font-semibold text-slate-900 shadow-2xs"
                         }
                       )
                     ] }),
@@ -8397,7 +8397,7 @@ var ProjectFormModal = ({
                             longitude: unpackDMSNumber(parseFloat(e.target.value) || 0, 180)
                           }),
                           placeholder: "102.615000",
-                          className: "w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 font-mono bg-white font-semibold text-slate-900 shadow-2xs"
+                          className: "w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 font-mono bg-white font-semibold text-slate-900 shadow-2xs"
                         }
                       )
                     ] }),
@@ -8411,7 +8411,7 @@ var ProjectFormModal = ({
                           value: pt.pumpCapacity || "",
                           onChange: (e) => handleUpdateIntakePoint(idx, { pumpCapacity: e.target.value }),
                           placeholder: "ຕົວຢ່າງ: 350 m³/ຊົ່ວໂມງ ຫຼື ທໍ່ Ø 300mm",
-                          className: "w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 bg-white shadow-2xs"
+                          className: "w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 bg-white shadow-2xs"
                         }
                       )
                     ] })
@@ -8421,7 +8421,7 @@ var ProjectFormModal = ({
                   /* @__PURE__ */ jsx8(DmsCoordField, {
                     lat: pt.latitude,
                     lng: pt.longitude,
-                    ring: "focus:ring-sky-500",
+                    ring: "focus:ring-rose-500",
                     label: `🧭 ພິກັດອົງສາ (GPS) ຈຸດທີ ${idx + 1} — ວາງພິກັດອົງສາ (DMS) ຫຼື ວາງ Lat/Lng ຫຼື Google Maps link`,
                     onChange: (la, lo) => handleUpdateIntakePoint(idx, { latitude: la, longitude: lo })
                   }),
@@ -8431,13 +8431,13 @@ var ProjectFormModal = ({
                     lat: pt.latitude,
                     lng: pt.longitude,
                     pointIdx: idx,
-                    ring: "focus:ring-sky-500",
+                    ring: "focus:ring-rose-500",
                     label: `🌐 ຈຸດພິກັດໃນຮູບແບບ UTM ຈຸດທີ ${idx + 1} (Zone 48N / 47N, X / Y ແມັດ)`,
                     onChange: (la, lo) => handleUpdateIntakePoint(idx, { latitude: la, longitude: lo })
                   }),
 
                   /* Validation, Distance & Google Maps Preview footer */
-                  /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center justify-between gap-2 text-[11px] pt-1.5 text-slate-500 border-t border-sky-100", children: [
+                  /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center justify-between gap-2 text-[11px] pt-1.5 text-slate-500 border-t border-rose-100", children: [
                     /* Status and Distance */
                     /* @__PURE__ */ jsxs8("div", { className: "flex flex-wrap items-center gap-2", children: [
                       validLL(pt.latitude, pt.longitude)
@@ -8449,7 +8449,7 @@ var ProjectFormModal = ({
                             Number(pt.longitude).toFixed(5)
                           ] })
                         : /* @__PURE__ */ jsx8("span", { className: "text-amber-600 font-semibold bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200", children: "⚠️ ກະລຸນາກວດສອບພິກັດ Lat/Lng ໃຫ້ຖືກຕ້ອງ" }),
-                      dist !== null && /* @__PURE__ */ jsxs8("span", { className: "text-sky-800 font-medium bg-sky-50 px-2 py-0.5 rounded-lg border border-sky-200", children: [
+                      dist !== null && /* @__PURE__ */ jsxs8("span", { className: "text-rose-800 font-medium bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200", children: [
                         "📏 ຫ່າງຈາກໂຄງການ: ",
                         /* @__PURE__ */ jsx8("b", { children: dist }),
                         " ກມ"
@@ -8462,7 +8462,7 @@ var ProjectFormModal = ({
                         href: `https://www.google.com/maps?q=${pt.latitude},${pt.longitude}`,
                         target: "_blank",
                         rel: "noreferrer",
-                        className: "text-sky-700 hover:text-sky-950 hover:underline flex items-center gap-1 font-semibold",
+                        className: "text-rose-700 hover:text-rose-950 hover:underline flex items-center gap-1 font-semibold",
                         children: [
                           /* @__PURE__ */ jsx8(NavigationF, { size: 12 }),
                           "ເປີດໃນ Google Maps"
@@ -8483,34 +8483,34 @@ var ProjectFormModal = ({
               {
                 type: "button",
                 onClick: () => handleAddIntakePoint(),
-                className: "w-full py-3.5 px-4 border-2 border-dashed border-sky-300 hover:border-sky-500 bg-sky-50/40 hover:bg-sky-50 text-sky-800 font-bold rounded-2xl flex items-center justify-center gap-2 transition cursor-pointer text-xs shadow-2xs group",
+                className: "w-full py-3.5 px-4 border-2 border-dashed border-rose-300 hover:border-rose-500 bg-rose-50/40 hover:bg-rose-50 text-rose-800 font-bold rounded-2xl flex items-center justify-center gap-2 transition cursor-pointer text-xs shadow-2xs group",
                 children: [
-                  /* @__PURE__ */ jsx8("span", { className: "w-6 h-6 rounded-full bg-sky-600 group-hover:bg-sky-500 text-white flex items-center justify-center text-xs transition", children: "+" }),
+                  /* @__PURE__ */ jsx8("span", { className: "w-6 h-6 rounded-full bg-rose-600 group-hover:bg-rose-500 text-white flex items-center justify-center text-xs transition", children: "+" }),
                   /* @__PURE__ */ jsx8("span", { children: `ເພີ່ມຫ້ອງຈຸດພິກັດບ່ອນດູດນໍ້າໃໝ່ (ຈຸດທີ ${intakePoints.length + 1})` })
                 ]
               }
             ),
             /* Quick preset buttons */
             /* @__PURE__ */ jsxs8("div", { className: "flex items-center justify-between text-xs text-slate-500 px-1", children: [
-              /* @__PURE__ */ jsxs8("span", { children: ["💧 ລວມທັງໝົດ: ", /* @__PURE__ */ jsx8("b", { className: "text-sky-800", children: intakePoints.length }), " ຫ້ອງຈຸດພິກັດ"] }),
+              /* @__PURE__ */ jsxs8("span", { children: ["💧 ລວມທັງໝົດ: ", /* @__PURE__ */ jsx8("b", { className: "text-rose-800", children: intakePoints.length }), " ຫ້ອງຈຸດພິກັດ"] }),
               /* @__PURE__ */ jsxs8("div", { className: "flex items-center gap-1.5", children: [
                 /* @__PURE__ */ jsx8("span", { className: "text-[11px] text-slate-400", children: "ເພີ່ມຫຼາຍຈຸດ:" }),
                 /* @__PURE__ */ jsx8("button", {
                   type: "button",
                   onClick: () => handleAddMultiplePoints(1),
-                  className: "text-[11px] font-semibold text-sky-700 hover:text-sky-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md hover:bg-slate-50 cursor-pointer",
+                  className: "text-[11px] font-semibold text-rose-700 hover:text-rose-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md hover:bg-slate-50 cursor-pointer",
                   children: "+1 ຈຸດ"
                 }),
                 /* @__PURE__ */ jsx8("button", {
                   type: "button",
                   onClick: () => handleAddMultiplePoints(2),
-                  className: "text-[11px] font-semibold text-sky-700 hover:text-sky-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md hover:bg-slate-50 cursor-pointer",
+                  className: "text-[11px] font-semibold text-rose-700 hover:text-rose-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md hover:bg-slate-50 cursor-pointer",
                   children: "+2 ຈຸດ"
                 }),
                 /* @__PURE__ */ jsx8("button", {
                   type: "button",
                   onClick: () => handleAddMultiplePoints(3),
-                  className: "text-[11px] font-semibold text-sky-700 hover:text-sky-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md hover:bg-slate-50 cursor-pointer",
+                  className: "text-[11px] font-semibold text-rose-700 hover:text-rose-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md hover:bg-slate-50 cursor-pointer",
                   children: "+3 ຈຸດ"
                 })
               ] })
@@ -8520,7 +8520,7 @@ var ProjectFormModal = ({
       ] }),
       activeTab === "plan" && /* @__PURE__ */ jsxs8("div", { className: "space-y-4", children: [
         /* @__PURE__ */ jsxs8("h4", { className: "text-sm font-bold text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-2", children: [
-          /* @__PURE__ */ jsx8(FileText3, { size: 16, className: "text-blue-600" }),
+          /* @__PURE__ */ jsx8(FileText3, { size: 16, className: "text-rose-600" }),
           "ແຜນການນໍາໃຊ້ນໍ້າ ແລະ ໝາຍເຫດ"
         ] }),
         /* @__PURE__ */ jsx8(YearlyRecordsEditor, { formData, setFormData }),
@@ -8534,7 +8534,7 @@ var ProjectFormModal = ({
               value: formData.waterUsagePlan || "",
               onChange: (e) => setFormData({ ...formData, waterUsagePlan: e.target.value }),
               placeholder: "ລະບຸແຜນການລະອຽດ ເຊັ່ນ: ຮອບວຽນການດູດນໍ້າ, ວັດຖຸປະສົງການນໍາໃຊ້, ການບໍາບັດນໍ້າເສຍ, ມາດຕະການປະຢັດນໍ້າ, ການກວດກາຄຸນນະພາບ...",
-              className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+              className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500"
             }
           )
         ] }),
@@ -8547,7 +8547,7 @@ var ProjectFormModal = ({
               value: formData.notes || "",
               onChange: (e) => setFormData({ ...formData, notes: e.target.value }),
               placeholder: "ຂໍ້ສັງເກດ, ປະຫວັດການກວດກາ ຫຼື ບັນຫາທີ່ພົບເຫັນ...",
-              className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+              className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500"
             }
           )
         ] }),
@@ -8592,7 +8592,7 @@ var ProjectFormModal = ({
                 const idx = tabs.indexOf(activeTab);
                 if (idx < tabs.length - 1) setActiveTab(tabs[idx + 1]);
               },
-              className: "px-4 py-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors",
+              className: "px-4 py-2 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors",
               children: "ຕໍ່ໄປ →"
             }
           )
@@ -8612,7 +8612,7 @@ var ProjectFormModal = ({
             {
               type: "submit",
               disabled: isSubmitting,
-              className: "px-6 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-98 rounded-xl shadow-md flex items-center gap-2 transition-all disabled:opacity-50",
+              className: "px-6 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-98 rounded-xl shadow-md flex items-center gap-2 transition-all disabled:opacity-50",
               children: [
                 /* @__PURE__ */ jsx8(Save3, { size: 16 }),
                 isSubmitting ? "ກໍາລັງບັນທຶກ..." : "ບັນທຶກຂໍ້ມູນໂຄງການ"
@@ -8687,7 +8687,7 @@ var ProjectDetailModal = ({
         /* @__PURE__ */ jsx9("div", { className: "w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-400 to-blue-600 flex items-center justify-center text-xl shadow-md ring-2 ring-white/10", children: "💧" }),
         /* @__PURE__ */ jsxs9("div", { children: [
           /* @__PURE__ */ jsxs9("div", { className: "flex items-center gap-2", children: [
-            /* @__PURE__ */ jsx9("span", { className: "text-[11px] font-bold px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 border border-sky-400/30", children: project.projectCategory }),
+            /* @__PURE__ */ jsx9("span", { className: "text-[11px] font-bold px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-400/30", children: project.projectCategory }),
             /* @__PURE__ */ jsx9("span", { className: `text-[11px] font-bold px-2 py-0.5 rounded-md ${expired ? "bg-rose-500/20 text-rose-300 border border-rose-400/30" : "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"}`, children: getStatusLaoText(project.status) })
           ] }),
           /* @__PURE__ */ jsx9("h3", { className: "text-base sm:text-lg font-bold text-white mt-1 line-clamp-1", children: project.projectName })
@@ -8706,7 +8706,7 @@ var ProjectDetailModal = ({
       /* @__PURE__ */ jsxs9("div", { className: `p-4 rounded-2xl border ${expired ? "bg-rose-50/80 border-rose-200" : daysLeft <= 60 ? "bg-amber-50/80 border-amber-200" : "bg-slate-50 border-slate-200"}`, children: [
         /* @__PURE__ */ jsxs9("div", { className: "flex items-center justify-between mb-2", children: [
           /* @__PURE__ */ jsxs9("span", { className: "text-xs font-bold text-slate-800 flex items-center gap-1.5", children: [
-            /* @__PURE__ */ jsx9(Clock2, { size: 15, className: expired ? "text-rose-600" : daysLeft <= 60 ? "text-amber-600" : "text-sky-600" }),
+            /* @__PURE__ */ jsx9(Clock2, { size: 15, className: expired ? "text-rose-600" : daysLeft <= 60 ? "text-amber-600" : "text-rose-600" }),
             "ຮອບວຽນອາຍຸໃບອະນຸຍາດນໍາໃຊ້ນໍ້າ (Permit Lifecycle)"
           ] }),
           /* @__PURE__ */ jsx9("span", { className: `text-xs font-black ${expired ? "text-rose-700" : daysLeft <= 60 ? "text-amber-700" : "text-emerald-700"}`, children: expired ? "⚠️ ໝົດອາຍຸແລ້ວ!" : `ເຫຼືອອີກ ${daysLeft} ວັນ` })
@@ -8730,10 +8730,10 @@ var ProjectDetailModal = ({
         ] })
       ] }),
       /* @__PURE__ */ jsxs9("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-3", children: [
-        /* @__PURE__ */ jsxs9("div", { className: "bg-sky-50/60 border border-sky-100 p-3.5 rounded-2xl", children: [
-          /* @__PURE__ */ jsx9("span", { className: "text-[11px] text-sky-700 font-semibold", children: "ປະລິມານນໍ້າທີ່ໃຊ້" }),
-          /* @__PURE__ */ jsx9("div", { className: "text-lg font-black text-sky-950 mt-1", children: project.waterVolume.toLocaleString() }),
-          /* @__PURE__ */ jsx9("span", { className: "text-[11px] text-sky-600 font-bold", children: project.waterVolumeUnit })
+        /* @__PURE__ */ jsxs9("div", { className: "bg-rose-50/60 border border-rose-100 p-3.5 rounded-2xl", children: [
+          /* @__PURE__ */ jsx9("span", { className: "text-[11px] text-rose-700 font-semibold", children: "ປະລິມານນໍ້າທີ່ໃຊ້" }),
+          /* @__PURE__ */ jsx9("div", { className: "text-lg font-black text-rose-950 mt-1", children: project.waterVolume.toLocaleString() }),
+          /* @__PURE__ */ jsx9("span", { className: "text-[11px] text-rose-600 font-bold", children: project.waterVolumeUnit })
         ] }),
         /* @__PURE__ */ jsxs9("div", { className: "bg-slate-50 border border-slate-200 p-3.5 rounded-2xl", children: [
           /* @__PURE__ */ jsx9("span", { className: "text-[11px] text-slate-500 font-semibold", children: "ເລກທີໃບອະນຸຍາດ" }),
@@ -8799,13 +8799,13 @@ var ProjectDetailModal = ({
             ] })
           ] })
         ] }),
-        /* @__PURE__ */ jsxs9("div", { className: "bg-sky-50/60 border border-sky-200 p-4 rounded-2xl space-y-3 text-xs", children: [
-          /* @__PURE__ */ jsxs9("div", { className: "flex items-center justify-between pb-2 border-b border-sky-200/60", children: [
+        /* @__PURE__ */ jsxs9("div", { className: "bg-rose-50/60 border border-rose-200 p-4 rounded-2xl space-y-3 text-xs", children: [
+          /* @__PURE__ */ jsxs9("div", { className: "flex items-center justify-between pb-2 border-b border-rose-200/60", children: [
             /* @__PURE__ */ jsxs9("div", { className: "flex items-center gap-2", children: [
-              /* @__PURE__ */ jsx9("span", { className: "w-3.5 h-3.5 rounded-full bg-sky-600 shadow-xs" }),
-              /* @__PURE__ */ jsxs9("span", { className: "font-bold text-sky-900 uppercase flex items-center gap-1.5", children: [
+              /* @__PURE__ */ jsx9("span", { className: "w-3.5 h-3.5 rounded-full bg-rose-600 shadow-xs" }),
+              /* @__PURE__ */ jsxs9("span", { className: "font-bold text-rose-900 uppercase flex items-center gap-1.5", children: [
                 "2. ບ່ອນດູດນໍ້າ (ສີຟ້າ 💧)",
-                /* @__PURE__ */ jsxs9("span", { className: "bg-sky-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full", children: [detailIntakePoints.length, " ຈຸດພິກັດ"] })
+                /* @__PURE__ */ jsxs9("span", { className: "bg-rose-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full", children: [detailIntakePoints.length, " ຈຸດພິກັດ"] })
               ] })
             ] }),
             detailIntakePoints[0] && validLL(detailIntakePoints[0].latitude, detailIntakePoints[0].longitude) && /* @__PURE__ */ jsxs9(
@@ -8814,7 +8814,7 @@ var ProjectDetailModal = ({
                 href: `https://www.google.com/maps/dir/?api=1&destination=${detailIntakePoints[0].latitude},${detailIntakePoints[0].longitude}`,
                 target: "_blank",
                 rel: "noreferrer",
-                className: "text-sky-700 hover:text-sky-950 flex items-center gap-1 font-semibold text-[11px]",
+                className: "text-rose-700 hover:text-rose-950 flex items-center gap-1 font-semibold text-[11px]",
                 children: [
                   /* @__PURE__ */ jsx9(Navigation2, { size: 12 }),
                   "Google Maps (ຈຸດຫຼັກ)"
@@ -8835,16 +8835,16 @@ var ProjectDetailModal = ({
           ] }),
           /* @__PURE__ */ jsx9("div", { className: "space-y-2 pt-1", children: detailIntakePoints.map((pt, pIdx) => {
             const dist = calcDistanceKm(project.projectLocation?.latitude, project.projectLocation?.longitude, pt.latitude, pt.longitude);
-            return /* @__PURE__ */ jsxs9("div", { className: "bg-white/80 p-2.5 rounded-xl border border-sky-200/60 flex flex-wrap items-center justify-between gap-2 shadow-2xs", children: [
+            return /* @__PURE__ */ jsxs9("div", { className: "bg-white/80 p-2.5 rounded-xl border border-rose-200/60 flex flex-wrap items-center justify-between gap-2 shadow-2xs", children: [
               /* @__PURE__ */ jsxs9("div", { className: "space-y-0.5", children: [
                 /* @__PURE__ */ jsxs9("div", { className: "flex items-center gap-1.5 font-bold text-slate-900 text-[11px]", children: [
-                  /* @__PURE__ */ jsxs9("span", { className: `text-[10px] px-1.5 py-0.5 rounded-md ${pIdx === 0 ? "bg-sky-600 text-white font-bold" : "bg-sky-100 text-sky-800"}`, children: ["💧 ຈຸດທີ ", pIdx + 1] }),
+                  /* @__PURE__ */ jsxs9("span", { className: `text-[10px] px-1.5 py-0.5 rounded-md ${pIdx === 0 ? "bg-rose-600 text-white font-bold" : "bg-rose-100 text-rose-800"}`, children: ["💧 ຈຸດທີ ", pIdx + 1] }),
                   pt.name || `ຈຸດດູດນໍ້າ ${pIdx + 1}`,
                   pt.pumpCapacity ? /* @__PURE__ */ jsxs9("span", { className: "text-[10px] text-slate-500 font-normal", children: [" (", pt.pumpCapacity, ")"] }) : ""
                 ] }),
-                /* @__PURE__ */ jsxs9("div", { className: "font-mono text-[10px] text-sky-800 flex items-center gap-2 flex-wrap", children: [
+                /* @__PURE__ */ jsxs9("div", { className: "font-mono text-[10px] text-rose-800 flex items-center gap-2 flex-wrap", children: [
                   /* @__PURE__ */ jsxs9("span", { children: ["Lat: ", Number(pt.latitude).toFixed(6), ", Long: ", Number(pt.longitude).toFixed(6)] }),
-                  validLL(pt.latitude, pt.longitude) && /* @__PURE__ */ jsxs9("span", { className: "text-blue-900 bg-sky-100/80 px-1.5 py-0.2 rounded font-semibold", children: ["🌐 UTM: ", formatUtm(pt.latitude, pt.longitude)] }),
+                  validLL(pt.latitude, pt.longitude) && /* @__PURE__ */ jsxs9("span", { className: "text-rose-900 bg-rose-100/80 px-1.5 py-0.2 rounded font-semibold", children: ["🌐 UTM: ", formatUtm(pt.latitude, pt.longitude)] }),
                   dist !== null && /* @__PURE__ */ jsxs9("span", { className: "text-emerald-700 font-sans font-semibold", children: ["• ຫ່າງໂຄງການ: ", dist, " ກມ"] })
                 ] })
               ] }),
@@ -8852,7 +8852,7 @@ var ProjectDetailModal = ({
                 href: `https://www.google.com/maps?q=${pt.latitude},${pt.longitude}`,
                 target: "_blank",
                 rel: "noreferrer",
-                className: "text-[11px] text-sky-700 hover:text-sky-900 font-semibold flex items-center gap-1 bg-sky-50 px-2 py-1 rounded-lg border border-sky-200 hover:bg-sky-100 transition shadow-2xs",
+                className: "text-[11px] text-rose-700 hover:text-rose-900 font-semibold flex items-center gap-1 bg-rose-50 px-2 py-1 rounded-lg border border-rose-200 hover:bg-rose-100 transition shadow-2xs",
                 children: [
                   /* @__PURE__ */ jsx9(Navigation2, { size: 11 }),
                   "ເບິ່ງພິກັດ"
@@ -8864,7 +8864,7 @@ var ProjectDetailModal = ({
       ] }),
       /* @__PURE__ */ jsxs9("div", { className: "bg-slate-50 border border-slate-200 p-4 rounded-2xl", children: [
         /* @__PURE__ */ jsxs9("h4", { className: "text-xs font-bold text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-1.5", children: [
-          /* @__PURE__ */ jsx9(FileText4, { size: 14, className: "text-sky-600" }),
+          /* @__PURE__ */ jsx9(FileText4, { size: 14, className: "text-rose-600" }),
           "ແຜນການນໍາໃຊ້ນໍ້າ (Water Usage Plan)"
         ] }),
         /* @__PURE__ */ jsx9("p", { className: "text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-white p-3 rounded-xl border border-slate-100", children: project.waterUsagePlan || "ບໍ່ມີຂໍ້ມູນແຜນການນໍາໃຊ້ນໍ້າ" })
@@ -8925,7 +8925,7 @@ var ProjectDetailModal = ({
               onClose();
               onViewOnMap(project);
             },
-            className: "px-4 py-2 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-colors",
+            className: "px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-colors",
             children: [
               /* @__PURE__ */ jsx9(MapPin4, { size: 15 }),
               "ສະແດງໃນແຜນທີ່ GIS"
@@ -8936,7 +8936,7 @@ var ProjectDetailModal = ({
           "button",
           {
             onClick: () => onOpenDirectMessage(project),
-            className: "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors",
+            className: "px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors",
             children: [
               /* @__PURE__ */ jsx9(Send3, { size: 14 }),
               "ສົ່ງຂໍ້ຄວາມແຈ້ງເຕືອນ"
@@ -9108,10 +9108,10 @@ var DirectMessagingModal = ({
   return /* @__PURE__ */ jsx10("div", { className: "fixed inset-0 z-[1250] flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200", children: /* @__PURE__ */ jsxs10("div", { className: "bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden", children: [
     /* @__PURE__ */ jsxs10("div", { className: "px-6 py-5 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between", children: [
       /* @__PURE__ */ jsxs10("div", { className: "flex items-center gap-3.5", children: [
-        /* @__PURE__ */ jsx10("div", { className: "w-10 h-10 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-xl text-sky-300", children: "💬" }),
+        /* @__PURE__ */ jsx10("div", { className: "w-10 h-10 rounded-2xl bg-rose-500/20 border border-rose-400/30 flex items-center justify-center text-xl text-rose-300", children: "💬" }),
         /* @__PURE__ */ jsxs10("div", { children: [
           /* @__PURE__ */ jsx10("h3", { className: "text-base sm:text-lg font-bold", children: "ສູນແຈ້ງເຕືອນຂໍ້ຄວາມໂດຍກົງ (Direct Alert & Notification Center)" }),
-          /* @__PURE__ */ jsxs10("p", { className: "text-xs text-sky-200", children: [
+          /* @__PURE__ */ jsxs10("p", { className: "text-xs text-rose-200", children: [
             "ບັນຊີ Firebase: ",
             /* @__PURE__ */ jsx10("span", { className: "font-mono text-white font-semibold", children: FIREBASE_ACCOUNT_EMAIL })
           ] })
@@ -9131,7 +9131,7 @@ var DirectMessagingModal = ({
         "button",
         {
           onClick: () => setActiveTab("compose"),
-          className: `py-3.5 border-b-2 transition-all flex items-center gap-1.5 ${activeTab === "compose" ? "border-sky-600 text-sky-700" : "border-transparent text-slate-500 hover:text-slate-900"}`,
+          className: `py-3.5 border-b-2 transition-all flex items-center gap-1.5 ${activeTab === "compose" ? "border-sky-600 text-rose-700" : "border-transparent text-slate-500 hover:text-slate-900"}`,
           children: [
             /* @__PURE__ */ jsx10(Send4, { size: 14 }),
             "ຂຽນຂໍ້ຄວາມແຈ້ງເຕືອນ"
@@ -9142,7 +9142,7 @@ var DirectMessagingModal = ({
         "button",
         {
           onClick: () => setActiveTab("history"),
-          className: `py-3.5 border-b-2 transition-all flex items-center gap-1.5 ${activeTab === "history" ? "border-sky-600 text-sky-700" : "border-transparent text-slate-500 hover:text-slate-900"}`,
+          className: `py-3.5 border-b-2 transition-all flex items-center gap-1.5 ${activeTab === "history" ? "border-sky-600 text-rose-700" : "border-transparent text-slate-500 hover:text-slate-900"}`,
           children: [
             /* @__PURE__ */ jsx10(Clock3, { size: 14 }),
             "ປະຫວັດຂໍ້ຄວາມທີ່ສົ່ງແລ້ວ (",
@@ -9153,15 +9153,15 @@ var DirectMessagingModal = ({
       )
     ] }),
     /* @__PURE__ */ jsx10("div", { className: "flex-1 overflow-y-auto p-6", children: activeTab === "compose" ? /* @__PURE__ */ jsxs10("form", { onSubmit: handleSend, className: "space-y-4", children: [
-      project && /* @__PURE__ */ jsxs10("div", { className: "bg-sky-50/70 border border-sky-200/80 rounded-2xl p-3.5 space-y-2", children: [
-        /* @__PURE__ */ jsx10("span", { className: "text-xs font-bold text-sky-950 flex items-center gap-1.5", children: "⚡ ແມ່ແບບຂໍ້ຄວາມດ່ວນ (Quick Templates):" }),
+      project && /* @__PURE__ */ jsxs10("div", { className: "bg-rose-50/70 border border-rose-200/80 rounded-2xl p-3.5 space-y-2", children: [
+        /* @__PURE__ */ jsx10("span", { className: "text-xs font-bold text-rose-950 flex items-center gap-1.5", children: "⚡ ແມ່ແບບຂໍ້ຄວາມດ່ວນ (Quick Templates):" }),
         /* @__PURE__ */ jsxs10("div", { className: "flex flex-wrap gap-2 text-xs", children: [
           /* @__PURE__ */ jsx10(
             "button",
             {
               type: "button",
               onClick: () => applyTemplate("expiry"),
-              className: "px-3 py-1 bg-white border border-sky-300 text-sky-900 rounded-xl hover:bg-sky-100 transition-colors font-bold",
+              className: "px-3 py-1 bg-white border border-rose-300 text-rose-900 rounded-xl hover:bg-rose-100 transition-colors font-bold",
               children: "⚠️ ໃບອະນຸຍາດໝົດອາຍຸ"
             }
           ),
@@ -9170,7 +9170,7 @@ var DirectMessagingModal = ({
             {
               type: "button",
               onClick: () => applyTemplate("quota"),
-              className: "px-3 py-1 bg-white border border-sky-300 text-sky-900 rounded-xl hover:bg-sky-100 transition-colors font-bold",
+              className: "px-3 py-1 bg-white border border-rose-300 text-rose-900 rounded-xl hover:bg-rose-100 transition-colors font-bold",
               children: "💧 ໂຄຕ້ານໍ້າທີ່ອະນຸຍາດ"
             }
           ),
@@ -9179,7 +9179,7 @@ var DirectMessagingModal = ({
             {
               type: "button",
               onClick: () => applyTemplate("inspection"),
-              className: "px-3 py-1 bg-white border border-sky-300 text-sky-900 rounded-xl hover:bg-sky-100 transition-colors font-bold",
+              className: "px-3 py-1 bg-white border border-rose-300 text-rose-900 rounded-xl hover:bg-rose-100 transition-colors font-bold",
               children: "🔎 ລົງກວດກາພາກສະໜາມ"
             }
           )
@@ -9195,7 +9195,7 @@ var DirectMessagingModal = ({
               required: true,
               value: recipientName,
               onChange: (e) => setRecipientName(e.target.value),
-              className: "w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-sky-500 font-medium"
+              className: "w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-rose-500 font-medium"
             }
           )
         ] }),
@@ -9208,7 +9208,7 @@ var DirectMessagingModal = ({
               required: true,
               value: recipientPhone,
               onChange: (e) => setRecipientPhone(e.target.value),
-              className: "w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-sky-500 font-mono font-medium"
+              className: "w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-rose-500 font-mono font-medium"
             }
           )
         ] })
@@ -9222,7 +9222,7 @@ var DirectMessagingModal = ({
             required: true,
             value: subject,
             onChange: (e) => setSubject(e.target.value),
-            className: "w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-sky-500 font-bold text-slate-900"
+            className: "w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-rose-500 font-bold text-slate-900"
           }
         )
       ] }),
@@ -9238,7 +9238,7 @@ var DirectMessagingModal = ({
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2e3);
               },
-              className: "text-[11px] text-sky-600 hover:text-sky-800 flex items-center gap-1 font-semibold",
+              className: "text-[11px] text-rose-600 hover:text-rose-800 flex items-center gap-1 font-semibold",
               children: [
                 /* @__PURE__ */ jsx10(Copy4, { size: 12 }),
                 copied ? "ຄັດລອກແລ້ວ" : "ຄັດລອກຂໍ້ຄວາມ"
@@ -9253,7 +9253,7 @@ var DirectMessagingModal = ({
             required: true,
             value: message,
             onChange: (e) => setMessage(e.target.value),
-            className: "w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-sky-500 leading-relaxed font-sans"
+            className: "w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-rose-500 leading-relaxed font-sans"
           }
         )
       ] }),
@@ -9299,7 +9299,7 @@ var DirectMessagingModal = ({
             {
               type: "submit",
               disabled: isSending,
-              className: "px-6 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 active:scale-98 text-white text-xs font-bold rounded-xl shadow-md shadow-sky-500/20 flex items-center gap-2 transition-all disabled:opacity-50",
+              className: "px-6 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 active:scale-98 text-white text-xs font-bold rounded-xl shadow-md shadow-rose-500/20 flex items-center gap-2 transition-all disabled:opacity-50",
               children: [
                 /* @__PURE__ */ jsx10(Send4, { size: 15 }),
                 isSending ? "ກໍາລັງສົ່ງ..." : "ສົ່ງ ແລະ ບັນທຶກລົງ Firebase"
@@ -9395,13 +9395,13 @@ var CommandPalette = ({
             onAddNewProject();
             onClose();
           },
-          className: "w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-blue-50 text-slate-700 hover:text-blue-700 transition-colors group text-left",
+          className: "w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-rose-50 text-slate-700 hover:text-rose-700 transition-colors group text-left",
           children: [
             /* @__PURE__ */ jsxs11("div", { className: "flex items-center gap-2.5", children: [
-              /* @__PURE__ */ jsx11("span", { className: "p-1 rounded-lg bg-blue-100 text-blue-700", children: /* @__PURE__ */ jsx11(Plus5, { size: 14 }) }),
+              /* @__PURE__ */ jsx11("span", { className: "p-1 rounded-lg bg-rose-100 text-rose-700", children: /* @__PURE__ */ jsx11(Plus5, { size: 14 }) }),
               /* @__PURE__ */ jsx11("span", { className: "font-semibold", children: "ເພີ່ມຂໍ້ມູນໂຄງການນໍາໃຊ້ນໍ້າໃໝ່" })
             ] }),
-            /* @__PURE__ */ jsx11(ArrowRight, { size: 14, className: "text-slate-300 group-hover:text-blue-600 transition-colors" })
+            /* @__PURE__ */ jsx11(ArrowRight, { size: 14, className: "text-slate-300 group-hover:text-rose-600 transition-colors" })
           ]
         }
       ),
@@ -9500,7 +9500,7 @@ var CommandPalette = ({
               onSelectProject(p);
               onClose();
             },
-            className: "w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-blue-50/70 text-slate-800 transition-colors text-left",
+            className: "w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-rose-50/70 text-slate-800 transition-colors text-left",
             children: [
               /* @__PURE__ */ jsxs11("div", { children: [
                 /* @__PURE__ */ jsx11("div", { className: "font-bold text-slate-900 line-clamp-1", children: p.projectName }),
@@ -9509,7 +9509,7 @@ var CommandPalette = ({
                   /* @__PURE__ */ jsx11("span", { children: "•" }),
                   /* @__PURE__ */ jsx11("span", { children: p.projectLocation.province }),
                   /* @__PURE__ */ jsx11("span", { children: "•" }),
-                  /* @__PURE__ */ jsxs11("span", { className: "text-blue-600 font-semibold", children: [
+                  /* @__PURE__ */ jsxs11("span", { className: "text-rose-600 font-semibold", children: [
                     p.waterVolume.toLocaleString(),
                     " ",
                     p.waterVolumeUnit
@@ -9759,7 +9759,7 @@ var LoginModal = ({
         }
       ),
       /* @__PURE__ */ jsxs13("div", { className: "flex items-center gap-3", children: [
-        /* @__PURE__ */ jsx13("div", { className: "w-12 h-12 rounded-2xl bg-sky-500/20 border border-sky-400/30 text-sky-400 flex items-center justify-center shadow-lg shadow-sky-500/10", children: /* @__PURE__ */ jsx13(LogIn3, { size: 24 }) }),
+        /* @__PURE__ */ jsx13("div", { className: "w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-400/30 text-rose-400 flex items-center justify-center shadow-lg shadow-sky-500/10", children: /* @__PURE__ */ jsx13(LogIn3, { size: 24 }) }),
         /* @__PURE__ */ jsxs13("div", { children: [
           /* @__PURE__ */ jsx13("h3", { className: "text-base font-bold text-white leading-tight", children: "ເຂົ້າສູ່ລະບົບ (Log In)" }),
           /* @__PURE__ */ jsx13("p", { className: "text-xs text-slate-400 mt-0.5", children: "ລະບົບຕິດຕາມຂໍ້ມູນການນໍາໃຊ້ນໍ້າຂອງໂຄງການ" })
@@ -9774,7 +9774,7 @@ var LoginModal = ({
       /* @__PURE__ */ jsxs13("div", { className: "space-y-1.5", children: [
         /* @__PURE__ */ jsxs13("label", { className: "text-xs font-semibold text-slate-300 flex items-center justify-between", children: [
           /* @__PURE__ */ jsxs13("span", { className: "flex items-center gap-1.5", children: [
-            /* @__PURE__ */ jsx13(User5, { size: 14, className: "text-sky-400" }),
+            /* @__PURE__ */ jsx13(User5, { size: 14, className: "text-rose-400" }),
             "ຊື່ຜູ້ໃຊ້ (Username)"
           ] }),
           /* @__PURE__ */ jsx13("span", { className: "text-[10px] text-slate-400", children: "ຕົວອັກສອນພາສາອັງກິດ" })
@@ -9789,7 +9789,7 @@ var LoginModal = ({
               setErrorMessage("");
             },
             placeholder: "ເຊັ່ນ: admin, manivone, khamphay",
-            className: "w-full bg-slate-800/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-hidden focus:border-sky-500 focus:ring-1 focus:ring-sky-500 font-mono",
+            className: "w-full bg-slate-800/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-hidden focus:border-rose-500 focus:ring-1 focus:ring-rose-500 font-mono",
             autoFocus: true
           }
         ) })
@@ -9813,7 +9813,7 @@ var LoginModal = ({
                 setErrorMessage("");
               },
               placeholder: "ປ້ອນລະຫັດຜ່ານຂອງທ່ານ",
-              className: "w-full bg-slate-800/90 border border-slate-700 rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-hidden focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+              className: "w-full bg-slate-800/90 border border-slate-700 rounded-xl pl-3.5 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-hidden focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
             }
           ),
           /* @__PURE__ */ jsx13(
@@ -9832,7 +9832,7 @@ var LoginModal = ({
         {
           type: "submit",
           disabled: isSubmitting,
-          className: "w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-sky-500/25 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50",
+          className: "w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-rose-500/25 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50",
           children: [
             /* @__PURE__ */ jsx13(LogIn3, { size: 16 }),
             /* @__PURE__ */ jsx13("span", { children: isSubmitting ? "ກໍາລັງກວດສອບ..." : "ເຂົ້າສູ່ລະບົບ (Log In)" })
@@ -10122,7 +10122,7 @@ function App() {
     setIsFormOpen(true);
   };
   const [isSidebarOpen, setIsSidebarOpen] = useState13(false);
-  return /* @__PURE__ */ jsxs14("div", { className: "min-h-screen flex bg-slate-100 text-slate-850 font-sans selection:bg-sky-500 selection:text-white", children: [
+  return /* @__PURE__ */ jsxs14("div", { className: "min-h-screen flex bg-slate-100 text-slate-850 font-sans selection:bg-rose-500 selection:text-white", children: [
     /* @__PURE__ */ jsx14(
       AppSidebar,
       {
@@ -10203,7 +10203,7 @@ function App() {
         /* @__PURE__ */ jsxs14("div", { className: "flex flex-col sm:flex-row sm:items-center justify-between gap-2", children: [
           /* @__PURE__ */ jsxs14("div", { children: [
             /* @__PURE__ */ jsxs14("h2", { className: "text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2", children: [
-              /* @__PURE__ */ jsx14(MapPin6, { size: 20, className: "text-sky-600" }),
+              /* @__PURE__ */ jsx14(MapPin6, { size: 20, className: "text-rose-600" }),
               "ແຜນທີ່ GIS ສະແດງທີ່ຕັ້ງໂຄງການ ແລະ ບ່ອນດູດນໍ້າ (Interactive Geospatial Portal)"
             ] }),
             /* @__PURE__ */ jsx14("p", { className: "text-xs text-slate-500", children: "ຈຸດທີ່ຕັ້ງໂຄງການ (ສີຂຽວ 🟢), ຈຸດບ່ອນດູດນໍ້າ (ສີຟ້າ 💧). ກົດໃສ່ຈຸດເພື່ອເບິ່ງຂໍ້ມູນ ແລະ ເສັ້ນທາງສົ່ງນໍ້າ." })
@@ -10420,14 +10420,14 @@ function App() {
         "aria-atomic": "true",
         className: "fixed bottom-6 right-6 z-[1400] max-w-md w-full bg-slate-900/95 text-white p-4 rounded-2xl border border-slate-700/80 shadow-2xl backdrop-blur-md animate-in slide-in-from-bottom-5 duration-200",
         children: /* @__PURE__ */ jsxs14("div", { className: "flex items-start gap-3", children: [
-          /* @__PURE__ */ jsxs14("div", { className: `p-2.5 rounded-xl shrink-0 ${operationToast.type === "create" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : operationToast.type === "update" ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" : "bg-rose-500/20 text-rose-400 border border-rose-500/30"}`, children: [
+          /* @__PURE__ */ jsxs14("div", { className: `p-2.5 rounded-xl shrink-0 ${operationToast.type === "create" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : operationToast.type === "update" ? "bg-rose-500/20 text-blue-400 border border-rose-500/30" : "bg-rose-500/20 text-rose-400 border border-rose-500/30"}`, children: [
             operationToast.type === "create" && /* @__PURE__ */ jsx14(Plus6, { size: 18 }),
             operationToast.type === "update" && /* @__PURE__ */ jsx14(CheckCircle29, { size: 18 }),
             operationToast.type === "delete" && /* @__PURE__ */ jsx14(Trash26, { size: 18 })
           ] }),
           /* @__PURE__ */ jsxs14("div", { className: "flex-1 min-w-0", children: [
             /* @__PURE__ */ jsxs14("div", { className: "flex items-center gap-2", children: [
-              /* @__PURE__ */ jsx14("span", { className: `text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${operationToast.type === "create" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : operationToast.type === "update" ? "bg-blue-500/20 text-blue-300 border border-blue-500/30" : "bg-rose-500/20 text-rose-300 border border-rose-500/30"}`, children: operationToast.type === "create" ? "ເພີ່ມຂໍ້ມູນໃໝ່" : operationToast.type === "update" ? "ແກ້ໄຂຂໍ້ມູນ" : "ລົບຂໍ້ມູນ" }),
+              /* @__PURE__ */ jsx14("span", { className: `text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${operationToast.type === "create" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" : operationToast.type === "update" ? "bg-rose-500/20 text-blue-300 border border-rose-500/30" : "bg-rose-500/20 text-rose-300 border border-rose-500/30"}`, children: operationToast.type === "create" ? "ເພີ່ມຂໍ້ມູນໃໝ່" : operationToast.type === "update" ? "ແກ້ໄຂຂໍ້ມູນ" : "ລົບຂໍ້ມູນ" }),
               /* @__PURE__ */ jsx14("span", { className: "text-[11px] text-slate-400", children: "ເມື່ອກີ້ນີ້" })
             ] }),
             /* @__PURE__ */ jsx14("h5", { className: "font-bold text-xs text-white mt-1", children: operationToast.title }),
@@ -10439,7 +10439,7 @@ function App() {
                   setActiveTab("export");
                   setOperationToast(null);
                 },
-                className: "text-[11px] font-bold text-sky-400 hover:text-sky-300 flex items-center gap-1 cursor-pointer transition-colors",
+                className: "text-[11px] font-bold text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer transition-colors",
                 children: [
                   /* @__PURE__ */ jsx14("span", { children: "ເບິ່ງບົດລາຍງານການດໍາເນີນງານ" }),
                   /* @__PURE__ */ jsx14(ArrowRight2, { size: 12 })
