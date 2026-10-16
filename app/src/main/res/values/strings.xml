@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ກົມຊັບພະຍາກອນນ້ຳ — ລະບົບຂໍ້ມູນຊັບພະຍາກອນນ້ຳ</string>
+    <string name="short_app_name">ກົມຊັບພະຍາກອນນ້ຳ</string>
+    <string name="ministry_title">ກະຊວງກະສິກຳ ແລະ ສິ່ງແວດລ້ອມ</string>
+    <string name="department_title">ກົມຊັບພະຍາກອນນ້ຳ</string>
+    <string name="portal_badge">ລະບົບຂໍ້ມູນຂ່າວສານຊັບພະຍາກອນນ້ຳແຫ່ງຊາດ</string>
+    
+    <!-- Navigation Systems -->
+    <string name="nav_dashboard">ໜ້າຫຼັກພອດທໍລ</string>
+    <string name="nav_water_quality">ຄຸນນະພາບນ້ຳ</string>
+    <string name="nav_water_usage">ການນຳໃຊ້ນ້ຳ</string>
+    <string name="nav_wastewater">ການປ່ອຍນ້ຳເປື້ອນ</string>
+    <string name="nav_reports">ບົດລາຍງານ &amp; ສະຖິຕິ</string>
+    <string name="nav_settings">ຕັ້ງຄ່າລະບົບ</string>
+
+    <!-- Sub views -->
+    <string name="view_gis_map">ແຜນທີ່ GIS ສະພາບນ້ຳ</string>
+    <string name="view_param_charts">ກຣາຟແຍກຕົວຊີ້ວັດ</string>
+    <string name="view_trends">ແນວໂນ້ມລາຍເດືອນ</string>
+    <string name="view_stats12">ສະຖິຕິ 12 ເດືອນ</string>
+    <string name="view_records">ຟອມບັນທຶກ &amp; ຕາຕະລາງ</string>
+
+    <!-- Actions -->
+    <string name="action_enter_system">ເຂົ້າສູ່ລະບົບ</string>
+    <string name="action_add_record">ເພີ່ມຂໍ້ມູນໃໝ່</string>
+    <string name="action_edit">ແກ້ໄຂ</string>
+    <string name="action_delete">ລຶບ</string>
+    <string name="action_save">ບັນທຶກ</string>
+    <string name="action_cancel">ຍົກເລີກ</string>
+    <string name="action_filter">ກັ່ນຕອງ</string>
+    <string name="action_search">ຄົ້ນຫາ...</string>
+    <string name="action_export">ສົ່ງອອກລາຍງານ</string>
+
+    <!-- Statuses -->
+    <string name="status_normal">ປົກກະຕິ</string>
+    <string name="status_warning">ເຝົ້າລະວັງ</string>
+    <string name="status_exceeded">ເກີນມາດຕະຖານ</string>
+    <string name="status_active">ກຳລັງດຳເນີນງານ</string>
+    <string name="status_pending">ລໍຖ້າຕໍ່ອາຍຸ</string>
+    <string name="status_expired">ໝົດອາຍຸ</string>
+</resources>

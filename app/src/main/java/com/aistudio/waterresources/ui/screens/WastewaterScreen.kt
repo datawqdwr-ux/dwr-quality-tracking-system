@@ -1,0 +1,534 @@
+package com.aistudio.waterresources.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.aistudio.waterresources.data.model.*
+import com.aistudio.waterresources.ui.theme.*
+import com.aistudio.waterresources.ui.viewmodel.WaterResourcesUiState
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WastewaterScreen(
+    state: WaterResourcesUiState,
+    onSelectFacility: (WastewaterFacility?) -> Unit,
+    onAddFacility: (WastewaterFacility) -> Unit,
+    onDeleteFacility: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isLao = state.language == Language.LO
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedSector by remember { mutableStateOf("ALL") }
+    var showAddDialog by remember { mutableStateOf(false) }
+
+    val sectors = listOf("ALL", "ໂຮງງານອຸດສາຫະກຳ", "ເຂດເສດຖະກິດພິເສດ", "ໂຮງງານແປຮູບ")
+
+    val filteredFacilities = state.wastewaterFacilities.filter { f ->
+        val matchesSearch = f.facilityName.contains(searchQuery, ignoreCase = true) ||
+                f.companyName.contains(searchQuery, ignoreCase = true) ||
+                f.receivingWaterBody.contains(searchQuery, ignoreCase = true)
+        val matchesSector = selectedSector == "ALL" || f.sector == selectedSector
+        matchesSearch && matchesSector
+    }
+
+    val totalDischarge = filteredFacilities.sumOf { it.dischargeVolume }
+
+    Scaffold(
+        containerColor = Slate950,
+        floatingActionButton = {
+            if (!state.isGuestMode) {
+                FloatingActionButton(
+                    onClick = { showAddDialog = true },
+                    containerColor = Rose600,
+                    contentColor = Slate100,
+                    modifier = Modifier.testTag("add_facility_fab")
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Facility")
+                }
+            }
+        }
+    ) { padding ->
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 16.dp)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = if (isLao) "🏭 ລະບົບຕິດຕາມໂຄງການປ່ອຍນ້ຳເປື້ອນ" else "🏭 Wastewater Discharge Monitoring",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = Slate100
+                    )
+                    Text(
+                        text = if (isLao) "ຕິດຕາມກວດກາມາດຕະຖານນ້ຳເສຍປ່ອຍອອກສິ່ງແວດລ້ອມ" else "Effluent Discharge & WWTP Audits",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Slate400
+                    )
+                }
+            }
+
+            // Summary KPI
+            Surface(
+                color = Slate900,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = if (isLao) "ປະລິມານນ້ຳເປື້ອນປ່ອຍອອກລວມ:" else "Total Daily Effluent Volume:",
+                            fontSize = 11.sp,
+                            color = Slate400
+                        )
+                        Text(
+                            text = "%,.0f m³/day".format(totalDischarge),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
+                            color = Rose400
+                        )
+                    }
+                    Surface(color = Rose600.copy(alpha = 0.2f), shape = RoundedCornerShape(10.dp)) {
+                        Text(
+                            text = "${filteredFacilities.size} " + if (isLao) "ແຫ່ງ" else "units",
+                            color = Rose300,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Search Bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Slate400) },
+                placeholder = {
+                    Text(
+                        text = if (isLao) "ຄົ້ນຫາໂຮງງານ ຫຼື ແຫຼ່ງນ້ຳຮັບ..." else "Search facility or receiving water...",
+                        color = Slate400,
+                        fontSize = 12.sp
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("wastewater_search_field"),
+                shape = RoundedCornerShape(14.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = Slate900,
+                    unfocusedContainerColor = Slate900,
+                    focusedBorderColor = Rose500,
+                    unfocusedBorderColor = Slate800,
+                    focusedTextColor = Slate100,
+                    unfocusedTextColor = Slate100
+                ),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Sector Filter Chips
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(bottom = 10.dp)
+            ) {
+                items(sectors) { sec ->
+                    val selected = (selectedSector == sec)
+                    FilterChip(
+                        selected = selected,
+                        onClick = { selectedSector = sec },
+                        label = {
+                            Text(
+                                text = if (sec == "ALL") (if (isLao) "ທຸກຂະແໜງ" else "All Sectors") else sec,
+                                fontSize = 11.sp
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Rose600,
+                            selectedLabelColor = Slate100,
+                            containerColor = Slate900,
+                            labelColor = Slate300
+                        )
+                    )
+                }
+            }
+
+            // Facilities List
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                items(filteredFacilities) { facility ->
+                    FacilityCard(
+                        facility = facility,
+                        isLao = isLao,
+                        onClick = { onSelectFacility(facility) }
+                    )
+                }
+            }
+        }
+    }
+
+    // Add Facility Dialog
+    if (showAddDialog) {
+        AddFacilityDialog(
+            isLao = isLao,
+            onDismiss = { showAddDialog = false },
+            onConfirm = { facility ->
+                onAddFacility(facility)
+                showAddDialog = false
+            }
+        )
+    }
+
+    // Facility Detail Dialog
+    if (state.selectedFacility != null) {
+        FacilityDetailDialog(
+            facility = state.selectedFacility,
+            isLao = isLao,
+            isAdmin = state.userSession.role == UserRole.ADMIN,
+            onDismiss = { onSelectFacility(null) },
+            onDelete = { onDeleteFacility(state.selectedFacility.id) }
+        )
+    }
+}
+
+@Composable
+private fun FacilityCard(
+    facility: WastewaterFacility,
+    isLao: Boolean,
+    onClick: () -> Unit
+) {
+    val statusColor = when (facility.complianceStatus) {
+        ComplianceStatus.NORMAL -> Emerald400
+        ComplianceStatus.WARNING -> Amber400
+        ComplianceStatus.EXCEEDED -> Rose500
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+            .testTag("facility_card_${facility.id}"),
+        colors = CardDefaults.cardColors(containerColor = Slate900),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(color = Rose600.copy(alpha = 0.2f), shape = RoundedCornerShape(8.dp)) {
+                    Text(
+                        text = facility.sector,
+                        color = Rose300,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
+
+                Surface(color = statusColor.copy(alpha = 0.15f), shape = RoundedCornerShape(8.dp)) {
+                    Text(
+                        text = if (isLao) facility.complianceStatus.labelLao else facility.complianceStatus.labelEn,
+                        color = statusColor,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
+            Text(
+                text = facility.facilityName,
+                style = MaterialTheme.typography.titleMedium,
+                color = Slate100,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = "🏢 ${facility.companyName}",
+                fontSize = 12.sp,
+                color = Slate300
+            )
+
+            HorizontalDivider(color = Slate800)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "💧 %,.0f %s".format(facility.dischargeVolume, facility.dischargeVolumeUnit),
+                    fontSize = 12.sp,
+                    color = Rose400,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "🌊 ${facility.receivingWaterBody}",
+                    fontSize = 12.sp,
+                    color = Slate400
+                )
+            }
+
+            // Quality metrics chips
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "pH: ${facility.phValue}", fontSize = 11.sp, color = Cyan400)
+                Text(text = "BOD: ${facility.bodValue} mg/L", fontSize = 11.sp, color = Amber400)
+                Text(text = "COD: ${facility.codValue} mg/L", fontSize = 11.sp, color = Rose400)
+                Text(text = "TSS: ${facility.tssValue} mg/L", fontSize = 11.sp, color = Slate300)
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddFacilityDialog(
+    isLao: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (WastewaterFacility) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var company by remember { mutableStateOf("") }
+    var sector by remember { mutableStateOf("ໂຮງງານອຸດສາຫະກຳ") }
+    var volumeText by remember { mutableStateOf("500") }
+    var receivingWater by remember { mutableStateOf("ແມ່ນ້ຳຂອງ") }
+    var treatmentSystem by remember { mutableStateOf("Activated Sludge") }
+    var province by remember { mutableStateOf("ນະຄອນຫຼວງວຽງຈັນ") }
+    var phText by remember { mutableStateOf("7.5") }
+    var bodText by remember { mutableStateOf("20.0") }
+    var codText by remember { mutableStateOf("60.0") }
+    var tssText by remember { mutableStateOf("30.0") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Slate900,
+        title = {
+            Text(
+                text = if (isLao) "🏭 ເພີ່ມໂຄງການປ່ອຍນ້ຳເປື້ອນ" else "Add Wastewater Facility",
+                color = Slate100,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(if (isLao) "ຊື່ໂຮງງານ / ແຫຼ່ງກຳເນີດ" else "Facility Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = company,
+                    onValueChange = { company = it },
+                    label = { Text(if (isLao) "ບໍລິສັດເຈົ້າຂອງ" else "Company") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = volumeText,
+                        onValueChange = { volumeText = it },
+                        label = { Text("m³/day") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = receivingWater,
+                        onValueChange = { receivingWater = it },
+                        label = { Text(if (isLao) "ແຫຼ່ງນ້ຳຮັບ" else "Receiving Water") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = phText,
+                        onValueChange = { phText = it },
+                        label = { Text("pH") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = bodText,
+                        onValueChange = { bodText = it },
+                        label = { Text("BOD (mg/L)") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val vol = volumeText.toDoubleOrNull() ?: 500.0
+                    val ph = phText.toDoubleOrNull() ?: 7.5
+                    val bod = bodText.toDoubleOrNull() ?: 20.0
+                    val cod = codText.toDoubleOrNull() ?: 60.0
+                    val tss = tssText.toDoubleOrNull() ?: 30.0
+
+                    val status = if (ph in 6.0..9.0 && bod <= 30.0 && cod <= 100.0) {
+                        ComplianceStatus.NORMAL
+                    } else if (ph in 5.5..9.5 && bod <= 40.0) {
+                        ComplianceStatus.WARNING
+                    } else {
+                        ComplianceStatus.EXCEEDED
+                    }
+
+                    val facility = WastewaterFacility(
+                        id = "WW-${System.currentTimeMillis()}",
+                        facilityName = if (name.isNotBlank()) name else "ໂຮງງານໃໝ່",
+                        sector = sector,
+                        companyName = if (company.isNotBlank()) company else "ບໍ່ລະບຸ",
+                        permitNumber = "WW-2025/001",
+                        dischargeVolume = vol,
+                        receivingWaterBody = receivingWater,
+                        treatmentSystem = treatmentSystem,
+                        province = province,
+                        district = "ໄຊທານີ",
+                        village = "ດົງໂດກ",
+                        latitude = 18.0,
+                        longitude = 102.6,
+                        lastInspectionDate = "2025-02-14",
+                        complianceStatus = status,
+                        phValue = ph,
+                        bodValue = bod,
+                        codValue = cod,
+                        tssValue = tss
+                    )
+                    onConfirm(facility)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Rose600)
+            ) {
+                Text(if (isLao) "ບັນທຶກ" else "Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(if (isLao) "ຍົກເລີກ" else "Cancel", color = Slate400)
+            }
+        }
+    )
+}
+
+@Composable
+private fun FacilityDetailDialog(
+    facility: WastewaterFacility,
+    isLao: Boolean,
+    isAdmin: Boolean,
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Slate900,
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = facility.facilityName,
+                    color = Slate100,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Slate400)
+                }
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(text = "ຂະແໜງການ: ${facility.sector}", color = Rose400, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(text = "ເຈົ້າຂອງ: ${facility.companyName}", color = Slate200, fontSize = 13.sp)
+                Text(text = "ເລກທີໃບອະນຸຍາດ: ${facility.permitNumber}", color = Slate300, fontSize = 12.sp)
+                Text(text = "ລະບົບບຳບັດ: ${facility.treatmentSystem}", color = Slate400, fontSize = 12.sp)
+
+                HorizontalDivider(color = Slate800)
+
+                Text(text = "ປະລິມານນ້ຳເປື້ອນ: %,.0f %s".format(facility.dischargeVolume, facility.dischargeVolumeUnit), color = Cyan400, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Text(text = "ແຫຼ່ງນ້ຳຮັບ: ${facility.receivingWaterBody}", color = Slate200, fontSize = 12.sp)
+                Text(text = "ກວດກາລ່າສຸດ: ${facility.lastInspectionDate}", color = Slate400, fontSize = 12.sp)
+
+                HorizontalDivider(color = Slate800)
+
+                Text(text = "ຄ່າວັດແທກຕົວຊີ້ວັດມາດຕະຖານ:", fontWeight = FontWeight.Bold, color = Slate100, fontSize = 13.sp)
+                Text(text = "• pH: ${facility.phValue} (ມາດຕະຖານ 6.0 – 9.0)", color = Slate300, fontSize = 12.sp)
+                Text(text = "• BOD: ${facility.bodValue} mg/L (ມາດຕະຖານ ≤ 30 mg/L)", color = Slate300, fontSize = 12.sp)
+                Text(text = "• COD: ${facility.codValue} mg/L (ມາດຕະຖານ ≤ 120 mg/L)", color = Slate300, fontSize = 12.sp)
+                Text(text = "• TSS: ${facility.tssValue} mg/L (ມາດຕະຖານ ≤ 50 mg/L)", color = Slate300, fontSize = 12.sp)
+
+                if (facility.notes.isNotBlank()) {
+                    Text(text = "ໝາຍເຫດ: ${facility.notes}", color = Slate400, fontSize = 11.sp)
+                }
+            }
+        },
+        confirmButton = {
+            if (isAdmin) {
+                Button(
+                    onClick = onDelete,
+                    colors = ButtonDefaults.buttonColors(containerColor = Rose600)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isLao) "ລຶບ" else "Delete")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(if (isLao) "ປິດ" else "Close", color = Slate400)
+            }
+        }
+    )
+}
