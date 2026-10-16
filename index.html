@@ -21,18 +21,54 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
+    @font-face {
+      font-family: 'Phetsarath OT';
+      src: local('Phetsarath OT'), local('Phetsarath'),
+           url('https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/files/phetsarath-lao-400-normal.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Phetsarath OT';
+      src: local('Phetsarath OT Bold'), local('Phetsarath-Bold'),
+           url('https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/files/phetsarath-lao-700-normal.woff2') format('woff2');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
     @layer base {
       html {
         font-size: 16px;
       }
+      *, ::before, ::after {
+        font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', serif;
+      }
       body {
-        font-family: 'Noto Sans Lao', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', serif;
         font-feature-settings: "liga" 1;
         letter-spacing: 0.01em;
       }
-      h1, h2, h3, h4 {
-        font-family: 'Noto Serif Lao', 'Noto Sans Lao', Georgia, serif;
+      h1, h2, h3, h4, h5, h6, button, input, select, textarea, p, span, a, div {
+        font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', serif;
       }
+      :lang(lo), [lang="lo"], [lang="lo"] * {
+        font-family: 'Phetsarath OT', 'Phetsarath', 'Times New Roman', Times, serif;
+      }
+      :lang(en), [lang="en"], [lang="en"] * {
+        font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', serif;
+      }
+    }
+
+    .system-card-title {
+      font-size: clamp(0.92rem, 1.35vw, 1.42rem) !important;
+      white-space: nowrap !important;
+      text-align: center !important;
+      width: 100% !important;
+      display: block !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
     }
   </style>
   <meta property="og:image" content="https://bolt.new/static/og_default.png">
@@ -62,7 +98,6 @@
         <div class="min-w-0">
           <div class="flex items-center gap-2 flex-wrap">
             <span data-i18n="ministry" class="text-xs sm:text-base font-bold text-slate-300 tracking-wide uppercase">ກະຊວງກະສິກຳ ແລະ ສິ່ງແວດລ້ອມ</span>
-            <span class="inline-block text-[10px] sm:text-xs px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 font-mono font-bold">DWR-PORTAL</span>
           </div>
           <h1 data-i18n="department" class="text-lg sm:text-2xl lg:text-3xl font-black text-white tracking-tight truncate mt-0.5">
             ກົມຊັບພະຍາກອນນ້ຳ
@@ -100,11 +135,6 @@
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-14">
     <!-- Hero Title Box -->
     <div class="text-center max-w-4xl mx-auto space-y-5">
-      <div class="inline-flex items-center gap-2.5 px-4.5 py-2 rounded-full bg-rose-500/10 border border-rose-400/25 text-rose-300 text-sm sm:text-base font-bold shadow-xs">
-        <span class="w-2.5 h-2.5 rounded-full bg-rose-400 animate-ping"></span>
-        <span data-i18n="heroBadge">ລະບົບຂໍ້ມູນຂ່າວສານຊັບພະຍາກອນນ້ຳແຫ່ງຊາດ (National Water Portal)</span>
-      </div>
-
       <h1 data-i18n="heroTitle" class="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight drop-shadow-sm">
         ລະບົບຂໍ້ມູນຊັບພະຍາກອນນ້ຳ
       </h1>
@@ -118,7 +148,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
 
       <!-- System 1: Water Quality Monitoring -->
-      <div class="group relative bg-slate-900/85 hover:bg-slate-900 border border-slate-800 hover:border-rose-500/60 rounded-3xl p-7 sm:p-9 shadow-xl hover:shadow-2xl hover:shadow-rose-500/20 transition-all duration-300 flex flex-col justify-between hover:-translate-y-1">
+      <div class="group relative bg-slate-900/85 hover:bg-slate-900 border border-slate-800 hover:border-rose-500/60 rounded-3xl p-5 sm:p-6 lg:p-6 xl:p-8 shadow-xl hover:shadow-2xl hover:shadow-rose-500/20 transition-all duration-300 flex flex-col justify-between hover:-translate-y-1">
         <!-- Top Glow Accent -->
         <div class="absolute inset-x-8 top-0 h-1.5 bg-gradient-to-r from-transparent via-rose-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-t-full"></div>
 
@@ -133,9 +163,9 @@
             </span>
           </div>
 
-          <!-- System Title / Name Only -->
-          <div>
-            <h2 data-i18n="system1Title" class="text-2xl sm:text-3xl lg:text-3.5xl font-black text-white group-hover:text-rose-300 transition-colors leading-tight">
+          <!-- System Title / Name Only (Single Line & Centered - Full Sentence) -->
+          <div class="text-center w-full pt-1">
+            <h2 data-i18n="system1Title" class="system-card-title font-black text-white group-hover:text-rose-300 transition-colors leading-normal tracking-tight">
               ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ
             </h2>
           </div>
@@ -162,7 +192,7 @@
       </div>
 
       <!-- System 2: Water Resources Usage -->
-      <div class="group relative bg-slate-900/85 hover:bg-slate-900 border border-slate-800 hover:border-rose-500/60 rounded-3xl p-7 sm:p-9 shadow-xl hover:shadow-2xl hover:shadow-rose-500/20 transition-all duration-300 flex flex-col justify-between hover:-translate-y-1">
+      <div class="group relative bg-slate-900/85 hover:bg-slate-900 border border-slate-800 hover:border-rose-500/60 rounded-3xl p-5 sm:p-6 lg:p-6 xl:p-8 shadow-xl hover:shadow-2xl hover:shadow-rose-500/20 transition-all duration-300 flex flex-col justify-between hover:-translate-y-1">
         <!-- Top Glow Accent -->
         <div class="absolute inset-x-8 top-0 h-1.5 bg-gradient-to-r from-transparent via-rose-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-t-full"></div>
 
@@ -177,9 +207,9 @@
             </span>
           </div>
 
-          <!-- System Title / Name Only -->
-          <div>
-            <h2 data-i18n="system2Title" class="text-2xl sm:text-3xl lg:text-3.5xl font-black text-white group-hover:text-rose-300 transition-colors leading-tight">
+          <!-- System Title / Name Only (Single Line & Centered - Full Sentence) -->
+          <div class="text-center w-full pt-1">
+            <h2 data-i18n="system2Title" class="system-card-title font-black text-white group-hover:text-rose-300 transition-colors leading-normal tracking-tight">
               ລະບົບຕິດຕາມຂໍ້ມູນການນຳໃຊ້ນ້ຳ
             </h2>
           </div>
@@ -206,7 +236,7 @@
       </div>
 
       <!-- System 3: Wastewater Project Monitoring -->
-      <div class="group relative bg-slate-900/85 hover:bg-slate-900 border border-slate-800 hover:border-rose-500/60 rounded-3xl p-7 sm:p-9 shadow-xl hover:shadow-2xl hover:shadow-rose-500/20 transition-all duration-300 flex flex-col justify-between hover:-translate-y-1">
+      <div class="group relative bg-slate-900/85 hover:bg-slate-900 border border-slate-800 hover:border-rose-500/60 rounded-3xl p-5 sm:p-6 lg:p-6 xl:p-8 shadow-xl hover:shadow-2xl hover:shadow-rose-500/20 transition-all duration-300 flex flex-col justify-between hover:-translate-y-1">
         <!-- Top Glow Accent -->
         <div class="absolute inset-x-8 top-0 h-1.5 bg-gradient-to-r from-transparent via-rose-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-t-full"></div>
 
@@ -221,9 +251,9 @@
             </span>
           </div>
 
-          <!-- System Title / Name Only -->
-          <div>
-            <h2 data-i18n="system3Title" class="text-2xl sm:text-3xl lg:text-3.5xl font-black text-white group-hover:text-rose-300 transition-colors leading-tight">
+          <!-- System Title / Name Only (Single Line & Centered - Full Sentence) -->
+          <div class="text-center w-full pt-1">
+            <h2 data-i18n="system3Title" class="system-card-title font-black text-white group-hover:text-rose-300 transition-colors leading-normal tracking-tight">
               ລະບົບຕິດຕາມໂຄງການປ່ອຍນ້ຳເປື້ອນ
             </h2>
           </div>

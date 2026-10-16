@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aistudio.waterresources.data.model.ComplianceStatus
@@ -58,35 +59,6 @@ fun PortalDashboardScreen(
                     .padding(vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // National Portal Badge
-                Surface(
-                    color = Rose500.copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(20.dp),
-                    border = CardDefaults.outlinedCardBorder().copy(
-                        brush = Brush.horizontalGradient(listOf(Rose500.copy(alpha = 0.4f), Indigo500.copy(alpha = 0.4f)))
-                    ),
-                    modifier = Modifier.padding(bottom = 12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(Rose400)
-                        )
-                        Text(
-                            text = if (isLao) "ລະບົບຂໍ້ມູນຂ່າວສານຊັບພະຍາກອນນ້ຳແຫ່ງຊາດ" else "National Water Resources Portal",
-                            color = Rose300,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
                 Text(
                     text = if (isLao) "ລະບົບຂໍ້ມູນຊັບພະຍາກອນນ້ຳ" else "Water Resources Information Portal",
                     style = MaterialTheme.typography.headlineMedium,
@@ -351,8 +323,11 @@ private fun SystemPortalCard(
 
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                color = Slate100
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, fontSize = 15.sp),
+                color = Slate100,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Text(
