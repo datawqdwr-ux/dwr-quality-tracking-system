@@ -10620,5 +10620,65 @@ window.sharedLogout = sharedLogout;
  */
 
   </script>
+<!-- ===== ສິດ "ເບິ່ງຢ່າງດຽວ" ສຳລັບຜູ້ໃຊ້ທົ່ວໄປ ແລະ Viewer + ແຜນທີ່ບໍ່ບັງເມນູ (ໃຊ້ຮ່ວມ 3 ລະບົບ) ===== -->
+<style>
+  /* ແຜນທີ່ຢູ່ໃນຊັ້ນຂອງຕົນເອງ → ເລື່ອນໜ້າແລ້ວບໍ່ບັງແຖບເມນູ / ເມນູເລື່ອນລົງ */
+  .leaflet-container { isolation: isolate; z-index: 0; }
+  div:has(> .leaflet-container) { isolation: isolate; }
+  .ro-badge { position: fixed; right: 14px; bottom: 14px; z-index: 9000; background: #334155; color: #f8fafc; font: 600 12px 'Noto Sans Lao', sans-serif; padding: 7px 12px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.25); pointer-events: none; }
+  body.map-fs .ro-badge { display: none; }
+</style>
+<script>
+(function () {
+  // ປຸ່ມທີ່ຜູ້ໃຊ້ທົ່ວໄປ / Viewer ໃຊ້ບໍ່ໄດ້: ພິມ-ສົ່ງອອກ, ແຈ້ງ/ສົ່ງຂໍ້ຄວາມຫາເຈົ້າຂອງ, ຕັ້ງຄ່າ-ແບກອັບ, ເພີ່ມ/ແກ້ໄຂ/ລົບ/ນຳເຂົ້າ
+  var BLOCK = /ສົ່ງອອກ|ພິມ|ປີ້ນ|\bpdf\b|excel|\bcsv\b|\bpng\b|ດາວໂຫລດ|ດາວໂຫຼດ|export|print|download|ສົ່ງຂໍ້ຄວາມ|ຂໍ້ຄວາມດ່ວນ|ສົ່ງແຈ້ງ|ແຈ້ງຫາ|ແຈ້ງເຈົ້າຂອງ|ສົ່ງອີເມວ|ສົ່ງຫາ|message|ຕັ້ງຄ່າ|ແບກອັບ|ສຳຮອງ|ສໍາຮອງ|backup|restore|ຟື້ນຟູ|settings|config|ເພີ່ມ(?!ເຕີມ)|ແກ້ໄຂ|ລຶບ|ລົບ|ບັນທຶກ|ນຳເຂົ້າ|ນໍາເຂົ້າ|import|ຕໍ່ໃບອະນຸຍາດ|ຕໍ່ອາຍຸ|ສະຫຼັບ|ໂປຣໄຟລ໌|ບັນຊີຂອງຂ້ອຍ|ຈັດການຜູ້ໃຊ້|ລ້າງຂໍ້ມູນ|ລວມຊຸດ|ລວມເປັນ|ແປງພິກັດ|📥|🖨|✏️|🗑|➕|⚙/i;
+  var ALLOW = /ເຂົ້າສູ່ລະບົບ|log\s*in|ອອກຈາກລະບົບ|ເບິ່ງແບບທົ່ວໄປ|ໜ້າຫຼັກ|ລາຍລະອຽດ|ທັງໝົດ|ຍົກເລີກ|ປິດ|ຕົກລົງ|ສະແດງເພີ່ມ|ເບິ່ງເພີ່ມ|ສະແດງທຸກຖັນ|ເຊື່ອງຖັນ/i;
+  function readOnly() {
+    var s = null;
+    try { s = JSON.parse(localStorage.getItem('waterSession') || sessionStorage.getItem('waterSession') || 'null'); } catch (e) {}
+    return !s || !s.key || s.role === 'VIEWER';
+  }
+  function excluded(el) {
+    return el.closest('#loginScreen, #sharedLoginScreen, #navPills, .swal2-container, .leaflet-control-zoom, .leaflet-control-layers, .leaflet-popup');
+  }
+  var ro = null, badge = null, queued = false;
+  function apply() {
+    queued = false;
+    var on = readOnly();
+    if (on !== ro) {
+      ro = on;
+      document.body.classList.toggle('ro-mode', on);
+      if (!on) document.querySelectorAll('[data-ro-hidden]').forEach(function (el) { el.style.display = el.dataset.roPrev || ''; delete el.dataset.roHidden; });
+      if (on && !badge) { badge = document.createElement('div'); badge.className = 'ro-badge'; badge.textContent = '👁️ ໂໝດເບິ່ງຢ່າງດຽວ'; document.body.appendChild(badge); }
+      if (badge) badge.style.display = on ? '' : 'none';
+    }
+    if (!on) return;
+    var activeHidden = false;
+    document.querySelectorAll('button, a[href], [role="button"], label[for], input[type="file"]').forEach(function (el) {
+      if (el.dataset.roHidden || excluded(el)) return;
+      var a = el.getAttribute('href') || '';
+      if (/\.html$|^#?$/.test(a) && el.tagName === 'A' && !el.hasAttribute('download')) return;
+      var txt = ((el.innerText || '') + ' ' + (el.title || '') + ' ' + (el.getAttribute('aria-label') || '')).trim();
+      if (el.type === 'file' || el.hasAttribute('download') || (BLOCK.test(txt) && !ALLOW.test(el.innerText || ''))) {
+        if (/bg-gradient-to-r|border-rose-600|bg-indigo-600/.test(el.className || '') && /ຕັ້ງຄ່າ|ແບກອັບ|ສົ່ງອອກ|backup|settings/i.test(txt)) activeHidden = true;
+        el.dataset.roPrev = el.style.display || '';
+        el.dataset.roHidden = '1';
+        el.style.display = 'none';
+      }
+    });
+    // ຢູ່ໜ້າທີ່ຖືກປິດ (ຕັ້ງຄ່າ / ແບກອັບ / ສົ່ງອອກ) → ກັບໄປໜ້າແຜນທີ່
+    if (activeHidden) {
+      var nav = [].find.call(document.querySelectorAll('button'), function (b) { return !b.dataset.roHidden && /ແຜນທີ່|GIS/.test(b.innerText || '') && b.offsetParent; });
+      if (nav) nav.click();
+    }
+  }
+  function queue() { if (!queued) { queued = true; setTimeout(apply, 200); } }
+  new MutationObserver(queue).observe(document.documentElement, { childList: true, subtree: true });
+  window.addEventListener('storage', queue);
+  setInterval(function () { if (readOnly() !== ro) apply(); }, 1500);
+  document.addEventListener('DOMContentLoaded', apply);
+  queue();
+})();
+</script>
 </body>
 </html>
