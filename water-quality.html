@@ -676,12 +676,23 @@
           </div>
 
           <div class="rounded-lg border border-slate-200 p-2 space-y-1.5 bg-slate-50/60">
-            <label class="block text-[11px] font-semibold text-slate-600">🧭 ພິກັດ GPS — ໃສ່ແບບໃດກໍ່ໄດ້ (ອີກແບບຈະແປງໃຫ້ເອງ)</label>
-            <input type="text" id="gpsDms" autocomplete="off" class="w-full border p-2 rounded text-xs outline-none focus:ring-2 focus:ring-rose-500 bg-white" placeholder="ແບບອົງສາ: 17°58'13.0&quot;N 102°35'48.1&quot;E">
+            <label class="block text-[11px] font-semibold text-slate-600">🧭 ພິກັດ GPS — ໃສ່ແບບໃດກໍ່ໄດ້ 3 ແບບ (ອີກ 2 ແບບຈະແປງໃຫ້ເອງ)</label>
+            <input type="text" id="gpsDms" autocomplete="off" class="w-full border p-2 rounded text-xs outline-none focus:ring-2 focus:ring-rose-500 bg-white" placeholder="ອົງສາ: 17°58'13.0&quot;N 102°35'48.1&quot;E  ຫຼື ວາງ UTM: 48N 249341 1989096">
+            <p class="text-[10px] font-semibold text-slate-500 pt-0.5">① ທົດສະນິຍົມ (WGS84)</p>
             <div class="grid grid-cols-2 gap-2">
               <input type="text" inputmode="decimal" id="lat" required autocomplete="off" class="w-full border p-2 rounded text-xs outline-none bg-white" placeholder="Lat (ເຊັ່ນ 17.9757)" value="17.9757" title="Latitude ແບບທົດສະນິຍົມ">
               <input type="text" inputmode="decimal" id="lng" required autocomplete="off" class="w-full border p-2 rounded text-xs outline-none bg-white" placeholder="Lng (ເຊັ່ນ 102.6331)" value="102.6331" title="Longitude ແບບທົດສະນິຍົມ">
             </div>
+            <p class="text-[10px] font-semibold text-slate-500 pt-0.5">② UTM (Zone 47N / 48N, X / Y ແມັດ)</p>
+            <div class="grid grid-cols-3 gap-2">
+              <select id="utmZone" class="w-full border p-2 rounded text-xs outline-none bg-white font-semibold" title="ລາວ: ພາກເໜືອ-ຕາເວັນຕົກ = 47N, ສ່ວນໃຫຍ່ = 48N">
+                <option value="48">ໂຊນ 48N</option>
+                <option value="47">ໂຊນ 47N</option>
+              </select>
+              <input type="text" inputmode="numeric" id="utmX" autocomplete="off" class="w-full border p-2 rounded text-xs outline-none bg-white font-mono" placeholder="X (Easting) 6 ຕົວເລກ" title="ຄ່າແກນ X (Easting) ແມັດ">
+              <input type="text" inputmode="numeric" id="utmY" autocomplete="off" class="w-full border p-2 rounded text-xs outline-none bg-white font-mono" placeholder="Y (Northing) 7 ຕົວເລກ" title="ຄ່າແກນ Y (Northing) ແມັດ">
+            </div>
+            <p id="coordSummary" class="text-[10.5px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1 hidden"></p>
           </div>
 
           <!-- 🌊 ຫ້ອງ QWI (Water Quality Index) ພ້ອມການແປຄ່າ -->
@@ -4719,10 +4730,81 @@
     }
 
     // ຫາຄູ່ພິກັດໃນຂໍ້ຄວາມ: "17°58'13.0"N 102°35'48.1"E" ຫຼື "17.9703, 102.5967" → { lat, lng }
+    /* ================================================================
+       🌐 ພິກັດ UTM (WGS84, Zone 47N / 48N ຂອງລາວ) ↔ Lat/Lng
+       ================================================================ */
+    const UTM_A = 6378137, UTM_F = 1 / 298.257223563, UTM_K0 = 0.9996;
+    const UTM_E2 = UTM_F * (2 - UTM_F), UTM_EP2 = UTM_E2 / (1 - UTM_E2);
+    function utmToLatLng(zone, E, N, southern = false) {
+      const x = Number(E) - 500000, y = southern ? Number(N) - 10000000 : Number(N);
+      const M = y / UTM_K0;
+      const mu = M / (UTM_A * (1 - UTM_E2 / 4 - 3 * UTM_E2 ** 2 / 64 - 5 * UTM_E2 ** 3 / 256));
+      const e1 = (1 - Math.sqrt(1 - UTM_E2)) / (1 + Math.sqrt(1 - UTM_E2));
+      const p1 = mu + (3 * e1 / 2 - 27 * e1 ** 3 / 32) * Math.sin(2 * mu) + (21 * e1 ** 2 / 16 - 55 * e1 ** 4 / 32) * Math.sin(4 * mu)
+        + (151 * e1 ** 3 / 96) * Math.sin(6 * mu) + (1097 * e1 ** 4 / 512) * Math.sin(8 * mu);
+      const s = Math.sin(p1), c = Math.cos(p1), t = Math.tan(p1);
+      const N1 = UTM_A / Math.sqrt(1 - UTM_E2 * s * s), T1 = t * t, C1 = UTM_EP2 * c * c;
+      const R1 = UTM_A * (1 - UTM_E2) / Math.pow(1 - UTM_E2 * s * s, 1.5), D = x / (N1 * UTM_K0);
+      const lat = p1 - (N1 * t / R1) * (D * D / 2 - (5 + 3 * T1 + 10 * C1 - 4 * C1 * C1 - 9 * UTM_EP2) * D ** 4 / 24
+        + (61 + 90 * T1 + 298 * C1 + 45 * T1 * T1 - 252 * UTM_EP2 - 3 * C1 * C1) * D ** 6 / 720);
+      const lon = (D - (1 + 2 * T1 + C1) * D ** 3 / 6 + (5 - 2 * C1 + 28 * T1 - 3 * C1 * C1 + 8 * UTM_EP2 + 24 * T1 * T1) * D ** 5 / 120) / c;
+      return { lat: Math.round(lat * 180 / Math.PI * 1e6) / 1e6, lng: Math.round(((Number(zone) - 1) * 6 - 177 + lon * 180 / Math.PI) * 1e6) / 1e6 };
+    }
+    function latLngToUtm(lat, lng, forceZone) {
+      const zone = forceZone || Math.floor((Number(lng) + 180) / 6) + 1;
+      const p = Number(lat) * Math.PI / 180, l0 = ((zone - 1) * 6 - 177) * Math.PI / 180, l = Number(lng) * Math.PI / 180;
+      const s = Math.sin(p), c = Math.cos(p), t = Math.tan(p);
+      const N = UTM_A / Math.sqrt(1 - UTM_E2 * s * s), T = t * t, C = UTM_EP2 * c * c, A = c * (l - l0);
+      const M = UTM_A * ((1 - UTM_E2 / 4 - 3 * UTM_E2 ** 2 / 64 - 5 * UTM_E2 ** 3 / 256) * p - (3 * UTM_E2 / 8 + 3 * UTM_E2 ** 2 / 32 + 45 * UTM_E2 ** 3 / 1024) * Math.sin(2 * p)
+        + (15 * UTM_E2 ** 2 / 256 + 45 * UTM_E2 ** 3 / 1024) * Math.sin(4 * p) - (35 * UTM_E2 ** 3 / 3072) * Math.sin(6 * p));
+      const E = UTM_K0 * N * (A + (1 - T + C) * A ** 3 / 6 + (5 - 18 * T + T * T + 72 * C - 58 * UTM_EP2) * A ** 5 / 120) + 500000;
+      let Nn = UTM_K0 * (M + N * t * (A * A / 2 + (5 - T + 9 * C + 4 * C * C) * A ** 4 / 24 + (61 - 58 * T + T * T + 600 * C - 330 * UTM_EP2) * A ** 6 / 720));
+      if (lat < 0) Nn += 10000000;
+      return { zone, hemi: lat < 0 ? 'S' : 'N', E: Math.round(E), N: Math.round(Nn) };
+    }
+    const inLaos = p => p && p.lat >= 13.5 && p.lat <= 23 && p.lng >= 99.5 && p.lng <= 108.5;
+    // ບໍ່ຮູ້ Zone → ລອງ 48 ແລະ 47 ເລືອກອັນທີ່ຕົກໃນລາວ (ເລີ່ມຕົ້ນ 48)
+    function utmGuess(E, N, zone) {
+      const z = parseInt(zone, 10);
+      if (z >= 1 && z <= 60) return { ...utmToLatLng(z, E, N), zone: z };
+      const a = { ...utmToLatLng(48, E, N), zone: 48 }, b = { ...utmToLatLng(47, E, N), zone: 47 };
+      return inLaos(a) || !inLaos(b) ? a : b;
+    }
+    const isUtmPair = (e, n) => e >= 100000 && e <= 1300000 && n >= 1000000 && n <= 9999999;
+    // ອ່ານຂໍ້ຄວາມ UTM: "48N 249341 1989096", "48Q 249341 1989096", "Zone 48 E 249341 N 1989096", "X: 249341, Y: 1989096", "249341, 1989096"
+    function parseUTMText(txt) {
+      const t = String(txt ?? '').trim();
+      if (!t) return null;
+      let zone = null;
+      const zm = t.match(/(?:zone|ໂຊນ|utm)\s*[:=]?\s*(\d{1,2})\s*[A-Za-z]?\b/i) || t.match(/^\s*(\d{1,2})\s*[C-HJ-NP-Xc-hj-np-x]?\s+(?=\d{5})/);
+      if (zm) zone = parseInt(zm[1], 10);
+      const rest = zm ? t.replace(zm[0], ' ') : t;
+      let E = null, N = null;
+      const ex = rest.match(/(?:x|e|easting|ແກນ\s*x)\s*[:=]?\s*(\d{5,7}(?:\.\d+)?)/i), ny = rest.match(/(?:y|n|northing|ແກນ\s*y)\s*[:=]?\s*(\d{6,8}(?:\.\d+)?)/i);
+      if (ex && ny) { E = Number(ex[1]); N = Number(ny[1]); }
+      else {
+        const nums = (rest.match(/\d+(?:\.\d+)?/g) || []).map(Number).filter(v => v >= 10000);
+        if (nums.length < 2) return null;
+        [E, N] = nums;
+        if (!isUtmPair(E, N) && isUtmPair(N, E)) [E, N] = [N, E];
+      }
+      if (!isUtmPair(E, N)) return null;
+      const r = utmGuess(E, N, zone);
+      if (!isFinite(r.lat) || Math.abs(r.lat) > 90 || Math.abs(r.lng) > 180) return null;
+      return { lat: r.lat, lng: r.lng, zone: r.zone, E, N };
+    }
+    const looksLikeUTMText = v => typeof v === 'string' && (/utm|zone|ໂຊນ/i.test(v) || /^\s*(4[6-9])\s*[A-Za-z]?\s+\d{5,7}/.test(v) || /\bx\s*[:=]\s*\d{5,7}[\s\S]*\by\s*[:=]\s*\d{6,8}/i.test(v)) && !!parseUTMText(v);
+    const utmText = (lat, lng) => { if (lat === null || lat === undefined || lng === null || lng === undefined || isNaN(lat) || isNaN(lng)) return ''; const u = latLngToUtm(lat, lng); return `${u.zone}${u.hemi} ${u.E} E, ${u.N} N`; };
+
     function parseCoordPair(txt) {
       if (txt === null || txt === undefined) return null;
       const t = String(txt).trim().replace(/[′’‘`´]/g, "'").replace(/[″”“]/g, '"');
       if (!t) return null;
+      // ພິກັດ UTM (Zone 47N/48N, X/Y ແມັດ)
+      if (!/[°º˚]/.test(t)) {
+        const big = (t.match(/\d+(?:\.\d+)?/g) || []).map(Number).filter(v => v >= 10000);
+        if (big.length >= 2 || /utm|zone|ໂຊນ/i.test(t)) { const u = parseUTMText(t); if (u) return { lat: u.lat, lng: u.lng }; }
+      }
       let a, b;
       // ມີ N/S ແລະ E/W → ແຍກຕາມຕົວອັກສອນທິດ
       const dms = t.match(/([-\d.,\s°º˚'"d]+?\s*[NS])[\s,;/]*([-\d.,\s°º˚'"d]+?\s*[EW])/i) || t.match(/([NS]\s*[-\d.,\s°º˚'"]+?)[\s,;/]+([EW]\s*[-\d.,\s°º˚'"]+)/i);
@@ -4748,7 +4830,8 @@
       const pr = parseCoordPair(v);
       return { ...st, lat: pr.lat, lng: pr.lng, _derivedCoord: true };
     }
-    const looksLikeCoordText = v => typeof v === 'string' && /\d+\s*[°º˚]\s*\d|\d+\s*[°º˚].*[NSEW]|^\s*-?\d{1,2}\.\d{3,}\s*[,;\s]\s*-?\d{2,3}\.\d{3,}\s*$/i.test(v);
+    const looksLikeCoordText = v => typeof v === 'string' && (looksLikeUTMText(v) || looksLikeCoordText0(v));
+    const looksLikeCoordText0 = v => typeof v === 'string' && /\d+\s*[°º˚]\s*\d|\d+\s*[°º˚].*[NSEW]|^\s*-?\d{1,2}\.\d{3,}\s*[,;\s]\s*-?\d{2,3}\.\d{3,}\s*$/i.test(v);
 
     // ເຄື່ອງມື: ສະຖານີທີ່ບໍ່ມີ Lat/Lng ແຕ່ມີພິກັດອົງສາຢູ່ໃນຖັນໃດໜຶ່ງ (ເຊັ່ນ "location") → ແປງ ແລະ ບັນທຶກ
     async function convertDegreeCoords() {
@@ -4813,7 +4896,7 @@
         const pr = parseCoordPair(dmsEl.value);
         dmsEl.classList.toggle('ring-2', !!dmsEl.value.trim() && !pr);
         dmsEl.classList.toggle('ring-rose-300', !!dmsEl.value.trim() && !pr);
-        if (pr) { latEl.value = pr.lat; lngEl.value = pr.lng; }
+        if (pr) { latEl.value = pr.lat; lngEl.value = pr.lng; latEl.dispatchEvent(new Event('change')); }
       };
       const fromDec = () => {
         const la = parseCoordPart(latEl.value), lo = parseCoordPart(lngEl.value);
@@ -4823,6 +4906,49 @@
       [latEl, lngEl].forEach(el => el.addEventListener('input', fromDec));
       [latEl, lngEl].forEach(el => el.addEventListener('change', fromDec));
       if (!dmsEl.value) fromDec();
+    }
+
+    // ເຊື່ອມຊ່ອງ UTM (Zone / X / Y) ↔ Lat/Lng ↔ ອົງສາ
+    function bindUtmFields(zoneEl, xEl, yEl, latEl, lngEl, sumEl) {
+      if (!zoneEl || !xEl || !yEl || !latEl || !lngEl || xEl.dataset.bound) return;
+      xEl.dataset.bound = '1';
+      const summary = () => {
+        if (!sumEl) return;
+        const la = parseCoordPart(latEl.value), lo = parseCoordPart(lngEl.value);
+        const ok = !isNaN(la) && !isNaN(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180;
+        sumEl.classList.toggle('hidden', !ok);
+        if (ok) sumEl.textContent = `✓ WGS84: Lat ${la.toFixed(6)}°, Long ${lo.toFixed(6)}° | UTM: ${utmText(la, lo)}`;
+      };
+      const fromUtm = () => {
+        const E = parseFloat(String(xEl.value).replace(/[,\s]/g, '')), N = parseFloat(String(yEl.value).replace(/[,\s]/g, ''));
+        const bad = (xEl.value || yEl.value) && !isUtmPair(E, N);
+        [xEl, yEl].forEach(el => el.classList.toggle('border-rose-400', !!bad));
+        if (!isUtmPair(E, N)) return;
+        const r = utmToLatLng(Number(zoneEl.value), E, N);
+        latEl.value = r.lat; lngEl.value = r.lng;
+        latEl.dispatchEvent(new Event('change'));
+        summary();
+      };
+      const fromDec = () => {
+        const la = parseCoordPart(latEl.value), lo = parseCoordPart(lngEl.value);
+        if (!isNaN(la) && !isNaN(lo) && Math.abs(la) <= 90 && Math.abs(lo) <= 180 && ![xEl, yEl, zoneEl].includes(document.activeElement)) {
+          const u = latLngToUtm(la, lo);
+          if (u.zone === 47 || u.zone === 48) zoneEl.value = String(u.zone);
+          const uz = latLngToUtm(la, lo, Number(zoneEl.value));
+          xEl.value = uz.E; yEl.value = uz.N;
+          [xEl, yEl].forEach(el => el.classList.remove('border-rose-400'));
+        }
+        summary();
+      };
+      // ວາງຂໍ້ຄວາມ UTM ທັງໝົດໃສ່ຊ່ອງ X → ແຍກໃຫ້ເອງ
+      xEl.addEventListener('paste', () => setTimeout(() => {
+        const u = parseUTMText(xEl.value);
+        if (u && /\s|,/.test(xEl.value.trim())) { zoneEl.value = String(u.zone === 47 ? 47 : 48); xEl.value = Math.round(u.E); yEl.value = Math.round(u.N); fromUtm(); }
+      }, 0));
+      [xEl, yEl].forEach(el => el.addEventListener('input', fromUtm));
+      zoneEl.addEventListener('change', fromUtm);
+      [latEl, lngEl].forEach(el => { el.addEventListener('input', fromDec); el.addEventListener('change', fromDec); });
+      fromDec();
     }
 
     // ຊ່ອງ Lat/Lng: ວາງພິກັດອົງສາ (ຫຼື ຄູ່ Lat, Lng) → ແປງ ແລະ ແຍກໃສ່ 2 ຊ່ອງໃຫ້ເອງ
@@ -4861,6 +4987,9 @@
       province: ['ແຂວງ/ເມືອງ', 'ແຂວງ', 'province'],
       lat:      ['lat', 'latitude', 'ເສັ້ນຂະໜານ', 'y'],
       lng:      ['lng', 'lon', 'long', 'longitude', 'ເສັ້ນແວງ', 'x'],
+      utmZone:  ['zone', 'utm zone', 'utmzone', 'ໂຊນ', 'ໂຊນ utm', 'utm (zone)'],
+      utmX:     ['easting', 'utm x', 'utmx', 'utm_x', 'x (easting)', 'x(easting)', 'ຄ່າແກນ x', 'ແກນ x', 'x utm', 'east'],
+      utmY:     ['northing', 'utm y', 'utmy', 'utm_y', 'y (northing)', 'y(northing)', 'ຄ່າແກນ y', 'ແກນ y', 'y utm', 'north'],
       qwi:      ['qwi', 'wqi', 'ດັດຊະນີຄຸນນະພາບນໍ້າ', 'ດັດຊະນີຄຸນນະພາບນ້ຳ', 'ດັດຊະນີ', 'water quality index', 'quality water index', 'qwi score', 'wqi score']
     };
 
@@ -4905,6 +5034,10 @@
     function matchField(header) {
       const h = normHeader(header), c = compactHeader(header);
       if (!h) return null;
+      // UTM: Zone / X (Easting) / Y (Northing) — ກວດກ່ອນຖັນ "ພິກັດ" ທົ່ວໄປ
+      if (/^(utm\s*)?zone$|^ໂຊນ|utm\s*zone|zone\s*utm/i.test(h)) return 'utmZone';
+      if (/easting|utm\s*[_-]?\s*x\b|\bx\s*[_-]?\s*utm|^x\s*\(\s*e|ແກນ\s*x/i.test(h)) return 'utmX';
+      if (/northing|utm\s*[_-]?\s*y\b|\by\s*[_-]?\s*utm|^y\s*\(\s*n|ແກນ\s*y/i.test(h)) return 'utmY';
       if (isCoordHeader(header) && !/^(lat|latitude|lng|lon|long|longitude)$/i.test(c)) return 'coord';
       if (/ວ\s*\.?\s*ດ\s*\.?\s*ປ|ວັນທີ|ວັນ\s*\/\s*ເດືອນ|sampling\s*date|date\s*of/i.test(String(header))) return 'date';
       for (const [field, aliases] of Object.entries(EXCEL_FIELDS)) {
@@ -5040,7 +5173,7 @@
         const grpNow = get('group') || cur.lastGroup || '';
         if (coordVals.length) { cur.lastCoordVals = coordVals; cur.lastCoordGroup = grpNow; }
         else if (cur.lastCoordVals && cur.lastCoordGroup === grpNow && (m.group !== undefined)) coordVals = cur.lastCoordVals;
-        const coordText = coordVals.find(v => parseCoordPair(v)) || coordVals[0] || '';
+        let coordText = coordVals.find(v => parseCoordPair(v)) || coordVals[0] || '';
         let code = get('code'), name = get('name');
         if (!code && !name && !village && !river && !district && !coordText) return; // ແຖວໝາຍເຫດ
         // ຊ່ອງ ວັນທີ / ຊື່ໂຄງການ ທີ່ປ່ອຍຫວ່າງ (ຂຽນໄວ້ແຕ່ແຖວທຳອິດຂອງກຸ່ມ) → ໃຊ້ຄ່າຂອງແຖວກ່ອນໜ້າ
@@ -5078,6 +5211,17 @@
         if (isNaN(lat) || isNaN(lng)) {
           const cell = row.find(c => looksLikeCoordText(String(c ?? '')) && parseCoordPair(c));
           if (cell) { const pr = parseCoordPair(cell); lat = pr.lat; lng = pr.lng; }
+        }
+        // ພິກັດ UTM: ຖັນ X/Y (Easting/Northing) + Zone (ຖ້າບໍ່ມີ Zone → ລອງ 48N/47N ເລືອກອັນທີ່ຢູ່ໃນລາວ)
+        const zoneRaw = m.utmZone !== undefined ? cellText(row[m.utmZone]) : '';
+        let utmE = m.utmX !== undefined ? parseFloat(String(row[m.utmX] ?? '').replace(/,/g, '')) : NaN;
+        let utmN = m.utmY !== undefined ? parseFloat(String(row[m.utmY] ?? '').replace(/,/g, '')) : NaN;
+        // ຖັນ x / y ທີ່ລະບົບຈັບເປັນ Lng / Lat ແຕ່ຄ່າເປັນແມັດ → ເປັນ UTM
+        if (isNaN(utmE) && isNaN(utmN) && !isNaN(lat) && !isNaN(lng) && isUtmPair(lng, lat)) { utmE = lng; utmN = lat; }
+        if ((isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) && isUtmPair(utmE, utmN)) {
+          const u = utmGuess(utmE, utmN, (zoneRaw.match(/\d{1,2}/) || [])[0]);
+          lat = u.lat; lng = u.lng;
+          if (!coordText) coordText = `${u.zone}N ${Math.round(utmE)} ${Math.round(utmN)}`;
         }
         if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180 || (lat === 0 && lng === 0)) { lat = null; lng = null; }
 
@@ -6194,6 +6338,7 @@
                 ${st.sampleDate ? `<b>📅 ວັນທີ:</b> ${fmtSampleDate(st.sampleDate)}<br>` : ''}
                 ${st.locationNote ? `<b>📌 ທີ່ຕັ້ງ:</b> ${escAttr(st.locationNote)}<br>` : ''}
                 <b>🧭 ພິກັດ:</b> <span style="font-family:monospace">${escAttr(gpsTextOf(st))}</span><br>
+                <b>🌐 UTM:</b> <span style="font-family:monospace">${escAttr(utmText(st.lat, st.lng))}</span><br>
                 ${st.info && Object.keys(st.info).length ? `<div style="margin-top:4px;padding-top:4px;border-top:1px dashed #cbd5e1;font-size:11px;color:#475569;">${Object.entries(st.info).map(([k, v]) => `<b>📝 ${escAttr(k)}:</b> ${escAttr(v)}`).join('<br>')}</div>` : ''}
                 <b>ແຂວງ:</b> ${st.province}<br>
                 ${(() => {
@@ -6322,9 +6467,10 @@
 
     document.addEventListener('focusin', e => {
       const id = e.target && e.target.id || '';
-      if (id === 'lat' || id === 'lng' || id === 'gpsDms') {
+      if (id === 'lat' || id === 'lng' || id === 'gpsDms' || id === 'utmX' || id === 'utmY' || id === 'utmZone') {
         smartCoordInput(document.getElementById('lat'), document.getElementById('lng'));
         bindGpsFields(document.getElementById('gpsDms'), document.getElementById('lat'), document.getElementById('lng'));
+        bindUtmFields(document.getElementById('utmZone'), document.getElementById('utmX'), document.getElementById('utmY'), document.getElementById('lat'), document.getElementById('lng'), document.getElementById('coordSummary'));
       }
       const m = id.match(/^(edit_.+_)(lat|lng)$/);
       if (m) smartCoordInput(document.getElementById(m[1] + 'lat'), document.getElementById(m[1] + 'lng'));
@@ -6853,14 +6999,14 @@
       if (!item) return;
       const stations = item.stations || [item];
       const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-      const head = ['No.', 'ໂຄງການ/ກຸ່ມ', 'ວັນທີເກັບຕົວຢ່າງ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'ພິກັດ (ອົງສາ)', 'Lat', 'Lng', ...valueInds().map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'QWI', 'ການແປຄ່າ QWI', 'ສະຖານະ', 'ຂໍ້ມູນເພີ່ມເຕີມ'];
+      const head = ['No.', 'ໂຄງການ/ກຸ່ມ', 'ວັນທີເກັບຕົວຢ່າງ', 'ລະຫັດ', 'ຊື່ສະຖານີ', 'ແຂວງ/ເມືອງ', 'ພິກັດ (ອົງສາ)', 'UTM', 'Lat', 'Lng', ...valueInds().map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`), 'QWI', 'ການແປຄ່າ QWI', 'ສະຖານະ', 'ຂໍ້ມູນເພີ່ມເຕີມ'];
       let csv = '\uFEFF' + [q('ບໍລິສັດ: ' + (item.companyName || item.name || '')), q('ວັນທີ: ' + (item.date || '')), q('ຜູ້ບັນທຶກ: ' + (item.recordedBy || ''))].join(',') + '\n';
       if (item.projectLocation) csv += q('ທີ່ຕັ້ງ: ' + item.projectLocation) + '\n';
       csv += '\n' + head.map(q).join(',') + '\n';
       stations.forEach((st, k) => {
         const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-') ? st.qwi : calculateAutoQWI(st.customs || {});
         const qi = interpretQWI(qRaw);
-        const row = [k + 1, st.section || '', st.sampleDate || '', st.code, st.name, st.province, gpsTextOf(st), st.lat ?? '', st.lng ?? '',
+        const row = [k + 1, st.section || '', st.sampleDate || '', st.code, st.name, st.province, gpsTextOf(st), utmText(st.lat, st.lng), st.lat ?? '', st.lng ?? '',
           ...valueInds().map(i => st.customs ? (st.customs[i.key] ?? '-') : '-'),
           qi ? (qi.score !== '-' ? qi.score : '') : (st.qwi ?? ''),
           qi ? `${qi.label} (${qi.text})` : '',
@@ -9856,7 +10002,7 @@
       }, 'ພິມ / ອອກ PDF ປະຫວັດການດຳເນີນງານ');
     }
 
-    window.addEventListener('load', () => setTimeout(() => bindGpsFields(document.getElementById('gpsDms'), document.getElementById('lat'), document.getElementById('lng')), 300));
+    window.addEventListener('load', () => setTimeout(() => { bindGpsFields(document.getElementById('gpsDms'), document.getElementById('lat'), document.getElementById('lng')); bindUtmFields(document.getElementById('utmZone'), document.getElementById('utmX'), document.getElementById('utmY'), document.getElementById('lat'), document.getElementById('lng'), document.getElementById('coordSummary')); }, 300));
     window.onload = () => {
       initMap();
       updateRBACUI();
