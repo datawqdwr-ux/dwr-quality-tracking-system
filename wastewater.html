@@ -2551,7 +2551,7 @@ var WaterMap = ({
   pickingMode,
   onOpenDirectMessage
 }) => {
-  let mapContainerRef = useRef2(null), mapRef = useRef2(null), markersLayerRef = useRef2(null), linesLayerRef = useRef2(null), activeTileLayerRef = useRef2(null), [currentLayer, setCurrentLayer] = useState2("streets"), [isFullscreen, setIsFullscreen] = useState2(!1), [filterProvince, setFilterProvince] = useState2("all"), [filterStatus, setFilterStatus] = useState2("all"), [filterQuality, setFilterQuality] = useState2("all"), [showConnections, setShowConnections] = useState2(!0), [showProjects, setShowProjects] = useState2(!0), [showOutfalls, setShowOutfalls] = useState2(!0), [cursorCoords, setCursorCoords] = useState2(null), [previewProject, setPreviewProject] = useState2(null), [copiedText, setCopiedText] = useState2(null);
+  let mapContainerRef = useRef2(null), mapRef = useRef2(null), markersLayerRef = useRef2(null), linesLayerRef = useRef2(null), activeTileLayerRef = useRef2(null), [currentLayer, setCurrentLayer] = useState2("streets"), [isFullscreen, setIsFullscreen] = useState2(!1), [filterProvince, setFilterProvince] = useState2("all"), [filterStatus, setFilterStatus] = useState2("all"), [filterQuality, setFilterQuality] = useState2("all"), [showConnections, setShowConnections] = useState2(!0), [showProjects, setShowProjects] = useState2(!0), [showOutfalls, setShowOutfalls] = useState2(!0), [cursorCoords, setCursorCoords] = useState2(null), [previewProject, setPreviewProject] = useState2(null), [copiedText, setCopiedText] = useState2(null), [focusProjectId, setFocusProjectId] = useState2(""), [focusOnly, setFocusOnly] = useState2(!1), [searchCoordText, setSearchCoordText] = useState2(""), gotoMarkerRef = useRef2(null);
   useEffect2(() => {
     if (!mapContainerRef.current || mapRef.current) return;
     let map = L.map(mapContainerRef.current, {
@@ -2612,8 +2612,8 @@ var WaterMap = ({
     if (!mapRef.current || !markersLayerRef.current || !linesLayerRef.current) return;
     markersLayerRef.current.clearLayers(), linesLayerRef.current.clearLayers();
     let filtered = projects.filter((p) => {
-      let matchProv = filterProvince === "all" || p.projectLocation.province === filterProvince, matchStatus = filterStatus === "all" || p.status === filterStatus, matchQuality = filterQuality === "all" || p.waterQuality.status === filterQuality;
-      return matchProv && matchStatus && matchQuality;
+      let matchProv = filterProvince === "all" || p.projectLocation.province === filterProvince, matchStatus = filterStatus === "all" || p.status === filterStatus, matchQuality = filterQuality === "all" || p.waterQuality.status === filterQuality, matchFocus = !focusOnly || !focusProjectId || p.id === focusProjectId;
+      return matchProv && matchStatus && matchQuality && matchFocus;
     }), createProjectIcon = (isSelected, isExpired) => {
       let size = isSelected ? 38 : 30;
       return L.divIcon({
@@ -2741,7 +2741,93 @@ var WaterMap = ({
       let sel = projects.find((p) => p.id === selectedProjectId);
       sel && (setPreviewProject(sel), mapRef.current.setView([sel.projectLocation.latitude, sel.projectLocation.longitude], 12, { animate: !0 }));
     }
-  }, [projects, selectedProjectId, previewProject, filterProvince, filterStatus, filterQuality, showConnections, showProjects, showOutfalls]);
+  }, [projects, selectedProjectId, previewProject, filterProvince, filterStatus, filterQuality, showConnections, showProjects, showOutfalls, focusOnly, focusProjectId]);
+  let flyToPoint = (p, kind) => {
+    if (!p || !mapRef.current) return;
+    let pOk = validLL(p.projectLocation?.latitude, p.projectLocation?.longitude),
+        dOk = validLL(p.dischargeLocation?.latitude, p.dischargeLocation?.longitude);
+    setPreviewProject(p);
+    if (!pOk && !dOk) { alert("ໂຄງການນີ້ ພິກັດບໍ່ຖືກຕ້ອງ"); return; }
+    if (kind === "both" && pOk && dOk) {
+      mapRef.current.flyToBounds([[p.projectLocation.latitude, p.projectLocation.longitude], [p.dischargeLocation.latitude, p.dischargeLocation.longitude]], { padding: [80, 80], maxZoom: 15, duration: 0.8 });
+      return;
+    }
+    let target = kind === "discharge" ? (dOk ? p.dischargeLocation : p.projectLocation) : (pOk ? p.projectLocation : p.dischargeLocation);
+    if (target && validLL(target.latitude, target.longitude)) mapRef.current.flyTo([target.latitude, target.longitude], 15, { duration: 0.8 });
+  };
+  let resetMapView = () => {
+    setFocusProjectId(""), setFocusOnly(!1), setPreviewProject(null);
+    if (gotoMarkerRef.current && mapRef.current) {
+      mapRef.current.removeLayer(gotoMarkerRef.current);
+      gotoMarkerRef.current = null;
+    }
+    mapRef.current && mapRef.current.flyTo([18.2, 103], 7, { duration: 0.8 });
+  };
+  let handleGotoCoord = () => {
+    let txt = (searchCoordText || "").trim();
+    if (!txt) return;
+    let pr = parseGoogleMapsOrCoord(txt);
+    if (!pr || !validLL(pr.lat, pr.lng)) {
+      alert("ອ່ານພິກັດບໍ່ໄດ້ — ຕົວຢ່າງ: 17°58'13.0\"N 102°35'48.1\"E ຫຼື 17.9703, 102.5967 ຫຼື 48N 249341 1989096 ຫຼື ລິ້ງ Google Maps");
+      return;
+    }
+    let map = mapRef.current;
+    if (!map) return;
+    if (gotoMarkerRef.current) {
+      map.removeLayer(gotoMarkerRef.current);
+      gotoMarkerRef.current = null;
+    }
+    let dmsStr = toDMS(pr.lat, pr.lng), utmStr = formatUtm(pr.lat, pr.lng);
+    let searchIcon = L.divIcon({
+      className: "custom-search-pin",
+      html: `
+        <div style="
+          position: relative;
+          width: 38px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transform: translate(-50%, -50%);
+        ">
+          <div style="
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+            border: 3px solid #ffffff;
+            box-shadow: 0 0 16px rgba(14, 165, 233, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+          ">
+            🧭
+          </div>
+        </div>
+      `,
+      iconSize: [38, 38],
+      iconAnchor: [19, 19]
+    });
+    let marker = L.marker([pr.lat, pr.lng], { icon: searchIcon, zIndexOffset: 1000 }).addTo(map)
+      .bindPopup(`
+        <div style="font-family: inherit; font-size: 12px; line-height: 1.5; min-width: 200px;">
+          <div style="display:flex; align-items:center; gap:6px; font-weight:bold; color:#0369a1; margin-bottom:4px;">
+            <span>🧭</span><span>ພິກັດທີ່ຄົ້ນຫາ (Search Result)</span>
+          </div>
+          <div style="font-family: monospace; font-size: 11px; background:#f8fafc; padding:6px; border-radius:6px; border:1px solid #e2e8f0; color:#334155;">
+            <div><b>Lat, Long:</b> ${pr.lat.toFixed(6)}, ${pr.lng.toFixed(6)}</div>
+            ${dmsStr ? `<div><b>DMS:</b> ${dmsStr}</div>` : ""}
+            ${utmStr ? `<div><b>UTM:</b> ${utmStr}</div>` : ""}
+          </div>
+        </div>
+      `);
+    gotoMarkerRef.current = marker;
+    map.flyTo([pr.lat, pr.lng], 15, { duration: 0.8 });
+    setTimeout(() => { if (gotoMarkerRef.current) gotoMarkerRef.current.openPopup(); }, 850);
+  };
   let copyGps = (text) => {
     navigator.clipboard.writeText(text), setCopiedText(text), setTimeout(() => setCopiedText(null), 2e3);
   };
@@ -2826,7 +2912,59 @@ var WaterMap = ({
               /* @__PURE__ */ jsx2("option", { value: "exceeded", children: "🔴 ເກີນມາດຕະຖານ" })
             ]
           }
-        )
+        ),
+        /* @__PURE__ */ jsx2("div", { className: "h-6 w-[1px] bg-slate-700 hidden sm:block" }),
+        /* ເລືອກໂຄງການ / ຈຸດ → ຊູມເຂົ້າ (ແບບດຽວກັບ ລະບົບຄຸນນະພາບນ້ຳ) */
+        /* @__PURE__ */ jsxs2(
+          "select",
+          {
+            value: focusProjectId,
+            onChange: (e) => { const id = e.target.value; setFocusProjectId(id); const p = projects.find((x) => x.id === id); if (p) flyToPoint(p, "both"); else resetMapView(); },
+            className: "text-xs bg-slate-800 border border-sky-700 text-sky-100 rounded-xl px-3 py-1.5 font-semibold outline-hidden max-w-[220px]",
+            title: "ເລືອກໂຄງການ ເພື່ອຊູມເຂົ້າ",
+            children: [
+              /* @__PURE__ */ jsxs2("option", { value: "", children: ["🏢 ເລືອກໂຄງການ... (", projects.length, ")"] }),
+              projects.slice().sort((a, b) => String(a.projectName).localeCompare(String(b.projectName))).map((p) => /* @__PURE__ */ jsx2("option", { value: p.id, disabled: !(p.projectLocation?.latitude || p.dischargeLocation?.latitude), children: `${p.projectName}${p.projectLocation?.province ? " · " + p.projectLocation.province : ""}` }, p.id))
+            ]
+          }
+        ),
+        focusProjectId && /* @__PURE__ */ jsxs2(
+          "select",
+          {
+            value: "",
+            onChange: (e) => { const p = projects.find((x) => x.id === focusProjectId); if (p && e.target.value) flyToPoint(p, e.target.value); },
+            className: "text-xs bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-3 py-1.5 font-medium outline-hidden",
+            children: [
+              /* @__PURE__ */ jsx2("option", { value: "", children: "📍 ເລືອກຈຸດ..." }),
+              /* @__PURE__ */ jsx2("option", { value: "project", children: "🟢 ທີ່ຕັ້ງໂຄງການ" }),
+              /* @__PURE__ */ jsx2("option", { value: "discharge", children: "🔴 ຈຸດປ່ອຍນໍ້າເປື້ອນ" }),
+              /* @__PURE__ */ jsx2("option", { value: "both", children: "↔️ ທັງສອງຈຸດ" })
+            ]
+          }
+        ),
+        focusProjectId && /* @__PURE__ */ jsxs2("label", { className: "flex items-center gap-1.5 text-xs text-slate-200 bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1.5 cursor-pointer", children: [
+          /* @__PURE__ */ jsx2("input", { type: "checkbox", checked: focusOnly, onChange: (e) => setFocusOnly(e.target.checked) }),
+          "ສະເພາະໂຄງການນີ້"
+        ] }),
+        /* @__PURE__ */ jsx2("button", { type: "button", onClick: resetMapView, className: "text-xs bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-2.5 py-1.5 font-semibold hover:bg-slate-700 cursor-pointer", title: "ເບິ່ງທັງໝົດ", children: "🌐 ທັງໝົດ" }),
+        /* 🧭 ຄົ້ນຫາຈຸດພິກັດ (ຄືກັບລະບົບຄຸນນະພາບນໍ້າ) */
+        /* @__PURE__ */ jsxs2("div", { className: "flex items-center gap-1 min-w-[260px] flex-1 sm:flex-initial", children: [
+          /* @__PURE__ */ jsx2("input", {
+            type: "text",
+            value: searchCoordText,
+            onChange: (e) => setSearchCoordText(e.target.value),
+            onKeyDown: (e) => { if (e.key === "Enter") { e.preventDefault(); handleGotoCoord(); } },
+            placeholder: "🧭 ໄປຫາພິກັດ: 17°58'13.0\"N 102°35'48.1\"E ຫຼື 17.9703, 102.5967",
+            className: "flex-1 bg-slate-800 border border-slate-700 text-slate-100 rounded-xl px-3 py-1.5 font-mono text-xs outline-none focus:ring-2 focus:ring-sky-400 placeholder:text-slate-500",
+            title: "ຄົ້ນຫາ ແລະ ໄປຫາຈຸດພິກັດ: DMS, Lat/Long, UTM, Google Maps URL"
+          }),
+          /* @__PURE__ */ jsx2("button", {
+            type: "button",
+            onClick: handleGotoCoord,
+            className: "px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-xl shadow-xs transition shrink-0 cursor-pointer",
+            children: "ໄປ"
+          })
+        ] })
       ] }),
       /* @__PURE__ */ jsxs2("div", { className: "flex items-center gap-2 pointer-events-auto", children: [
         pickingMode && /* @__PURE__ */ jsx2("div", { className: "bg-amber-500 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-2xl shadow-xl animate-pulse flex items-center gap-2", children: /* @__PURE__ */ jsxs2("span", { children: [

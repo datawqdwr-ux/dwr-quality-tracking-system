@@ -1181,6 +1181,15 @@ function parseCoordPair(txt) {
   const t = String(txt).trim().replace(/[′’‘`´]/g, "'").replace(/[″”“]/g, '"');
   if (!t) return null;
 
+  // 1. Google Maps URL ຫຼື geo: URI (e.g. @17.9703,102.5967 ຫຼື q=17.9703,102.5967)
+  const gUrl = t.match(/(?:@|q=|query=|ll=|loc:|place\/|destination=)(-?\d{1,2}\.\d+)[,\s/]+(-?\d{2,3}\.\d+)/i) || t.match(/geo:(-?\d{1,2}\.\d+),(-?\d{2,3}\.\d+)/i);
+  if (gUrl) {
+    let lat = Number(gUrl[1]), lng = Number(gUrl[2]);
+    if (Math.abs(lat) > 90 && Math.abs(lng) <= 90) [lat, lng] = [lng, lat];
+    if (lat >= 95 && lat <= 110 && lng >= 13 && lng <= 24) [lat, lng] = [lng, lat];
+    if (validLL(lat, lng)) return { lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 };
+  }
+
   // ຮອງຮັບພິກັດ UTM: e.g. "48N 249341 1989096" ຫຼື "Zone 48, X=249341, Y=1989096"
   const utmPr = parseUtmString(t);
   if (utmPr) {
@@ -3363,6 +3372,8 @@ var WaterMap = ({
   const [cursorCoords, setCursorCoords] = useState2(null);
   const [previewProject, setPreviewProject] = useState2(null);
   const [copiedText, setCopiedText] = useState2(null);
+  const [searchCoordText, setSearchCoordText] = useState2("");
+  const gotoMarkerRef = useRef2(null);
   useEffect2(() => {
     if (!mapContainerRef.current) return;
     if (mapRef.current) return;
@@ -3665,7 +3676,77 @@ var WaterMap = ({
   };
   const resetMapView = () => {
     setFocusProjectId(""); setFocusOnly(false); setPreviewProject(null);
+    if (gotoMarkerRef.current && mapRef.current) {
+      mapRef.current.removeLayer(gotoMarkerRef.current);
+      gotoMarkerRef.current = null;
+    }
     mapRef.current && mapRef.current.flyTo([18.2, 103], 7, { duration: 0.8 });
+  };
+  const handleGotoCoord = () => {
+    const txt = (searchCoordText || "").trim();
+    if (!txt) return;
+    const pr = parseCoordPair(txt);
+    if (!pr || !validLL(pr.lat, pr.lng)) {
+      alert("ອ່ານພິກັດບໍ່ໄດ້ — ຕົວຢ່າງ: 17°58'13.0\"N 102°35'48.1\"E ຫຼື 17.9703, 102.5967 ຫຼື 48N 249341 1989096 ຫຼື ລິ້ງ Google Maps");
+      return;
+    }
+    const map = mapRef.current;
+    if (!map) return;
+    if (gotoMarkerRef.current) {
+      map.removeLayer(gotoMarkerRef.current);
+      gotoMarkerRef.current = null;
+    }
+    const dmsStr = toDMS ? toDMS(pr.lat, pr.lng) : "";
+    const utmStr = formatUtm ? formatUtm(pr.lat, pr.lng) : "";
+    const searchIcon = L.divIcon({
+      className: "custom-search-pin",
+      html: `
+        <div style="
+          position: relative;
+          width: 38px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transform: translate(-50%, -50%);
+        ">
+          <div style="
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
+            border: 3px solid #ffffff;
+            box-shadow: 0 0 16px rgba(244, 63, 94, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+          ">
+            🧭
+          </div>
+        </div>
+      `,
+      iconSize: [38, 38],
+      iconAnchor: [19, 19]
+    });
+    const marker = L.marker([pr.lat, pr.lng], { icon: searchIcon, zIndexOffset: 1000 }).addTo(map)
+      .bindPopup(`
+        <div style="font-family: inherit; font-size: 12px; line-height: 1.5; min-width: 200px;">
+          <div style="display:flex; align-items:center; gap:6px; font-weight:bold; color:#be123c; margin-bottom:4px;">
+            <span>🧭</span><span>ພິກັດທີ່ຄົ້ນຫາ (Search Result)</span>
+          </div>
+          <div style="font-family: monospace; font-size: 11px; background:#f8fafc; padding:6px; border-radius:6px; border:1px solid #e2e8f0; color:#334155;">
+            <div><b>Lat, Long:</b> ${pr.lat.toFixed(6)}, ${pr.lng.toFixed(6)}</div>
+            ${dmsStr ? `<div><b>DMS:</b> ${dmsStr}</div>` : ""}
+            ${utmStr ? `<div><b>UTM:</b> ${utmStr}</div>` : ""}
+          </div>
+        </div>
+      `);
+    gotoMarkerRef.current = marker;
+    map.flyTo([pr.lat, pr.lng], 15, { duration: 0.8 });
+    setTimeout(() => { if (gotoMarkerRef.current) gotoMarkerRef.current.openPopup(); }, 850);
   };
   const copyGps = (text) => {
     navigator.clipboard.writeText(text);
@@ -3775,7 +3856,25 @@ var WaterMap = ({
           /* @__PURE__ */ jsx2("input", { type: "checkbox", checked: focusOnly, onChange: (e) => setFocusOnly(e.target.checked) }),
           "ສະເພາະໂຄງການນີ້"
         ] }),
-        /* @__PURE__ */ jsx2("button", { type: "button", onClick: resetMapView, className: "text-xs bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-2.5 py-1.5 font-semibold hover:bg-slate-700", title: "ເບິ່ງທັງໝົດ", children: "🌐 ທັງໝົດ" })
+        /* @__PURE__ */ jsx2("button", { type: "button", onClick: resetMapView, className: "text-xs bg-slate-800 border border-slate-700 text-slate-200 rounded-xl px-2.5 py-1.5 font-semibold hover:bg-slate-700 cursor-pointer", title: "ເບິ່ງທັງໝົດ", children: "🌐 ທັງໝົດ" }),
+        /* 🧭 ຄົ້ນຫາຈຸດພິກັດ (ຄືກັບລະບົບຄຸນນະພາບນໍ້າ) */
+        /* @__PURE__ */ jsxs2("div", { className: "flex items-center gap-1 min-w-[260px] flex-1 sm:flex-initial", children: [
+          /* @__PURE__ */ jsx2("input", {
+            type: "text",
+            value: searchCoordText,
+            onChange: (e) => setSearchCoordText(e.target.value),
+            onKeyDown: (e) => { if (e.key === "Enter") { e.preventDefault(); handleGotoCoord(); } },
+            placeholder: "🧭 ໄປຫາພິກັດ: 17°58'13.0\"N 102°35'48.1\"E ຫຼື 17.9703, 102.5967",
+            className: "flex-1 bg-slate-800 border border-slate-700 text-slate-100 rounded-xl px-3 py-1.5 font-mono text-xs outline-none focus:ring-2 focus:ring-rose-400 placeholder:text-slate-500",
+            title: "ຄົ້ນຫາ ແລະ ໄປຫາຈຸດພິກັດ: DMS, Lat/Long, UTM, Google Maps URL"
+          }),
+          /* @__PURE__ */ jsx2("button", {
+            type: "button",
+            onClick: handleGotoCoord,
+            className: "px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-xs transition shrink-0 cursor-pointer",
+            children: "ໄປ"
+          })
+        ] })
       ] }),
       /* @__PURE__ */ jsxs2("div", { className: "flex items-center gap-2 pointer-events-auto", children: [
         pickingMode && /* @__PURE__ */ jsx2("div", { className: "bg-amber-500 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-2xl shadow-xl animate-pulse flex items-center gap-2", children: /* @__PURE__ */ jsxs2("span", { children: [
