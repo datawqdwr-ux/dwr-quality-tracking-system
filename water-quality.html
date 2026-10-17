@@ -388,6 +388,9 @@
         <label class="flex items-center gap-1.5 border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-600 cursor-pointer hover:bg-slate-50" title="ເຊື່ອງໝຸດຂອງບໍລິສັດອື່ນ">
           <input type="checkbox" id="mapOnlyChk" onchange="setMapOnly(this.checked)" class="rounded text-rose-600 focus:ring-sky-400"> ສະເພາະບໍລິສັດນີ້
         </label>
+        <select id="mapYearSel" onchange="mapSelectYear(this.value)" class="flex-1 min-w-[150px] border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400">
+          <option value="ALL">📅 ທຸກປີ (All Years)</option>
+        </select>
         <button type="button" onclick="mapResetView()" class="border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition" title="ເບິ່ງທັງໝົດ">🌐 ທັງໝົດ</button>
         <div class="flex w-full md:w-auto md:flex-1 gap-1 min-w-[260px]">
           <input type="text" id="mapGoto" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();mapGotoCoord()}" placeholder="🧭 ໄປຫາພິກັດ: 17°58'13.0&quot;N 102°35'48.1&quot;E ຫຼື 17.9703, 102.5967" class="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-mono text-xs outline-none focus:ring-2 focus:ring-sky-400">
@@ -6015,7 +6018,9 @@
     let markerIndex = {};
     let mapCompany = '';
     let mapOnly = false;
+    let mapYear = 'ALL';
     const hasLL = st => { const d = withDerivedCoord(st); return !!(d && d.lat && d.lng && !isNaN(d.lat) && !isNaN(d.lng)); };
+    const stationYear = (st, rec) => { const y = rowYear(st, rec); return y ? String(y) : ''; };
 
     function renderMapSelectors() {
       const cSel = document.getElementById('mapCompanySel');
@@ -6047,6 +6052,14 @@
       if ([...sSel.options].some(o => o.value === prev)) sSel.value = prev;
       const chk = document.getElementById('mapOnlyChk');
       if (chk) { chk.checked = mapOnly; chk.disabled = !mapCompany; }
+
+      const ySel = document.getElementById('mapYearSel');
+      if (ySel) {
+        const years = [...new Set(waterData.flatMap(rec => stationsOf(rec).map(st => rowYear(st, rec)).filter(Boolean)))].sort((a, b) => b - a);
+        const yHtml = '<option value="ALL">📅 ທຸກປີ (All Years)</option>' + years.map(yy => `<option value="${yy}">📅 ປີ ${yy}</option>`).join('');
+        if (ySel.dataset.last !== yHtml) { ySel.innerHTML = yHtml; ySel.dataset.last = yHtml; }
+        ySel.value = mapYear;
+      }
     }
 
     function mapSelectCompany(key) {
@@ -6101,9 +6114,16 @@
       render();
     }
 
+    function mapSelectYear(val) {
+      mapYear = val || 'ALL';
+      map.closePopup();
+      render();
+    }
+
     function mapResetView() {
       mapCompany = '';
       mapOnly = false;
+      mapYear = 'ALL';
       map.closePopup();
       renderMapSelectors();
       render();
