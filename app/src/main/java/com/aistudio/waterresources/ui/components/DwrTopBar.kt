@@ -59,12 +59,16 @@ fun DwrTopBar(
                         .clip(RoundedCornerShape(12.dp))
                         .background(
                             Brush.linearGradient(listOf(Rose500, Indigo600))
-                        ),
+                        )
+                        .padding(2.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "🏛️",
-                        fontSize = 22.sp
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = com.aistudio.waterresources.R.drawable.ministry_logo),
+                        contentDescription = "Logo",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(10.dp))
                     )
                 }
 
