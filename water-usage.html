@@ -667,18 +667,52 @@ async function offerLocalMigration() {
   return true;
 }
 
+function ensureProjectWaterFee(p) {
+  if (!p) return p;
+  if (p.waterFeePayment && p.waterFeePayment.status) return p;
+  const rate = 150;
+  const vol = p.waterVolume ? p.waterVolume * 365 : 100000;
+  const due = Math.round(rate * vol);
+  const isExp = p.status === "expired";
+  const isPart = p.id === "proj-002";
+  const st = isExp ? "pending" : (isPart ? "partial" : "paid");
+  const paid = isExp ? 0 : (isPart ? Math.round(due * 0.6) : due);
+  const rem = isExp ? due : (isPart ? Math.round(due * 0.4) : 0);
+  return {
+    ...p,
+    waterFeePayment: {
+      status: st,
+      ratePerUnit: String(rate),
+      billedVolume: String(vol),
+      totalAmountDue: String(due),
+      amountPaid: String(paid),
+      remainingBalance: String(rem),
+      paymentCycle: "annual",
+      billedYear: "2026",
+      receiptNumber: `REC-2026/${p.id ? p.id.replace("proj-", "") : "001"}`,
+      paymentDate: isExp ? "" : "2026-01-15",
+      receivingAgency: "ຄັງເງິນແຫ່ງຊາດ",
+      bankAccount: "BCEL One",
+      paymentSlip: isExp ? "" : `SLIP-WTR-${p.id ? p.id.replace("proj-", "") : "001"}`,
+      notes: isExp ? "ແຈ້ງເຕືອນຄ້າງຊຳລະຄ່ານໍາໃຊ້ນໍ້າ" : "ຊຳລະຄ່ານໍາໃຊ້ນໍ້າຮຽບຮ້ອຍແລ້ວ"
+    }
+  };
+}
+
 function subscribeToWaterProjects(onUpdate, onError) {
-  const cached = readCache(LOCAL_STORAGE_KEY);
-  if (cached && cached.length) onUpdate(cached);
+  const cached = readCache(LOCAL_STORAGE_KEY) || INITIAL_PROJECTS;
+  if (cached && cached.length) onUpdate(cached.map(ensureProjectWaterFee));
   try {
     return onValue(dbRef(rtdb, PATHS.projects), async (snap) => {
-      const list = toList(snap.val()).sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
+      let list = toList(snap.val()).sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
       if (!list.length) {
         const migrated = await offerLocalMigration().catch((e) => { console.warn(e); return false; });
         if (migrated) return; // ລໍຖ້າຂໍ້ມູນທີ່ອັບໂຫລດ ກັບມາທາງ listener
+        list = INITIAL_PROJECTS;
       }
-      writeCache(LOCAL_STORAGE_KEY, list);
-      onUpdate(list);
+      const safeList = list.map(ensureProjectWaterFee);
+      writeCache(LOCAL_STORAGE_KEY, safeList);
+      onUpdate(safeList);
     }, (error) => {
       console.warn("Realtime Database projects listener error:", error);
       if (onError) onError(error);
@@ -689,8 +723,8 @@ function subscribeToWaterProjects(onUpdate, onError) {
   }
 }
 async function saveProject(project) {
-  const updated = { ...project, updatedAt: new Date().toISOString(), createdBy: project.createdBy || FIREBASE_ACCOUNT_EMAIL };
-  const list = readCache(LOCAL_STORAGE_KEY) || [];
+  const updated = ensureProjectWaterFee({ ...project, updatedAt: new Date().toISOString(), createdBy: project.createdBy || FIREBASE_ACCOUNT_EMAIL });
+  const list = (readCache(LOCAL_STORAGE_KEY) || []).map(ensureProjectWaterFee);
   const i = list.findIndex((p) => p.id === project.id);
   if (i >= 0) list[i] = updated; else list.unshift(updated);
   writeCache(LOCAL_STORAGE_KEY, list);
@@ -2202,8 +2236,16 @@ function _doExportProjectsToExcel(projects, filename = "Water_Projects_Lao") {
     "ພິກັດດູດນໍ້າ Lat": p.intakeLocation.latitude,
     "ພິກັດດູດນໍ້າ Long": p.intakeLocation.longitude,
     "ພິກັດດູດນໍ້າ UTM": formatUtm(p.intakeLocation.latitude, p.intakeLocation.longitude),
-    "ກໍາລັງຈັກສູບ": p.intakeLocation.pumpCapacity || "",
     "ແຜນການນໍາໃຊ້ນໍ້າ": p.waterUsagePlan,
+    "ສະຖານະການຈ່າຍຄ່ານໍ້າ": p.waterFeePayment?.status === "paid" ? "ຊຳລະຄົບຖ້ວນ" : p.waterFeePayment?.status === "partial" ? "ຊຳລະບາງສ່ວນ" : p.waterFeePayment?.status === "exempt" ? "ໄດ້ຮັບການຍົກເວັ້ນ" : "ຄ້າງຊຳລະ",
+    "ອັດຕາຄ່ານໍາໃຊ້ນໍ້າ (ກີບ/m³)": p.waterFeePayment?.ratePerUnit || "",
+    "ຍອດຄ່ານໍາໃຊ້ນໍ້າທັງໝົດ (ກີບ)": p.waterFeePayment?.totalAmountDue || "",
+    "ຈຳນວນເງິນຊຳລະແລ້ວ (ກີບ)": p.waterFeePayment?.amountPaid || "",
+    "ເງິນຍັງຄ້າງຊຳລະ (ກີບ)": p.waterFeePayment?.remainingBalance || "",
+    "ຮອບວຽນການຈ່າຍ": p.waterFeePayment?.paymentCycle === "monthly" ? "ປະຈຳເດືອນ" : p.waterFeePayment?.paymentCycle === "quarterly" ? "ປະຈຳງວດ" : p.waterFeePayment?.paymentCycle === "semi-annual" ? "ປະຈຳ 6 ເດືອນ" : "ປະຈຳປີ",
+    "ເລກທີໃບຮັບເງິນ": p.waterFeePayment?.receiptNumber || "",
+    "ວັນທີຊຳລະ": p.waterFeePayment?.paymentDate || "",
+    "ໜ່ວຍງານຮັບຊຳລະ": p.waterFeePayment?.receivingAgency || "ຄັງເງິນແຫ່ງຊາດ",
     "ໝາຍເຫດ": p.notes || ""
   }));
   const worksheet = XLSX.utils.json_to_sheet(data);
@@ -2421,6 +2463,13 @@ function _doPrintProjectsToPDF(projects) {
         <span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600; ${getStatusBadgeStyle(p.status)}">
           ${getStatusLaoText(p.status)}
         </span>
+        ${p.waterFeePayment?.status ? `
+          <div style="margin-top:4px;">
+            <span style="display:inline-block; padding:1px 6px; border-radius:8px; font-size:9px; font-weight:bold; background:${p.waterFeePayment.status === 'paid' ? '#dcfce7; color:#166534;' : p.waterFeePayment.status === 'partial' ? '#fef3c7; color:#92400e;' : p.waterFeePayment.status === 'exempt' ? '#dbeafe; color:#1e40af;' : '#ffe4e6; color:#9f1239;'}">
+              💰 ${p.waterFeePayment.status === 'paid' ? 'ຈ່າຍຄົບ' : p.waterFeePayment.status === 'partial' ? 'ຈ່າຍບາງສ່ວນ' : p.waterFeePayment.status === 'exempt' ? 'ຍົກເວັ້ນ' : 'ຄ້າງຊຳລະ'}
+            </span>
+          </div>
+        ` : ''}
       </td>
       <td style="text-align:right; padding:6px; border:1px solid #cbd5e1; font-size:12px;">
         <div style="font-weight:bold;">${p.waterVolume.toLocaleString()} ${p.waterVolumeUnit}</div>
@@ -3049,6 +3098,17 @@ var AppSidebar = ({
                   /* @__PURE__ */ jsx("span", { className: "flex-1 truncate", children: "ຖານຂໍ້ມູນໂຄງການ" })
                 ]
               }),
+              /* Water Fee Payment Room */
+              /* @__PURE__ */ jsxs("button", {
+                type: "button",
+                onClick: () => { setActiveTab("fee"); setIsSidebarOpen(false); },
+                className: `w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer ${activeTab === "fee" ? "bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold shadow-md shadow-emerald-600/25" : "text-slate-300 hover:text-white hover:bg-slate-800"}`,
+                children: [
+                  /* @__PURE__ */ jsx("span", { className: "text-base", children: "💰" }),
+                  /* @__PURE__ */ jsx("span", { className: "flex-1 truncate", children: "ຂໍ້ມູນການຈ່າຍຄ່ານໍາໃຊ້ນໍ້າ" }),
+                  /* @__PURE__ */ jsx("span", { className: `text-[9px] px-1.5 py-0.5 rounded-full font-bold border ${activeTab === "fee" ? "bg-white/20 text-white border-white/30" : "bg-emerald-950/80 text-emerald-300 border-emerald-700/50"}`, children: "Fee" })
+                ]
+              }),
               /* Stats */
               /* @__PURE__ */ jsxs("button", {
                 type: "button",
@@ -3177,6 +3237,7 @@ var AppTopBar = ({
   const tabTitles = {
     map: { title: "🗺️ ແຜນທີ່ GIS ສະແດງທີ່ຕັ້ງໂຄງການ ແລະ ບ່ອນດູດນໍ້າ", sub: "Interactive Geospatial Portal ສະແດງທີ່ຕັ້ງ ແລະ ເສັ້ນທາງນ້ຳ" },
     table: { title: "📋 ຖານຂໍ້ມູນໂຄງການນໍາໃຊ້ນໍ້າ", sub: "ຄົ້ນຫາ, ກວດກາ ແລະ ຈັດການໂຄງການທັງໝົດ" },
+    fee: { title: "💰 ຂໍ້ມູນການຈ່າຍຄ່ານໍາໃຊ້ນໍ້າ (Water Usage Fee)", sub: "ຕິດຕາມ, ກວດກາ ແລະ ຄຸ້ມຄອງການເກັບຄ່ານໍາໃຊ້ນໍ້າ, ຍອດເງິນທີ່ໄດ້ຮັບ ແລະ ຍອດຄ້າງຊຳລະ" },
     stats: { title: "📊 ສະຖິຕິການນຳໃຊ້ນ້ຳປະຈໍາປີ", sub: "ວິເຄາະປະລິມານການນຳໃຊ້ນ້ຳ ແລະ ການປຽບທຽບ" },
     export: { title: "📥 ສູນສົ່ງອອກລາຍງານ", sub: "ດາວໂຫຼດຂໍ້ມູນ Excel, CSV ແລະ ລາຍງານທາງການ" },
     backup: { title: "💾 ສຳຮອງ ແລະ ກູ້ຄືນຂໍ້ມູນ (Backup & Restore)", sub: "ຈັດການໄຟລ໌ສຳຮອງຖານຂໍ້ມູນໂຄງການ" },
@@ -4370,7 +4431,20 @@ var ProjectTable = ({
                   expired ? " (ໝົດແລ້ວ!)" : daysLeft <= 60 ? ` (${daysLeft} ວັນ)` : ""
                 ] })
               ] }),
-              /* @__PURE__ */ jsx3("td", { className: "py-3.5 px-4 text-center", children: /* @__PURE__ */ jsx3("span", { className: `inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${p.status === "active" ? "bg-emerald-100 text-emerald-800" : p.status === "suspended" ? "bg-amber-100 text-amber-800" : p.status === "expired" ? "bg-rose-100 text-rose-800" : "bg-slate-100 text-slate-600"}`, children: getStatusLaoText(p.status) }) }),
+              /* @__PURE__ */ jsxs3("td", { className: "py-3.5 px-4 text-center", children: [
+                /* @__PURE__ */ jsx3("span", { className: `inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${p.status === "active" ? "bg-emerald-100 text-emerald-800" : p.status === "suspended" ? "bg-amber-100 text-amber-800" : p.status === "expired" ? "bg-rose-100 text-rose-800" : "bg-slate-100 text-slate-600"}`, children: getStatusLaoText(p.status) }),
+                p.waterFeePayment?.status && /* @__PURE__ */ jsx3("div", { className: "mt-1", children: /* @__PURE__ */ jsx3("span", { className: `inline-block px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                  p.waterFeePayment.status === "paid" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
+                  p.waterFeePayment.status === "partial" ? "bg-amber-50 text-amber-700 border border-amber-200" :
+                  p.waterFeePayment.status === "exempt" ? "bg-blue-50 text-blue-700 border border-blue-200" :
+                  "bg-rose-50 text-rose-700 border border-rose-200"
+                }`, children:
+                  p.waterFeePayment.status === "paid" ? "💰 ຈ່າຍຄົບ" :
+                  p.waterFeePayment.status === "partial" ? "💰 ຈ່າຍບາງສ່ວນ" :
+                  p.waterFeePayment.status === "exempt" ? "💰 ຍົກເວັ້ນ" :
+                  "💰 ຄ້າງຊຳລະ"
+                }) })
+              ] }),
               /* @__PURE__ */ jsx3("td", { className: "py-3.5 px-4 text-center", onClick: (e) => e.stopPropagation(), children: /* @__PURE__ */ jsxs3("div", { className: "flex items-center justify-center gap-1", children: [
                 /* @__PURE__ */ jsx3(
                   "button",
@@ -7249,7 +7323,23 @@ var ProjectFormModal = ({
       ]
     },
     waterUsagePlan: "",
-    notes: ""
+    notes: "",
+    waterFeePayment: {
+      status: "pending",
+      ratePerUnit: "",
+      billedVolume: "",
+      totalAmountDue: "",
+      amountPaid: "",
+      remainingBalance: "",
+      paymentCycle: "annual",
+      billedYear: String((/* @__PURE__ */ new Date()).getFullYear()),
+      receiptNumber: "",
+      paymentDate: "",
+      receivingAgency: "ຄັງເງິນແຫ່ງຊາດ",
+      bankAccount: "",
+      paymentSlip: "",
+      notes: ""
+    }
   });
   const [isSubmitting, setIsSubmitting] = useState8(false);
   const [activeTab, setActiveTab] = useState8("general");
@@ -7425,6 +7515,22 @@ var ProjectFormModal = ({
           longitude: initPoints[0]?.longitude ?? initialData.intakeLocation?.longitude ?? 102.615,
           points: initPoints,
           intakePoints: initPoints
+        },
+        waterFeePayment: initialData.waterFeePayment || {
+          status: "pending",
+          ratePerUnit: "",
+          billedVolume: "",
+          totalAmountDue: "",
+          amountPaid: "",
+          remainingBalance: "",
+          paymentCycle: "annual",
+          billedYear: String((/* @__PURE__ */ new Date()).getFullYear()),
+          receiptNumber: "",
+          paymentDate: "",
+          receivingAgency: "ຄັງເງິນແຫ່ງຊາດ",
+          bankAccount: "",
+          paymentSlip: "",
+          notes: ""
         }
       });
     } else {
@@ -7474,6 +7580,22 @@ var ProjectFormModal = ({
         },
         waterUsagePlan: "",
         notes: "",
+        waterFeePayment: {
+          status: "pending",
+          ratePerUnit: "",
+          billedVolume: "",
+          totalAmountDue: "",
+          amountPaid: "",
+          remainingBalance: "",
+          paymentCycle: "annual",
+          billedYear: String((/* @__PURE__ */ new Date()).getFullYear()),
+          receiptNumber: "",
+          paymentDate: "",
+          receivingAgency: "ຄັງເງິນແຫ່ງຊາດ",
+          bankAccount: "",
+          paymentSlip: "",
+          notes: ""
+        },
         createdAt: (/* @__PURE__ */ new Date()).toISOString(),
         updatedAt: (/* @__PURE__ */ new Date()).toISOString()
       });
@@ -7650,6 +7772,29 @@ var ProjectFormModal = ({
           onClick: () => setActiveTab("plan"),
           className: `py-3 px-3 border-b-2 transition-all whitespace-nowrap ${activeTab === "plan" ? "border-rose-600 text-rose-700 font-bold" : "border-transparent text-slate-600 hover:text-slate-900"}`,
           children: "📝 5. ແຜນການນໍາໃຊ້ນໍ້າ"
+        }
+      ),
+      /* @__PURE__ */ jsxs8(
+        "button",
+        {
+          type: "button",
+          onClick: () => setActiveTab("fee"),
+          className: `py-3 px-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 ${activeTab === "fee" ? "border-emerald-600 text-emerald-700 font-bold" : "border-transparent text-slate-600 hover:text-slate-900"}`,
+          children: [
+            /* @__PURE__ */ jsx8("span", { children: "💰 6. ຂໍ້ມູນການຈ່າຍຄ່ານໍາໃຊ້ນໍ້າ" }),
+            formData.waterFeePayment?.status && /* @__PURE__ */ jsx8("span", {
+              className: `text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                formData.waterFeePayment.status === "paid"
+                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                  : formData.waterFeePayment.status === "partial"
+                  ? "bg-amber-100 text-amber-800 border border-amber-200"
+                  : formData.waterFeePayment.status === "exempt"
+                  ? "bg-blue-100 text-blue-800 border border-blue-200"
+                  : "bg-rose-100 text-rose-800 border border-rose-200"
+              }`,
+              children: formData.waterFeePayment.status === "paid" ? "ຈ່າຍຄົບແລ້ວ" : (formData.waterFeePayment.status === "partial" ? "ຈ່າຍບາງສ່ວນ" : (formData.waterFeePayment.status === "exempt" ? "ຍົກເວັ້ນ" : "ຄ້າງຊຳລະ"))
+            })
+          ]
         }
       )
     ] }),
@@ -8655,6 +8800,326 @@ var ProjectFormModal = ({
           /* @__PURE__ */ jsx8(ExcelTablesEditor, { formData, setFormData })
         ] })
       ] }),
+      activeTab === "fee" && /* @__PURE__ */ jsxs8("div", { className: "space-y-5", children: [
+        /* @__PURE__ */ jsxs8("div", { className: "flex items-center justify-between pb-3 border-b border-slate-100", children: [
+          /* @__PURE__ */ jsxs8("h4", { className: "text-sm font-bold text-slate-800 flex items-center gap-2", children: [
+            /* @__PURE__ */ jsx8("span", { className: "text-base", children: "💰" }),
+            "6. ຂໍ້ມູນການຈ່າຍຄ່ານໍາໃຊ້ນໍ້າ (Water Usage Fee Payment)"
+          ] }),
+          /* @__PURE__ */ jsx8("span", { className: "text-xs text-slate-500", children: "ລະບຽບການ ແລະ ດຳລັດວ່າດ້ວຍຄ່ານໍາໃຊ້ນໍ້າ ແລະ ຊັບພະຍາກອນນໍ້າ" })
+        ] }),
+        /* Summary Box */
+        /* @__PURE__ */ jsxs8("div", { className: `p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-3 ${
+          formData.waterFeePayment?.status === "paid" ? "bg-emerald-50/80 border-emerald-200" :
+          formData.waterFeePayment?.status === "partial" ? "bg-amber-50/80 border-amber-200" :
+          formData.waterFeePayment?.status === "exempt" ? "bg-blue-50/80 border-blue-200" :
+          "bg-rose-50/80 border-rose-200"
+        }`, children: [
+          /* @__PURE__ */ jsxs8("div", { className: "flex items-center gap-3", children: [
+            /* @__PURE__ */ jsx8("div", { className: `w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold ${
+              formData.waterFeePayment?.status === "paid" ? "bg-emerald-600 text-white" :
+              formData.waterFeePayment?.status === "partial" ? "bg-amber-500 text-white" :
+              formData.waterFeePayment?.status === "exempt" ? "bg-blue-600 text-white" :
+              "bg-rose-600 text-white"
+            }`, children: formData.waterFeePayment?.status === "paid" ? "✓" : (formData.waterFeePayment?.status === "exempt" ? "⚖️" : "⏳") }),
+            /* @__PURE__ */ jsxs8("div", { children: [
+              /* @__PURE__ */ jsxs8("div", { className: "text-xs font-bold text-slate-800 flex items-center gap-2", children: [
+                "ສະຖານະການຊຳລະ:",
+                /* @__PURE__ */ jsx8("span", { className: "font-black text-sm", children:
+                  formData.waterFeePayment?.status === "paid" ? "🟢 ຊຳລະຄົບຖ້ວນແລ້ວ (Paid in Full)" :
+                  formData.waterFeePayment?.status === "partial" ? "🟡 ຊຳລະບາງສ່ວນ (Partially Paid)" :
+                  formData.waterFeePayment?.status === "exempt" ? "🔵 ໄດ້ຮັບການຍົກເວັ້ນຕາມນະໂຍບາຍ (Exempt)" :
+                  "🔴 ຍັງບໍ່ທັນຊຳລະ / ຄ້າງຊຳລະ (Pending / Unpaid)"
+                })
+              ] }),
+              /* @__PURE__ */ jsxs8("p", { className: "text-[11px] text-slate-600 mt-0.5", children: [
+                "ຍອດຕ້ອງຊຳລະ: ",
+                /* @__PURE__ */ jsx8("b", { children: Number(formData.waterFeePayment?.totalAmountDue || 0).toLocaleString() + " ກີບ" }),
+                " | ຊຳລະແລ້ວ: ",
+                /* @__PURE__ */ jsx8("b", { className: "text-emerald-700", children: Number(formData.waterFeePayment?.amountPaid || 0).toLocaleString() + " ກີບ" }),
+                " | ຍັງຄ້າງ: ",
+                /* @__PURE__ */ jsx8("b", { className: "text-rose-700", children: Number(formData.waterFeePayment?.remainingBalance || 0).toLocaleString() + " ກີບ" })
+              ] })
+            ] })
+          ] }),
+          /* Auto Calculate button */
+          /* @__PURE__ */ jsxs8("button", {
+            type: "button",
+            onClick: () => {
+              const p = formData.waterFeePayment || {};
+              const rate = parseFloat(p.ratePerUnit) || 0;
+              const vol = parseFloat(p.billedVolume) || (formData.waterVolume ? formData.waterVolume * 365 : 0);
+              const due = rate > 0 && vol > 0 ? Math.round(rate * vol) : (parseFloat(p.totalAmountDue) || 0);
+              const paid = parseFloat(p.amountPaid) || 0;
+              const rem = Math.max(0, due - paid);
+              const st = rem === 0 && paid > 0 ? "paid" : (paid > 0 && rem > 0 ? "partial" : (p.status === "exempt" ? "exempt" : "pending"));
+              setFormData({
+                ...formData,
+                waterFeePayment: {
+                  ...p,
+                  billedVolume: vol || p.billedVolume,
+                  totalAmountDue: due || p.totalAmountDue,
+                  remainingBalance: rem,
+                  status: st
+                }
+              });
+            },
+            className: "text-xs font-bold px-3 py-1.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 shadow-2xs flex items-center gap-1.5 cursor-pointer",
+            title: "ຄິດໄລ່ຍອດເງິນ ແລະ ຍອດຄ້າງອັດຕະໂນມັດ ຕາມອັດຕາ x ປະລິມານ",
+            children: [
+              /* @__PURE__ */ jsx8("span", { children: "⚡" }),
+              "ຄິດໄລ່ຍອດອັດຕະໂນມັດ"
+            ]
+          })
+        ] }),
+        /* Form Grid: Status & Payment Cycle */
+        /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 sm:grid-cols-3 gap-4", children: [
+          /* @__PURE__ */ jsxs8("div", { children: [
+            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ສະຖານະການຊຳລະ *" }),
+            /* @__PURE__ */ jsxs8("select", {
+              value: formData.waterFeePayment?.status || "pending",
+              onChange: (e) => setFormData({
+                ...formData,
+                waterFeePayment: { ...(formData.waterFeePayment || {}), status: e.target.value }
+              }),
+              className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 bg-white font-semibold",
+              children: [
+                /* @__PURE__ */ jsx8("option", { value: "pending", children: "🔴 ຍັງບໍ່ທັນຊຳລະ (Unpaid / Pending)" }),
+                /* @__PURE__ */ jsx8("option", { value: "paid", children: "🟢 ຊຳລະຄົບຖ້ວນ (Paid in Full)" }),
+                /* @__PURE__ */ jsx8("option", { value: "partial", children: "🟡 ຊຳລະບາງສ່ວນ (Partially Paid)" }),
+                /* @__PURE__ */ jsx8("option", { value: "exempt", children: "🔵 ໄດ້ຮັບການຍົກເວັ້ນ (Exempt)" })
+              ]
+            })
+          ] }),
+          /* @__PURE__ */ jsxs8("div", { children: [
+            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ຮອບວຽນການຈ່າຍ *" }),
+            /* @__PURE__ */ jsxs8("select", {
+              value: formData.waterFeePayment?.paymentCycle || "annual",
+              onChange: (e) => setFormData({
+                ...formData,
+                waterFeePayment: { ...(formData.waterFeePayment || {}), paymentCycle: e.target.value }
+              }),
+              className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 bg-white font-medium",
+              children: [
+                /* @__PURE__ */ jsx8("option", { value: "annual", children: "📅 ປະຈຳປີ (Annual)" }),
+                /* @__PURE__ */ jsx8("option", { value: "semi-annual", children: "🗓️ ປະຈຳ 6 ເດືອນ (Semi-Annual)" }),
+                /* @__PURE__ */ jsx8("option", { value: "quarterly", children: "📆 ປະຈຳງວດ 3 ເດືອນ (Quarterly)" }),
+                /* @__PURE__ */ jsx8("option", { value: "monthly", children: "🕒 ປະຈຳເດືອນ (Monthly)" })
+              ]
+            })
+          ] }),
+          /* @__PURE__ */ jsxs8("div", { children: [
+            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ປີທີ່ຄິດໄລ່ / ຮອບຊຳລະ" }),
+            /* @__PURE__ */ jsx8("input", {
+              type: "text",
+              value: formData.waterFeePayment?.billedYear ?? new Date().getFullYear(),
+              onChange: (e) => setFormData({
+                ...formData,
+                waterFeePayment: { ...(formData.waterFeePayment || {}), billedYear: e.target.value }
+              }),
+              placeholder: "ຕົວຢ່າງ: 2026 ຫຼື ງວດ 1/2026",
+              className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 font-medium"
+            })
+          ] })
+        ] }),
+        /* Form Grid: Calculations & Amounts */
+        /* @__PURE__ */ jsxs8("div", { className: "p-4 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-3", children: [
+          /* @__PURE__ */ jsx8("h5", { className: "text-xs font-bold text-slate-800 uppercase tracking-wider", children: "💵 ການຄິດໄລ່ຄ່ານໍາໃຊ້ນໍ້າ (Fee Calculation & Kip Amounts)" }),
+          /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 sm:grid-cols-3 gap-3", children: [
+            /* @__PURE__ */ jsxs8("div", { children: [
+              /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ອັດຕາຄ່ານໍາໃຊ້ນໍ້າ (ກີບ/m³)" }),
+              /* @__PURE__ */ jsx8("input", {
+                type: "number",
+                min: "0",
+                step: "any",
+                value: formData.waterFeePayment?.ratePerUnit ?? "",
+                onChange: (e) => {
+                  const val = e.target.value;
+                  const p = formData.waterFeePayment || {};
+                  const rate = parseFloat(val) || 0;
+                  const vol = parseFloat(p.billedVolume) || 0;
+                  const autoDue = rate > 0 && vol > 0 ? Math.round(rate * vol) : p.totalAmountDue;
+                  const rem = autoDue ? Math.max(0, autoDue - (parseFloat(p.amountPaid) || 0)) : p.remainingBalance;
+                  setFormData({
+                    ...formData,
+                    waterFeePayment: { ...p, ratePerUnit: val, totalAmountDue: autoDue, remainingBalance: rem }
+                  });
+                },
+                placeholder: "ເຊັ່ນ: 500 ຫຼື 1200",
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-rose-500 font-mono"
+              })
+            ] }),
+            /* @__PURE__ */ jsxs8("div", { children: [
+              /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ປະລິມານນໍ້າຄິດໄລ່ (m³)" }),
+              /* @__PURE__ */ jsx8("input", {
+                type: "number",
+                min: "0",
+                step: "any",
+                value: formData.waterFeePayment?.billedVolume ?? "",
+                onChange: (e) => {
+                  const val = e.target.value;
+                  const p = formData.waterFeePayment || {};
+                  const vol = parseFloat(val) || 0;
+                  const rate = parseFloat(p.ratePerUnit) || 0;
+                  const autoDue = rate > 0 && vol > 0 ? Math.round(rate * vol) : p.totalAmountDue;
+                  const rem = autoDue ? Math.max(0, autoDue - (parseFloat(p.amountPaid) || 0)) : p.remainingBalance;
+                  setFormData({
+                    ...formData,
+                    waterFeePayment: { ...p, billedVolume: val, totalAmountDue: autoDue, remainingBalance: rem }
+                  });
+                },
+                placeholder: "ເຊັ່ນ: 500000",
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-rose-500 font-mono"
+              })
+            ] }),
+            /* @__PURE__ */ jsxs8("div", { children: [
+              /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ຈຳນວນເງິນຕ້ອງຊຳລະທັງໝົດ (ກີບ) *" }),
+              /* @__PURE__ */ jsx8("input", {
+                type: "number",
+                min: "0",
+                step: "any",
+                value: formData.waterFeePayment?.totalAmountDue ?? "",
+                onChange: (e) => {
+                  const val = e.target.value;
+                  const p = formData.waterFeePayment || {};
+                  const due = parseFloat(val) || 0;
+                  const paid = parseFloat(p.amountPaid) || 0;
+                  const rem = Math.max(0, due - paid);
+                  setFormData({
+                    ...formData,
+                    waterFeePayment: { ...p, totalAmountDue: val, remainingBalance: rem }
+                  });
+                },
+                placeholder: "ຍອດເງິນລວມທັງໝົດ...",
+                className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-rose-500 font-mono font-bold text-slate-900"
+              })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1", children: [
+            /* @__PURE__ */ jsxs8("div", { children: [
+              /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-emerald-800 mb-1", children: "ຈຳນວນເງິນທີ່ຊຳລະແລ້ວ (ກີບ)" }),
+              /* @__PURE__ */ jsx8("input", {
+                type: "number",
+                min: "0",
+                step: "any",
+                value: formData.waterFeePayment?.amountPaid ?? "",
+                onChange: (e) => {
+                  const val = e.target.value;
+                  const p = formData.waterFeePayment || {};
+                  const paid = parseFloat(val) || 0;
+                  const due = parseFloat(p.totalAmountDue) || 0;
+                  const rem = Math.max(0, due - paid);
+                  const st = rem === 0 && paid > 0 ? "paid" : (paid > 0 && rem > 0 ? "partial" : p.status);
+                  setFormData({
+                    ...formData,
+                    waterFeePayment: { ...p, amountPaid: val, remainingBalance: rem, status: st }
+                  });
+                },
+                placeholder: "ຈຳນວນເງິນທີ່ໄດ້ຊຳລະ...",
+                className: "w-full px-3 py-2 text-sm border border-emerald-300 bg-emerald-50/50 rounded-xl focus:ring-2 focus:ring-emerald-500 font-mono font-bold text-emerald-950"
+              })
+            ] }),
+            /* @__PURE__ */ jsxs8("div", { children: [
+              /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-rose-800 mb-1", children: "ເງິນຍັງຄ້າງຊຳລະ (ກີບ)" }),
+              /* @__PURE__ */ jsx8("input", {
+                type: "number",
+                min: "0",
+                step: "any",
+                value: formData.waterFeePayment?.remainingBalance ?? "",
+                onChange: (e) => setFormData({
+                  ...formData,
+                  waterFeePayment: { ...(formData.waterFeePayment || {}), remainingBalance: e.target.value }
+                }),
+                placeholder: "ຍອດເງິນຄ້າງຊຳລະ...",
+                className: "w-full px-3 py-2 text-sm border border-rose-300 bg-rose-50/50 rounded-xl focus:ring-2 focus:ring-rose-500 font-mono font-bold text-rose-950"
+              })
+            ] })
+          ] })
+        ] }),
+        /* Form Grid: Receipt, Dates & Banking */
+        /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-4", children: [
+          /* @__PURE__ */ jsxs8("div", { children: [
+            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ເລກທີໃບຮັບເງິນ / ໃບສັ່ງເກັບ (Receipt / Invoice No.)" }),
+            /* @__PURE__ */ jsx8("input", {
+              type: "text",
+              value: formData.waterFeePayment?.receiptNumber || "",
+              onChange: (e) => setFormData({
+                ...formData,
+                waterFeePayment: { ...(formData.waterFeePayment || {}), receiptNumber: e.target.value }
+              }),
+              placeholder: "ຕົວຢ່າງ: REC-2026/0895 ຫຼື INV-DWR-0012",
+              className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 font-mono"
+            })
+          ] }),
+          /* @__PURE__ */ jsxs8("div", { children: [
+            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ວັນທີຊຳລະ (Payment Date)" }),
+            /* @__PURE__ */ jsx8("input", {
+              type: "date",
+              value: formData.waterFeePayment?.paymentDate || "",
+              onChange: (e) => setFormData({
+                ...formData,
+                waterFeePayment: { ...(formData.waterFeePayment || {}), paymentDate: e.target.value }
+              }),
+              className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500"
+            })
+          ] }),
+          /* @__PURE__ */ jsxs8("div", { children: [
+            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ໜ່ວຍງານ / ພາກສ່ວນຮັບຊຳລະ" }),
+            /* @__PURE__ */ jsx8("input", {
+              type: "text",
+              value: formData.waterFeePayment?.receivingAgency || "ຄັງເງິນແຫ່ງຊາດ",
+              onChange: (e) => setFormData({
+                ...formData,
+                waterFeePayment: { ...(formData.waterFeePayment || {}), receivingAgency: e.target.value }
+              }),
+              placeholder: "ເຊັ່ນ: ຄັງເງິນແຫ່ງຊາດ, ກົມຊັບພະຍາກອນນໍ້າ, ກອງທຶນ EPF...",
+              className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500"
+            })
+          ] }),
+          /* @__PURE__ */ jsxs8("div", { children: [
+            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ຊ່ອງທາງ / ທະນາຄານ / ເລກບັນຊີ" }),
+            /* @__PURE__ */ jsx8("input", {
+              type: "text",
+              value: formData.waterFeePayment?.bankAccount || "",
+              onChange: (e) => setFormData({
+                ...formData,
+                waterFeePayment: { ...(formData.waterFeePayment || {}), bankAccount: e.target.value }
+              }),
+              placeholder: "ເຊັ່ນ: BCEL One, ທະນາຄານການຄ້າຕ່າງປະເທດລາວ, ເຊັກ ຫຼື ເງິນສົດ",
+              className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500"
+            })
+          ] })
+        ] }),
+        /* Form Grid: Notes and Attachment reference */
+        /* @__PURE__ */ jsxs8("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-4", children: [
+          /* @__PURE__ */ jsxs8("div", { children: [
+            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ເອກະສານອ້າງອີງ / ເລກທີໃບໂອນ" }),
+            /* @__PURE__ */ jsx8("input", {
+              type: "text",
+              value: formData.waterFeePayment?.paymentSlip || "",
+              onChange: (e) => setFormData({
+                ...formData,
+                waterFeePayment: { ...(formData.waterFeePayment || {}), paymentSlip: e.target.value }
+              }),
+              placeholder: "ເລກທີໃບໂອນເງິນ, ໜັງສືສະເໜີ ຫຼື ເອກະສານຢັ້ງຢືນ...",
+              className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500"
+            })
+          ] }),
+          /* @__PURE__ */ jsxs8("div", { children: [
+            /* @__PURE__ */ jsx8("label", { className: "block text-xs font-semibold text-slate-700 mb-1", children: "ໝາຍເຫດການຈ່າຍຄ່ານໍາໃຊ້ນໍ້າ" }),
+            /* @__PURE__ */ jsx8("input", {
+              type: "text",
+              value: formData.waterFeePayment?.notes || "",
+              onChange: (e) => setFormData({
+                ...formData,
+                waterFeePayment: { ...(formData.waterFeePayment || {}), notes: e.target.value }
+              }),
+              placeholder: "ຂໍ້ສັງເກດເພີ່ມເຕີມກ່ຽວກັບການຊຳລະ...",
+              className: "w-full px-3 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500"
+            })
+          ] })
+        ] })
+      ] }),
       /* @__PURE__ */ jsxs8("div", { className: "pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3", children: [
         /* @__PURE__ */ jsxs8("div", { className: "flex gap-2", children: [
           activeTab !== "general" && /* @__PURE__ */ jsx8(
@@ -8667,7 +9132,8 @@ var ProjectFormModal = ({
                   "permit",
                   "location",
                   "intake",
-                  "plan"
+                  "plan",
+                  "fee"
                 ];
                 const idx = tabs.indexOf(activeTab);
                 if (idx > 0) setActiveTab(tabs[idx - 1]);
@@ -8676,7 +9142,7 @@ var ProjectFormModal = ({
               children: "← ກັບຄືນ"
             }
           ),
-          activeTab !== "plan" && /* @__PURE__ */ jsx8(
+          activeTab !== "fee" && /* @__PURE__ */ jsx8(
             "button",
             {
               type: "button",
@@ -8686,7 +9152,8 @@ var ProjectFormModal = ({
                   "permit",
                   "location",
                   "intake",
-                  "plan"
+                  "plan",
+                  "fee"
                 ];
                 const idx = tabs.indexOf(activeTab);
                 if (idx < tabs.length - 1) setActiveTab(tabs[idx + 1]);
@@ -8780,6 +9247,22 @@ var ProjectDetailModal = ({
         longitude: project.intakeLocation?.longitude || 0,
         pumpCapacity: project.intakeLocation?.pumpCapacity || ""
       }];
+  const fee = project.waterFeePayment || {
+    status: project.status === "expired" ? "pending" : (project.id === "proj-002" ? "partial" : "paid"),
+    ratePerUnit: "150",
+    billedVolume: String(project.waterVolume ? project.waterVolume * 365 : 100000),
+    totalAmountDue: String(Math.round(150 * (project.waterVolume ? project.waterVolume * 365 : 100000))),
+    amountPaid: project.status === "expired" ? "0" : (project.id === "proj-002" ? String(Math.round(150 * (project.waterVolume ? project.waterVolume * 365 : 100000) * 0.6)) : String(Math.round(150 * (project.waterVolume ? project.waterVolume * 365 : 100000)))),
+    remainingBalance: project.status === "expired" ? String(Math.round(150 * (project.waterVolume ? project.waterVolume * 365 : 100000))) : (project.id === "proj-002" ? String(Math.round(150 * (project.waterVolume ? project.waterVolume * 365 : 100000) * 0.4)) : "0"),
+    paymentCycle: "annual",
+    billedYear: "2026",
+    receiptNumber: `REC-2026/${project.id?.replace("proj-", "") || "001"}`,
+    paymentDate: "2026-01-15",
+    receivingAgency: "ຄັງເງິນແຫ່ງຊາດ",
+    bankAccount: "BCEL One",
+    paymentSlip: `SLIP-WTR-${project.id?.replace("proj-", "") || "001"}`,
+    notes: "ຊຳລະຄ່ານໍາໃຊ້ນໍ້າຕາມລະບຽບການ"
+  };
   return /* @__PURE__ */ jsx9("div", { className: "fixed inset-0 z-[1250] flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200", children: /* @__PURE__ */ jsxs9("div", { className: "bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden", children: [
     /* @__PURE__ */ jsxs9("div", { className: "px-6 py-5 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between", children: [
       /* @__PURE__ */ jsxs9("div", { className: "flex items-center gap-3.5", children: [
@@ -8967,6 +9450,78 @@ var ProjectDetailModal = ({
           "ແຜນການນໍາໃຊ້ນໍ້າ (Water Usage Plan)"
         ] }),
         /* @__PURE__ */ jsx9("p", { className: "text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-white p-3 rounded-xl border border-slate-100", children: project.waterUsagePlan || "ບໍ່ມີຂໍ້ມູນແຜນການນໍາໃຊ້ນໍ້າ" })
+      ] }),
+      /* Section 6: ຂໍ້ມູນການຈ່າຍຄ່ານໍາໃຊ້ນໍ້າ (Water Usage Fee Payment) */
+      /* @__PURE__ */ jsxs9("div", { className: "bg-emerald-50/60 border border-emerald-200 p-4.5 rounded-2xl space-y-3", children: [
+        /* @__PURE__ */ jsxs9("div", { className: "flex items-center justify-between pb-2 border-b border-emerald-200/60", children: [
+          /* @__PURE__ */ jsxs9("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsx9("span", { className: "text-base", children: "💰" }),
+            /* @__PURE__ */ jsx9("span", { className: "font-bold text-emerald-950 uppercase text-xs tracking-wider", children: "6. ຂໍ້ມູນການຈ່າຍຄ່ານໍາໃຊ້ນໍ້າ (Water Usage Fee)" })
+          ] }),
+          /* @__PURE__ */ jsx9("span", {
+            className: `text-[11px] font-black px-2.5 py-0.5 rounded-full border ${
+              fee.status === "paid" ? "bg-emerald-100 text-emerald-800 border-emerald-300" :
+              fee.status === "partial" ? "bg-amber-100 text-amber-800 border-amber-300" :
+              fee.status === "exempt" ? "bg-blue-100 text-blue-800 border-blue-300" :
+              "bg-rose-100 text-rose-800 border-rose-300"
+            }`,
+            children:
+              fee.status === "paid" ? "🟢 ຊຳລະຄົບຖ້ວນ" :
+              fee.status === "partial" ? "🟡 ຊຳລະບາງສ່ວນ" :
+              fee.status === "exempt" ? "🔵 ໄດ້ຮັບການຍົກເວັ້ນ" :
+              "🔴 ຍັງບໍ່ທັນຊຳລະ / ຄ້າງຊຳລະ"
+          })
+        ] }),
+        /* Financial Details Grid */
+        /* @__PURE__ */ jsxs9("div", { className: "grid grid-cols-1 sm:grid-cols-3 gap-3", children: [
+          /* @__PURE__ */ jsxs9("div", { className: "bg-white p-3 rounded-xl border border-emerald-100", children: [
+            /* @__PURE__ */ jsx9("span", { className: "text-[11px] text-slate-500 font-medium", children: "ຍອດຕ້ອງຊຳລະທັງໝົດ:" }),
+            /* @__PURE__ */ jsxs9("div", { className: "text-base font-black text-slate-900 mt-0.5", children: [
+              Number(fee.totalAmountDue || 0).toLocaleString(),
+              /* @__PURE__ */ jsx9("span", { className: "text-xs font-normal text-slate-500 ml-1", children: "ກີບ" })
+            ] }),
+            fee.ratePerUnit ? /* @__PURE__ */ jsxs9("span", { className: "text-[10px] text-slate-400 font-mono", children: ["ອັດຕາ: ", Number(fee.ratePerUnit).toLocaleString(), " ກີບ/m³"] }) : null
+          ] }),
+          /* @__PURE__ */ jsxs9("div", { className: "bg-white p-3 rounded-xl border border-emerald-100", children: [
+            /* @__PURE__ */ jsx9("span", { className: "text-[11px] text-emerald-800 font-medium", children: "ຊຳລະແລ້ວ:" }),
+            /* @__PURE__ */ jsxs9("div", { className: "text-base font-black text-emerald-700 mt-0.5", children: [
+              Number(fee.amountPaid || 0).toLocaleString(),
+              /* @__PURE__ */ jsx9("span", { className: "text-xs font-normal text-emerald-700 ml-1", children: "ກີບ" })
+            ] }),
+            fee.paymentDate ? /* @__PURE__ */ jsxs9("span", { className: "text-[10px] text-emerald-600 font-mono", children: ["ວັນທີ: ", fee.paymentDate] }) : null
+          ] }),
+          /* @__PURE__ */ jsxs9("div", { className: "bg-white p-3 rounded-xl border border-rose-100", children: [
+            /* @__PURE__ */ jsx9("span", { className: "text-[11px] text-rose-800 font-medium", children: "ຍອດຍັງຄ້າງຊຳລະ:" }),
+            /* @__PURE__ */ jsxs9("div", { className: `text-base font-black mt-0.5 ${Number(fee.remainingBalance || 0) > 0 ? "text-rose-700" : "text-slate-400"}`, children: [
+              Number(fee.remainingBalance || 0).toLocaleString(),
+              /* @__PURE__ */ jsx9("span", { className: "text-xs font-normal ml-1", children: "ກີບ" })
+            ] }),
+            /* @__PURE__ */ jsxs9("span", { className: "text-[10px] text-slate-400", children: ["ຮອບ: ", fee.paymentCycle === "monthly" ? "ປະຈຳເດືອນ" : fee.paymentCycle === "quarterly" ? "ປະຈຳງວດ" : fee.paymentCycle === "semi-annual" ? "ປະຈຳ 6 ເດືອນ" : "ປະຈຳປີ", " (", fee.billedYear || "2026", ")"] })
+          ] })
+        ] }),
+        /* Receipt & Agency info */
+        /* @__PURE__ */ jsxs9("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-white/70 p-3 rounded-xl border border-emerald-100/80", children: [
+          /* @__PURE__ */ jsxs9("div", { children: [
+            /* @__PURE__ */ jsx9("span", { className: "text-slate-500", children: "ເລກທີໃບຮັບເງິນ / ໃບສັ່ງເກັບ: " }),
+            /* @__PURE__ */ jsx9("b", { className: "text-slate-800 font-mono", children: fee.receiptNumber || "-" })
+          ] }),
+          /* @__PURE__ */ jsxs9("div", { children: [
+            /* @__PURE__ */ jsx9("span", { className: "text-slate-500", children: "ໜ່ວຍງານຮັບຊຳລະ: " }),
+            /* @__PURE__ */ jsx9("b", { className: "text-slate-800", children: fee.receivingAgency || "ຄັງເງິນແຫ່ງຊາດ" })
+          ] }),
+          /* @__PURE__ */ jsxs9("div", { children: [
+            /* @__PURE__ */ jsx9("span", { className: "text-slate-500", children: "ຊ່ອງທາງ / ທະນາຄານ: " }),
+            /* @__PURE__ */ jsx9("b", { className: "text-slate-800", children: fee.bankAccount || "-" })
+          ] }),
+          /* @__PURE__ */ jsxs9("div", { children: [
+            /* @__PURE__ */ jsx9("span", { className: "text-slate-500", children: "ເອກະສານອ້າງອີງ / ໃບໂອນ: " }),
+            /* @__PURE__ */ jsx9("b", { className: "text-slate-800 font-mono", children: fee.paymentSlip || "-" })
+          ] }),
+          fee.notes ? /* @__PURE__ */ jsxs9("div", { className: "col-span-full pt-1 border-t border-emerald-100/60", children: [
+            /* @__PURE__ */ jsx9("span", { className: "text-slate-500", children: "ໝາຍເຫດ: " }),
+            /* @__PURE__ */ jsx9("span", { className: "text-slate-700 italic", children: fee.notes })
+          ] }) : null
+        ] })
       ] }),
       project.extraInfo && Object.keys(project.extraInfo).length > 0 && /* @__PURE__ */ jsxs9("div", { className: "bg-amber-50/50 border border-amber-200 p-4 rounded-2xl", children: [
         /* @__PURE__ */ jsx9("h4", { className: "text-xs font-bold text-slate-800 mb-2", children: "📝 ຂໍ້ມູນເພີ່ມເຕີມ (ຈາກ Excel)" }),
@@ -9783,6 +10338,885 @@ var DeleteConfirmModal = ({
   ] }) });
 };
 
+// src/components/WaterFeeManagement.tsx
+import { useState as useStateFee, useMemo as useMemoFee } from "react";
+import {
+  Search as SearchFee,
+  FileSpreadsheet as FileSpreadsheetFee,
+  Printer as PrinterFee,
+  CheckCircle2 as CheckCircle2Fee,
+  Clock as ClockFee,
+  AlertCircle as AlertCircleFee,
+  Edit as EditFee,
+  Eye as EyeFee,
+  X as XFee,
+  Save as SaveFee,
+  Receipt as ReceiptFee,
+  DollarSign as DollarSignFee
+} from "lucide-react";
+import { jsx as jsxFee, jsxs as jsxsFee } from "react/jsx-runtime";
+
+function doExportFeesToExcel(projects) {
+  if (typeof XLSX === "undefined") {
+    alert("ໂຫລດຕົວສ້າງ Excel ບໍ່ສຳເລັດ");
+    return;
+  }
+  const data = projects.map((p, index) => {
+    const fee = p.waterFeePayment || {};
+    return {
+      "ລ/ດ": index + 1,
+      "ຊື່ໂຄງການ / ກິດຈະການ": p.projectName,
+      "ປະເພດກິດຈະການ": p.projectCategory,
+      "ເຈົ້າຂອງໂຄງການ": p.ownerName,
+      "ເບີໂທ": p.contactPhone,
+      "ເລກທີໃບອະນຸຍາດ": p.permitNumber,
+      "ປະລິມານນໍ້າອະນຸຍາດ": `${p.waterVolume.toLocaleString()} ${p.waterVolumeUnit}`,
+      "ອັດຕາຄ່ານໍາໃຊ້ນໍ້າ (ກີບ/m³)": fee.ratePerUnit || "",
+      "ປະລິມານນໍ້າຄິດໄລ່ (m³)": fee.billedVolume || "",
+      "ຈຳນວນເງິນຕ້ອງຊຳລະທັງໝົດ (ກີບ)": Number(fee.totalAmountDue || 0),
+      "ຈຳນວນເງິນຊຳລະແລ້ວ (ກີບ)": Number(fee.amountPaid || 0),
+      "ເງິນຍັງຄ້າງຊຳລະ (ກີບ)": Number(fee.remainingBalance || 0),
+      "ສະຖານະການຊຳລະ": fee.status === "paid" ? "ຊຳລະຄົບຖ້ວນ" : fee.status === "partial" ? "ຊຳລະບາງສ່ວນ" : fee.status === "exempt" ? "ໄດ້ຮັບການຍົກເວັ້ນ" : "ຄ້າງຊຳລະ",
+      "ຮອບວຽນການຈ່າຍ": fee.paymentCycle === "monthly" ? "ປະຈຳເດືອນ" : fee.paymentCycle === "quarterly" ? "ປະຈຳງວດ" : fee.paymentCycle === "semi-annual" ? "ປະຈຳ 6 ເດືອນ" : "ປະຈຳປີ",
+      "ປີ / ຮອບຊຳລະ": fee.billedYear || "",
+      "ເລກທີໃບຮັບເງິນ / ໃບສັ່ງເກັບ": fee.receiptNumber || "",
+      "ວັນທີຊຳລະ": fee.paymentDate || "",
+      "ໜ່ວຍງານຮັບຊຳລະ": fee.receivingAgency || "ຄັງເງິນແຫ່ງຊາດ",
+      "ຊ່ອງທາງ / ທະນາຄານ": fee.bankAccount || "",
+      "ເອກະສານອ້າງອີງ / ໃບໂອນ": fee.paymentSlip || "",
+      "ໝາຍເຫດ": fee.notes || ""
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "ລາຍງານການເກັບຄ່ານໍາໃຊ້ນໍ້າ");
+  XLSX.writeFile(wb, `ລາຍງານການເກັບຄ່ານໍາໃຊ້ນໍ້າ_${new Date().toISOString().split("T")[0]}.xlsx`);
+}
+
+function doPrintFeesReport(projects) {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    alert("ກະລຸນາອະນຸຍາດ Pop-up window ເພື່ອພິມລາຍງານ");
+    return;
+  }
+  const currentDate = new Date().toLocaleDateString("lo-LA", { year: "numeric", month: "long", day: "numeric" });
+  let totalDue = 0, totalPaid = 0, totalRem = 0;
+  projects.forEach((p) => {
+    const f = p.waterFeePayment || {};
+    totalDue += parseFloat(f.totalAmountDue) || 0;
+    totalPaid += parseFloat(f.amountPaid) || 0;
+    totalRem += parseFloat(f.remainingBalance) || 0;
+  });
+  const rows = projects.map((p, idx) => {
+    const f = p.waterFeePayment || {};
+    const stText = f.status === "paid" ? "ຊຳລະຄົບຖ້ວນ" : f.status === "partial" ? "ຊຳລະບາງສ່ວນ" : f.status === "exempt" ? "ໄດ້ຮັບການຍົກເວັ້ນ" : "ຄ້າງຊຳລະ";
+    const stColor = f.status === "paid" ? "#166534" : f.status === "partial" ? "#854d0e" : f.status === "exempt" ? "#1e40af" : "#991b1b";
+    const stBg = f.status === "paid" ? "#dcfce7" : f.status === "partial" ? "#fef9c3" : f.status === "exempt" ? "#dbeafe" : "#fee2e2";
+    return `
+      <tr>
+        <td style="text-align:center; padding:6px; border:1px solid #cbd5e1;">${idx + 1}</td>
+        <td style="padding:6px; border:1px solid #cbd5e1;">
+          <b>${escapeHtml(p.projectName)}</b><br/>
+          <span style="font-size:11px; color:#64748b;">${escapeHtml(p.projectCategory)} • ${escapeHtml(p.ownerName)}</span>
+        </td>
+        <td style="text-align:right; padding:6px; border:1px solid #cbd5e1; font-size:11px;">
+          ${p.waterVolume.toLocaleString()} ${p.waterVolumeUnit}<br/>
+          <span style="color:#64748b;">${f.ratePerUnit ? Number(f.ratePerUnit).toLocaleString() + " ກີບ/m³" : "-"}</span>
+        </td>
+        <td style="text-align:right; padding:6px; border:1px solid #cbd5e1; font-weight:bold;">${Number(f.totalAmountDue || 0).toLocaleString()} ກີບ</td>
+        <td style="text-align:right; padding:6px; border:1px solid #cbd5e1; color:#166534; font-weight:bold;">${Number(f.amountPaid || 0).toLocaleString()} ກີບ</td>
+        <td style="text-align:right; padding:6px; border:1px solid #cbd5e1; color:#991b1b; font-weight:bold;">${Number(f.remainingBalance || 0).toLocaleString()} ກີບ</td>
+        <td style="padding:6px; border:1px solid #cbd5e1; font-size:11px;">
+          ${escapeHtml(f.receiptNumber || "-")}<br/>
+          <span style="color:#64748b;">${f.paymentDate || "-"}</span>
+        </td>
+        <td style="text-align:center; padding:6px; border:1px solid #cbd5e1;">
+          <span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:bold; background:${stBg}; color:${stColor};">
+            ${stText}
+          </span>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="lo">
+    <head>
+      <meta charset="UTF-8">
+      <title>ລາຍງານການເກັບຄ່ານໍາໃຊ້ນໍ້າ - ກົມຊັບພະຍາກອນນໍ້າ</title>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/400.css">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/700.css">
+      <style>
+        body { font-family: 'Phetsarath OT', 'Noto Sans Lao', sans-serif; padding: 24px; color: #0f172a; font-size: 12px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .emblem { font-weight: bold; font-size: 14px; }
+        .motto { font-size: 12px; margin-bottom: 12px; }
+        .title { font-size: 17px; font-weight: bold; color: #047857; margin: 12px 0 4px; }
+        .stats { display: flex; justify-content: space-between; margin-bottom: 16px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; }
+        .stat-box b { font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+        th { background: #f1f5f9; padding: 8px; border: 1px solid #cbd5e1; text-align: left; }
+        @media print { .no-print { display: none !important; } }
+      </style>
+    </head>
+    <body>
+      <div class="no-print" style="margin-bottom: 16px; padding: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+        <b>ກຽມພ້ອມພິມ ຫຼື ບັນທຶກເປັນ PDF:</b>
+        <button onclick="window.print()" style="background:#15803d; color:white; border:none; padding:8px 18px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ ພິມລາຍງານ</button>
+      </div>
+      <div class="header">
+        <div class="emblem">ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</div>
+        <div class="motto">ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</div>
+        <div style="font-size: 11px; text-align: left;">
+          ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ<br/>
+          ກົມຊັບພະຍາກອນນໍ້າ | ລະບົບຂໍ້ມູນການນໍາໃຊ້ນໍ້າ
+        </div>
+        <div class="title">ບົດລາຍງານສະຫຼຸບ ຂໍ້ມູນການຈ່າຍຄ່ານໍາໃຊ້ນໍ້າ (Water Usage Fee Report)</div>
+        <div style="font-size: 11px; color: #64748b;">ວັນທີອອກລາຍງານ: ${currentDate} | ຈຳນວນ: ${projects.length} ໂຄງການ</div>
+      </div>
+      <div class="stats">
+        <div class="stat-box">ຍອດຕ້ອງຊຳລະທັງໝົດ: <br/><b style="color:#0f172a;">${totalDue.toLocaleString()} ກີບ</b></div>
+        <div class="stat-box">ຊຳລະແລ້ວທັງໝົດ: <br/><b style="color:#166534;">${totalPaid.toLocaleString()} ກີບ</b></div>
+        <div class="stat-box">ເງິນຍັງຄ້າງຊຳລະ: <br/><b style="color:#991b1b;">${totalRem.toLocaleString()} ກີບ</b></div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 4%; text-align:center;">ລ/ດ</th>
+            <th style="width: 25%;">ໂຄງການ / ກິດຈະການ</th>
+            <th style="width: 14%; text-align:right;">ປະລິມານ & ອັດຕາ</th>
+            <th style="width: 13%; text-align:right;">ຍອດຕ້ອງຊຳລະ</th>
+            <th style="width: 12%; text-align:right;">ຊຳລະແລ້ວ</th>
+            <th style="width: 12%; text-align:right;">ຍັງຄ້າງ</th>
+            <th style="width: 10%;">ໃບຮັບເງິນ / ວັນທີ</th>
+            <th style="width: 10%; text-align:center;">ສະຖານະ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+  printWindow.document.write(html);
+  printWindow.document.close();
+}
+
+function doPrintSingleReceipt(project) {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    alert("ກະລຸນາອະນຸຍາດ Pop-up window ເພື່ອພິມໃບຮັບເງິນ");
+    return;
+  }
+  const fee = project.waterFeePayment || {};
+  const currentDate = new Date().toLocaleDateString("lo-LA", { year: "numeric", month: "long", day: "numeric" });
+  const html = `
+    <!DOCTYPE html>
+    <html lang="lo">
+    <head>
+      <meta charset="UTF-8">
+      <title>ໃບຮັບເງິນຄ່ານໍາໃຊ້ນໍ້າ - ${escapeHtml(project.projectName)}</title>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/400.css">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/700.css">
+      <style>
+        body { font-family: 'Phetsarath OT', 'Noto Sans Lao', sans-serif; padding: 40px; color: #0f172a; max-width: 800px; margin: 0 auto; line-height: 1.6; }
+        .header { text-align: center; margin-bottom: 24px; }
+        .emblem { font-weight: bold; font-size: 15px; }
+        .motto { font-size: 12px; margin-bottom: 12px; }
+        .box { border: 2px solid #0f172a; border-radius: 12px; padding: 24px; position: relative; }
+        .title { text-align: center; font-size: 19px; font-weight: bold; color: #047857; margin-bottom: 4px; }
+        .sub { text-align: center; font-size: 12px; color: #64748b; margin-bottom: 20px; }
+        .receipt-no { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 16px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+        th, td { border: 1px solid #cbd5e1; padding: 8px 12px; }
+        th { background: #f8fafc; font-weight: bold; text-align: left; }
+        .signatures { display: grid; grid-template-columns: 1fr 1fr; margin-top: 40px; text-align: center; font-size: 13px; }
+        .sig-box { min-height: 80px; }
+        @media print { .no-print { display: none !important; } }
+      </style>
+    </head>
+    <body>
+      <div class="no-print" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; background:#f0fdf4; padding:12px; border-radius:8px; border:1px solid #bbf7d0;">
+        <b>ໃບຮັບເງິນທາງການ (Official Receipt Voucher)</b>
+        <button onclick="window.print()" style="background:#15803d; color:white; border:none; padding:10px 24px; border-radius:8px; font-weight:bold; cursor:pointer;">🖨️ ພິມໃບຮັບເງິນ</button>
+      </div>
+      <div class="header">
+        <div class="emblem">ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</div>
+        <div class="motto">ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</div>
+        <div style="font-size: 12px; text-align: left;">
+          ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ<br/>
+          ກົມຊັບພະຍາກອນນໍ້າ
+        </div>
+      </div>
+      <div class="box">
+        <div class="title">ໃບຮັບເງິນ / ໃບຢັ້ງຢືນການຊຳລະຄ່ານໍາໃຊ້ນໍ້າ</div>
+        <div class="sub">Water Usage Fee Payment Receipt Voucher</div>
+        <div class="receipt-no">
+          <span>ເລກທີ: <span style="font-family: monospace; color:#0369a1;">${escapeHtml(fee.receiptNumber || "REC-" + project.id)}</span></span>
+          <span>ວັນທີ: ${fee.paymentDate || currentDate}</span>
+        </div>
+        <div class="grid">
+          <div><b>ຊື່ໂຄງການ / ກິດຈະການ:</b> ${escapeHtml(project.projectName)}</div>
+          <div><b>ເຈົ້າຂອງໂຄງການ:</b> ${escapeHtml(project.ownerName)}</div>
+          <div><b>ປະເພດກິດຈະການ:</b> ${escapeHtml(project.projectCategory)}</div>
+          <div><b>ເລກທີໃບອະນຸຍາດ:</b> ${escapeHtml(project.permitNumber)}</div>
+          <div><b>ທີ່ຕັ້ງ:</b> ບ້ານ ${escapeHtml(project.projectLocation?.village || "")}, ${escapeHtml(project.projectLocation?.district || "")}, ${escapeHtml(project.projectLocation?.province || "")}</div>
+          <div><b>ແຫຼ່ງນໍ້າ:</b> ${escapeHtml(project.waterSourceName)} (${escapeHtml(project.waterSourceType)})</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ລາຍການ</th>
+              <th style="text-align:right;">ປະລິມານ</th>
+              <th style="text-align:right;">ອັດຕາ (ກີບ)</th>
+              <th style="text-align:right;">ຈຳນວນເງິນ (ກີບ)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ຄ່ານໍາໃຊ້ນໍ້າ ${fee.paymentCycle === "monthly" ? "ປະຈຳເດືອນ" : fee.paymentCycle === "quarterly" ? "ປະຈຳງວດ" : fee.paymentCycle === "semi-annual" ? "ປະຈຳ 6 ເດືອນ" : "ປະຈຳປີ"} (${fee.billedYear || "2026"})</td>
+              <td style="text-align:right;">${Number(fee.billedVolume || project.waterVolume * 365).toLocaleString()} m³</td>
+              <td style="text-align:right;">${Number(fee.ratePerUnit || 150).toLocaleString()}</td>
+              <td style="text-align:right; font-weight:bold;">${Number(fee.totalAmountDue || 0).toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td colspan="3" style="text-align:right; font-weight:bold;">ຈຳນວນເງິນທີ່ໄດ້ຊຳລະ:</td>
+              <td style="text-align:right; font-weight:bold; color:#166534;">${Number(fee.amountPaid || 0).toLocaleString()} ກີບ</td>
+            </tr>
+            <tr>
+              <td colspan="3" style="text-align:right; font-weight:bold;">ເງິນຍັງຄ້າງຊຳລະ:</td>
+              <td style="text-align:right; font-weight:bold; color:#991b1b;">${Number(fee.remainingBalance || 0).toLocaleString()} ກີບ</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="font-size:12px; margin-top:10px;">
+          <div><b>ໜ່ວຍງານຮັບຊຳລະ:</b> ${escapeHtml(fee.receivingAgency || "ຄັງເງິນແຫ່ງຊາດ")} | <b>ຊ່ອງທາງ / ທະນາຄານ:</b> ${escapeHtml(fee.bankAccount || "BCEL One")}</div>
+          ${fee.paymentSlip ? `<div><b>ເລກທີໃບໂອນ / ເອກະສານອ້າງອີງ:</b> ${escapeHtml(fee.paymentSlip)}</div>` : ""}
+          ${fee.notes ? `<div><b>ໝາຍເຫດ:</b> <i>${escapeHtml(fee.notes)}</i></div>` : ""}
+        </div>
+        <div class="signatures">
+          <div>
+            <b>ຜູ້ມອບເງິນ / ຕາງໜ້າໂຄງການ</b>
+            <div class="sig-box"></div>
+            <div>( .................................................. )</div>
+          </div>
+          <div>
+            <b>ຜູ້ຮັບເງິນ / ເຈົ້າໜ້າທີ່ການເງິນ</b>
+            <div class="sig-box"></div>
+            <div>( .................................................. )</div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+  printWindow.document.write(html);
+  printWindow.document.close();
+}
+
+var WaterFeeManagement = ({
+  projects = [],
+  onSaveProject,
+  onSelectProject,
+  onEditProject
+}) => {
+  const [keyword, setKeyword] = useStateFee("");
+  const [statusFilter, setStatusFilter] = useStateFee("all");
+  const [cycleFilter, setCycleFilter] = useStateFee("all");
+  const [editingPaymentProject, setEditingPaymentProject] = useStateFee(null);
+  const [receiptProject, setReceiptProject] = useStateFee(null);
+  const [paymentForm, setPaymentForm] = useStateFee(null);
+  const [isSaving, setIsSaving] = useStateFee(false);
+
+  const stats = useMemoFee(() => {
+    let totalDue = 0, totalPaid = 0, totalRem = 0;
+    let paidCount = 0, partialCount = 0, pendingCount = 0, exemptCount = 0;
+    projects.forEach((p) => {
+      const f = p.waterFeePayment || {};
+      const due = parseFloat(f.totalAmountDue) || 0;
+      const paid = parseFloat(f.amountPaid) || 0;
+      const rem = parseFloat(f.remainingBalance) || 0;
+      totalDue += due;
+      totalPaid += paid;
+      totalRem += rem;
+      if (f.status === "paid") paidCount++;
+      else if (f.status === "partial") partialCount++;
+      else if (f.status === "exempt") exemptCount++;
+      else pendingCount++;
+    });
+    return { totalDue, totalPaid, totalRem, paidCount, partialCount, pendingCount, exemptCount };
+  }, [projects]);
+
+  const filteredProjects = useMemoFee(() => {
+    return projects.filter((p) => {
+      const f = p.waterFeePayment || {};
+      if (statusFilter !== "all" && f.status !== statusFilter) return false;
+      if (cycleFilter !== "all" && f.paymentCycle !== cycleFilter) return false;
+      if (!keyword.trim()) return true;
+      const q = keyword.toLowerCase();
+      return (
+        p.projectName?.toLowerCase().includes(q) ||
+        p.ownerName?.toLowerCase().includes(q) ||
+        p.permitNumber?.toLowerCase().includes(q) ||
+        p.projectLocation?.province?.toLowerCase().includes(q) ||
+        f.receiptNumber?.toLowerCase().includes(q)
+      );
+    });
+  }, [projects, keyword, statusFilter, cycleFilter]);
+
+  const handleOpenEditPayment = (p) => {
+    const f = p.waterFeePayment || {};
+    setEditingPaymentProject(p);
+    setPaymentForm({
+      status: f.status || "pending",
+      ratePerUnit: f.ratePerUnit || "150",
+      billedVolume: f.billedVolume || String(p.waterVolume ? p.waterVolume * 365 : 100000),
+      totalAmountDue: f.totalAmountDue || String(Math.round(150 * (p.waterVolume ? p.waterVolume * 365 : 100000))),
+      amountPaid: f.amountPaid || "0",
+      remainingBalance: f.remainingBalance || String(Math.round(150 * (p.waterVolume ? p.waterVolume * 365 : 100000))),
+      paymentCycle: f.paymentCycle || "annual",
+      billedYear: f.billedYear || String(new Date().getFullYear()),
+      receiptNumber: f.receiptNumber || `REC-2026/${p.id.replace("proj-", "")}`,
+      paymentDate: f.paymentDate || new Date().toISOString().split("T")[0],
+      receivingAgency: f.receivingAgency || "ຄັງເງິນແຫ່ງຊາດ",
+      bankAccount: f.bankAccount || "BCEL One",
+      paymentSlip: f.paymentSlip || "",
+      notes: f.notes || ""
+    });
+  };
+
+  const handleSavePayment = async (e) => {
+    e.preventDefault();
+    if (!editingPaymentProject || !paymentForm) return;
+    try {
+      setIsSaving(true);
+      const updatedProject = {
+        ...editingPaymentProject,
+        waterFeePayment: { ...paymentForm },
+        updatedAt: new Date().toISOString()
+      };
+      await onSaveProject(updatedProject);
+      setEditingPaymentProject(null);
+      setPaymentForm(null);
+    } catch (err) {
+      console.error(err);
+      alert("ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກຂໍ້ມູນການຊຳລະ");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleAutoCalc = () => {
+    if (!paymentForm) return;
+    const rate = parseFloat(paymentForm.ratePerUnit) || 0;
+    const vol = parseFloat(paymentForm.billedVolume) || 0;
+    const due = Math.round(rate * vol);
+    const paid = parseFloat(paymentForm.amountPaid) || 0;
+    const rem = Math.max(0, due - paid);
+    const st = rem === 0 && paid > 0 ? "paid" : (paid > 0 && rem > 0 ? "partial" : paymentForm.status);
+    setPaymentForm({
+      ...paymentForm,
+      totalAmountDue: String(due),
+      remainingBalance: String(rem),
+      status: st
+    });
+  };
+
+  return /* @__PURE__ */ jsxsFee("div", { className: "space-y-6", children: [
+    /* Header Area */
+    /* @__PURE__ */ jsxsFee("div", { className: "flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200 shadow-xs", children: [
+      /* @__PURE__ */ jsxsFee("div", { children: [
+        /* @__PURE__ */ jsxsFee("div", { className: "flex items-center gap-2.5", children: [
+          /* @__PURE__ */ jsxFee("span", { className: "p-2 rounded-2xl bg-emerald-100 text-emerald-700 text-xl", children: "💰" }),
+          /* @__PURE__ */ jsxFee("h2", { className: "text-lg sm:text-xl font-bold text-slate-900", children: "ຂໍ້ມູນການຈ່າຍຄ່ານໍາໃຊ້ນໍ້າ (Water Usage Fee Management)" })
+        ] }),
+        /* @__PURE__ */ jsxFee("p", { className: "text-xs text-slate-500 mt-1", children: "ຫ້ອງສະເພາະຕິດຕາມ ແລະ ຄຸ້ມຄອງການເກັບຄ່ານໍາໃຊ້ນໍ້າ, ຍອດເງິນທີ່ໄດ້ຮັບ, ຍອດຄ້າງຊຳລະ ແລະ ອອກໃບຮັບເງິນຂອງບັນດາໂຄງການ" })
+      ] }),
+      /* @__PURE__ */ jsxsFee("div", { className: "flex items-center gap-2 shrink-0 flex-wrap", children: [
+        /* @__PURE__ */ jsxsFee(
+          "button",
+          {
+            type: "button",
+            onClick: () => doExportFeesToExcel(filteredProjects),
+            className: "px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer",
+            children: [
+              /* @__PURE__ */ jsxFee(FileSpreadsheetFee, { size: 15 }),
+              "ສົ່ງອອກ Excel"
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxsFee(
+          "button",
+          {
+            type: "button",
+            onClick: () => doPrintFeesReport(filteredProjects),
+            className: "px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer",
+            children: [
+              /* @__PURE__ */ jsxFee(PrinterFee, { size: 15 }),
+              "ພິມລາຍງານ PDF"
+            ]
+          }
+        )
+      ] })
+    ] }),
+
+    /* 4 KPI Summary Cards */
+    /* @__PURE__ */ jsxsFee("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4", children: [
+      /* Total Due */
+      /* @__PURE__ */ jsxsFee("div", { className: "bg-white p-4.5 rounded-3xl border border-slate-200 shadow-xs space-y-1.5", children: [
+        /* @__PURE__ */ jsxsFee("div", { className: "flex items-center justify-between text-xs text-slate-500 font-medium", children: [
+          "ຍອດຕ້ອງຊຳລະທັງໝົດ",
+          /* @__PURE__ */ jsxFee("span", { className: "text-base", children: "💵" })
+        ] }),
+        /* @__PURE__ */ jsxsFee("div", { className: "text-xl font-black text-slate-900 tracking-tight", children: [
+          stats.totalDue.toLocaleString(),
+          /* @__PURE__ */ jsxFee("span", { className: "text-xs font-normal text-slate-500 ml-1.5", children: "ກີບ" })
+        ] }),
+        /* @__PURE__ */ jsxFee("p", { className: "text-[11px] text-slate-400", children: "ຄິດໄລ່ຕາມອັດຕາ x ປະລິມານນໍ້າ" })
+      ] }),
+      /* Total Paid */
+      /* @__PURE__ */ jsxsFee("div", { className: "bg-white p-4.5 rounded-3xl border border-emerald-200 shadow-xs space-y-1.5", children: [
+        /* @__PURE__ */ jsxsFee("div", { className: "flex items-center justify-between text-xs text-emerald-800 font-semibold", children: [
+          "ຊຳລະແລ້ວທັງໝົດ",
+          /* @__PURE__ */ jsxFee("span", { className: "text-base", children: "🟢" })
+        ] }),
+        /* @__PURE__ */ jsxsFee("div", { className: "text-xl font-black text-emerald-700 tracking-tight", children: [
+          stats.totalPaid.toLocaleString(),
+          /* @__PURE__ */ jsxFee("span", { className: "text-xs font-normal text-emerald-600 ml-1.5", children: "ກີບ" })
+        ] }),
+        /* @__PURE__ */ jsxsFee("p", { className: "text-[11px] text-emerald-700 font-medium", children: [
+          "ກວມເອົາ ",
+          stats.totalDue > 0 ? ((stats.totalPaid / stats.totalDue) * 100).toFixed(1) : 0,
+          "% ຂອງຍອດທັງໝົດ"
+        ] })
+      ] }),
+      /* Total Remaining */
+      /* @__PURE__ */ jsxsFee("div", { className: "bg-white p-4.5 rounded-3xl border border-rose-200 shadow-xs space-y-1.5", children: [
+        /* @__PURE__ */ jsxsFee("div", { className: "flex items-center justify-between text-xs text-rose-800 font-semibold", children: [
+          "ຍອດຍັງຄ້າງຊຳລະ",
+          /* @__PURE__ */ jsxFee("span", { className: "text-base", children: "🔴" })
+        ] }),
+        /* @__PURE__ */ jsxsFee("div", { className: "text-xl font-black text-rose-700 tracking-tight", children: [
+          stats.totalRem.toLocaleString(),
+          /* @__PURE__ */ jsxFee("span", { className: "text-xs font-normal text-rose-600 ml-1.5", children: "ກີບ" })
+        ] }),
+        /* @__PURE__ */ jsxsFee("p", { className: "text-[11px] text-rose-700 font-medium", children: [
+          "ມີ ",
+          stats.pendingCount + stats.partialCount,
+          " ໂຄງການທີ່ຍັງມີຍອດຄ້າງ"
+        ] })
+      ] }),
+      /* Status Breakdown */
+      /* @__PURE__ */ jsxsFee("div", { className: "bg-white p-4.5 rounded-3xl border border-slate-200 shadow-xs space-y-2", children: [
+        /* @__PURE__ */ jsxsFee("div", { className: "flex items-center justify-between text-xs text-slate-500 font-medium", children: [
+          "ສະຖານະການຊຳລະ",
+          /* @__PURE__ */ jsxFee("span", { className: "text-base", children: "📊" })
+        ] }),
+        /* @__PURE__ */ jsxsFee("div", { className: "flex items-center gap-1.5 flex-wrap text-[11px] font-bold", children: [
+          /* @__PURE__ */ jsxsFee("span", { className: "px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800", children: ["ຈ່າຍຄົບ: ", stats.paidCount] }),
+          /* @__PURE__ */ jsxsFee("span", { className: "px-2 py-0.5 rounded-full bg-amber-100 text-amber-800", children: ["ບາງສ່ວນ: ", stats.partialCount] }),
+          /* @__PURE__ */ jsxsFee("span", { className: "px-2 py-0.5 rounded-full bg-rose-100 text-rose-800", children: ["ຄ້າງ: ", stats.pendingCount] })
+        ] })
+      ] })
+    ] }),
+
+    /* Filter Bar */
+    /* @__PURE__ */ jsxsFee("div", { className: "bg-white p-4 rounded-3xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs", children: [
+      /* Search Input */
+      /* @__PURE__ */ jsxsFee("div", { className: "relative flex-1 max-w-md", children: [
+        /* @__PURE__ */ jsxFee(SearchFee, { size: 16, className: "absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" }),
+        /* @__PURE__ */ jsxFee("input", {
+          type: "text",
+          value: keyword,
+          onChange: (e) => setKeyword(e.target.value),
+          placeholder: "ຄົ້ນຫາຊື່ໂຄງການ, ເຈົ້າຂອງ, ເລກທີໃບຮັບເງິນ, ແຂວງ...",
+          className: "w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 bg-slate-50 font-medium"
+        })
+      ] }),
+      /* Filter Pills */
+      /* @__PURE__ */ jsxsFee("div", { className: "flex items-center gap-1.5 overflow-x-auto", children: [
+        /* @__PURE__ */ jsxsFee(
+          "button",
+          {
+            type: "button",
+            onClick: () => setStatusFilter("all"),
+            className: `px-3 py-1.5 rounded-xl font-bold transition-colors cursor-pointer ${statusFilter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`,
+            children: ["ທັງໝົດ (", projects.length, ")"]
+          }
+        ),
+        /* @__PURE__ */ jsxsFee(
+          "button",
+          {
+            type: "button",
+            onClick: () => setStatusFilter("paid"),
+            className: `px-3 py-1.5 rounded-xl font-bold transition-colors cursor-pointer ${statusFilter === "paid" ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100"}`,
+            children: ["🟢 ຈ່າຍຄົບ (", stats.paidCount, ")"]
+          }
+        ),
+        /* @__PURE__ */ jsxsFee(
+          "button",
+          {
+            type: "button",
+            onClick: () => setStatusFilter("partial"),
+            className: `px-3 py-1.5 rounded-xl font-bold transition-colors cursor-pointer ${statusFilter === "partial" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-800 hover:bg-amber-100"}`,
+            children: ["🟡 ບາງສ່ວນ (", stats.partialCount, ")"]
+          }
+        ),
+        /* @__PURE__ */ jsxsFee(
+          "button",
+          {
+            type: "button",
+            onClick: () => setStatusFilter("pending"),
+            className: `px-3 py-1.5 rounded-xl font-bold transition-colors cursor-pointer ${statusFilter === "pending" ? "bg-rose-600 text-white" : "bg-rose-50 text-rose-800 hover:bg-rose-100"}`,
+            children: ["🔴 ຄ້າງຊຳລະ (", stats.pendingCount, ")"]
+          }
+        ),
+        /* @__PURE__ */ jsxsFee(
+          "button",
+          {
+            type: "button",
+            onClick: () => setStatusFilter("exempt"),
+            className: `px-3 py-1.5 rounded-xl font-bold transition-colors cursor-pointer ${statusFilter === "exempt" ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-800 hover:bg-blue-100"}`,
+            children: ["🔵 ຍົກເວັ້ນ (", stats.exemptCount, ")"]
+          }
+        )
+      ] }),
+      /* Cycle Filter */
+      /* @__PURE__ */ jsxsFee("select", {
+        value: cycleFilter,
+        onChange: (e) => setCycleFilter(e.target.value),
+        className: "px-3 py-2 border border-slate-200 rounded-xl bg-slate-50 font-medium text-xs",
+        children: [
+          /* @__PURE__ */ jsxFee("option", { value: "all", children: "ທຸກຮອບວຽນການຈ່າຍ" }),
+          /* @__PURE__ */ jsxFee("option", { value: "annual", children: "📅 ປະຈຳປີ (Annual)" }),
+          /* @__PURE__ */ jsxFee("option", { value: "semi-annual", children: "🗓️ ປະຈຳ 6 ເດືອນ (Semi-Annual)" }),
+          /* @__PURE__ */ jsxFee("option", { value: "quarterly", children: "📆 ປະຈຳງວດ 3 ເດືອນ" }),
+          /* @__PURE__ */ jsxFee("option", { value: "monthly", children: "🕒 ປະຈຳເດືອນ (Monthly)" })
+        ]
+      })
+    ] }),
+
+    /* Table */
+    /* @__PURE__ */ jsxFee("div", { className: "bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden", children: /* @__PURE__ */ jsxFee("div", { className: "overflow-x-auto", children: /* @__PURE__ */ jsxsFee("table", { className: "w-full text-left text-xs text-slate-600", children: [
+      /* Table Head */
+      /* @__PURE__ */ jsxFee("thead", { className: "bg-slate-50 text-slate-700 font-bold uppercase text-[11px] border-b border-slate-200", children: /* @__PURE__ */ jsxsFee("tr", { children: [
+        /* @__PURE__ */ jsxFee("th", { className: "py-4 px-3.5 text-center w-12", children: "ລ/ດ" }),
+        /* @__PURE__ */ jsxFee("th", { className: "py-4 px-4", children: "ຊື່ໂຄງການ / ກິດຈະການ & ເຈົ້າຂອງ" }),
+        /* @__PURE__ */ jsxFee("th", { className: "py-4 px-4 text-right", children: "ປະລິມານ & ອັດຕາ" }),
+        /* @__PURE__ */ jsxFee("th", { className: "py-4 px-4 text-right", children: "ຍອດຕ້ອງຊຳລະ (ກີບ)" }),
+        /* @__PURE__ */ jsxFee("th", { className: "py-4 px-4 text-right", children: "ຊຳລະແລ້ວ (ກີບ)" }),
+        /* @__PURE__ */ jsxFee("th", { className: "py-4 px-4 text-right", children: "ຍັງຄ້າງ (ກີບ)" }),
+        /* @__PURE__ */ jsxFee("th", { className: "py-4 px-4", children: "ໃບຮັບເງິນ / ວັນທີ" }),
+        /* @__PURE__ */ jsxFee("th", { className: "py-4 px-4 text-center", children: "ສະຖານະ" }),
+        /* @__PURE__ */ jsxFee("th", { className: "py-4 px-4 text-center", children: "ຈັດການ" })
+      ] }) }),
+      /* Table Body */
+      /* @__PURE__ */ jsxFee("tbody", { className: "divide-y divide-slate-100 font-medium", children: filteredProjects.length === 0 ? /* @__PURE__ */ jsxFee("tr", { children: /* @__PURE__ */ jsxsFee("td", { colSpan: 9, className: "py-16 text-center text-slate-400", children: [
+        /* @__PURE__ */ jsxFee(AlertCircleFee, { size: 36, className: "mx-auto mb-2 text-slate-300" }),
+        "ບໍ່ພົບຂໍ້ມູນການຈ່າຍຄ່ານໍາໃຊ້ນໍ້າທີ່ກົງກັບເງື່ອນໄຂ"
+      ] }) }) : filteredProjects.map((p, index) => {
+        const fee = p.waterFeePayment || {};
+        return /* @__PURE__ */ jsxsFee("tr", { className: "hover:bg-slate-50 transition-colors", children: [
+          /* @__PURE__ */ jsxFee("td", { className: "py-3.5 px-3.5 text-center font-mono text-slate-400", children: index + 1 }),
+          /* @__PURE__ */ jsxsFee("td", { className: "py-3.5 px-4", children: [
+            /* @__PURE__ */ jsxFee("div", { className: "font-bold text-slate-900 line-clamp-1", children: p.projectName }),
+            /* @__PURE__ */ jsxsFee("div", { className: "text-[11px] text-slate-500 mt-0.5", children: [
+              p.projectCategory,
+              " • ເຈົ້າຂອງ: ",
+              /* @__PURE__ */ jsxFee("b", { children: p.ownerName })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxsFee("td", { className: "py-3.5 px-4 text-right", children: [
+            /* @__PURE__ */ jsxsFee("div", { className: "font-bold text-slate-800", children: [p.waterVolume.toLocaleString(), " ", p.waterVolumeUnit] }),
+            /* @__PURE__ */ jsxsFee("div", { className: "text-[11px] text-emerald-700 font-mono", children: [fee.ratePerUnit ? Number(fee.ratePerUnit).toLocaleString() + " ກີບ/m³" : "-"] })
+          ] }),
+          /* @__PURE__ */ jsxFee("td", { className: "py-3.5 px-4 text-right font-mono font-bold text-slate-900", children: Number(fee.totalAmountDue || 0).toLocaleString() }),
+          /* @__PURE__ */ jsxFee("td", { className: "py-3.5 px-4 text-right font-mono font-bold text-emerald-700", children: Number(fee.amountPaid || 0).toLocaleString() }),
+          /* @__PURE__ */ jsxFee("td", { className: `py-3.5 px-4 text-right font-mono font-bold ${Number(fee.remainingBalance || 0) > 0 ? "text-rose-700" : "text-slate-400"}`, children: Number(fee.remainingBalance || 0).toLocaleString() }),
+          /* @__PURE__ */ jsxsFee("td", { className: "py-3.5 px-4", children: [
+            /* @__PURE__ */ jsxFee("div", { className: "font-mono font-bold text-slate-800 text-[11px]", children: fee.receiptNumber || "-" }),
+            /* @__PURE__ */ jsxFee("div", { className: "text-[10px] text-slate-400 mt-0.5", children: fee.paymentDate || "-" })
+          ] }),
+          /* @__PURE__ */ jsxFee("td", { className: "py-3.5 px-4 text-center", children: /* @__PURE__ */ jsxFee("span", {
+            className: `inline-block px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+              fee.status === "paid" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+              fee.status === "partial" ? "bg-amber-50 text-amber-700 border-amber-200" :
+              fee.status === "exempt" ? "bg-blue-50 text-blue-700 border-blue-200" :
+              "bg-rose-50 text-rose-700 border-rose-200"
+            }`,
+            children:
+              fee.status === "paid" ? "🟢 ຊຳລະຄົບຖ້ວນ" :
+              fee.status === "partial" ? "🟡 ຊຳລະບາງສ່ວນ" :
+              fee.status === "exempt" ? "🔵 ໄດ້ຮັບການຍົກເວັ້ນ" :
+              "🔴 ຄ້າງຊຳລະ"
+          }) }),
+          /* @__PURE__ */ jsxFee("td", { className: "py-3.5 px-4 text-center", children: /* @__PURE__ */ jsxsFee("div", { className: "flex items-center justify-center gap-1", children: [
+            /* Record/Edit Payment button */
+            /* @__PURE__ */ jsxFee(
+              "button",
+              {
+                type: "button",
+                onClick: () => handleOpenEditPayment(p),
+                className: "p-1.5 rounded-lg text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer",
+                title: "ບັນທຶກ ແລະ ແກ້ໄຂການຊຳລະ",
+                children: /* @__PURE__ */ jsxFee(EditFee, { size: 15 })
+              }
+            ),
+            /* Receipt voucher button */
+            /* @__PURE__ */ jsxFee(
+              "button",
+              {
+                type: "button",
+                onClick: () => doPrintSingleReceipt(p),
+                className: "p-1.5 rounded-lg text-sky-700 hover:bg-sky-50 transition-colors cursor-pointer",
+                title: "ພິມໃບຮັບເງິນ / Receipt",
+                children: /* @__PURE__ */ jsxFee(ReceiptFee, { size: 15 })
+              }
+            ),
+            /* View details button */
+            /* @__PURE__ */ jsxFee(
+              "button",
+              {
+                type: "button",
+                onClick: () => onSelectProject(p),
+                className: "p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer",
+                title: "ເບິ່ງຂໍ້ມູນໂຄງການ",
+                children: /* @__PURE__ */ jsxFee(EyeFee, { size: 15 })
+              }
+            )
+          ] }) })
+        ] }, p.id);
+      }) })
+    ] }) }) }),
+
+    /* Quick Payment Editor Modal */
+    editingPaymentProject && paymentForm && /* @__PURE__ */ jsxFee("div", { className: "fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200", children: /* @__PURE__ */ jsxsFee("div", { className: "bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden", children: [
+      /* Modal Header */
+      /* @__PURE__ */ jsxsFee("div", { className: "px-6 py-4.5 bg-gradient-to-r from-emerald-700 via-teal-700 to-slate-900 text-white flex items-center justify-between", children: [
+        /* @__PURE__ */ jsxsFee("div", { className: "flex items-center gap-3", children: [
+          /* @__PURE__ */ jsxFee("span", { className: "text-2xl", children: "💰" }),
+          /* @__PURE__ */ jsxsFee("div", { children: [
+            /* @__PURE__ */ jsxFee("h3", { className: "text-base font-bold", children: "ບັນທຶກ ແລະ ແກ້ໄຂຂໍ້ມູນການຈ່າຍຄ່ານໍາໃຊ້ນໍ້າ" }),
+            /* @__PURE__ */ jsxFee("p", { className: "text-xs text-emerald-100", children: editingPaymentProject.projectName })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxFee(
+          "button",
+          {
+            type: "button",
+            onClick: () => { setEditingPaymentProject(null); setPaymentForm(null); },
+            className: "w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors cursor-pointer",
+            children: /* @__PURE__ */ jsxFee(XFee, { size: 18 })
+          }
+        )
+      ] }),
+      /* Modal Body Form */
+      /* @__PURE__ */ jsxsFee("form", { onSubmit: handleSavePayment, className: "p-6 overflow-y-auto space-y-4 text-xs", children: [
+        /* Calculation header & auto-calc */
+        /* @__PURE__ */ jsxsFee("div", { className: "p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-3", children: [
+          /* @__PURE__ */ jsxsFee("div", { children: [
+            /* @__PURE__ */ jsxFee("div", { className: "font-bold text-emerald-950", children: "ຄິດໄລ່ຍອດເງິນອັດຕະໂນມັດ:" }),
+            /* @__PURE__ */ jsxFee("p", { className: "text-[11px] text-emerald-700", children: "ຄູນ ອັດຕາຄ່ານໍາໃຊ້ນໍ້າ x ປະລິມານນໍ້າ ແລະ ຫັກລົບຍອດທີ່ຊຳລະແລ້ວ" })
+          ] }),
+          /* @__PURE__ */ jsxsFee(
+            "button",
+            {
+              type: "button",
+              onClick: handleAutoCalc,
+              className: "px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 shadow-xs cursor-pointer",
+              children: [
+                /* @__PURE__ */ jsxFee("span", { children: "⚡" }),
+                "ຄິດໄລ່ດຽວນີ້"
+              ]
+            }
+          )
+        ] }),
+
+        /* Row 1: Status & Cycle & Year */
+        /* @__PURE__ */ jsxsFee("div", { className: "grid grid-cols-1 sm:grid-cols-3 gap-3", children: [
+          /* @__PURE__ */ jsxsFee("div", { children: [
+            /* @__PURE__ */ jsxFee("label", { className: "block font-bold text-slate-700 mb-1", children: "ສະຖານະການຊຳລະ *" }),
+            /* @__PURE__ */ jsxsFee("select", {
+              value: paymentForm.status,
+              onChange: (e) => setPaymentForm({ ...paymentForm, status: e.target.value }),
+              className: "w-full px-3 py-2 border border-slate-300 rounded-xl bg-white font-bold",
+              children: [
+                /* @__PURE__ */ jsxFee("option", { value: "pending", children: "🔴 ຍັງບໍ່ທັນຊຳລະ (Unpaid)" }),
+                /* @__PURE__ */ jsxFee("option", { value: "paid", children: "🟢 ຊຳລະຄົບຖ້ວນ (Paid in Full)" }),
+                /* @__PURE__ */ jsxFee("option", { value: "partial", children: "🟡 ຊຳລະບາງສ່ວນ (Partially Paid)" }),
+                /* @__PURE__ */ jsxFee("option", { value: "exempt", children: "🔵 ໄດ້ຮັບການຍົກເວັ້ນ (Exempt)" })
+              ]
+            })
+          ] }),
+          /* @__PURE__ */ jsxsFee("div", { children: [
+            /* @__PURE__ */ jsxFee("label", { className: "block font-bold text-slate-700 mb-1", children: "ຮອບວຽນການຈ່າຍ *" }),
+            /* @__PURE__ */ jsxsFee("select", {
+              value: paymentForm.paymentCycle,
+              onChange: (e) => setPaymentForm({ ...paymentForm, paymentCycle: e.target.value }),
+              className: "w-full px-3 py-2 border border-slate-300 rounded-xl bg-white font-medium",
+              children: [
+                /* @__PURE__ */ jsxFee("option", { value: "annual", children: "📅 ປະຈຳປີ (Annual)" }),
+                /* @__PURE__ */ jsxFee("option", { value: "semi-annual", children: "🗓️ ປະຈຳ 6 ເດືອນ" }),
+                /* @__PURE__ */ jsxFee("option", { value: "quarterly", children: "📆 ປະຈຳງວດ" }),
+                /* @__PURE__ */ jsxFee("option", { value: "monthly", children: "🕒 ປະຈຳເດືອນ" })
+              ]
+            })
+          ] }),
+          /* @__PURE__ */ jsxsFee("div", { children: [
+            /* @__PURE__ */ jsxFee("label", { className: "block font-bold text-slate-700 mb-1", children: "ປີທີ່ຄິດໄລ່" }),
+            /* @__PURE__ */ jsxFee("input", {
+              type: "text",
+              value: paymentForm.billedYear,
+              onChange: (e) => setPaymentForm({ ...paymentForm, billedYear: e.target.value }),
+              className: "w-full px-3 py-2 border border-slate-300 rounded-xl font-medium"
+            })
+          ] })
+        ] }),
+
+        /* Row 2: Rate, Volume, Total */
+        /* @__PURE__ */ jsxsFee("div", { className: "grid grid-cols-1 sm:grid-cols-3 gap-3", children: [
+          /* @__PURE__ */ jsxsFee("div", { children: [
+            /* @__PURE__ */ jsxFee("label", { className: "block font-bold text-slate-700 mb-1", children: "ອັດຕາຄ່ານໍາໃຊ້ນໍ້າ (ກີບ/m³)" }),
+            /* @__PURE__ */ jsxFee("input", {
+              type: "number",
+              value: paymentForm.ratePerUnit,
+              onChange: (e) => setPaymentForm({ ...paymentForm, ratePerUnit: e.target.value }),
+              className: "w-full px-3 py-2 border border-slate-300 rounded-xl font-mono"
+            })
+          ] }),
+          /* @__PURE__ */ jsxsFee("div", { children: [
+            /* @__PURE__ */ jsxFee("label", { className: "block font-bold text-slate-700 mb-1", children: "ປະລິມານນໍ້າຄິດໄລ່ (m³)" }),
+            /* @__PURE__ */ jsxFee("input", {
+              type: "number",
+              value: paymentForm.billedVolume,
+              onChange: (e) => setPaymentForm({ ...paymentForm, billedVolume: e.target.value }),
+              className: "w-full px-3 py-2 border border-slate-300 rounded-xl font-mono"
+            })
+          ] }),
+          /* @__PURE__ */ jsxsFee("div", { children: [
+            /* @__PURE__ */ jsxFee("label", { className: "block font-bold text-slate-700 mb-1", children: "ຈຳນວນເງິນຕ້ອງຊຳລະ (ກີບ) *" }),
+            /* @__PURE__ */ jsxFee("input", {
+              type: "number",
+              value: paymentForm.totalAmountDue,
+              onChange: (e) => setPaymentForm({ ...paymentForm, totalAmountDue: e.target.value }),
+              className: "w-full px-3 py-2 border border-slate-300 rounded-xl font-mono font-bold"
+            })
+          ] })
+        ] }),
+
+        /* Row 3: Paid & Remaining */
+        /* @__PURE__ */ jsxsFee("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3", children: [
+          /* @__PURE__ */ jsxsFee("div", { children: [
+            /* @__PURE__ */ jsxFee("label", { className: "block font-bold text-emerald-800 mb-1", children: "ຈຳນວນເງິນທີ່ຊຳລະແລ້ວ (ກີບ)" }),
+            /* @__PURE__ */ jsxFee("input", {
+              type: "number",
+              value: paymentForm.amountPaid,
+              onChange: (e) => {
+                const paid = parseFloat(e.target.value) || 0;
+                const due = parseFloat(paymentForm.totalAmountDue) || 0;
+                const rem = Math.max(0, due - paid);
+                const st = rem === 0 && paid > 0 ? "paid" : (paid > 0 && rem > 0 ? "partial" : paymentForm.status);
+                setPaymentForm({ ...paymentForm, amountPaid: e.target.value, remainingBalance: String(rem), status: st });
+              },
+              className: "w-full px-3 py-2 border border-emerald-300 bg-emerald-50/50 rounded-xl font-mono font-bold text-emerald-950"
+            })
+          ] }),
+          /* @__PURE__ */ jsxsFee("div", { children: [
+            /* @__PURE__ */ jsxFee("label", { className: "block font-bold text-rose-800 mb-1", children: "ເງິນຍັງຄ້າງຊຳລະ (ກີບ)" }),
+            /* @__PURE__ */ jsxFee("input", {
+              type: "number",
+              value: paymentForm.remainingBalance,
+              onChange: (e) => setPaymentForm({ ...paymentForm, remainingBalance: e.target.value }),
+              className: "w-full px-3 py-2 border border-rose-300 bg-rose-50/50 rounded-xl font-mono font-bold text-rose-950"
+            })
+          ] })
+        ] }),
+
+        /* Row 4: Receipt, Date, Agency, Bank */
+        /* @__PURE__ */ jsxsFee("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-3", children: [
+          /* @__PURE__ */ jsxsFee("div", { children: [
+            /* @__PURE__ */ jsxFee("label", { className: "block font-semibold text-slate-700 mb-1", children: "ເລກທີໃບຮັບເງິນ / ໃບສັ່ງເກັບ" }),
+            /* @__PURE__ */ jsxFee("input", {
+              type: "text",
+              value: paymentForm.receiptNumber,
+              onChange: (e) => setPaymentForm({ ...paymentForm, receiptNumber: e.target.value }),
+              className: "w-full px-3 py-2 border border-slate-300 rounded-xl font-mono"
+            })
+          ] }),
+          /* @__PURE__ */ jsxsFee("div", { children: [
+            /* @__PURE__ */ jsxFee("label", { className: "block font-semibold text-slate-700 mb-1", children: "ວັນທີຊຳລະ" }),
+            /* @__PURE__ */ jsxFee("input", {
+              type: "date",
+              value: paymentForm.paymentDate,
+              onChange: (e) => setPaymentForm({ ...paymentForm, paymentDate: e.target.value }),
+              className: "w-full px-3 py-2 border border-slate-300 rounded-xl"
+            })
+          ] }),
+          /* @__PURE__ */ jsxsFee("div", { children: [
+            /* @__PURE__ */ jsxFee("label", { className: "block font-semibold text-slate-700 mb-1", children: "ໜ່ວຍງານຮັບຊຳລະ" }),
+            /* @__PURE__ */ jsxFee("input", {
+              type: "text",
+              value: paymentForm.receivingAgency,
+              onChange: (e) => setPaymentForm({ ...paymentForm, receivingAgency: e.target.value }),
+              className: "w-full px-3 py-2 border border-slate-300 rounded-xl"
+            })
+          ] }),
+          /* @__PURE__ */ jsxsFee("div", { children: [
+            /* @__PURE__ */ jsxFee("label", { className: "block font-semibold text-slate-700 mb-1", children: "ຊ່ອງທາງ / ທະນາຄານ / ໃບໂອນ" }),
+            /* @__PURE__ */ jsxFee("input", {
+              type: "text",
+              value: paymentForm.bankAccount,
+              onChange: (e) => setPaymentForm({ ...paymentForm, bankAccount: e.target.value }),
+              className: "w-full px-3 py-2 border border-slate-300 rounded-xl"
+            })
+          ] })
+        ] }),
+
+        /* Row 5: Notes */
+        /* @__PURE__ */ jsxsFee("div", { children: [
+          /* @__PURE__ */ jsxFee("label", { className: "block font-semibold text-slate-700 mb-1", children: "ໝາຍເຫດການຊຳລະ" }),
+          /* @__PURE__ */ jsxFee("input", {
+            type: "text",
+            value: paymentForm.notes,
+            onChange: (e) => setPaymentForm({ ...paymentForm, notes: e.target.value }),
+            placeholder: "ຂໍ້ສັງເກດເພີ່ມເຕີມ...",
+            className: "w-full px-3 py-2 border border-slate-300 rounded-xl"
+          })
+        ] }),
+
+        /* Action Buttons */
+        /* @__PURE__ */ jsxsFee("div", { className: "pt-3 border-t border-slate-200 flex justify-end gap-2", children: [
+          /* @__PURE__ */ jsxFee(
+            "button",
+            {
+              type: "button",
+              onClick: () => { setEditingPaymentProject(null); setPaymentForm(null); },
+              className: "px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 font-bold transition-colors cursor-pointer",
+              children: "ຍົກເລີກ"
+            }
+          ),
+          /* @__PURE__ */ jsxsFee(
+            "button",
+            {
+              type: "submit",
+              disabled: isSaving,
+              className: "px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50",
+              children: [
+                /* @__PURE__ */ jsxFee(SaveFee, { size: 16 }),
+                isSaving ? "ກໍາລັງບັນທຶກ..." : "ບັນທຶກຂໍ້ມູນການຊຳລະ"
+              ]
+            }
+          )
+        ] })
+      ] })
+    ] }) })
+  ] });
+};
+
+
 // src/components/LoginModal.tsx
 import React13, { useState as useState12 } from "react";
 import { LogIn as LogIn3, User as User5, Lock as Lock3, Eye as Eye5, EyeOff as EyeOff3, ShieldCheck as ShieldCheck2, AlertCircle as AlertCircle3, X as X7 } from "lucide-react";
@@ -10364,6 +11798,15 @@ function App() {
           }
         )
       ] }),
+      activeTab === "fee" && /* @__PURE__ */ jsx14(WaterFeeManagement, {
+        projects,
+        onSaveProject: handleSaveProject,
+        onSelectProject: (p) => setSelectedProject(p),
+        onEditProject: (p) => {
+          setEditingProject(p);
+          setIsFormOpen(true);
+        }
+      }),
       activeTab === "stats" && /* @__PURE__ */ jsx14(YearlyStatistics, { projects }),
       activeTab === "export" && /* @__PURE__ */ jsx14(
         ExportReports,
