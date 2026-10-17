@@ -1,0 +1,392 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- Sky & Environment Gradients -->
+    <radialGradient id="skyGrad" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#bae6fd"/>
+      <stop offset="50%" stop-color="#7dd3fc"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </radialGradient>
+    <linearGradient id="mountainFar" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#93c5fd"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="mountainMid" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="fieldGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde047"/>
+      <stop offset="60%" stop-color="#ca8a04"/>
+      <stop offset="100%" stop-color="#854d0e"/>
+    </linearGradient>
+    <linearGradient id="fieldGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#84cc16"/>
+      <stop offset="70%" stop-color="#4d7c0f"/>
+      <stop offset="100%" stop-color="#365314"/>
+    </linearGradient>
+    <linearGradient id="waterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2fe"/>
+      <stop offset="50%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="goldGrain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="40%" stop-color="#facc15"/>
+      <stop offset="85%" stop-color="#ca8a04"/>
+      <stop offset="100%" stop-color="#a16207"/>
+    </linearGradient>
+    <linearGradient id="gearGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="ribbonGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="40%" stop-color="#15803d"/>
+      <stop offset="100%" stop-color="#14532d"/>
+    </linearGradient>
+    <linearGradient id="ribbonFold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#166534"/>
+      <stop offset="100%" stop-color="#052e16"/>
+    </linearGradient>
+
+    <!-- Clip Path for Inner Scenery -->
+    <clipPath id="innerCircleClip">
+      <circle cx="250" cy="240" r="175"/>
+    </clipPath>
+
+    <!-- Filter for Shadow -->
+    <filter id="dropGlow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background Base of Emblem -->
+  <g clip-path="url(#innerCircleClip)">
+    <!-- Sky -->
+    <rect x="50" y="40" width="400" height="400" fill="url(#skyGrad)"/>
+
+    <!-- Rain Cloud at Peak -->
+    <g transform="translate(235, 75) scale(0.7)">
+      <ellipse cx="20" cy="18" rx="18" ry="10" fill="#38bdf8" opacity="0.9"/>
+      <ellipse cx="32" cy="14" rx="14" ry="12" fill="#7dd3fc"/>
+      <ellipse cx="10" cy="20" rx="12" ry="8" fill="#bae6fd"/>
+      <!-- Rain drops -->
+      <line x1="12" y1="28" x2="10" y2="38" stroke="#0284c7" stroke-width="2" stroke-linecap="round"/>
+      <line x1="20" y1="26" x2="18" y2="40" stroke="#0284c7" stroke-width="2" stroke-linecap="round"/>
+      <line x1="28" y1="28" x2="26" y2="38" stroke="#0284c7" stroke-width="2" stroke-linecap="round"/>
+      <line x1="36" y1="27" x2="34" y2="37" stroke="#0284c7" stroke-width="2" stroke-linecap="round"/>
+    </g>
+
+    <!-- Far Blue Mountains -->
+    <path d="M120 220 L180 150 L240 190 L300 135 L380 220 Z" fill="url(#mountainFar)" opacity="0.85"/>
+    <!-- Mid Mountains -->
+    <path d="M70 230 L150 170 L210 215 L280 165 L370 230 Z" fill="url(#mountainMid)" opacity="0.75"/>
+
+    <!-- Agricultural Fields & Farm Building on Right -->
+    <!-- Building -->
+    <path d="M285 160 L325 155 L355 165 L355 210 L285 205 Z" fill="#e2e8f0"/>
+    <path d="M285 160 L325 140 L355 165 Z" fill="#b91c1c"/>
+    <rect x="315" y="175" width="20" height="25" fill="#38bdf8"/>
+
+    <!-- Golden Rice Terraces on Right -->
+    <path d="M240 200 Q320 180 430 220 L430 330 Q330 260 240 280 Z" fill="url(#fieldGrad1)"/>
+    <path d="M230 230 Q320 220 430 270 L430 350 Q300 310 220 320 Z" fill="url(#fieldGrad2)"/>
+
+    <!-- Green Forest & Trees on Left -->
+    <path d="M70 210 Q140 190 190 230 L180 320 Q110 300 70 320 Z" fill="#15803d"/>
+    <circle cx="120" cy="210" r="22" fill="#166534"/>
+    <circle cx="145" cy="205" r="25" fill="#22c55e"/>
+    <circle cx="168" cy="218" r="20" fill="#15803d"/>
+    <rect x="138" y="225" width="8" height="40" fill="#78350f"/>
+    <rect x="160" y="230" width="7" height="35" fill="#78350f"/>
+
+    <!-- Deers on the Left bank -->
+    <g transform="translate(100, 275) scale(0.35)">
+      <ellipse cx="40" cy="30" rx="25" ry="14" fill="#b45309"/>
+      <circle cx="62" cy="18" r="10" fill="#b45309"/>
+      <path d="M66 10 L72 2 M68 12 L76 6" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"/>
+      <rect x="25" y="42" width="4" height="22" fill="#92400e"/>
+      <rect x="35" y="42" width="4" height="22" fill="#92400e"/>
+      <rect x="52" y="42" width="4" height="22" fill="#92400e"/>
+      <rect x="58" y="42" width="4" height="22" fill="#92400e"/>
+    </g>
+    <g transform="translate(135, 270) scale(0.32)">
+      <ellipse cx="40" cy="30" rx="25" ry="14" fill="#d97706"/>
+      <circle cx="62" cy="20" r="9" fill="#d97706"/>
+      <rect x="25" y="42" width="4" height="20" fill="#b45309"/>
+      <rect x="55" y="42" width="4" height="20" fill="#b45309"/>
+    </g>
+
+    <!-- Red Tractor in the Center Field -->
+    <g transform="translate(220, 205) scale(0.48)">
+      <!-- Body -->
+      <rect x="20" y="20" width="35" height="25" rx="4" fill="#dc2626"/>
+      <rect x="12" y="32" width="22" height="15" rx="3" fill="#ef4444"/>
+      <!-- Cab / Driver -->
+      <path d="M35 10 L48 10 L45 22 L28 22 Z" fill="#93c5fd" stroke="#1e293b" stroke-width="2"/>
+      <circle cx="36" cy="16" r="4" fill="#1e293b"/>
+      <!-- Exhaust pipe -->
+      <line x1="20" y1="20" x2="20" y2="8" stroke="#1e293b" stroke-width="3"/>
+      <!-- Wheels -->
+      <circle cx="16" cy="48" r="11" fill="#1e293b"/>
+      <circle cx="16" cy="48" r="5" fill="#94a3b8"/>
+      <circle cx="48" cy="44" r="16" fill="#1e293b"/>
+      <circle cx="48" cy="44" r="8" fill="#cbd5e1"/>
+    </g>
+
+    <!-- Concrete Irrigation Canal & Cascading Water -->
+    <!-- Canal Wall -->
+    <path d="M240 190 L170 235 L175 255 L245 200 Z" fill="#94a3b8"/>
+    <path d="M245 200 L175 255 L225 295 L260 210 Z" fill="#cbd5e1"/>
+    <!-- Water Stream flowing down -->
+    <path d="M238 195 Q205 235 190 270 Q160 310 110 340 L160 370 Q210 330 240 280 Z" fill="url(#waterGrad)"/>
+    <path d="M190 250 Q160 290 120 330" stroke="#f0f9ff" stroke-width="4" fill="none" opacity="0.8"/>
+    <path d="M205 265 Q180 305 150 345" stroke="#bae6fd" stroke-width="3" fill="none" opacity="0.7"/>
+
+    <!-- Fish in the water -->
+    <g transform="translate(130, 325) scale(0.25)">
+      <path d="M10 20 Q25 10 40 20 Q25 30 10 20 Z" fill="#0284c7"/>
+      <polygon points="10,20 0,12 0,28" fill="#0284c7"/>
+    </g>
+    <g transform="translate(155, 345) scale(0.22)">
+      <path d="M10 20 Q25 10 40 20 Q25 30 10 20 Z" fill="#0369a1"/>
+      <polygon points="10,20 0,12 0,28" fill="#0369a1"/>
+    </g>
+
+    <!-- Livestock on the Right Bank (Cattle and Pigs) -->
+    <!-- Brown Cows -->
+    <g transform="translate(365, 275) scale(0.35)">
+      <ellipse cx="40" cy="30" rx="25" ry="15" fill="#c2410c"/>
+      <circle cx="62" cy="22" r="11" fill="#c2410c"/>
+      <rect x="25" y="42" width="5" height="18" fill="#9a3412"/>
+      <rect x="55" y="42" width="5" height="18" fill="#9a3412"/>
+    </g>
+    <g transform="translate(340, 295) scale(0.32)">
+      <ellipse cx="40" cy="30" rx="25" ry="15" fill="#ea580c"/>
+      <circle cx="62" cy="22" r="10" fill="#ea580c"/>
+      <rect x="25" y="42" width="4" height="18" fill="#c2410c"/>
+      <rect x="55" y="42" width="4" height="18" fill="#c2410c"/>
+    </g>
+    <!-- Pink Pig -->
+    <g transform="translate(350, 325) scale(0.28)">
+      <ellipse cx="35" cy="25" rx="20" ry="12" fill="#f472b6"/>
+      <circle cx="50" cy="22" r="8" fill="#f472b6"/>
+      <rect x="22" y="35" width="4" height="12" fill="#db2777"/>
+      <rect x="42" y="35" width="4" height="12" fill="#db2777"/>
+    </g>
+
+    <!-- FOREGROUND HEROES (Farmer Man, Water Buffalo, Farmer Woman) -->
+
+    <!-- 1. Central Lao Water Buffalo (ຄວາຍ) -->
+    <g id="buffalo" transform="translate(250, 335)">
+      <!-- Body & Shoulders -->
+      <ellipse cx="0" cy="5" rx="42" ry="32" fill="#1e293b"/>
+      <ellipse cx="0" cy="-5" rx="36" ry="28" fill="#0f172a"/>
+      <!-- Buffalo Head -->
+      <path d="M-22 -35 Q0 -42 22 -35 Q18 0 0 10 Q-18 0 -22 -35 Z" fill="#1e293b"/>
+      <ellipse cx="0" cy="-5" rx="18" ry="12" fill="#334155"/>
+      <!-- Snout & Nose -->
+      <ellipse cx="0" cy="2" rx="14" ry="7" fill="#475569"/>
+      <circle cx="-5" cy="2" r="2.5" fill="#0f172a"/>
+      <circle cx="5" cy="2" r="2.5" fill="#0f172a"/>
+      <!-- Nose Ring / Rope -->
+      <path d="M-6 4 Q0 9 6 4" stroke="#e2e8f0" stroke-width="2" fill="none"/>
+      <!-- Eyes -->
+      <ellipse cx="-11" cy="-20" rx="3.5" ry="2" fill="#f8fafc"/>
+      <circle cx="-11" cy="-20" r="1.8" fill="#020617"/>
+      <ellipse cx="11" cy="-20" rx="3.5" ry="2" fill="#f8fafc"/>
+      <circle cx="11" cy="-20" r="1.8" fill="#020617"/>
+      <!-- Large Horns (ຄົມເຂົາຄວາຍ) -->
+      <path d="M-15 -35 C-35 -48 -55 -28 -50 -10 C-46 -18 -32 -32 -10 -30 Z" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+      <path d="M15 -35 C35 -48 55 -28 50 -10 C46 -18 32 -32 10 -30 Z" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
+      <!-- Ears -->
+      <ellipse cx="-25" cy="-25" rx="9" ry="4" fill="#334155" transform="rotate(-15 -25 -25)"/>
+      <ellipse cx="25" cy="-25" rx="9" ry="4" fill="#334155" transform="rotate(15 25 -25)"/>
+      <!-- Legs -->
+      <rect x="-24" y="25" width="14" height="45" rx="4" fill="#0f172a"/>
+      <rect x="10" y="25" width="14" height="45" rx="4" fill="#0f172a"/>
+      <rect x="-25" y="65" width="16" height="8" rx="2" fill="#475569"/>
+      <rect x="9" y="65" width="16" height="8" rx="2" fill="#475569"/>
+    </g>
+
+    <!-- 2. Lao Farmer Man (Left) -->
+    <g id="farmerMan" transform="translate(190, 325)">
+      <!-- Legs & Pants -->
+      <rect x="-14" y="55" width="11" height="50" rx="3" fill="#1e3a8a"/>
+      <rect x="2" y="55" width="11" height="50" rx="3" fill="#1e3a8a"/>
+      <!-- Indigo Shirt (Morhom) -->
+      <path d="M-22 5 L20 5 L16 65 L-18 65 Z" fill="#2563eb"/>
+      <path d="M-18 8 L0 25 L16 8" stroke="#1d4ed8" stroke-width="2" fill="none"/>
+      <!-- White & Black Sash (ຜ້າຂາວມ້າ) -->
+      <rect x="-20" y="50" width="38" height="12" rx="2" fill="#f8fafc"/>
+      <rect x="-16" y="50" width="6" height="12" fill="#020617"/>
+      <rect x="-4" y="50" width="6" height="12" fill="#020617"/>
+      <rect x="8" y="50" width="6" height="12" fill="#020617"/>
+      <rect x="-12" y="62" width="10" height="20" fill="#f8fafc"/>
+      <!-- Wooden Plow over Shoulder -->
+      <path d="M-60 15 L25 -40 L35 -36 L-50 22 Z" fill="#92400e" stroke="#78350f" stroke-width="2"/>
+      <path d="M-65 18 L-85 35 L-75 38 Z" fill="#64748b"/>
+      <!-- Head & Face -->
+      <circle cx="-1" cy="-14" r="14" fill="#fdba74"/>
+      <!-- Hair -->
+      <path d="M-15 -18 Q-2 -32 13 -18 Q5 -28 -15 -18 Z" fill="#1e293b"/>
+      <!-- Eyes & Smile -->
+      <ellipse cx="-6" cy="-14" rx="2" ry="1.2" fill="#0f172a"/>
+      <ellipse cx="4" cy="-14" rx="2" ry="1.2" fill="#0f172a"/>
+      <path d="M-3 -8 Q-1 -5 3 -8" stroke="#9a3412" stroke-width="1.8" fill="none"/>
+      <!-- Arms -->
+      <path d="M-20 10 L-35 25 L-25 35" stroke="#2563eb" stroke-width="9" stroke-linecap="round" fill="none"/>
+      <circle cx="-25" cy="35" r="5" fill="#fdba74"/>
+      <path d="M16 10 L28 28 L15 32" stroke="#2563eb" stroke-width="9" stroke-linecap="round" fill="none"/>
+    </g>
+
+    <!-- 3. Lao Farmer Woman (Right) -->
+    <g id="farmerWoman" transform="translate(315, 330)">
+      <!-- Lao Sinh (Skirt) with Pattern -->
+      <path d="M-15 48 L17 48 L22 105 L-18 105 Z" fill="#1e3a8a"/>
+      <!-- Golden Sinh Border (ຕີນສິ້ນ) -->
+      <rect x="-18" y="95" width="40" height="10" fill="#facc15"/>
+      <line x1="-18" y1="98" x2="22" y2="98" stroke="#b45309" stroke-width="1.5"/>
+      <!-- Blue Lao Blouse -->
+      <path d="M-16 8 L18 8 L15 52 L-14 52 Z" fill="#3b82f6"/>
+      <!-- Head & Traditional Hair Bun -->
+      <circle cx="1" cy="-14" r="13" fill="#fdba74"/>
+      <!-- Hair Bun with Gold Hairpin -->
+      <path d="M-12 -16 Q1 -28 14 -16 Z" fill="#1e293b"/>
+      <circle cx="13" cy="-22" r="7" fill="#1e293b"/>
+      <line x1="8" y1="-26" x2="18" y2="-18" stroke="#facc15" stroke-width="2.5"/>
+      <!-- Face -->
+      <ellipse cx="-4" cy="-14" rx="1.8" ry="1.2" fill="#0f172a"/>
+      <ellipse cx="6" cy="-14" rx="1.8" ry="1.2" fill="#0f172a"/>
+      <path d="M-2 -8 Q1 -6 4 -8" stroke="#9a3412" stroke-width="1.5" fill="none"/>
+      <!-- Arms holding Golden Rice Sheaf & Sickle -->
+      <path d="M-12 12 L-4 35" stroke="#3b82f6" stroke-width="8" stroke-linecap="round"/>
+      <circle cx="-4" cy="35" r="4.5" fill="#fdba74"/>
+      <path d="M14 12 L8 32" stroke="#3b82f6" stroke-width="8" stroke-linecap="round"/>
+      <!-- Curved Sickle (ກ່ຽວ) -->
+      <path d="M-6 32 Q10 20 18 36" stroke="#94a3b8" stroke-width="3" fill="none"/>
+      <!-- Golden Rice Sheaf in Arms -->
+      <g transform="translate(14, 25) rotate(20)">
+        <ellipse cx="0" cy="0" rx="14" ry="24" fill="url(#goldGrain)"/>
+        <line x1="0" y1="10" x2="0" y2="35" stroke="#ca8a04" stroke-width="3"/>
+      </g>
+    </g>
+  </g> <!-- End Scenery Clip -->
+
+  <!-- BOTTOM GEAR (ກົງຈັກ) & EMBLEM SOIL MOUND -->
+  <g id="gearBase" transform="translate(250, 395)" filter="url(#dropGlow)">
+    <!-- Cyan Gear Teeth -->
+    <path d="
+      M -90 0 
+      L -85 -18 L -75 -18 L -72 0 
+      L -58 4 L -52 -13 L -42 -10 L -40 7 
+      L -25 14 L -18 -3 L -8 -1 L -8 18 
+      L 8 18 L 8 -1 L 18 -3 L 25 14 
+      L 40 7 L 42 -10 L 52 -13 L 58 4 
+      L 72 0 L 75 -18 L 85 -18 L 90 0 
+      Q 0 45 -90 0 Z" 
+      fill="url(#gearGrad)" stroke="#0369a1" stroke-width="3"/>
+    <!-- Brown Inner Mound -->
+    <ellipse cx="0" cy="18" rx="55" ry="26" fill="#854d0e" stroke="#582f07" stroke-width="2.5"/>
+  </g>
+
+  <!-- GOLDEN SHEAVES OF RICE WREATH (ຮວງເຂົ້າ) AROUND EMBLEM -->
+  <g id="riceWreath" filter="url(#dropGlow)">
+    <!-- LEFT RICE BRANCH -->
+    <g id="leftRice">
+      <!-- Stalk stem -->
+      <path d="M 120 400 C 20 280 40 100 215 55" stroke="#ca8a04" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M 115 405 C 15 285 35 105 210 60" stroke="#fef08a" stroke-width="2" fill="none"/>
+
+      <!-- Individual Golden Rice Grains (left) -->
+      <!-- Top Tip -->
+      <ellipse cx="215" cy="55" rx="14" ry="7" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(-30 215 55)"/>
+      <ellipse cx="195" cy="62" rx="15" ry="8" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(-40 195 62)"/>
+      <ellipse cx="172" cy="74" rx="16" ry="8.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(-50 172 74)"/>
+      <ellipse cx="148" cy="90" rx="17" ry="9" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(-60 148 90)"/>
+      <ellipse cx="125" cy="112" rx="18" ry="9.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(-70 125 112)"/>
+      <ellipse cx="104" cy="138" rx="19" ry="10" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(-80 104 138)"/>
+      <ellipse cx="88" cy="168" rx="19" ry="10.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(-90 88 168)"/>
+      <ellipse cx="78" cy="200" rx="20" ry="11" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(-100 78 200)"/>
+      <ellipse cx="72" cy="235" rx="20" ry="11" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(-110 72 235)"/>
+      <ellipse cx="74" cy="270" rx="20" ry="11" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(-120 74 270)"/>
+      <ellipse cx="82" cy="305" rx="19" ry="10.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(-130 82 305)"/>
+      <ellipse cx="96" cy="340" rx="19" ry="10" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(-140 96 340)"/>
+      <ellipse cx="118" cy="370" rx="18" ry="9.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(-150 118 370)"/>
+
+      <!-- Second inner row of grains for lush fullness -->
+      <ellipse cx="198" cy="80" rx="14" ry="7.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.2" transform="rotate(-35 198 80)"/>
+      <ellipse cx="168" cy="100" rx="15" ry="8" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.2" transform="rotate(-48 168 100)"/>
+      <ellipse cx="138" cy="130" rx="16" ry="8.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.2" transform="rotate(-65 138 130)"/>
+      <ellipse cx="112" cy="168" rx="17" ry="9" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.2" transform="rotate(-85 112 168)"/>
+      <ellipse cx="100" cy="210" rx="17" ry="9" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.2" transform="rotate(-95 100 210)"/>
+      <ellipse cx="102" cy="255" rx="17" ry="9" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.2" transform="rotate(-115 102 255)"/>
+      <ellipse cx="118" cy="300" rx="16" ry="8.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.2" transform="rotate(-130 118 300)"/>
+    </g>
+
+    <!-- RIGHT RICE BRANCH (Mirrored symmetrically) -->
+    <g id="rightRice">
+      <!-- Stalk stem -->
+      <path d="M 380 400 C 480 280 460 100 285 55" stroke="#ca8a04" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M 385 405 C 485 285 465 105 290 60" stroke="#fef08a" stroke-width="2" fill="none"/>
+
+      <!-- Individual Golden Rice Grains (right) -->
+      <ellipse cx="285" cy="55" rx="14" ry="7" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(30 285 55)"/>
+      <ellipse cx="305" cy="62" rx="15" ry="8" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(40 305 62)"/>
+      <ellipse cx="328" cy="74" rx="16" ry="8.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(50 328 74)"/>
+      <ellipse cx="352" cy="90" rx="17" ry="9" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(60 352 90)"/>
+      <ellipse cx="375" cy="112" rx="18" ry="9.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(70 375 112)"/>
+      <ellipse cx="396" cy="138" rx="19" ry="10" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(80 396 138)"/>
+      <ellipse cx="412" cy="168" rx="19" ry="10.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(90 412 168)"/>
+      <ellipse cx="422" cy="200" rx="20" ry="11" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(100 422 200)"/>
+      <ellipse cx="428" cy="235" rx="20" ry="11" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(110 428 235)"/>
+      <ellipse cx="426" cy="270" rx="20" ry="11" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(120 426 270)"/>
+      <ellipse cx="418" cy="305" rx="19" ry="10.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(130 418 305)"/>
+      <ellipse cx="404" cy="340" rx="19" ry="10" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(140 404 340)"/>
+      <ellipse cx="382" cy="370" rx="18" ry="9.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.5" transform="rotate(150 382 370)"/>
+
+      <!-- Second inner row of grains for right -->
+      <ellipse cx="302" cy="80" rx="14" ry="7.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.2" transform="rotate(35 302 80)"/>
+      <ellipse cx="332" cy="100" rx="15" ry="8" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.2" transform="rotate(48 332 100)"/>
+      <ellipse cx="362" cy="130" rx="16" ry="8.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.2" transform="rotate(65 362 130)"/>
+      <ellipse cx="388" cy="168" rx="17" ry="9" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.2" transform="rotate(85 388 168)"/>
+      <ellipse cx="400" cy="210" rx="17" ry="9" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.2" transform="rotate(95 400 210)"/>
+      <ellipse cx="398" cy="255" rx="17" ry="9" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.2" transform="rotate(115 398 255)"/>
+      <ellipse cx="382" cy="300" rx="16" ry="8.5" fill="url(#goldGrain)" stroke="#a16207" stroke-width="1.2" transform="rotate(130 382 300)"/>
+    </g>
+  </g>
+
+  <!-- BOTTOM GREEN RIBBON BANNER (ແຖບຜ້າສີຂຽວ ພ້ອມຕົວໜັງສືຄຳ) -->
+  <g id="greenRibbon" filter="url(#dropGlow)">
+    <!-- Ribbon Tail Left -->
+    <path d="M 65 425 L 115 385 L 125 435 L 75 460 Z" fill="url(#ribbonFold)" stroke="#14532d" stroke-width="2"/>
+    <path d="M 75 460 L 125 435 L 140 455 L 90 480 Z" fill="url(#ribbonGrad)" stroke="#facc15" stroke-width="2"/>
+
+    <!-- Ribbon Tail Right -->
+    <path d="M 435 425 L 385 385 L 375 435 L 425 460 Z" fill="url(#ribbonFold)" stroke="#14532d" stroke-width="2"/>
+    <path d="M 425 460 L 375 435 L 360 455 L 410 480 Z" fill="url(#ribbonGrad)" stroke="#facc15" stroke-width="2"/>
+
+    <!-- Main Center Arched Banner -->
+    <path id="ribbonBody" d="
+      M 115 415 
+      C 170 380 330 380 385 415 
+      C 370 450 360 475 350 480 
+      C 300 455 200 455 150 480 
+      C 140 475 130 450 115 415 Z" 
+      fill="url(#ribbonGrad)" stroke="#facc15" stroke-width="3"/>
+
+    <!-- Ribbon Border Accents -->
+    <path d="M 118 420 C 172 386 328 386 382 420" stroke="#fef08a" stroke-width="1.8" fill="none"/>
+    <path d="M 148 474 C 198 450 302 450 352 474" stroke="#fef08a" stroke-width="1.8" fill="none"/>
+
+    <!-- Path for Lao Text Arc -->
+    <path id="textPathBanner" d="M 130 448 C 180 422 320 422 370 448" fill="none"/>
+
+    <!-- Lao Script on Ribbon Banner: "ກະຊວງ ກະສິກຳ ແລະ ສິ່ງແວດລ້ອມ" -->
+    <text font-family="'Phetsarath OT', 'Phetsarath', 'Saysettha OT', sans-serif" font-size="19" font-weight="bold" fill="#fef08a" stroke="#854d0e" stroke-width="0.8">
+      <textPath href="#textPathBanner" startOffset="50%" text-anchor="middle">
+        ກະຊວງ ກະສິກຳ ແລະ ສິ່ງແວດລ້ອມ
+      </textPath>
+    </text>
+  </g>
+</svg>

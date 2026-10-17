@@ -175,8 +175,8 @@ fun PortalDashboardScreen(
         item {
             SystemPortalCard(
                 icon = "🏭",
-                title = if (isLao) "ລະບົບຕິດຕາມໂຄງການປ່ອຍນ້ຳເປື້ອນ" else "Wastewater Discharge Monitoring",
-                badge = if (isLao) "ການປ່ອຍນ້ຳເປື້ອນ" else "Wastewater",
+                title = if (isLao) "ລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ" else "Wastewater Project Monitoring System",
+                badge = if (isLao) "ການປ່ອຍນໍ້າເປື້ອນ" else "Wastewater",
                 description = if (isLao)
                     "ກວດກາມາດຕະຖານນ້ຳເສຍປ່ອຍອອກຈາກໂຮງງານອຸດສາຫະກຳ, ບໍ່ແຮ່ ແລະ ເຂດເສດຖະກິດພິເສດ"
                 else

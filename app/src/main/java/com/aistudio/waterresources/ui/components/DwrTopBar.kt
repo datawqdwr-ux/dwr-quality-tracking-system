@@ -63,21 +63,21 @@ fun DwrTopBar(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "🌊",
+                        text = "🏛️",
                         fontSize = 22.sp
                     )
                 }
 
                 Column {
                     Text(
-                        text = if (language == Language.LO) "ກະຊວງກະສິກຳ ແລະ ສິ່ງແວດລ້ອມ" else "Ministry of Agriculture & Env",
+                        text = if (language == Language.LO) "ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ" else "Ministry of Agriculture & Env",
                         style = MaterialTheme.typography.labelSmall,
                         color = Slate400,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = if (language == Language.LO) "ກົມຊັບພະຍາກອນນ້ຳ" else "Dept of Water Resources",
+                        text = if (language == Language.LO) "ກົມຊັບພະຍາກອນນໍ້າ" else "Dept of Water Resources",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = Slate100,
                         maxLines = 1,
