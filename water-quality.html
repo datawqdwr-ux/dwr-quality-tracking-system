@@ -385,8 +385,8 @@
         <select id="mapStationSel" onchange="mapSelectStation(this.value)" disabled class="flex-1 min-w-[190px] border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400 disabled:text-slate-300">
           <option value="">📍 ເລືອກສະຖານີ...</option>
         </select>
-        <label class="flex items-center gap-1.5 border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-600 cursor-pointer hover:bg-slate-50" title="ເຊື່ອງໝຸດຂອງບໍລິສັດອື່ນ">
-          <input type="checkbox" id="mapOnlyChk" onchange="setMapOnly(this.checked)" class="rounded text-rose-600 focus:ring-sky-400"> ສະເພາະບໍລິສັດນີ້
+        <label class="flex items-center gap-1.5 border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-600 cursor-pointer hover:bg-slate-50" title="ເຊື່ອງໝຸດອື່ນ ແລະ ສະແດງສະເພາະຈຸດ ຫຼື ບໍລິສັດທີ່ເລືອກ">
+          <input type="checkbox" id="mapOnlyChk" onchange="setMapOnly(this.checked)" class="rounded text-rose-600 focus:ring-sky-400"> ເລືອກສະເພາະຈຸດນີ້
         </label>
         <select id="mapYearSel" onchange="mapSelectYear(this.value)" class="flex-1 min-w-[150px] border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400">
           <option value="ALL">📅 ທຸກປີ (All Years)</option>
@@ -4710,29 +4710,40 @@
         </div>`;
     }
 
-    /* --- ອ່ານພິກັດແບບອົງສາ (DMS) ເຊັ່ນ 17°58'13.0"N 102°35'48.1"E --- */
-    // ແປງຄ່າດຽວ: "17°58'13.0\"N", "17 58 13 N", "N17°58.2'", "17.9703" → ທົດສະນິຍົມ
+    /* ================================================================
+       🌐 ລະບົບແປງພິກັດຄົບວົງຈອນ: ຮອງຮັບທຸກຮູບແບບ (DD, DMS, DDM, UTM, Google Maps, ຕົວເລກລາວ, ແຍກຖັນ)
+       ================================================================ */
+    const laoDigitsMap = {'໐':'0','໑':'1','໒':'2','໓':'3','໔':'4','໕':'5','໖':'6','໗':'7','໘':'8','໙':'9'};
+    const normalizeLaoDigits = s => String(s ?? '').replace(/[໐-໙]/g, d => laoDigitsMap[d] || d);
+
+    // ແປງຄ່າພິກັດດ່ຽວ: "17°58'13.0\"N", "17 58 13 N", "N17°58.2'", "17.9703", "17:58:13", "໑໗°໕໘'໑໓\""
     function parseCoordPart(txt) {
       if (txt === null || txt === undefined) return NaN;
       if (typeof txt === 'number') return txt;
-      let t = String(txt).trim().replace(/[′’‘`´]/g, "'").replace(/[″”“]/g, '"').replace(/''/g, '"').replace(/,/g, '.');
+      let t = normalizeLaoDigits(txt).trim()
+        .replace(/[′’‘`´]/g, "'")
+        .replace(/[″”“]/g, '"')
+        .replace(/''/g, '"')
+        .replace(/(\d+):(\d+):?(\d+(?:\.\d+)?)?/g, (m, d, min, s) => `${d}° ${min}' ${s || 0}"`);
+      // ແທນ comma ທີ່ເປັນທົດສະນິຍົມ
+      t = t.replace(/(\d),(\d)/g, '$1.$2');
       if (!t) return NaN;
       const hemi = (t.match(/[NSEW]|ເໜືອ|ໃຕ້|ຕາເວັນອອກ|ຕາເວັນຕົກ/i) || [''])[0].toUpperCase();
       const nums = t.match(/-?\d+(?:\.\d+)?/g);
       if (!nums) return NaN;
       let [d, m = 0, s = 0] = nums.map(Number);
       if (nums.length === 1 && !/[°º˚d']/.test(t)) {
-        // ທົດສະນິຍົມທຳມະດາ (ອາດມີ N/E)
         const v = Number(nums[0]);
         return /^[SW]|ໃຕ້|ຕາເວັນຕົກ/.test(hemi) ? -Math.abs(v) : v;
       }
-      if (m >= 60 || s >= 60) return NaN;
+      if (m >= 60 || s >= 60) {
+        if (nums.length === 1) return Number(nums[0]);
+      }
       let v = Math.abs(d) + m / 60 + s / 3600;
       if (d < 0 || /^[SW]|ໃຕ້|ຕາເວັນຕົກ/.test(hemi)) v = -v;
       return Math.round(v * 1e6) / 1e6;
     }
 
-    // ຫາຄູ່ພິກັດໃນຂໍ້ຄວາມ: "17°58'13.0"N 102°35'48.1"E" ຫຼື "17.9703, 102.5967" → { lat, lng }
     /* ================================================================
        🌐 ພິກັດ UTM (WGS84, Zone 47N / 48N ຂອງລາວ) ↔ Lat/Lng
        ================================================================ */
@@ -4766,7 +4777,6 @@
       return { zone, hemi: lat < 0 ? 'S' : 'N', E: Math.round(E), N: Math.round(Nn) };
     }
     const inLaos = p => p && p.lat >= 13.5 && p.lat <= 23 && p.lng >= 99.5 && p.lng <= 108.5;
-    // ບໍ່ຮູ້ Zone → ລອງ 48 ແລະ 47 ເລືອກອັນທີ່ຕົກໃນລາວ (ເລີ່ມຕົ້ນ 48)
     function utmGuess(E, N, zone) {
       const z = parseInt(zone, 10);
       if (z >= 1 && z <= 60) return { ...utmToLatLng(z, E, N), zone: z };
@@ -4774,9 +4784,8 @@
       return inLaos(a) || !inLaos(b) ? a : b;
     }
     const isUtmPair = (e, n) => e >= 100000 && e <= 1300000 && n >= 1000000 && n <= 9999999;
-    // ອ່ານຂໍ້ຄວາມ UTM: "48N 249341 1989096", "48Q 249341 1989096", "Zone 48 E 249341 N 1989096", "X: 249341, Y: 1989096", "249341, 1989096"
     function parseUTMText(txt) {
-      const t = String(txt ?? '').trim();
+      const t = normalizeLaoDigits(String(txt ?? '')).trim();
       if (!t) return null;
       let zone = null;
       const zm = t.match(/(?:zone|ໂຊນ|utm)\s*[:=]?\s*(\d{1,2})\s*[A-Za-z]?\b/i) || t.match(/^\s*(\d{1,2})\s*[C-HJ-NP-Xc-hj-np-x]?\s+(?=\d{5})/);
@@ -4786,7 +4795,7 @@
       const ex = rest.match(/(?:x|e|easting|ແກນ\s*x)\s*[:=]?\s*(\d{5,7}(?:\.\d+)?)/i), ny = rest.match(/(?:y|n|northing|ແກນ\s*y)\s*[:=]?\s*(\d{6,8}(?:\.\d+)?)/i);
       if (ex && ny) { E = Number(ex[1]); N = Number(ny[1]); }
       else {
-        const nums = (rest.match(/\d+(?:\.\d+)?/g) || []).map(Number).filter(v => v >= 10000);
+        const nums = (rest.replace(/,/g, '').match(/\d+(?:\.\d+)?/g) || []).map(Number).filter(v => v >= 10000);
         if (nums.length < 2) return null;
         [E, N] = nums;
         if (!isUtmPair(E, N) && isUtmPair(N, E)) [E, N] = [N, E];
@@ -4799,42 +4808,157 @@
     const looksLikeUTMText = v => typeof v === 'string' && (/utm|zone|ໂຊນ/i.test(v) || /^\s*(4[6-9])\s*[A-Za-z]?\s+\d{5,7}/.test(v) || /\bx\s*[:=]\s*\d{5,7}[\s\S]*\by\s*[:=]\s*\d{6,8}/i.test(v)) && !!parseUTMText(v);
     const utmText = (lat, lng) => { if (lat === null || lat === undefined || lng === null || lng === undefined || isNaN(lat) || isNaN(lng)) return ''; const u = latLngToUtm(lat, lng); return `${u.zone}${u.hemi} ${u.E} E, ${u.N} N`; };
 
+    // ອ່ານຄູ່ພິກັດໃນຂໍ້ຄວາມດຽວ: Google Maps, DMS, DDM, UTM, Decimal
     function parseCoordPair(txt) {
       if (txt === null || txt === undefined) return null;
-      const t = String(txt).trim().replace(/[′’‘`´]/g, "'").replace(/[″”“]/g, '"');
+      let t = normalizeLaoDigits(String(txt)).trim()
+        .replace(/[′’‘`´]/g, "'")
+        .replace(/[″”“]/g, '"')
+        .replace(/''/g, '"');
       if (!t) return null;
-      // ພິກັດ UTM (Zone 47N/48N, X/Y ແມັດ)
-      if (!/[°º˚]/.test(t)) {
-        const big = (t.match(/\d+(?:\.\d+)?/g) || []).map(Number).filter(v => v >= 10000);
-        if (big.length >= 2 || /utm|zone|ໂຊນ/i.test(t)) { const u = parseUTMText(t); if (u) return { lat: u.lat, lng: u.lng }; }
+
+      // 1. Google Maps URL ຫຼື geo: URI (e.g. @17.9703,102.5967, q=17.9703,102.5967)
+      const gUrl = t.match(/(?:@|q=|ll=|loc:|place\/|destination=)(-?\d{1,2}\.\d+)[,\s/]+(-?\d{2,3}\.\d+)/i) || t.match(/geo:(-?\d{1,2}\.\d+),(-?\d{2,3}\.\d+)/i);
+      if (gUrl) {
+        let lat = Number(gUrl[1]), lng = Number(gUrl[2]);
+        if (Math.abs(lat) > 90 && Math.abs(lng) <= 90) [lat, lng] = [lng, lat];
+        if (lat >= 95 && lat <= 110 && lng >= 13 && lng <= 24) [lat, lng] = [lng, lat];
+        if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) return { lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 };
       }
+
+      // 2. ພິກັດ UTM
+      if (!/[°º˚]/.test(t)) {
+        const big = (t.replace(/,/g, '').match(/\d+(?:\.\d+)?/g) || []).map(Number).filter(v => v >= 10000);
+        if (big.length >= 2 || /utm|zone|ໂຊນ/i.test(t)) {
+          const u = parseUTMText(t);
+          if (u) return { lat: u.lat, lng: u.lng };
+        }
+      }
+
+      // 3. ມີ N/S ແລະ E/W (DMS ຫຼື Decimal)
       let a, b;
-      // ມີ N/S ແລະ E/W → ແຍກຕາມຕົວອັກສອນທິດ
-      const dms = t.match(/([-\d.,\s°º˚'"d]+?\s*[NS])[\s,;/]*([-\d.,\s°º˚'"d]+?\s*[EW])/i) || t.match(/([NS]\s*[-\d.,\s°º˚'"]+?)[\s,;/]+([EW]\s*[-\d.,\s°º˚'"]+)/i);
-      if (dms) { a = parseCoordPart(dms[1]); b = parseCoordPart(dms[2]); }
-      else {
-        const nums = t.match(/-?\d+(?:\.\d+)?/g);
+      const dms = t.match(/([-\d.,\s°º˚'"d]+?\s*(?:[NS]|ເໜືອ|ໃຕ້))[\s,;/]*([-\d.,\s°º˚'"d]+?\s*(?:[EW]|ຕາເວັນອອກ|ຕາເວັນຕົກ))/i)
+               || t.match(/((?:[NS]|ເໜືອ|ໃຕ້)\s*[-\d.,\s°º˚'"]+?)[\s,;/]+((?:[EW]|ຕາເວັນອອກ|ຕາເວັນຕົກ)\s*[-\d.,\s°º˚'"]+)/i)
+               || t.match(/([-\d.,\s°º˚'"d]+?\s*(?:[EW]|ຕາເວັນອອກ|ຕາເວັນຕົກ))[\s,;/]*([-\d.,\s°º˚'"d]+?\s*(?:[NS]|ເໜືອ|ໃຕ້))/i);
+      if (dms) {
+        a = parseCoordPart(dms[1]);
+        b = parseCoordPart(dms[2]);
+      } else {
+        const normComma = t.replace(/(\d),(\d)/g, '$1.$2');
+        const nums = normComma.match(/-?\d+(?:\.\d+)?/g);
         if (!nums) return null;
-        if (nums.length === 2) { a = Number(nums[0]); b = Number(nums[1]); }                              // 17.97, 102.59
-        else if (nums.length === 6) { a = parseCoordPart(nums.slice(0, 3).join(' ') + '°'); b = parseCoordPart(nums.slice(3).join(' ') + '°'); } // 17 58 13 102 35 48
-        else if (nums.length === 4) { a = parseCoordPart(nums.slice(0, 2).join(' ') + '°'); b = parseCoordPart(nums.slice(2).join(' ') + '°'); }
-        else return null;
+        if (nums.length === 2) {
+          const n1 = Number(nums[0]), n2 = Number(nums[1]);
+          if (isUtmPair(n1, n2) || isUtmPair(n2, n1)) {
+            const u = isUtmPair(n1, n2) ? utmGuess(n1, n2) : utmGuess(n2, n1);
+            return { lat: u.lat, lng: u.lng };
+          }
+          a = n1; b = n2;
+        } else if (nums.length === 6) {
+          a = parseCoordPart(nums.slice(0, 3).join(' ') + '°');
+          b = parseCoordPart(nums.slice(3).join(' ') + '°');
+        } else if (nums.length === 4) {
+          a = parseCoordPart(nums.slice(0, 2).join(' ') + '°');
+          b = parseCoordPart(nums.slice(2).join(' ') + '°');
+        } else {
+          return null;
+        }
       }
       if (isNaN(a) || isNaN(b)) return null;
-      // ລາວ: lat 13–23, lng 100–108 → ຖ້າໃສ່ສະລັບກັນ ໃຫ້ສະລັບຄືນ
+
+      // ກວດສອບ ແລະ ສະຫຼັບຄ່າ ຖ້າໃສ່ Longitude ກ່ອນ Latitude (ລາວ: Lat ~13.5-23.0, Lng ~100.0-108.5)
       if (Math.abs(a) > 90 && Math.abs(b) <= 90) [a, b] = [b, a];
-      if (Math.abs(a) > 90 || Math.abs(b) > 180) return null;
-      return { lat: a, lng: b };
+      if (a >= 95 && a <= 110 && b >= 13 && b <= 24) [a, b] = [b, a];
+      if (Math.abs(a) > 90 || Math.abs(b) > 180 || (a === 0 && b === 0)) return null;
+      return { lat: Math.round(a * 1e6) / 1e6, lng: Math.round(b * 1e6) / 1e6 };
     }
+
+    // ດຶງພິກັດຈາກສະຖານີ: ຮອງຮັບທັງ direct fields, customs (ຄູ່ດຽວ ຫຼື ແຍກຖັນ Lat/Lng, X/Y, N/E)
+    function parseStationCoord(st) {
+      if (!st) return null;
+
+      // 1. ກວດສອບ Lat, Lng ທີ່ມີຢູ່ແລ້ວ
+      let lat = parseCoordPart(st.lat);
+      let lng = parseCoordPart(st.lng);
+      if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0 && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+        if (lat > 90 && Math.abs(lng) <= 90) [lat, lng] = [lng, lat];
+        if (lat >= 95 && lat <= 110 && lng >= 13 && lng <= 24) [lat, lng] = [lng, lat];
+        return { lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 };
+      }
+
+      // 2. ຖ້າ st.lat ຫຼື st.lng ມີທັງຄູ່ພິກັດໃນຊ່ອງດຽວ
+      if (st.lat) { const p = parseCoordPair(st.lat); if (p) return p; }
+      if (st.lng) { const p = parseCoordPair(st.lng); if (p) return p; }
+
+      // 3. ກວດສອບຊ່ອງຂໍ້ຄວາມໃນ Object ຂອງສະຖານີ
+      const strProps = [st.gps, st.locationNote, st.location, st.coord, st.coordinates, st.address, st.note, st.name];
+      for (const s of strProps) {
+        if (typeof s === 'string' && s.trim()) {
+          const p = parseCoordPair(s);
+          if (p) return p;
+        }
+      }
+
+      // 4. ກວດສອບໃນ st.customs
+      const customs = st.customs || {};
+      const entries = Object.entries(customs);
+
+      // 4a. ຊ່ອງໃດໜຶ່ງທີ່ມີພິກັດຄົບຄູ່
+      for (const [, val] of entries) {
+        if (typeof val === 'string' && val.trim() && val.trim() !== '-') {
+          const p = parseCoordPair(val);
+          if (p) return p;
+        }
+      }
+
+      // 4b. ແຍກຖັນ Lat ແລະ Lng (ຫຼື X ແລະ Y / N ແລະ E)
+      const latPatterns = [/^(?:lat|latitude|ເສັ້ນຂະໜານ|ພິກັດ\s*[-_]?\s*n|n|northing|y|ແກນ\s*y)$/i, /^lat/i, /ເສັ້ນຂະໜານ/i, /north/i];
+      const lngPatterns = [/^(?:lng|long|longitude|ເສັ້ນແວງ|ພິກັດ\s*[-_]?\s*e|e|easting|x|ແກນ\s*x)$/i, /^l[no]g/i, /ເສັ້ນແວງ/i, /east/i];
+
+      let rawLat = null, rawLng = null;
+      for (const pat of latPatterns) {
+        const found = entries.find(([k, v]) => pat.test(k.trim()) && v !== null && v !== undefined && String(v).trim() !== '' && String(v).trim() !== '-');
+        if (found) { rawLat = found[1]; break; }
+      }
+      for (const pat of lngPatterns) {
+        const found = entries.find(([k, v]) => pat.test(k.trim()) && v !== null && v !== undefined && String(v).trim() !== '' && String(v).trim() !== '-');
+        if (found) { rawLng = found[1]; break; }
+      }
+
+      if (rawLat !== null && rawLng !== null) {
+        const n1 = Number(String(rawLat).replace(/,/g, '').trim());
+        const n2 = Number(String(rawLng).replace(/,/g, '').trim());
+        if (!isNaN(n1) && !isNaN(n2)) {
+          if (isUtmPair(n2, n1)) { const u = utmGuess(n2, n1); return { lat: u.lat, lng: u.lng }; }
+          if (isUtmPair(n1, n2)) { const u = utmGuess(n1, n2); return { lat: u.lat, lng: u.lng }; }
+        }
+        let p1 = parseCoordPart(rawLat);
+        let p2 = parseCoordPart(rawLng);
+        if (!isNaN(p1) && !isNaN(p2) && (p1 !== 0 || p2 !== 0)) {
+          if (Math.abs(p1) > 90 && Math.abs(p2) <= 90) [p1, p2] = [p2, p1];
+          if (p1 >= 95 && p1 <= 110 && p2 >= 13 && p2 <= 24) [p1, p2] = [p2, p1];
+          if (Math.abs(p1) <= 90 && Math.abs(p2) <= 180) {
+            return { lat: Math.round(p1 * 1e6) / 1e6, lng: Math.round(p2 * 1e6) / 1e6 };
+          }
+        }
+      }
+
+      return null;
+    }
+
     function withDerivedCoord(st) {
-      if (!st || (st.lat && st.lng && !isNaN(st.lat) && !isNaN(st.lng))) return st;
-      const v = Object.values(st.customs || {}).find(x => looksLikeCoordText(x) && parseCoordPair(x));
-      if (!v) return st;
-      const pr = parseCoordPair(v);
-      return { ...st, lat: pr.lat, lng: pr.lng, _derivedCoord: true };
+      if (!st) return st;
+      const c = parseStationCoord(st);
+      if (c) {
+        return { ...st, lat: c.lat, lng: c.lng, _derivedCoord: true };
+      }
+      return st;
     }
     const looksLikeCoordText = v => typeof v === 'string' && (looksLikeUTMText(v) || looksLikeCoordText0(v));
-    const looksLikeCoordText0 = v => typeof v === 'string' && /\d+\s*[°º˚]\s*\d|\d+\s*[°º˚].*[NSEW]|^\s*-?\d{1,2}\.\d{3,}\s*[,;\s]\s*-?\d{2,3}\.\d{3,}\s*$/i.test(v);
+    const looksLikeCoordText0 = v => typeof v === 'string' && (
+      /\d+\s*[°º˚]\s*\d|\d+\s*[°º˚].*[NSEW]|^\s*-?\d{1,2}[\.,]\d{2,}\s*[,;\s]\s*-?\d{2,3}[\.,]\d{2,}\s*$/i.test(normalizeLaoDigits(v)) ||
+      /(?:maps\.google|geo:)/i.test(v)
+    );
 
     // ເຄື່ອງມື: ສະຖານີທີ່ບໍ່ມີ Lat/Lng ແຕ່ມີພິກັດອົງສາຢູ່ໃນຖັນໃດໜຶ່ງ (ເຊັ່ນ "location") → ແປງ ແລະ ບັນທຶກ
     async function convertDegreeCoords() {
@@ -4844,11 +4968,14 @@
         if (!Array.isArray(rec.stations)) return;
         rec.stations.forEach((st, i) => {
           if (!st || (hasCoord(st) && !(Number(st.lat) === 0 && Number(st.lng) === 0))) return;
-          const src = Object.entries(st.customs || {}).find(([, v]) => looksLikeCoordText(v) && parseCoordPair(v));
-          if (src) fixes.push({ rec, i, st, pair: parseCoordPair(src[1]), from: src[1] });
+          const pair = parseStationCoord(st);
+          if (pair) {
+            const fromText = st.gps || st.locationNote || Object.values(st.customs || {}).find(v => parseCoordPair(v)) || `${pair.lat}, ${pair.lng}`;
+            fixes.push({ rec, i, st, pair, from: fromText });
+          }
         });
       });
-      if (!fixes.length) return Swal.fire({ icon: 'info', title: 'ບໍ່ພົບສະຖານີທີ່ຕ້ອງແປງ', text: 'ທຸກສະຖານີມີ Lat/Lng ແລ້ວ ຫຼື ບໍ່ມີພິກັດແບບອົງສາໃນຂໍ້ມູນ' });
+      if (!fixes.length) return Swal.fire({ icon: 'info', title: 'ບໍ່ພົບສະຖານີທີ່ຕ້ອງແປງ', text: 'ທຸກສະຖານີມີ Lat/Lng ແລ້ວ ຫຼື ບໍ່ມີພິກັດໃນຂໍ້ມູນ' });
 
       const rows = fixes.slice(0, 20).map(f => `<tr><td class="px-2 py-1 border">${escAttr(f.st.name || f.st.code)}</td><td class="px-2 py-1 border font-mono">${escAttr(f.from)}</td><td class="px-2 py-1 border font-mono text-emerald-700">${f.pair.lat}, ${f.pair.lng}</td></tr>`).join('');
       const ok = await Swal.fire({
@@ -6017,9 +6144,10 @@
     /* --- ເລືອກບໍລິສັດ / ສະຖານີ ເທິງແຜນທີ່ → ຊູມເຂົ້າ ແລະ ເປີດຂໍ້ມູນ --- */
     let markerIndex = {};
     let mapCompany = '';
+    let mapStation = '';
     let mapOnly = false;
     let mapYear = 'ALL';
-    const hasLL = st => { const d = withDerivedCoord(st); return !!(d && d.lat && d.lng && !isNaN(d.lat) && !isNaN(d.lng)); };
+    const hasLL = st => { const d = withDerivedCoord(st); return !!(d && d.lat && d.lng && !isNaN(d.lat) && !isNaN(d.lng) && d.lat !== 0 && d.lng !== 0); };
     const stationYear = (st, rec) => { const y = rowYear(st, rec); return y ? String(y) : ''; };
 
     function renderMapSelectors() {
@@ -6050,8 +6178,10 @@
       const prev = sSel.value;
       if (sSel.dataset.last !== sHtml) { sSel.innerHTML = sHtml; sSel.dataset.last = sHtml; }
       if ([...sSel.options].some(o => o.value === prev)) sSel.value = prev;
+      sSel.value = mapStation;
+
       const chk = document.getElementById('mapOnlyChk');
-      if (chk) { chk.checked = mapOnly; chk.disabled = !mapCompany; }
+      if (chk) { chk.checked = mapOnly; chk.disabled = !mapCompany && !mapStation; }
 
       const ySel = document.getElementById('mapYearSel');
       if (ySel) {
@@ -6064,6 +6194,7 @@
 
     function mapSelectCompany(key) {
       mapCompany = key;
+      mapStation = '';
       const sSel = document.getElementById('mapStationSel');
       if (sSel) sSel.value = '';
       map.closePopup();
@@ -6080,10 +6211,12 @@
     }
 
     function mapSelectStation(val) {
+      mapStation = val || '';
+      renderMapSelectors();
+      if (mapOnly) render();
       if (!val) return;
       const m = markerIndex[val];
       if (!m) {
-        // ໝຸດອາດຖືກເຊື່ອງດ້ວຍການຄົ້ນຫາ → ລ້າງການຄົ້ນຫາ ແລ້ວລອງໃໝ່
         const si = document.getElementById('searchInput');
         if (si && si.value) { si.value = ''; render(); return setTimeout(() => mapSelectStation(val), 200); }
         return Swal.fire({ icon: 'info', title: 'ສະຖານີນີ້ບໍ່ມີພິກັດໃນແຜນທີ່' });
@@ -6093,17 +6226,17 @@
       let opened = false;
       const open = () => { if (!opened) { opened = true; m.openPopup(); } };
       map.once('moveend', open);
-      setTimeout(open, 1000); // ກໍລະນີແຜນທີ່ບໍ່ຕ້ອງເລື່ອນ (ຢູ່ບ່ອນນັ້ນແລ້ວ)
+      setTimeout(open, 1000);
     }
 
     let gotoMarker = null;
     function mapGotoCoord() {
       const v = document.getElementById('mapGoto')?.value || '';
       const pr = parseCoordPair(v);
-      if (!pr) return Swal.fire({ icon: 'warning', title: 'ອ່ານພິກັດບໍ່ໄດ້', text: `ຕົວຢ່າງ: 17°58'13.0"N 102°35'48.1"E ຫຼື 17.9703, 102.5967` });
+      if (!pr) return Swal.fire({ icon: 'warning', title: 'ອ່ານພິກັດບໍ່ໄດ້', text: `ຕົວຢ່າງ: 17°58'13.0"N 102°35'48.1"E ຫຼື 17.9703, 102.5967 ຫຼື 48N 249341 1989096` });
       if (gotoMarker) map.removeLayer(gotoMarker);
       gotoMarker = L.marker([pr.lat, pr.lng]).addTo(map)
-        .bindPopup(`<b>🧭 ພິກັດທີ່ຄົ້ນຫາ</b><br><span style="font-family:monospace">${pr.lat}, ${pr.lng}<br>${toDMS(pr.lat, pr.lng).replace(/"/g, '&quot;')}</span>`);
+        .bindPopup(`<b>🧭 ພິກັດທີ່ຄົ້ນຫາ</b><br><span style="font-family:monospace">${pr.lat}, ${pr.lng}<br>${toDMS(pr.lat, pr.lng).replace(/"/g, '&quot;')}<br>UTM: ${utmText(pr.lat, pr.lng)}</span>`);
       document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
       map.flyTo([pr.lat, pr.lng], 15, { duration: 0.8 });
       setTimeout(() => gotoMarker && gotoMarker.openPopup(), 900);
@@ -6111,6 +6244,7 @@
 
     function setMapOnly(on) {
       mapOnly = on;
+      renderMapSelectors();
       render();
     }
 
@@ -6122,6 +6256,7 @@
 
     function mapResetView() {
       mapCompany = '';
+      mapStation = '';
       mapOnly = false;
       mapYear = 'ALL';
       map.closePopup();
@@ -6139,6 +6274,32 @@
        📊 ບົດວິເຄາະສະຖິຕິຄຸນນະພາບນ້ຳ ປະຈຳປີ (ແບບລະບົບປ່ອຍນ້ຳເປື້ອນ)
        ================================================================ */
     let annualYear = null;
+    let annualCompany = 'ALL';
+    let annualStation = 'ALL';
+    let annualIndicator = 'ALL';
+    let annualQuarter = 'ALL';
+    let annualStatus = 'ALL';
+
+    function setAnnualYear(y) { annualYear = Number(y); renderAnnualNow(); }
+    function setAnnualCompany(c) { annualCompany = c; annualStation = 'ALL'; renderAnnualNow(); }
+    function setAnnualStation(s) { annualStation = s; renderAnnualNow(); }
+    function setAnnualIndicator(i) { annualIndicator = i; renderAnnualNow(); }
+    function setAnnualQuarter(q) { annualQuarter = q; renderAnnualNow(); }
+    function setAnnualStatus(st) { annualStatus = st; renderAnnualNow(); }
+    function resetAnnualFilters() {
+      annualCompany = 'ALL';
+      annualStation = 'ALL';
+      annualIndicator = 'ALL';
+      annualQuarter = 'ALL';
+      annualStatus = 'ALL';
+      renderAnnualNow();
+    }
+    function renderAnnualNow() {
+      const rows = annualRows();
+      const years = [...new Set(rows.map(x => x.y))].sort((a, b) => b - a);
+      renderAnnual(rows, years);
+    }
+
     // ປີຂອງແຖວຂໍ້ມູນ: ວັນທີເກັບຕົວຢ່າງ → ວັນທີບັນທຶກ → ເວລາສ້າງ
     function rowYear(st, rec) {
       const m = String(st.sampleDate || '').match(/^(\d{4})/);
@@ -6157,8 +6318,36 @@
     }
     const isAlertRow = st => !!(st.status && st.status.isAlert);
 
+    function filterAnnualRows(rows, y) {
+      return rows.filter(x => {
+        if (x.y !== y) return false;
+        if (annualCompany !== 'ALL' && x.rec.fbKey !== annualCompany && datasetKey(x.company) !== datasetKey(annualCompany)) return false;
+        if (annualStation !== 'ALL') {
+          const stId = `${x.st.code || ''}|${x.st.name || ''}`;
+          if (stId !== annualStation && x.st.code !== annualStation && x.st.name !== annualStation) return false;
+        }
+        if (annualQuarter !== 'ALL') {
+          const d = String(x.st.sampleDate || x.rec.date || '');
+          const m = d.match(/-(0[1-9]|1[0-2])\b/) || d.match(/[\/.-](0?[1-9]|1[0-2])[\/.-]/);
+          const mo = m ? parseInt(m[1], 10) : null;
+          if (annualQuarter === 'Q1' && !(mo >= 1 && mo <= 3)) return false;
+          if (annualQuarter === 'Q2' && !(mo >= 4 && mo <= 6)) return false;
+          if (annualQuarter === 'Q3' && !(mo >= 7 && mo <= 9)) return false;
+          if (annualQuarter === 'Q4' && !(mo >= 10 && mo <= 12)) return false;
+          if (annualQuarter.startsWith('M') && mo !== parseInt(annualQuarter.slice(1), 10)) return false;
+        }
+        if (annualStatus === 'ALERT' && !isAlertRow(x.st)) return false;
+        if (annualStatus === 'PASS' && isAlertRow(x.st)) return false;
+        if (annualIndicator !== 'ALL') {
+          const val = x.st.customs ? x.st.customs[annualIndicator] : undefined;
+          if (val === undefined || val === '-' || val === '' || val === null) return false;
+        }
+        return true;
+      });
+    }
+
     function yearStats(rows, y) {
-      const r = rows.filter(x => x.y === y);
+      const r = filterAnnualRows(rows, y);
       const companies = new Set(r.map(x => datasetKey(x.company)));
       const points = new Set(r.map(x => `${datasetKey(x.company)}|${x.st.section || ''}|${x.st.code || x.st.name}`));
       const alerts = r.filter(x => isAlertRow(x.st)).length;
@@ -6185,7 +6374,6 @@
       document.getElementById('annualOverlay')?.remove();
       document.body.style.overflow = '';
     }
-    function setAnnualYear(y) { annualYear = y; const rows = annualRows(); renderAnnual(rows, [...new Set(rows.map(x => x.y))].sort((a, b) => b - a)); }
 
     function renderAnnual(rows, years) {
       const ov = document.getElementById('annualOverlay');
@@ -6193,18 +6381,92 @@
       const y = annualYear, cur = yearStats(rows, y), prev = yearStats(rows, y - 1);
       const diff = cur.companies - prev.companies;
       const diffPct = prev.companies ? (diff / prev.companies * 100).toFixed(1) : '0.0';
-      // 5 ປີຍ້ອນຫຼັງ
+
+      // ລາຍຊື່ບໍລິສັດທັງໝົດໃນປີນີ້
+      const yearAllRows = rows.filter(x => x.y === y);
+      const availableCos = [...new Map(yearAllRows.map(x => [x.rec.fbKey || datasetKey(x.company), { key: x.rec.fbKey || datasetKey(x.company), name: x.company }])).values()];
+      
+      // ລາຍຊື່ສະຖານີໃນບໍລິສັດທີ່ເລືອກ
+      const filteredForStations = annualCompany === 'ALL' ? yearAllRows : yearAllRows.filter(x => x.rec.fbKey === annualCompany || datasetKey(x.company) === datasetKey(annualCompany));
+      const availableSts = [...new Map(filteredForStations.map(x => [`${x.st.code || ''}|${x.st.name || ''}`, { id: `${x.st.code || ''}|${x.st.name || ''}`, label: `${x.st.name || '-'}${x.st.code ? ' (' + x.st.code + ')' : ''}` }])).values()];
+
+      // ລາຍຊື່ໂຕຊີ້ວັດທັງໝົດ
+      const allIndsMap = new Map();
+      customIndicators.forEach(i => allIndsMap.set(i.key, i));
+      masterIndicators.forEach(i => { if (!allIndsMap.has(i.key)) allIndsMap.set(i.key, i); });
+      yearAllRows.forEach(x => {
+        Object.keys(x.st.customs || {}).forEach(k => {
+          if (!allIndsMap.has(k)) allIndsMap.set(k, { key: k, name: k, unit: '' });
+        });
+      });
+      const availableInds = [...allIndsMap.values()];
+
+      // 5 ປີຍ້ອນຫຼັງ (ອີງຕາມຕົວກອງບໍລິສັດ/ໂຕຊີ້ວັດ)
       const span = Array.from({ length: 5 }, (_, i) => y - 4 + i);
       const trend = span.map(yy => ({ yy, ...yearStats(rows, yy) }));
       const maxC = Math.max(1, ...trend.map(t => t.companies));
+
       // ໂຕຊີ້ວັດທີ່ເກີນເກນຫຼາຍທີ່ສຸດ
       const exceed = {};
       cur.rows.forEach(({ st }) => Object.entries(st.customs || {}).forEach(([k, v]) => { if (isOutOfThreshold(k, v)) exceed[k] = (exceed[k] || 0) + 1; }));
-      const topEx = Object.entries(exceed).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, n]) => ({ ind: customIndicators.find(i => i.key === k) || masterIndicators.find(i => i.key === k) || { name: k, unit: '' }, n, k }));
+      const topEx = Object.entries(exceed).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k, n]) => ({ ind: allIndsMap.get(k) || { name: k, unit: '' }, n, k }));
+
       // ສະຫຼຸບຕາມບໍລິສັດ
       const byCo = {};
       cur.rows.forEach(x => { const c = byCo[x.company] = byCo[x.company] || { name: x.company, n: 0, alerts: 0, months: new Set() }; c.n++; if (isAlertRow(x.st)) c.alerts++; if (x.st.sampleDate) c.months.add(String(x.st.sampleDate).slice(0, 7)); });
       const coList = Object.values(byCo).sort((a, b) => b.alerts - a.alerts || b.n - a.n);
+
+      // ສະຖິຕິສະເພາະໂຕຊີ້ວັດ (ຖ້າມີການເລືອກ)
+      let indStatCard = '';
+      if (annualIndicator !== 'ALL') {
+        const indObj = allIndsMap.get(annualIndicator) || { name: annualIndicator, unit: '' };
+        const vals = cur.rows.map(x => parseFloat(String(x.st.customs?.[annualIndicator] ?? '').replace(',', '.'))).filter(v => !isNaN(v));
+        if (vals.length) {
+          const min = Math.min(...vals);
+          const max = Math.max(...vals);
+          const avg = Math.round((vals.reduce((s, v) => s + v, 0) / vals.length) * 100) / 100;
+          const exCount = cur.rows.filter(x => isOutOfThreshold(annualIndicator, x.st.customs?.[annualIndicator])).length;
+          const passPct = Math.round((vals.length - exCount) / vals.length * 100);
+          const th = customThresholds[annualIndicator] || masterIndicators.find(i => i.key === annualIndicator) || null;
+          const thText = th ? (th.min !== undefined && th.max !== undefined ? `${th.min} - ${th.max} ${th.unit || indObj.unit}` : th.max !== undefined ? `≤ ${th.max} ${th.unit || indObj.unit}` : th.min !== undefined ? `≥ ${th.min} ${th.unit || indObj.unit}` : 'ຕາມເກນ') : 'ບໍ່ໄດ້ຕັ້ງເກນ';
+
+          indStatCard = `
+            <div class="bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-950 text-white rounded-3xl p-5 border border-indigo-500/30 shadow-lg">
+              <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-indigo-700/40">
+                <div>
+                  <span class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-300">🧪 ບົດວິເຄາະສະເພາະໂຕຊີ້ວັດ (SPECIFIC PARAMETER ANALYTICS)</span>
+                  <h3 class="text-xl font-black text-white mt-0.5">${escAttr(indObj.name)} ${indObj.unit ? `<span class="text-sm font-normal text-indigo-200">(${escAttr(indObj.unit)})</span>` : ''}</h3>
+                </div>
+                <div class="px-3 py-1 rounded-xl bg-indigo-500/20 border border-indigo-400/30 text-xs font-bold text-indigo-200">
+                  ເກນມາດຕະຖານ: <b class="text-white">${escAttr(thText)}</b>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4 text-center">
+                <div class="bg-white/5 rounded-2xl p-3 border border-white/10">
+                  <span class="text-[10px] text-slate-300 block font-semibold">ຈຳນວນຕົວຢ່າງ</span>
+                  <span class="text-2xl font-black text-white">${vals.length}</span>
+                </div>
+                <div class="bg-white/5 rounded-2xl p-3 border border-white/10">
+                  <span class="text-[10px] text-emerald-300 block font-semibold">ຄ່າຕ່ຳສຸດ (Min)</span>
+                  <span class="text-2xl font-black text-emerald-400">${min}</span>
+                </div>
+                <div class="bg-white/5 rounded-2xl p-3 border border-white/10">
+                  <span class="text-[10px] text-sky-300 block font-semibold">ຄ່າສະເລ່ຍ (Average)</span>
+                  <span class="text-2xl font-black text-sky-400">${avg}</span>
+                </div>
+                <div class="bg-white/5 rounded-2xl p-3 border border-white/10">
+                  <span class="text-[10px] text-amber-300 block font-semibold">ຄ່າສູງສຸດ (Max)</span>
+                  <span class="text-2xl font-black text-amber-400">${max}</span>
+                </div>
+                <div class="bg-white/5 rounded-2xl p-3 border border-white/10">
+                  <span class="text-[10px] text-rose-300 block font-semibold">ອັດຕາຜ່ານເກນ</span>
+                  <span class="text-2xl font-black ${passPct >= 90 ? 'text-emerald-400' : 'text-rose-400'}">${passPct}% <span class="text-xs font-normal text-slate-300">(${exCount} ເກີນ)</span></span>
+                </div>
+              </div>
+            </div>`;
+        }
+      }
+
       const card = (title, icon, big, sub, foot, tone) => `
         <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm">
           <div class="flex justify-between items-start"><p class="text-xs font-semibold text-slate-500">${title}</p><span class="w-8 h-8 rounded-full grid place-items-center ${tone}">${icon}</span></div>
@@ -6212,12 +6474,18 @@
           <div class="mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-500">${foot}</div>
         </div>`;
       const passTone = cur.pass >= 90 ? 'text-emerald-600' : cur.pass >= 70 ? 'text-amber-600' : 'text-rose-600';
+
+      const hasActiveFilters = annualCompany !== 'ALL' || annualStation !== 'ALL' || annualIndicator !== 'ALL' || annualQuarter !== 'ALL' || annualStatus !== 'ALL';
+
       ov.innerHTML = `
         <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-5" id="annualPrintable">
           <div class="flex justify-end gap-2 no-print">
-            <button onclick="window.print()" class="bg-white border border-slate-300 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50">🖨️ ພິມ / PDF</button>
-            <button onclick="closeAnnualReport()" class="bg-slate-800 text-white rounded-xl px-4 py-2 text-xs font-bold hover:bg-slate-700">✕ ປິດ</button>
+            ${hasActiveFilters ? `<button onclick="resetAnnualFilters()" class="bg-amber-100 border border-amber-300 text-amber-800 rounded-xl px-3.5 py-2 text-xs font-bold hover:bg-amber-200 transition">🔄 ລ້າງຕົວກອງທັງໝົດ</button>` : ''}
+            <button onclick="window.print()" class="bg-white border border-slate-300 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition">🖨️ ພິມ / PDF</button>
+            <button onclick="closeAnnualReport()" class="bg-slate-800 text-white rounded-xl px-4 py-2 text-xs font-bold hover:bg-slate-700 shadow-sm transition">✕ ປິດ</button>
           </div>
+
+          <!-- Header & Year Selector Banner -->
           <div class="rounded-3xl p-6 md:p-8 text-white shadow-lg" style="background:linear-gradient(135deg,#0b2a3f,#0b3a53 55%,#13667a)">
             <div class="flex flex-wrap items-center justify-between gap-5">
               <div>
@@ -6227,11 +6495,89 @@
               </div>
               <div class="flex flex-wrap items-center gap-1 bg-white/5 border border-white/10 rounded-2xl p-1.5 text-xs font-bold">
                 <span class="px-2 text-slate-300 font-semibold">ເລືອກປີ:</span>
-                ${years.map(yy => `<button onclick="setAnnualYear(${yy})" class="px-3 py-1.5 rounded-xl ${yy === y ? 'bg-cyan-500 text-white shadow' : 'text-slate-200 hover:bg-white/10'}">ຄ.ສ ${yy}</button>`).join('')}
+                ${years.map(yy => `<button onclick="setAnnualYear(${yy})" class="px-3 py-1.5 rounded-xl transition ${yy === y ? 'bg-cyan-500 text-white shadow font-black' : 'text-slate-200 hover:bg-white/10'}">ຄ.ສ ${yy}</button>`).join('')}
+              </div>
+            </div>
+
+            <!-- 🔍 ຊ່ອງເລືອກຂໍ້ມູນທີ່ຕ້ອງການວິເຄາະ (Interactive Analytics Filters) -->
+            <div class="mt-5 pt-4 border-t border-white/15">
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-xs font-bold uppercase tracking-wider text-cyan-300 flex items-center gap-1.5">
+                  <span>⚙️</span> ຊ່ອງເລືອກຂໍ້ມູນທີ່ຕ້ອງການວິເຄາະ (Select Data for Analysis)
+                </span>
+                ${hasActiveFilters ? `<span class="px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 text-[10px] font-bold">ກຳລັງກອງຂໍ້ມູນສະເພາະ</span>` : ''}
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 text-xs">
+                <!-- 1. ບໍລິສັດ / ໂຄງການ -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-300 mb-1">🏢 ບໍລິສັດ / ໂຄງການ:</label>
+                  <select onchange="setAnnualCompany(this.value)" class="w-full bg-slate-900/90 text-white border border-white/25 rounded-xl px-2.5 py-2 font-medium outline-none focus:ring-2 focus:ring-cyan-400">
+                    <option value="ALL">🏢 ທຸກບໍລິສັດ (${availableCos.length})</option>
+                    ${availableCos.map(c => `<option value="${escAttr(c.key)}" ${annualCompany === c.key ? 'selected' : ''}>${escAttr(c.name)}</option>`).join('')}
+                  </select>
+                </div>
+
+                <!-- 2. ຈຸດກວດ / ສະຖານີ -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-300 mb-1">📍 ຈຸດກວດ / ສະຖານີ:</label>
+                  <select onchange="setAnnualStation(this.value)" class="w-full bg-slate-900/90 text-white border border-white/25 rounded-xl px-2.5 py-2 font-medium outline-none focus:ring-2 focus:ring-cyan-400">
+                    <option value="ALL">📍 ທຸກຈຸດກວດ (${availableSts.length})</option>
+                    ${availableSts.map(s => `<option value="${escAttr(s.id)}" ${annualStation === s.id ? 'selected' : ''}>${escAttr(s.label)}</option>`).join('')}
+                  </select>
+                </div>
+
+                <!-- 3. ໂຕຊີ້ວັດ -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-300 mb-1">🧪 ໂຕຊີ້ວັດທີ່ວິເຄາະ:</label>
+                  <select onchange="setAnnualIndicator(this.value)" class="w-full bg-slate-900/90 text-white border border-white/25 rounded-xl px-2.5 py-2 font-medium outline-none focus:ring-2 focus:ring-cyan-400">
+                    <option value="ALL">🧪 ທຸກໂຕຊີ້ວັດ (${availableInds.length})</option>
+                    ${availableInds.map(i => `<option value="${escAttr(i.key)}" ${annualIndicator === i.key ? 'selected' : ''}>${escAttr(i.name)}${i.unit ? ' (' + escAttr(i.unit) + ')' : ''}</option>`).join('')}
+                  </select>
+                </div>
+
+                <!-- 4. ງວດ / ໄຕຣມາດ -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-300 mb-1">🗓️ ງວດ / ໄຕຣມາດ / ເດືອນ:</label>
+                  <select onchange="setAnnualQuarter(this.value)" class="w-full bg-slate-900/90 text-white border border-white/25 rounded-xl px-2.5 py-2 font-medium outline-none focus:ring-2 focus:ring-cyan-400">
+                    <option value="ALL" ${annualQuarter === 'ALL' ? 'selected' : ''}>🗓️ ຕະຫຼອດປີ (All Quarters)</option>
+                    <option value="Q1" ${annualQuarter === 'Q1' ? 'selected' : ''}>🌱 ໄຕຣມາດ 1 (ເດືອນ 1-3)</option>
+                    <option value="Q2" ${annualQuarter === 'Q2' ? 'selected' : ''}>☀️ ໄຕຣມາດ 2 (ເດືອນ 4-6)</option>
+                    <option value="Q3" ${annualQuarter === 'Q3' ? 'selected' : ''}>🌧️ ໄຕຣມາດ 3 (ເດືອນ 7-9)</option>
+                    <option value="Q4" ${annualQuarter === 'Q4' ? 'selected' : ''}>🌾 ໄຕຣມາດ 4 (ເດືອນ 10-12)</option>
+                    <optgroup label="📅 ແຍກຕາມເດືອນ">
+                      <option value="M01" ${annualQuarter === 'M01' ? 'selected' : ''}>ເດືອນ 1 (ມັງກອນ)</option>
+                      <option value="M02" ${annualQuarter === 'M02' ? 'selected' : ''}>ເດືອນ 2 (ກຸມພາ)</option>
+                      <option value="M03" ${annualQuarter === 'M03' ? 'selected' : ''}>ເດືອນ 3 (ມີນາ)</option>
+                      <option value="M04" ${annualQuarter === 'M04' ? 'selected' : ''}>ເດືອນ 4 (ເມສາ)</option>
+                      <option value="M05" ${annualQuarter === 'M05' ? 'selected' : ''}>ເດືອນ 5 (ພຶດສະພາ)</option>
+                      <option value="M06" ${annualQuarter === 'M06' ? 'selected' : ''}>ເດືອນ 6 (ມິຖຸນາ)</option>
+                      <option value="M07" ${annualQuarter === 'M07' ? 'selected' : ''}>ເດືອນ 7 (ກໍລະກົດ)</option>
+                      <option value="M08" ${annualQuarter === 'M08' ? 'selected' : ''}>ເດືອນ 8 (ສິງຫາ)</option>
+                      <option value="M09" ${annualQuarter === 'M09' ? 'selected' : ''}>ເດືອນ 9 (ກັນຍາ)</option>
+                      <option value="M10" ${annualQuarter === 'M10' ? 'selected' : ''}>ເດືອນ 10 (ຕຸລາ)</option>
+                      <option value="M11" ${annualQuarter === 'M11' ? 'selected' : ''}>ເດືອນ 11 (ພະຈິກ)</option>
+                      <option value="M12" ${annualQuarter === 'M12' ? 'selected' : ''}>ເດືອນ 12 (ທັນວາ)</option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                <!-- 5. ສະຖານະຜົນກວດ -->
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-300 mb-1">🛡️ ສະຖານະຜົນກວດ:</label>
+                  <select onchange="setAnnualStatus(this.value)" class="w-full bg-slate-900/90 text-white border border-white/25 rounded-xl px-2.5 py-2 font-medium outline-none focus:ring-2 focus:ring-cyan-400">
+                    <option value="ALL" ${annualStatus === 'ALL' ? 'selected' : ''}>🛡️ ທຸກສະຖານະ (All)</option>
+                    <option value="ALERT" ${annualStatus === 'ALERT' ? 'selected' : ''}>🚨 ສະເພາະເກີນມາດຕະຖານ</option>
+                    <option value="PASS" ${annualStatus === 'PASS' ? 'selected' : ''}>✅ ສະເພາະຜ່ານມາດຕະຖານ</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
 
+          <!-- Specific Parameter Stats Card (If Parameter Selected) -->
+          ${indStatCard}
+
+          <!-- KPI Cards -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             ${card(`ບໍລິສັດ / ໂຄງການ ທີ່ກວດໃນປີ ${y}`, '🏢', `<span class="text-3xl font-extrabold text-slate-800">${cur.companies}</span>`, '<span class="text-xs text-slate-500">ບໍລິສັດ</span>', `ປີກ່ອນ (${y - 1}): <b class="text-slate-700">${prev.companies}</b> ບໍລິສັດ`, 'bg-rose-50 text-rose-600')}
             ${card('ການປ່ຽນແປງ (ເພີ່ມ / ຫຼຸດ)', diff >= 0 ? '↗' : '↘', `<span class="text-3xl font-extrabold ${diff > 0 ? 'text-emerald-600' : diff < 0 ? 'text-rose-600' : 'text-slate-700'}">${diff > 0 ? '+' : ''}${diff}</span>`, `<span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${diff >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${diff > 0 ? '+' : ''}${diffPct}%</span>`, diff === 0 ? 'ຈຳນວນບໍລິສັດ ເທົ່າກັບປີກ່ອນ' : `${diff > 0 ? 'ເພີ່ມຂຶ້ນ' : 'ຫຼຸດລົງ'} ທຽບກັບປີ ${y - 1}`, 'bg-emerald-50 text-emerald-600')}
@@ -6239,9 +6585,13 @@
             ${card('ອັດຕາຜ່ານມາດຕະຖານ', '🛡️', `<span class="text-3xl font-extrabold ${passTone}">${cur.pass}%</span>`, `<span class="text-xs text-slate-500">(${cur.n - cur.alerts}/${cur.n})</span>`, `ເກີນມາດຕະຖານ: <b class="text-rose-600">${cur.alerts}</b> ຕົວຢ່າງ · ປີກ່ອນ ${prev.pass}%`, 'bg-emerald-50 text-emerald-600')}
           </div>
 
+          <!-- 5-Year Trend Table -->
           <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm">
             <div class="flex flex-wrap justify-between items-start gap-2 mb-3">
-              <div><h3 class="font-bold text-slate-800">ຕາຕະລາງວິເຄາະແນວໂນ້ມ 5 ປີຍ້ອນຫຼັງ</h3><p class="text-[11px] text-slate-500">ປຽບທຽບຈຳນວນບໍລິສັດ, ຕົວຢ່າງ ແລະ ອັດຕາຜ່ານມາດຕະຖານ</p></div>
+              <div>
+                <h3 class="font-bold text-slate-800">ຕາຕະລາງວິເຄາະແນວໂນ້ມ 5 ປີຍ້ອນຫຼັງ</h3>
+                <p class="text-[11px] text-slate-500">ປຽບທຽບຈຳນວນບໍລິສັດ, ຕົວຢ່າງ ແລະ ອັດຕາຜ່ານມາດຕະຖານ ${annualCompany !== 'ALL' ? `(ສະເພາະ: ${escAttr(annualCompany)})` : ''}</p>
+              </div>
               <span class="text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-full px-3 py-1">ໄລຍະ: ${span[0]} - ${span[4]}</span>
             </div>
             <div class="overflow-auto"><table class="w-full text-sm">
@@ -6262,15 +6612,16 @@
             </table></div>
           </div>
 
+          <!-- Parameter Exceed and Company Summaries -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm">
               <h3 class="font-bold text-slate-800 mb-1">🚨 ໂຕຊີ້ວັດທີ່ເກີນມາດຕະຖານຫຼາຍທີ່ສຸດ (${y})</h3>
               <p class="text-[11px] text-slate-500 mb-3">ນັບຈຳນວນຕົວຢ່າງທີ່ເກີນເກນເຕືອນໄພ</p>
               ${topEx.length ? topEx.map(t => `
                 <div class="flex items-center gap-2 py-1.5">
-                  <span class="w-32 text-xs font-semibold text-slate-700 truncate">${escAttr(t.ind.name)}${t.ind.unit ? ' <span class="text-slate-400 font-normal">(' + escAttr(t.ind.unit) + ')</span>' : ''}</span>
+                  <span class="w-36 text-xs font-semibold text-slate-700 truncate">${escAttr(t.ind.name)}${t.ind.unit ? ' <span class="text-slate-400 font-normal">(' + escAttr(t.ind.unit) + ')</span>' : ''}</span>
                   <div class="flex-1 h-3 rounded-full bg-rose-50 overflow-hidden"><div class="h-full bg-rose-500 rounded-full" style="width:${t.n / topEx[0].n * 100}%"></div></div>
-                  <span class="text-xs font-bold text-rose-600 w-10 text-right">${t.n}</span>
+                  <span class="text-xs font-bold text-rose-600 w-12 text-right">${t.n} ຄັ້ງ</span>
                 </div>`).join('') : '<p class="text-sm text-emerald-600 font-semibold py-6 text-center">✅ ບໍ່ມີໂຕຊີ້ວັດໃດເກີນມາດຕະຖານ</p>'}
             </div>
             <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm">
@@ -6362,7 +6713,7 @@
           if (!st0) return;
           const st = withDerivedCoord(st0); // ບໍ່ມີ Lat/Lng ແຕ່ມີອົງສາ → ສະແດງໃນແຜນທີ່ໄດ້ເລີຍ
           flatStationsForChart.push({ ...st, companyName: company });
-          const hideOnMap = (mapOnly && mapCompany && item.fbKey !== mapCompany) || (mapYear !== 'ALL' && stationYear(st, item) !== mapYear);
+          const hideOnMap = (mapOnly && ((mapStation && `${item.fbKey}:${stIdx}` !== mapStation) || (!mapStation && mapCompany && item.fbKey !== mapCompany))) || (mapYear !== 'ALL' && stationYear(st, item) !== mapYear);
           if (!hideOnMap && st.lat && st.lng && !isNaN(st.lat) && !isNaN(st.lng)) try {
             const currentIcon = (st.status && st.status.isAlert) ? alertIcon : normalIcon;
             const marker = L.marker([st.lat, st.lng], { icon: currentIcon }).addTo(markersGroup);
@@ -6467,7 +6818,7 @@
       });
 
       renderMapSelectors();
-      const boundsKey = `${filterKey}|${validLaosBounds.length}|${mapOnly ? mapCompany : ''}|${mapYear}`;
+      const boundsKey = `${filterKey}|${validLaosBounds.length}|${mapOnly ? mapCompany + ':' + mapStation : ''}|${mapYear}`;
       if (boundsKey !== lastBoundsKey) {
         lastBoundsKey = boundsKey;
         if (validLaosBounds.length > 0) map.fitBounds(validLaosBounds, { padding: [30, 30], maxZoom: 12 });
