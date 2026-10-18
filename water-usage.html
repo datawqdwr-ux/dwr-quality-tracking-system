@@ -117,6 +117,8 @@
       <p class="text-[11px] text-slate-400 text-center -mt-3">ເບິ່ງແຜນທີ່ ແລະ ຂໍ້ມູນໄດ້ ແຕ່ບັນທຶກ/ແກ້ໄຂບໍ່ໄດ້</p>
       <div class="flex items-center justify-center gap-3 text-[11px] font-semibold pt-1">
         <a href="index.html" class="text-indigo-600 hover:underline">🏠 ໜ້າຫຼັກ</a>
+        <span class="text-slate-300">•</span>
+        <a href="wastewater.html" class="text-rose-600 hover:underline flex items-center gap-1">🏭 ໄປລະບົບປ່ອຍນໍ້າເປື້ອນ</a>
       </div>
     </div>
   </div>
@@ -3154,7 +3156,7 @@ var AppSidebar = ({
                 ]
               })
             ] })
-          ] }),
+          ] })
         ] }),
         /* Sidebar Footer (User Profile & Session) */
         /* @__PURE__ */ jsxs("div", { className: "p-3 border-t border-slate-800 bg-slate-950/40 space-y-2 shrink-0", children: [
@@ -3336,6 +3338,14 @@ var AppTopBar = ({
                         children: [
                           /* @__PURE__ */ jsx(LogIn, { size: 14, className: "text-rose-400" }),
                           /* @__PURE__ */ jsx("span", { children: "ເຂົ້າສູ່ລະບົບດ້ວຍບັນຊີອື່ນ" })
+                        ]
+                      }),
+                      /* @__PURE__ */ jsxs("a", {
+                        href: "wastewater.html",
+                        className: "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-rose-300 hover:text-white hover:bg-rose-500/10 transition-colors text-left font-medium",
+                        children: [
+                          /* @__PURE__ */ jsx("span", { className: "text-sm", children: "🏭" }),
+                          /* @__PURE__ */ jsx("span", { children: "ໄປລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ" })
                         ]
                       })
                     ] }),
@@ -5275,6 +5285,22 @@ var ExportReports = ({
                 ]
               }
             ),
+            (auditActionFilter !== "all" || auditEntityFilter !== "all" || auditSearchQuery) && /* @__PURE__ */ jsxs5(
+              "button",
+              {
+                type: "button",
+                onClick: () => {
+                  setAuditActionFilter("all");
+                  setAuditEntityFilter("all");
+                  setAuditSearchQuery("");
+                },
+                className: "px-2.5 py-1 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold cursor-pointer transition flex items-center gap-1",
+                children: [
+                  "✕ ",
+                  "ລ້າງການກັ່ນຕອງ (Clear)"
+                ]
+              }
+            ),
             /* @__PURE__ */ jsxs5("span", { className: "text-xs px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold", children: [
               "ກອງໄດ້ ",
               filteredAuditLogs.length,
@@ -5812,7 +5838,10 @@ import {
   Check,
   X as X2,
   FileText as FileText2,
-  Copy as CopyIcon
+  Copy as CopyIcon,
+  Search as SearchAudit,
+  RotateCcw as RotateCcw2,
+  Filter as Filter2
 } from "lucide-react";
 import { jsx as jsx7, jsxs as jsxs7 } from "react/jsx-runtime";
 /* --- ✏️ ແກ້ໄຂບັນຊີຜູ້ໃຊ້ (Admin): ຊື່ເຂົ້າລະບົບ, ຊື່ເຕັມ, ຕຳແໜ່ງ, ສິດ, ຕັ້ງລະຫັດໃໝ່ ---
@@ -5955,6 +5984,8 @@ var SecurityAndSettings = ({
   const [exportPasscodeVal, setExportPasscodeVal] = useState7(getExportPasscode());
   const [exportPasscodeSaved, setExportPasscodeSaved] = useState7(false);
   const [copiedPasscode, setCopiedPasscode] = useState7(false);
+  const [logActionFilter, setLogActionFilter] = useState7("all");
+  const [logSearchQuery, setLogSearchQuery] = useState7("");
   React8.useEffect(() => {
     setProfile(currentUser);
     setPasswordInput(currentUser.password || "");
@@ -6515,82 +6546,196 @@ var SecurityAndSettings = ({
         );
       }) })
     ] }),
-    activeSubTab === "logs" && /* @__PURE__ */ jsxs7("div", { className: "bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4", children: [
-      /* @__PURE__ */ jsxs7("div", { className: "flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-3", children: [
-        /* @__PURE__ */ jsxs7("div", { children: [
-          /* @__PURE__ */ jsxs7("h3", { className: "text-base font-bold text-white flex items-center gap-2", children: [
-            /* @__PURE__ */ jsx7(History2, { size: 18, className: "text-rose-400" }),
-            /* @__PURE__ */ jsx7("span", { children: "ປະຫວັດການດໍາເນີນງານໃນລະບົບ (Audit Trail)" })
-          ] }),
-          /* @__PURE__ */ jsx7("p", { className: "text-xs text-slate-400 mt-0.5", children: "ບັນທຶກທຸກການເຄື່ອນໄຫວ ເຊັ່ນ ການເພີ່ມ, ແກ້ໄຂ, ລຶບຂໍ້ມູນ ຫຼື ການເຂົ້າລະບົບ" })
-        ] }),
-        /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-2.5", children: [
-          currentUser.role === "admin" && auditLogs.length > 0 && /* @__PURE__ */ jsxs7(
-            "button",
-            {
-              type: "button",
-              onClick: () => {
-                if (window.confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບຂໍ້ມູນປະຫວັດການດໍາເນີນງານທັງໝົດ? ການກະທຳນີ້ສະເພາະ Super Admin ເທົ່ານັ້ນ ແລະ ບໍ່ສາມາດກູ້ຄືນໄດ້.")) {
-                  if (onClearLogs) onClearLogs();
-                }
-              },
-              className: "px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer",
-              title: "ສະເພາະ Super Admin: ລົບປະຫວັດການດຳເນີນງານທັງໝົດ",
-              children: [
-                /* @__PURE__ */ jsx7(Trash23, { size: 14 }),
-                /* @__PURE__ */ jsx7("span", { children: "ລົບປະຫວັດທັງໝົດ (Super Admin)" })
-              ]
-            }
-          ),
-          /* @__PURE__ */ jsxs7("span", { className: "px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-mono font-bold", children: [
-            auditLogs.length,
-            " ລາຍການ"
-          ] })
-        ] })
-      ] }),
-      auditLogs.length === 0 ? /* @__PURE__ */ jsx7("div", { className: "text-center py-12 text-slate-500 text-xs", children: "ຍັງບໍ່ມີປະຫວັດການເຄື່ອນໄຫວໃນລະບົບ" }) : /* @__PURE__ */ jsx7("div", { className: "divide-y divide-slate-800/80 max-h-[500px] overflow-y-auto pr-1", children: auditLogs.map((log) => /* @__PURE__ */ jsxs7("div", { className: "py-3 flex items-start justify-between gap-3 text-xs", children: [
-        /* @__PURE__ */ jsxs7("div", { className: "flex items-start gap-2.5", children: [
-          /* @__PURE__ */ jsxs7("div", { className: "mt-0.5", children: [
-            log.action === "create" && /* @__PURE__ */ jsx7(Plus4, { size: 14, className: "text-emerald-400" }),
-            log.action === "update" && /* @__PURE__ */ jsx7(Save2, { size: 14, className: "text-rose-400" }),
-            log.action === "delete" && /* @__PURE__ */ jsx7(Trash23, { size: 14, className: "text-rose-400" }),
-            log.action === "export" && /* @__PURE__ */ jsx7(FileText2, { size: 14, className: "text-purple-400" }),
-            !["create", "update", "delete", "export"].includes(log.action) && /* @__PURE__ */ jsx7(History2, { size: 14, className: "text-amber-400" })
-          ] }),
+    activeSubTab === "logs" && (() => {
+      const q = (logSearchQuery || "").trim().toLowerCase();
+      const filteredLogs = (auditLogs || []).filter((log) => {
+        if (logActionFilter !== "all") {
+          if (logActionFilter === "crud_only") {
+            if (!["create", "update", "delete"].includes(log.action?.toLowerCase())) return false;
+          } else if (log.action?.toLowerCase() !== logActionFilter.toLowerCase()) {
+            return false;
+          }
+        }
+        if (q) {
+          const matchDetails = log.details && log.details.toLowerCase().includes(q);
+          const matchUser = log.userName && log.userName.toLowerCase().includes(q);
+          const matchEntity = log.entityName && log.entityName.toLowerCase().includes(q);
+          const matchAction = log.action && log.action.toLowerCase().includes(q);
+          if (!matchDetails && !matchUser && !matchEntity && !matchAction) return false;
+        }
+        return true;
+      });
+      const hasFilter = logActionFilter !== "all" || !!(logSearchQuery || "").trim();
+
+      return /* @__PURE__ */ jsxs7("div", { className: "bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4", children: [
+        /* @__PURE__ */ jsxs7("div", { className: "flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-3", children: [
           /* @__PURE__ */ jsxs7("div", { children: [
-            /* @__PURE__ */ jsx7("div", { className: "font-semibold text-slate-200", children: log.details }),
-            /* @__PURE__ */ jsxs7("div", { className: "text-[11px] text-slate-400 mt-0.5 flex items-center gap-2", children: [
-              /* @__PURE__ */ jsxs7("span", { children: [
-                "ຜູ້ດໍາເນີນການ: ",
-                /* @__PURE__ */ jsx7("strong", { className: "text-slate-300", children: log.userName })
-              ] }),
-              /* @__PURE__ */ jsx7("span", { children: "•" }),
-              /* @__PURE__ */ jsxs7("span", { children: [
-                "ເປົ້າໝາຍ: ",
-                log.entityName
-              ] })
+            /* @__PURE__ */ jsxs7("h3", { className: "text-base font-bold text-white flex items-center gap-2", children: [
+              /* @__PURE__ */ jsx7(History2, { size: 18, className: "text-rose-400" }),
+              /* @__PURE__ */ jsx7("span", { children: "ປະຫວັດການດໍາເນີນງານໃນລະບົບ (Audit Trail)" })
+            ] }),
+            /* @__PURE__ */ jsx7("p", { className: "text-xs text-slate-400 mt-0.5", children: "ບັນທຶກທຸກການເຄື່ອນໄຫວ ເຊັ່ນ ການເພີ່ມ, ແກ້ໄຂ, ລຶບຂໍ້ມູນ ຫຼື ການເຂົ້າລະບົບ" })
+          ] }),
+          /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-2.5", children: [
+            currentUser.role === "admin" && auditLogs.length > 0 && /* @__PURE__ */ jsxs7(
+              "button",
+              {
+                type: "button",
+                onClick: () => {
+                  if (window.confirm("ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບຂໍ້ມູນປະຫວັດການດໍາເນີນງານທັງໝົດ? ການກະທຳນີ້ສະເພາະ Super Admin ເທົ່ານັ້ນ ແລະ ບໍ່ສາມາດກູ້ຄືນໄດ້.")) {
+                    if (onClearLogs) onClearLogs();
+                  }
+                },
+                className: "px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer",
+                title: "ສະເພາະ Super Admin: ລົບປະຫວັດການດຳເນີນງານທັງໝົດ",
+                children: [
+                  /* @__PURE__ */ jsx7(Trash23, { size: 14 }),
+                  /* @__PURE__ */ jsx7("span", { children: "ລົບປະຫວັດທັງໝົດ (Super Admin)" })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxs7("span", { className: "px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-mono font-bold", children: [
+              hasFilter ? `ກອງໄດ້ ${filteredLogs.length} / ${auditLogs.length}` : auditLogs.length,
+              " ລາຍການ"
             ] })
           ] })
         ] }),
-        /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-2 shrink-0", children: [
-          /* @__PURE__ */ jsx7("div", { className: "text-[10px] text-slate-400 font-mono", children: new Date(log.timestamp).toLocaleString("lo-LA") }),
-          currentUser.role === "admin" && /* @__PURE__ */ jsx7(
+
+        /* Filter & Search Toolbar (ບ໋ອກ select + ຫ້ອງ clear) */
+        /* @__PURE__ */ jsxs7("div", { className: "flex flex-col sm:flex-row items-center gap-2.5 p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80", children: [
+          /* Select Box (ບ໋ອກ select) */
+          /* @__PURE__ */ jsxs7("div", { className: "w-full sm:w-60 shrink-0 relative", children: [
+            /* @__PURE__ */ jsx7(Filter2, { size: 14, className: "absolute left-3 top-1/2 -translate-y-1/2 text-rose-400 pointer-events-none" }),
+            /* @__PURE__ */ jsxs7(
+              "select",
+              {
+                value: logActionFilter,
+                onChange: (e) => setLogActionFilter(e.target.value),
+                className: "w-full bg-slate-900 border border-slate-700/80 text-slate-200 text-xs rounded-xl pl-8 pr-3 py-2 outline-hidden focus:ring-2 focus:ring-rose-500 cursor-pointer font-medium",
+                children: [
+                  /* @__PURE__ */ jsxs7("option", { value: "all", children: [
+                    "ທຸກປະເພດການກະທຳ (",
+                    auditLogs.length,
+                    ")"
+                  ] }),
+                  /* @__PURE__ */ jsx7("option", { value: "crud_only", children: "ສະເພາະ ເພີ່ມ, ແກ້ໄຂ ແລະ ລົບ" }),
+                  /* @__PURE__ */ jsx7("option", { value: "create", children: "🟢 ເພີ່ມຂໍ້ມູນ (Create)" }),
+                  /* @__PURE__ */ jsx7("option", { value: "update", children: "🔵 ແກ້ໄຂຂໍ້ມູນ (Update)" }),
+                  /* @__PURE__ */ jsx7("option", { value: "delete", children: "🔴 ລົບຂໍ້ມູນ (Delete)" }),
+                  /* @__PURE__ */ jsx7("option", { value: "export", children: "🟣 ສົ່ງອອກລາຍງານ (Export)" }),
+                  /* @__PURE__ */ jsx7("option", { value: "login", children: "🔑 ການເຂົ້າສູ່ລະບົບ (Login)" }),
+                  /* @__PURE__ */ jsx7("option", { value: "logout", children: "🚪 ການອອກຈາກລະບົບ (Logout)" }),
+                  /* @__PURE__ */ jsx7("option", { value: "message", children: "✉️ ຂໍ້ຄວາມແຈ້ງເຕືອນ (Message)" })
+                ]
+              }
+            )
+          ] }),
+
+          /* Search Box with Inline Clear Button (ຫ້ອງ clear) */
+          /* @__PURE__ */ jsxs7("div", { className: "w-full sm:flex-1 relative", children: [
+            /* @__PURE__ */ jsx7(SearchAudit, { size: 14, className: "absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" }),
+            /* @__PURE__ */ jsx7(
+              "input",
+              {
+                type: "text",
+                value: logSearchQuery,
+                onChange: (e) => setLogSearchQuery(e.target.value),
+                placeholder: "🔍 ຄົ້ນຫາປະຫວັດ (ລາຍລະອຽດ, ຜູ້ດຳເນີນການ, ເປົ້າໝາຍ...)",
+                className: "w-full bg-slate-900 border border-slate-700/80 text-slate-200 text-xs rounded-xl pl-8 pr-8 py-2 outline-hidden focus:ring-2 focus:ring-rose-500 placeholder:text-slate-500 font-medium"
+              }
+            ),
+            logSearchQuery && /* @__PURE__ */ jsx7(
+              "button",
+              {
+                type: "button",
+                onClick: () => setLogSearchQuery(""),
+                className: "absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 rounded-md transition cursor-pointer",
+                title: "ລ້າງຄຳຄົ້ນຫາ (Clear Search)",
+                children: /* @__PURE__ */ jsx7(X2, { size: 14 })
+              }
+            )
+          ] }),
+
+          /* Dedicated Clear Button (ຫ້ອງ clear: ລ້າງການກັ່ນຕອງທັງໝົດ) */
+          hasFilter && /* @__PURE__ */ jsxs7(
             "button",
             {
               type: "button",
               onClick: () => {
-                if (window.confirm("ທ່ານຕ້ອງການລົບລາຍການປະຫວັດນີ້ແທ້ບໍ່?")) {
-                  if (onDeleteLog) onDeleteLog(log.id);
-                }
+                setLogActionFilter("all");
+                setLogSearchQuery("");
               },
-              className: "p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer",
-              title: "ລົບລາຍການນີ້ (Super Admin)",
-              children: /* @__PURE__ */ jsx7(Trash23, { size: 13 })
+              className: "px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shrink-0 animate-in fade-in",
+              title: "ລ້າງການກັ່ນຕອງທັງໝົດ (Clear Filters)",
+              children: [
+                /* @__PURE__ */ jsx7(RotateCcw2, { size: 13 }),
+                /* @__PURE__ */ jsx7("span", { children: "ລ້າງການກັ່ນຕອງ (Clear)" })
+              ]
             }
           )
-        ] })
-      ] }, log.id)) })
-    ] }),
+        ] }),
+
+        /* Audit Log List Feed */
+        auditLogs.length === 0 ? /* @__PURE__ */ jsx7("div", { className: "text-center py-12 text-slate-500 text-xs", children: "ຍັງບໍ່ມີປະຫວັດການເຄື່ອນໄຫວໃນລະບົບ" }) :
+        filteredLogs.length === 0 ? /* @__PURE__ */ jsxs7("div", { className: "text-center py-12 space-y-2.5 text-xs text-slate-400 bg-slate-950/30 rounded-2xl border border-slate-800/60 p-6", children: [
+          /* @__PURE__ */ jsx7("p", { className: "font-medium text-slate-300", children: "ບໍ່ພົບລາຍການປະຫວັດທີ່ກົງກັບເງື່ອນໄຂການຄົ້ນຫາ" }),
+          /* @__PURE__ */ jsxs7(
+            "button",
+            {
+              type: "button",
+              onClick: () => { setLogActionFilter("all"); setLogSearchQuery(""); },
+              className: "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-rose-300 border border-slate-700 text-xs font-bold transition cursor-pointer",
+              children: [
+                /* @__PURE__ */ jsx7(RotateCcw2, { size: 12 }),
+                "ລ້າງການກັ່ນຕອງ (Clear Filter)"
+              ]
+            }
+          )
+        ] }) :
+        /* @__PURE__ */ jsx7("div", { className: "divide-y divide-slate-800/80 max-h-[500px] overflow-y-auto pr-1", children: filteredLogs.map((log) => /* @__PURE__ */ jsxs7("div", { className: "py-3 flex items-start justify-between gap-3 text-xs", children: [
+          /* @__PURE__ */ jsxs7("div", { className: "flex items-start gap-2.5", children: [
+            /* @__PURE__ */ jsxs7("div", { className: "mt-0.5", children: [
+              log.action === "create" && /* @__PURE__ */ jsx7(Plus4, { size: 14, className: "text-emerald-400" }),
+              log.action === "update" && /* @__PURE__ */ jsx7(Save2, { size: 14, className: "text-rose-400" }),
+              log.action === "delete" && /* @__PURE__ */ jsx7(Trash23, { size: 14, className: "text-rose-400" }),
+              log.action === "export" && /* @__PURE__ */ jsx7(FileText2, { size: 14, className: "text-purple-400" }),
+              !["create", "update", "delete", "export"].includes(log.action) && /* @__PURE__ */ jsx7(History2, { size: 14, className: "text-amber-400" })
+            ] }),
+            /* @__PURE__ */ jsxs7("div", { children: [
+              /* @__PURE__ */ jsx7("div", { className: "font-semibold text-slate-200", children: log.details }),
+              /* @__PURE__ */ jsxs7("div", { className: "text-[11px] text-slate-400 mt-0.5 flex items-center gap-2", children: [
+                /* @__PURE__ */ jsxs7("span", { children: [
+                  "ຜູ້ດໍາເນີນການ: ",
+                  /* @__PURE__ */ jsx7("strong", { className: "text-slate-300", children: log.userName })
+                ] }),
+                /* @__PURE__ */ jsx7("span", { children: "•" }),
+                /* @__PURE__ */ jsxs7("span", { children: [
+                  "ເປົ້າໝາຍ: ",
+                  log.entityName
+                ] })
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-2 shrink-0", children: [
+            /* @__PURE__ */ jsx7("div", { className: "text-[10px] text-slate-400 font-mono", children: new Date(log.timestamp).toLocaleString("lo-LA") }),
+            currentUser.role === "admin" && /* @__PURE__ */ jsx7(
+              "button",
+              {
+                type: "button",
+                onClick: () => {
+                  if (window.confirm("ທ່ານຕ້ອງການລົບລາຍການປະຫວັດນີ້ແທ້ບໍ່?")) {
+                    if (onDeleteLog) onDeleteLog(log.id);
+                  }
+                },
+                className: "p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer",
+                title: "ລົບລາຍການນີ້ (Super Admin)",
+                children: /* @__PURE__ */ jsx7(Trash23, { size: 13 })
+              }
+            )
+          ] })
+        ] }, log.id)) })
+      ] });
+    })(),
     activeSubTab === "exportSecurity" && /* @__PURE__ */ jsxs7("div", { className: "bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-xl space-y-6 max-w-3xl", children: [
       /* @__PURE__ */ jsxs7("div", { className: "flex items-center gap-3 pb-4 border-b border-slate-800", children: [
         /* @__PURE__ */ jsx7("div", { className: "w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-400/20 text-amber-400 flex items-center justify-center", children: /* @__PURE__ */ jsx7(Shield, { size: 20 }) }),
@@ -10095,6 +10240,20 @@ var CommandPalette = ({
           ]
         }
       ),
+      /* @__PURE__ */ jsxs11(
+        "a",
+        {
+          href: "wastewater.html",
+          className: "w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-rose-50 text-slate-700 hover:text-rose-700 transition-colors group text-left",
+          children: [
+            /* @__PURE__ */ jsxs11("div", { className: "flex items-center gap-2.5", children: [
+              /* @__PURE__ */ jsx11("span", { className: "p-1 rounded-lg bg-rose-100 text-rose-700 text-sm", children: "🏭" }),
+              /* @__PURE__ */ jsx11("span", { className: "font-semibold", children: "ໄປລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ" })
+            ] }),
+            /* @__PURE__ */ jsx11("span", { className: "text-[10px] text-rose-600 font-medium", children: "ປ່ຽນລະບົບ" })
+          ]
+        }
+      ),
       filteredProjects.length > 0 && /* @__PURE__ */ jsxs11("div", { className: "pt-2", children: [
         /* @__PURE__ */ jsxs11("div", { className: "px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider", children: [
           "ໂຄງການທີ່ພົບເຫັນ (",
@@ -11816,7 +11975,8 @@ function App() {
     ] }),
     /* @__PURE__ */ jsx14("footer", { className: "bg-white border-t border-slate-200 mt-16 py-6 text-center text-xs text-slate-500", children: /* @__PURE__ */ jsxs14("div", { className: "max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3", children: [
       /* @__PURE__ */ jsxs14("div", { className: "flex flex-col sm:flex-row items-center gap-2 sm:gap-4", children: [
-        /* @__PURE__ */ jsx14("span", { children: "ລະບົບຕິດຕາມຂໍ້ມູນການນໍາໃຊ້ນໍ້າຂອງໂຄງການ ຫຼື ກິດຈະການ • ກົມຊັບພະຍາກອນນໍ້າ, ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ" })
+        /* @__PURE__ */ jsx14("span", { children: "ລະບົບຕິດຕາມຂໍ້ມູນການນໍາໃຊ້ນໍ້າຂອງໂຄງການ ຫຼື ກິດຈະການ • ກົມຊັບພະຍາກອນນໍ້າ, ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ" }),
+        /* @__PURE__ */ jsx14("a", { href: "wastewater.html", className: "text-rose-600 hover:text-rose-700 font-bold flex items-center gap-1 hover:underline text-xs", children: "🏭 ໄປລະບົບຕິດຕາມໂຄງການປ່ອຍນໍ້າເປື້ອນ" })
       ] }),
       /* @__PURE__ */ jsxs14("div", { className: "flex items-center gap-2", children: [
         /* @__PURE__ */ jsx14("span", { className: "w-2 h-2 rounded-full bg-emerald-500 animate-pulse" }),

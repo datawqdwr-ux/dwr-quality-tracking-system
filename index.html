@@ -111,19 +111,29 @@
         <!-- Language Switcher Component (Persisted in localStorage) -->
         <div class="flex items-center p-1 bg-slate-950/80 border border-slate-700/80 rounded-2xl shadow-inner text-xs sm:text-sm font-bold" role="group" aria-label="Language Switcher">
           <button type="button" id="langBtnLo" onclick="setLanguage('lo')" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer" title="ສະຫຼັບເປັນພາສາລາວ (Lao)">
-            <span class="text-base leading-none">🇱🇦</span>
+            <svg class="w-5 h-3.5 rounded-xs overflow-hidden shadow-xs shrink-0 border border-slate-600/40" viewBox="0 0 30 20" aria-hidden="true">
+              <rect width="30" height="20" fill="#CE1126"/>
+              <rect y="5" width="30" height="10" fill="#002868"/>
+              <circle cx="15" cy="10" r="4" fill="#FFFFFF"/>
+            </svg>
             <span class="hidden sm:inline">ລາວ</span>
             <span class="sm:hidden text-xs">LO</span>
           </button>
           <button type="button" id="langBtnEn" onclick="setLanguage('en')" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer" title="Switch to English (EN)">
-            <span class="text-base leading-none">🇬🇧</span>
+            <svg class="w-5 h-3.5 rounded-xs overflow-hidden shadow-xs shrink-0 border border-slate-600/40" viewBox="0 0 60 30" aria-hidden="true">
+              <rect width="60" height="30" fill="#012169"/>
+              <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/>
+              <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="2"/>
+              <path d="M30,0 V30 M0,15 H60" stroke="#fff" stroke-width="10"/>
+              <path d="M30,0 V30 M0,15 H60" stroke="#C8102E" stroke-width="6"/>
+            </svg>
             <span class="hidden sm:inline">English</span>
             <span class="sm:hidden text-xs">EN</span>
           </button>
         </div>
 
         <!-- User Session Box -->
-        <div id="sessionBox" class="flex items-center gap-2 sm:gap-3 bg-slate-850/90 border border-slate-700/80 px-3 sm:px-4 py-2 sm:py-2 rounded-2xl text-xs sm:text-base shadow-sm">
+        <div id="sessionBox" class="flex items-center gap-2 sm:gap-3 bg-slate-855/90 border border-slate-700/80 px-3 sm:px-4 py-2 sm:py-2 rounded-2xl text-xs sm:text-base shadow-sm">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
           <span id="sessionUserInfo" class="text-slate-200 font-semibold truncate max-w-[140px] sm:max-w-none">ກຳລັງກວດສອບບັນຊີ...</span>
         </div>
@@ -405,7 +415,7 @@
           signOutBtn: "🚪 Sign Out",
           heroBadge: "National Water Resources Information System (National Water Portal)",
           heroTitle: "Water Resources Information System",
-          heroDesc: "Centralized monitoring and management portal for water quality, water resources utilization, and wastewater discharge projects.",
+          heroDesc: "Monitoring and management portal for water quality, water resources utilization, and wastewater discharge projects.",
           system1Badge: "Water Quality",
           system1Title: "Water Quality Monitoring System",
           system2Badge: "Water Usage",

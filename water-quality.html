@@ -251,8 +251,6 @@
             </button>
           </nav>
         </div>
-
-
       </div>
 
       <!-- Sidebar Footer (Admin Settings & Session) -->
@@ -6820,10 +6818,7 @@
       updateAppViewUI();
     }
 
-    /* --- EDIT SYSTEM (ແກ້ໄຂຂໍ້ມູນ ຢູ່ກ້ອງບ໋ອກລາຍລະອຽດ) --- */
-    function escAttr(v) {
-      return String(v ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
+
 
     function parseIndicatorValue(val) {
       val = String(val ?? '').trim();
