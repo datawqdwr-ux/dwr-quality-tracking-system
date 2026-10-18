@@ -1279,6 +1279,28 @@
           </div>
         </div>
 
+        <!-- ບ໋ອກ Select: Select All & Bulk Action Toolbar -->
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-850/80 border border-slate-800 text-xs shrink-0">
+          <label class="flex items-center gap-2 cursor-pointer select-none text-slate-300 font-medium">
+            <input type="checkbox" id="selectAllLogsCheckbox" onchange="toggleSelectAllLogs(this)" class="w-4 h-4 rounded text-rose-600 bg-slate-800 border-slate-700 focus:ring-rose-500 cursor-pointer">
+            <span>ເລືອກທັງໝົດ (Select All)</span>
+          </label>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="document.querySelectorAll('.log-item-checkbox').forEach(cb => cb.checked = false); updateSelectedLogsUI();" class="text-slate-400 hover:text-slate-200 text-xs transition cursor-pointer">
+              ລ້າງການເລືອກ
+            </button>
+          </div>
+        </div>
+
+        <!-- Banner when items are selected for deletion -->
+        <div id="selectedLogsActionBanner" class="hidden p-2.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-xs flex items-center justify-between shrink-0">
+          <span id="selectedLogsCountText" class="font-bold text-rose-200">ເລືອກແລ້ວ: 0 ລາຍການ</span>
+          <button type="button" onclick="deleteSelectedActivityLogs()" class="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/30 transition cursor-pointer">
+            <span>🗑️</span>
+            <span>ລົບລາຍການທີ່ເລືອກ</span>
+          </button>
+        </div>
+
         <!-- Wastewater style Audit Logs Feed Container -->
         <div id="logsWastewaterListContainer" class="flex-1 overflow-y-auto divide-y divide-slate-800/80 pr-1 min-h-[220px] max-h-[460px]">
           <div class="text-center py-12 text-slate-500 text-xs">ກຳລັງໂຫລດຂໍ້ມູນປະຫວັດ...</div>
@@ -2149,6 +2171,70 @@
       }
     }
 
+    async function deleteSelectedActivityLogs() {
+      const checkedBoxes = Array.from(document.querySelectorAll('.log-item-checkbox:checked'));
+      if (checkedBoxes.length === 0) {
+        return Swal.fire({ icon: 'info', title: 'ກະລຸນາເລືອກລາຍການ', text: 'ກະລຸນາໝາຍຕິກເລືອກປະຫວັດທີ່ຕ້ອງການລົບກ່ອນ' });
+      }
+      if (currentUserRole !== 'SUPER_ADMIN') {
+        return Swal.fire({ icon: 'error', title: 'ບໍ່ມີສິດດຳເນີນການ', text: 'ສະເພາະ Super Admin ເທົ່ານັ້ນທີ່ສາມາດລົບຂໍ້ມູນປະຫວັດການໃຊ້ງານໄດ້' });
+      }
+      const confirmResult = await Swal.fire({
+        title: `ຢືນຢັນການລົບ ${checkedBoxes.length} ລາຍການ?`,
+        text: `ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບຂໍ້ມູນປະຫວັດທີ່ເລືອກໄວ້ຈຳນວນ ${checkedBoxes.length} ລາຍການ?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e11d48',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'ແມ່ນ, ລົບລາຍການທີ່ເລືອກ',
+        cancelButtonText: 'ຍົກເລີກ'
+      });
+      if (confirmResult.isConfirmed) {
+        try {
+          const updates = {};
+          checkedBoxes.forEach(cb => {
+            updates['activity_logs/' + cb.value] = null;
+          });
+          await db.ref().update(updates);
+          Swal.fire({ icon: 'success', title: `ລົບ ${checkedBoxes.length} ລາຍການສຳເລັດ`, timer: 1500, showConfirmButton: false });
+          fetchActivityLogs();
+          if (typeof fetchActivityLogsForExport === 'function') fetchActivityLogsForExport();
+        } catch (err) {
+          console.error(err);
+          Swal.fire({ icon: 'error', title: 'ເກີດຂໍ້ຜິດພາດ', text: err.message });
+        }
+      }
+    }
+
+    function toggleSelectAllLogs(selectAllBox) {
+      const checkboxes = document.querySelectorAll('.log-item-checkbox');
+      checkboxes.forEach(cb => cb.checked = selectAllBox.checked);
+      updateSelectedLogsUI();
+    }
+
+    function updateSelectedLogsUI() {
+      const checkedBoxes = document.querySelectorAll('.log-item-checkbox:checked');
+      const allBoxes = document.querySelectorAll('.log-item-checkbox');
+      const count = checkedBoxes.length;
+      const banner = document.getElementById('selectedLogsActionBanner');
+      const selectedCountText = document.getElementById('selectedLogsCountText');
+      const selectAllCb = document.getElementById('selectAllLogsCheckbox');
+
+      if (selectAllCb) {
+        selectAllCb.checked = allBoxes.length > 0 && count === allBoxes.length;
+        selectAllCb.indeterminate = count > 0 && count < allBoxes.length;
+      }
+      if (banner) {
+        banner.classList.toggle('hidden', count === 0);
+      }
+      if (selectedCountText) {
+        selectedCountText.innerText = `ເລືອກແລ້ວ: ${count} ລາຍການ`;
+      }
+    }
+    window.deleteSelectedActivityLogs = deleteSelectedActivityLogs;
+    window.toggleSelectAllLogs = toggleSelectAllLogs;
+    window.updateSelectedLogsUI = updateSelectedLogsUI;
+
     async function clearAllActivityLogs() {
       if (currentUserRole !== 'SUPER_ADMIN') {
         return Swal.fire({ icon: 'error', title: 'ບໍ່ມີສິດດຳເນີນການ', text: 'ສະເພາະ Super Admin ເທົ່ານັ້ນທີ່ສາມາດລົບຂໍ້ມູນປະຫວັດການໃຊ້ງານໄດ້' });
@@ -2285,7 +2371,8 @@
 
         return `
           <div class="py-3 flex items-start justify-between gap-3 text-xs hover:bg-slate-850/50 px-2.5 rounded-2xl transition">
-            <div class="flex items-start gap-3 min-w-0 flex-1">
+            <div class="flex items-start gap-2.5 min-w-0 flex-1">
+              <input type="checkbox" value="${log._key}" onchange="updateSelectedLogsUI()" class="log-item-checkbox w-4 h-4 rounded text-rose-600 bg-slate-800 border-slate-700 focus:ring-rose-500 cursor-pointer mt-2 shrink-0">
               <div class="w-8 h-8 rounded-xl ${iconBadgeClass} flex items-center justify-center shrink-0 mt-0.5 text-sm font-bold shadow-xs">
                 ${iconHtml}
               </div>
@@ -2325,6 +2412,7 @@
           </tr>
         `).join('');
       }
+      updateSelectedLogsUI();
     }
 
     function updateRBACUI() {

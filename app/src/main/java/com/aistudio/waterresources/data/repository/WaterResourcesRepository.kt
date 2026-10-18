@@ -74,6 +74,22 @@ class WaterResourcesRepository {
         logAction("DELETE_WASTEWATER", "ລຶບໂຄງການປ່ອຍນ້ຳເປື້ອນ: $id")
     }
 
+    fun deleteAuditLogs(ids: Set<String>) {
+        _auditLogs.update { current ->
+            current.filterNot { it.id in ids }
+        }
+    }
+
+    fun deleteAuditLog(id: String) {
+        _auditLogs.update { current ->
+            current.filterNot { it.id == id }
+        }
+    }
+
+    fun clearAllAuditLogs() {
+        _auditLogs.update { emptyList() }
+    }
+
     private fun logAction(action: String, details: String) {
         val newLog = AuditLog(
             id = "LOG-${System.currentTimeMillis()}",

@@ -155,4 +155,16 @@ class WaterResourcesViewModel(
         repository.deleteWastewaterFacility(id)
         closeDetailsDialog()
     }
+
+    fun deleteAuditLogs(ids: Set<String>) {
+        repository.deleteAuditLogs(ids)
+    }
+
+    fun deleteAuditLog(id: String) {
+        repository.deleteAuditLog(id)
+    }
+
+    fun clearAllAuditLogs() {
+        repository.clearAllAuditLogs()
+    }
 }

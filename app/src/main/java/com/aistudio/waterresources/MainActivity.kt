@@ -102,6 +102,8 @@ class MainActivity : ComponentActivity() {
                                 state = state,
                                 onSelectRole = { viewModel.setUserRole(it) },
                                 onSelectLanguage = { viewModel.setLanguage(it) },
+                                onDeleteAuditLogs = { viewModel.deleteAuditLogs(it) },
+                                onClearAllAuditLogs = { viewModel.clearAllAuditLogs() },
                                 modifier = Modifier.padding(innerPadding)
                             )
                         }
