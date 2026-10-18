@@ -47,42 +47,31 @@ fun DwrTopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Brand & Logo
+            // Brand & Logo without square border
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            Brush.linearGradient(listOf(Rose500, Indigo600))
-                        )
-                        .padding(2.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    androidx.compose.foundation.Image(
-                        painter = androidx.compose.ui.res.painterResource(id = com.aistudio.waterresources.R.drawable.ministry_logo),
-                        contentDescription = "Logo",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(10.dp))
-                    )
-                }
+                androidx.compose.foundation.Image(
+                    painter = androidx.compose.ui.res.painterResource(id = com.aistudio.waterresources.R.drawable.ministry_logo),
+                    contentDescription = "Logo",
+                    modifier = Modifier.size(50.dp)
+                )
 
                 Column {
                     Text(
                         text = if (language == Language.LO) "ກະຊວງກະສິກໍາ ແລະ ສິ່ງແວດລ້ອມ" else "Ministry of Agriculture & Env",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Slate400,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Slate200,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = if (language == Language.LO) "ກົມຊັບພະຍາກອນນໍ້າ" else "Dept of Water Resources",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Black,
                         color = Slate100,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis

@@ -71,7 +71,7 @@ fun PortalDashboardScreen(
 
                 Text(
                     text = if (isLao)
-                        "ສູນລວມການຕິດຕາມກວດກາ ແລະ ຄຸ້ມຄອງຂໍ້ມູນຄຸນນະພາບນ້ຳ, ການນຳໃຊ້ນ້ຳ ແລະ ໂຄງການປ່ອຍນ້ຳເປື້ອນ ຂອງບັນດາໂຄງການ ຫຼື ກິດຈະການ ພາຍໃຕ້ການຊີ້ນຳຂອງ ກົມຊັບພະຍາກອນນ້ຳ."
+                        "ການຕິດຕາມກວດກາ ແລະ ຄຸ້ມຄອງຂໍ້ມູນຄຸນນະພາບນ້ຳ, ການນຳໃຊ້ນ້ຳ ແລະ ໂຄງການປ່ອຍນ້ຳເປື້ອນ ຂອງບັນດາໂຄງການ ຫຼື ກິດຈະການ ພາຍໃຕ້ການຊີ້ນຳຂອງ ກົມຊັບພະຍາກອນນ້ຳ."
                     else
                         "Comprehensive monitoring and management center for water quality, water usage concessions, and industrial wastewater discharge under the Department of Water Resources.",
                     style = MaterialTheme.typography.bodyMedium,
