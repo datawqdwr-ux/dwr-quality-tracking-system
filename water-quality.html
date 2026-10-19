@@ -413,8 +413,8 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-2 text-xs">
-        <!-- 🧪 ເລືອກໂຕຊີ້ວັດສະເພາະ (Dropdown ສະອາດຕາ) -->
-        <select id="chartIndicatorSel" onchange="switchChartIndicator(this.value)" class="flex-1 min-w-[210px] border border-indigo-300 rounded-xl px-3 py-2 bg-indigo-50/70 font-bold text-indigo-900 outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs cursor-pointer" title="ເລືອກໂຕຊີ້ວັດທີ່ຕ້ອງການສະແດງກຣາຟແຍກສະເພາະ">
+        <select id="chartIndicatorSel" onchange="switchChartIndicator(this.value)" class="flex-1 min-w-[210px] border border-indigo-300 rounded-xl px-3 py-2 bg-indigo-50/70 font-bold text-indigo-900 outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs cursor-pointer" title="ເລືອກໂຕຊີ້ວັດທີ່ຕ້ອງການສະແດງ">
+          <option value="__ALL__">🌐 ໂຕຊີ້ວັດທັງໝົດ</option>
         </select>
 
         <select id="chartDatasetSel" onchange="setChartDataset(this.value)" class="flex-1 min-w-[190px] border border-slate-300 rounded-xl px-3 py-2 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400">
@@ -8134,12 +8134,12 @@
       });
     }
 
-    // ຕົວຊີ້ວັດທີ່ເລືອກຕ້ອງມີຢູ່ຈິງ — ຖ້າບໍ່ມີ (ເຊັ່ນ ຄ່າເກົ່າຈາກ localStorage ຫຼື ຖືກລົບ) ໃຫ້ເລືອກໂຕທຳອິດແທນ
-    // ຕົວຊີ້ວັດທີ່ເລືອກຕ້ອງມີຢູ່ຈິງ — ຖ້າບໍ່ມີ ຫຼື ເປັນ __ALL__ ໃຫ້ເລືອກໂຕຊີ້ວັດດ່ຽວຕົວທຳອິດແທນ ເພື່ອສະແດງກຣາຟແຍກສະເພາະຕົວຊີ້ວັດ
+    // ຕົວຊີ້ວັດທີ່ເລືອກຕ້ອງມີຢູ່ຈິງ — ຖ້າບໍ່ມີໃຫ້ເລືອກໂຕທຳອິດ, ຖ້າເປັນ __ALL__ ແມ່ນສະແດງໂຕຊີ້ວັດທັງໝົດ
     function ensureSelectedIndicator() {
       const ci = chartInds();
       if (!ci.length) { currentSelectedIndicator = null; return; }
-      if (!currentSelectedIndicator || currentSelectedIndicator === '__ALL__' || !ci.some(i => i.key === currentSelectedIndicator)) {
+      if (currentSelectedIndicator === '__ALL__') return;
+      if (!currentSelectedIndicator || !ci.some(i => i.key === currentSelectedIndicator)) {
         currentSelectedIndicator = ci[0].key;
       }
     }
@@ -8156,7 +8156,7 @@
 
       const allActive = currentSelectedIndicator === '__ALL__';
       const keepScroll = container.scrollTop;
-      container.innerHTML = `<button type="button" data-indname="all ທຸກໂຕຊີ້ວັດ" onclick="switchChartIndicator('__ALL__')" class="px-2.5 py-1 rounded-lg font-bold ${allActive ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}" title="ສະແດງທຸກໂຕຊີ້ວັດຂອງສະຖານີພ້ອມກັນ">🧪 ທຸກໂຕຊີ້ວັດ</button>` + chartInds().map(i => {
+      container.innerHTML = `<button type="button" data-indname="all ທຸກໂຕຊີ້ວັດ ໂຕຊີ້ວັດທັງໝົດ" onclick="switchChartIndicator('__ALL__')" class="px-2.5 py-1 rounded-lg font-bold ${allActive ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}" title="ສະແດງທຸກໂຕຊີ້ວັດຂອງສະຖານີພ້ອມກັນ">🌐 ໂຕຊີ້ວັດທັງໝົດ</button>` + chartInds().map(i => {
         const isActive = currentSelectedIndicator === i.key;
         return `<button type="button" data-indname="${escAttr(normHeader(i.name + ' ' + (i.unit || '')))}" onclick="switchChartIndicator('${i.key}')" id="chartBtn-${i.key}" class="px-2.5 py-1 rounded-lg font-bold ${isActive ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}">${escAttr(i.name)}</button>`;
       }).join('');
@@ -8165,17 +8165,23 @@
       if (q && q.value) filterChartInds(q.value);
       const cur = document.getElementById('chartIndCurrent');
       if (cur) {
-        const ind = chartInds().find(i => i.key === currentSelectedIndicator);
-        if (ind) {
-          const tMin = sysThresholds[`cfg_${ind.key}_min`];
-          const tMax = sysThresholds[`cfg_${ind.key}_max`];
-          const hasT = (tMin !== undefined && tMin !== null && tMin !== '') || (tMax !== undefined && tMax !== null && tMax !== '');
-          const tStr = hasT ? ` (ມາດຕະຖານ: ${tMin ? '≥' + tMin : ''}${tMin && tMax ? ' · ' : ''}${tMax ? '≤' + tMax : ''}${ind.unit ? ' ' + ind.unit : ''})` : '';
-          cur.textContent = `📊 ກຳລັງສະແດງ: ${ind.name}${ind.unit ? ' (' + ind.unit + ')' : ''}${tStr}`;
+        if (currentSelectedIndicator === '__ALL__') {
+          cur.textContent = '🌐 ກຳລັງສະແດງ: ໂຕຊີ້ວັດທັງໝົດ';
           cur.parentElement?.classList.remove('hidden');
           cur.parentElement?.classList.add('flex');
         } else {
-          cur.textContent = allActive ? '🧪 ທຸກໂຕຊີ້ວັດ (ພາບລວມ Profile)' : '';
+          const ind = chartInds().find(i => i.key === currentSelectedIndicator);
+          if (ind) {
+            const tMin = sysThresholds[`cfg_${ind.key}_min`];
+            const tMax = sysThresholds[`cfg_${ind.key}_max`];
+            const hasT = (tMin !== undefined && tMin !== null && tMin !== '') || (tMax !== undefined && tMax !== null && tMax !== '');
+            const tStr = hasT ? ` (ມາດຕະຖານ: ${tMin ? '≥' + tMin : ''}${tMin && tMax ? ' · ' : ''}${tMax ? '≤' + tMax : ''}${ind.unit ? ' ' + ind.unit : ''})` : '';
+            cur.textContent = `📊 ກຳລັງສະແດງ: ${ind.name}${ind.unit ? ' (' + ind.unit + ')' : ''}${tStr}`;
+            cur.parentElement?.classList.remove('hidden');
+            cur.parentElement?.classList.add('flex');
+          } else {
+            cur.textContent = '';
+          }
         }
       }
     }
@@ -8245,19 +8251,20 @@
       if (indSel) {
         const inds = chartInds();
         ensureSelectedIndicator();
-        const opts = inds.map(i => {
-          const tMin = sysThresholds[`cfg_${i.key}_min`];
-          const tMax = sysThresholds[`cfg_${i.key}_max`];
-          const hasT = (tMin !== undefined && tMin !== null && tMin !== '') || (tMax !== undefined && tMax !== null && tMax !== '');
-          const tStr = hasT ? ` [ເກນ: ${tMin ? '≥' + tMin : ''}${tMin && tMax ? ' · ' : ''}${tMax ? '≤' + tMax : ''}]` : '';
-          return `<option value="${escAttr(i.key)}" ${i.key === currentSelectedIndicator ? 'selected' : ''}>🧪 ໂຕຊີ້ວັດ: ${escAttr(i.name)}${i.unit ? ' (' + escAttr(i.unit) + ')' : ''}${tStr}</option>`;
-        });
+        let opts = [`<option value="__ALL__" ${currentSelectedIndicator === '__ALL__' ? 'selected' : ''}>🌐 ໂຕຊີ້ວັດທັງໝົດ</option>`]
+          .concat(inds.map(i => {
+            const tMin = sysThresholds[`cfg_${i.key}_min`];
+            const tMax = sysThresholds[`cfg_${i.key}_max`];
+            const hasT = (tMin !== undefined && tMin !== null && tMin !== '') || (tMax !== undefined && tMax !== null && tMax !== '');
+            const tStr = hasT ? ` [ເກນ: ${tMin ? '≥' + tMin : ''}${tMin && tMax ? ' · ' : ''}${tMax ? '≤' + tMax : ''}]` : '';
+            return `<option value="${escAttr(i.key)}" ${i.key === currentSelectedIndicator ? 'selected' : ''}>🧪 ໂຕຊີ້ວັດ: ${escAttr(i.name)}${i.unit ? ' (' + escAttr(i.unit) + ')' : ''}${tStr}</option>`;
+          }));
         const html = opts.join('');
         if (indSel.dataset.last !== html) {
           indSel.innerHTML = html;
           indSel.dataset.last = html;
         }
-        indSel.value = currentSelectedIndicator || (inds[0] ? inds[0].key : '');
+        indSel.value = currentSelectedIndicator || '__ALL__';
       }
 
       const sel = document.getElementById('chartDatasetSel');
