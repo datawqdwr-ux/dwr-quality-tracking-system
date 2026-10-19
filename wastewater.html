@@ -2809,7 +2809,21 @@ var WaterMap = ({
   let copyGps = (text) => {
     navigator.clipboard.writeText(text), setCopiedText(text), setTimeout(() => setCopiedText(null), 2e3);
   };
-  return /* @__PURE__ */ jsxs2("div", { className: `relative w-full rounded-3xl overflow-hidden border border-slate-200/80 shadow-md bg-slate-900 transition-all ${isFullscreen ? "fixed inset-0 z-50 rounded-none h-screen w-screen" : "h-[670px]"}`, children: [
+  return /* @__PURE__ */ jsxs2("div", { className: "bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col min-w-0 space-y-3", children: [
+    /* @__PURE__ */ jsxs2("div", { className: "flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3", children: [
+      /* @__PURE__ */ jsxs2("div", { className: "flex items-center gap-2.5", children: [
+        /* @__PURE__ */ jsx2("span", { className: "inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 text-white text-lg shadow-sm", children: "📍" }),
+        /* @__PURE__ */ jsxs2("div", { children: [
+          /* @__PURE__ */ jsxs2("div", { className: "flex flex-wrap items-center gap-2", children: [
+            /* @__PURE__ */ jsx2("h2", { className: "text-base font-bold text-slate-800", children: "ແຜນທີ່ GIS ສະແດງທີ່ຕັ້ງໂຄງການ ແລະ ຈຸດປ່ອຍນໍ້າເປື້ອນ (Wastewater GIS Map)" }),
+            /* @__PURE__ */ jsx2("span", { className: "text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-sky-800 border border-rose-200", children: "Google Maps / GIS" })
+          ] }),
+          /* @__PURE__ */ jsx2("p", { className: "text-xs text-slate-500", children: "ສະແດງຕຳແໜ່ງພິກັດສະຖານີໂຄງການ, ຈຸດປ່ອຍນໍ້າເປື້ອນ ແລະ ສະຖານະຄຸນນະພາບນໍ້າຕາມແຜນທີ່ພູມສາດ" })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs2("span", { className: "text-xs bg-rose-100 text-sky-800 px-3 py-1 rounded-full font-bold self-start sm:self-auto border border-rose-200", children: [projects.length, " ໂຄງການ"] })
+    ] }),
+    /* @__PURE__ */ jsxs2("div", { className: `relative w-full rounded-xl overflow-hidden border border-slate-200 shadow-inner bg-slate-900 transition-all ${isFullscreen ? "fixed inset-0 z-50 rounded-none h-screen w-screen" : "h-[670px]"}`, children: [
     /* @__PURE__ */ jsxs2("div", { className: "absolute top-4 left-4 right-4 z-[1000] flex flex-wrap items-center justify-between gap-2.5 pointer-events-none", children: [
       /* @__PURE__ */ jsxs2("div", { className: "flex flex-wrap items-center gap-2 pointer-events-auto bg-slate-900/90 backdrop-blur-xl p-1.5 rounded-2xl border border-slate-700/80 shadow-xl", children: [
         /* @__PURE__ */ jsxs2("div", { className: "flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl", children: [
@@ -3155,6 +3169,7 @@ var WaterMap = ({
       ] })
     ] }),
     /* @__PURE__ */ jsx2("div", { ref: mapContainerRef, className: "w-full h-full" })
+  ] })
   ] });
 };
 
