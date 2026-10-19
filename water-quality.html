@@ -1937,6 +1937,7 @@
           waterData.sort((a, b) => (b.lastUpdatedTs || b.id || 0) - (a.lastUpdatedTs || a.id || 0));
         }
         dataLoaded = true;
+        valueCountCache = null;
         render();
       }, err => {
         console.error('Load error:', err);
@@ -2758,13 +2759,17 @@
     }
 
     // "ເຊື່ອງ" ໂຕຊີ້ວັດ: ຄ່າທີ່ບັນທຶກໄວ້ໃນທຸກສະຖານີ ແລະ ເກນເຕືອນໄພ ຍັງຢູ່ຄົບ — ກູ້ຄືນໄດ້ທຸກເວລາ
+    let valueCountCache = null;
     function countValuesFor(key) {
-      let n = 0;
-      waterData.forEach(d => stationsOf(d).forEach(st => {
-        const v = st.customs ? st.customs[key] : undefined;
-        if (v !== undefined && v !== '-' && v !== '') n++;
-      }));
-      return n;
+      if (!valueCountCache) {
+        valueCountCache = {};
+        waterData.forEach(d => stationsOf(d).forEach(st => {
+          const c = st && st.customs;
+          if (!c) return;
+          for (const k in c) { const v = c[k]; if (v !== undefined && v !== null && v !== '-' && v !== '') valueCountCache[k] = (valueCountCache[k] || 0) + 1; }
+        }));
+      }
+      return valueCountCache[key] || 0;
     }
 
     function removeCustomIndicator(key) {
@@ -2817,23 +2822,57 @@
 
     // ລົບຖາວອນ: ລົບໂຕຊີ້ວັດ + ຄ່າຂອງມັນໃນທຸກສະຖານີ + ເກນເຕືອນໄພ (ກູ້ຄືນບໍ່ໄດ້)
     async function deleteIndicatorsPermanently(keys) {
-      if (keys.length === 1) return deleteIndicatorPermanently(keys[0]);
-      if (currentUserRole !== 'SUPER_ADMIN') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!' });
-      const inds = keys.map(k => masterIndicators.find(m => m.key === k)).filter(Boolean);
+      if (currentUserRole !== 'SUPER_ADMIN') return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!', text: 'ສະເພາະ Super Admin' });
+      keys = [...new Set(keys)];
+      const inds = keys.map(k => customIndicators.find(c => c.key === k) || masterIndicators.find(m => m.key === k)).filter(Boolean);
+      if (!inds.length) return;
       const n = inds.reduce((t, i) => t + countValuesFor(i.key), 0);
       const { isConfirmed } = await Swal.fire({
         icon: 'warning',
-        title: `🗑️ ລົບ ${inds.length} ໂຕຊີ້ວັດ ຖາວອນ?`,
-        html: `<div class="text-sm leading-relaxed">${inds.map(i => `<b>${escAttr(i.name)}</b>`).join(', ')}<br><br>
-               ຈະລົບ <b class="text-rose-600">${n} ຄ່າ</b> ໃນທຸກສະຖານີ ແລະ ເກນເຕືອນໄພ. <b class="text-rose-600">ກູ້ຄືນບໍ່ໄດ້.</b></div>`,
-        focusCancel: true,
-        showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: '🗑️ ລົບຖາວອນ', cancelButtonText: 'ຍົກເລີກ',
+        title: inds.length === 1 ? `🗑️ ລົບ "${inds[0].name}" ຖາວອນ?` : `🗑️ ລົບ ${inds.length} ໂຕຊີ້ວັດ ຖາວອນ?`,
+        html: `<div class="text-sm leading-relaxed">${inds.length > 1 ? inds.slice(0, 30).map(i => `<b>${escAttr(i.name)}</b>`).join(', ') + (inds.length > 30 ? ` … (+${inds.length - 30})` : '') + '<br><br>' : ''}
+               ຈະລົບ <b class="text-rose-600">${n} ຄ່າ</b> ໃນທຸກສະຖານີ ແລະ ເກນເຕືອນໄພ. <b class="text-rose-600">ກູ້ຄືນບໍ່ໄດ້.</b><br>ແນະນຳໃຫ້ Export Excel ເກັບໄວ້ກ່ອນ.</div>`,
+        focusCancel: true, showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: '🗑️ ລົບຖາວອນ', cancelButtonText: 'ຍົກເລີກ'
       });
       if (!isConfirmed) return;
-      for (const k of keys) await deleteIndicatorPermanently(k, true);
-      indSel.clear();
-      renderSettingsList();
-      Swal.fire({ icon: 'success', title: `ລົບ ${inds.length} ໂຕຊີ້ວັດ ຖາວອນແລ້ວ` });
+      const kset = new Set(keys);
+      const updates = {};
+      waterData.forEach(rec => {
+        const fix = (basePath, st) => {
+          if (!st || !st.customs) return;
+          const hit = Object.keys(st.customs).filter(k => kset.has(k));
+          if (!hit.length) return;
+          const customs = { ...st.customs };
+          hit.forEach(k => { delete customs[k]; updates[`${basePath}/customs/${k}`] = null; });
+          updates[`${basePath}/status`] = evalStatus(customs);
+        };
+        if (Array.isArray(rec.stations)) rec.stations.forEach((st, i) => fix(`water_records/${rec.fbKey}/stations/${i}`, st));
+        else if (rec.stations && typeof rec.stations === 'object') Object.entries(rec.stations).forEach(([k, st]) => fix(`water_records/${rec.fbKey}/stations/${k}`, st));
+        else fix(`water_records/${rec.fbKey}`, rec);
+      });
+      const remaining = customIndicators.filter(c => !kset.has(c.key));
+      const newMaster = masterIndicators.filter(m => !kset.has(m.key));
+      const newThr = { ...sysThresholds };
+      keys.forEach(k => { delete newThr[`cfg_${k}_min`]; delete newThr[`cfg_${k}_max`]; });
+      updates['system_config/indicators'] = remaining;
+      updates['system_config/master_indicators'] = newMaster;
+      updates['system_config/thresholds'] = newThr;
+      Swal.fire({ title: 'ກຳລັງລົບ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      try {
+        await db.ref().update(updates);   // ຂຽນເທື່ອດຽວ ບໍ່ວ່າຈະລົບຈັກໂຕ
+        customIndicators = remaining; masterIndicators = newMaster; sysThresholds = newThr;
+        if (kset.has(currentSelectedIndicator)) currentSelectedIndicator = customIndicators.length ? customIndicators[0].key : '';
+        indSel.clear();
+        db.ref('activity_logs').push({
+          action: 'DELETE_INDICATOR',
+          itemCode: `${inds.map(i => i.name).slice(0, 10).join(', ')}${inds.length > 10 ? ' …' : ''} · ລົບ ${n} ຄ່າ`,
+          performedBy: currentUserName || 'Super Admin', timestamp: new Date().toLocaleString('lo-LA'), userRole: currentUserRole
+        });
+        renderSettingsList(); renderFormCustomInputs(); renderThresholdFields(); render();
+        Swal.fire({ icon: 'success', title: inds.length === 1 ? `ລົບ "${inds[0].name}" ແລ້ວ` : `ລົບ ${inds.length} ໂຕຊີ້ວັດ ແລ້ວ`, text: `ລົບ ${n} ຄ່າ ອອກຈາກລະບົບ`, timer: 2200, showConfirmButton: false });
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'ລົບບໍ່ສຳເລັດ', text: err.message });
+      }
     }
 
     async function deleteIndicatorPermanently(key, skipConfirm = false) {
@@ -2979,8 +3018,8 @@
         arc.forEach(i => { if (!customIndicators.some(c => c.key === i.key)) customIndicators.push({ ...i, noChart: false, noTable: false, noForm: false }); });
       }
       else if (action === 'delete') {
-        if (!arc.length) return Swal.fire({ icon: 'info', title: 'ລົບຖາວອນໄດ້ສະເພາະໂຕທີ່ເກັບໄວ້', text: 'ກະລຸນາ 🙈 ເກັບໄວ້ກ່ອນ ແລ້ວຈຶ່ງລົບ' });
-        return deleteIndicatorsPermanently(arc.map(i => i.key));
+        // ລົບໄດ້ທັງໂຕທີ່ໃຊ້ຢູ່ ແລະ ໂຕທີ່ເກັບໄວ້
+        return deleteIndicatorsPermanently([...act, ...arc].map(i => i.key));
       }
       indSel.clear();
       saveIndicatorConfig();
@@ -3013,6 +3052,7 @@
               ${pill(!i.noForm, '✏️ ຟອມ', '✏️ ຟອມ', `event.preventDefault(); setIndFlag('${i.key}', 'noForm', ${!i.noForm})`, i.noForm ? 'ຊ່ອງປ້ອນຄ່າຖືກເຊື່ອງ — ກົດເພື່ອສະແດງ' : 'ມີຊ່ອງປ້ອນຄ່າໃນຟອມ — ກົດເພື່ອເຊື່ອງ')}
               ${pill(!i.noTable, '📋 ຕາຕະລາງ', '📋 ຕາຕະລາງ', `event.preventDefault(); setIndFlag('${i.key}', 'noTable', ${!i.noTable})`, i.noTable ? 'ເຊື່ອງຈາກຕາຕະລາງ/ແຜນທີ່/Export — ກົດເພື່ອສະແດງ' : 'ສະແດງໃນຕາຕະລາງ — ກົດເພື່ອເຊື່ອງ')}
               ${pill(!i.noChart, '📈 ກຣາຟ', '📈 ກຣາຟ', `event.preventDefault(); setIndFlag('${i.key}', 'noChart', ${!i.noChart})`, i.noChart ? 'ເຊື່ອງຈາກກຣາຟ — ກົດເພື່ອສະແດງ' : 'ສະແດງໃນກຣາຟ — ກົດເພື່ອເຊື່ອງ')}`}
+            ${currentUserRole === 'SUPER_ADMIN' ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); deleteIndicatorsPermanently(['${i.key}'])" class="shrink-0 px-2 py-0.5 rounded-md border border-rose-500/60 text-rose-400 hover:bg-rose-600 hover:text-white text-[11px] font-bold" title="ລົບໂຕຊີ້ວັດນີ້ ແລະ ຄ່າທັງໝົດ ອອກຖາວອນ">🗑️ ລົບ</button>` : ''}
           </label>`;
       };
 
@@ -3053,7 +3093,8 @@
                 <button type="button" onclick="bulkIndAction('chartOff')" class="px-2 py-1 border-l font-semibold hover:bg-slate-50">ເຊື່ອງ</button>
                 <button type="button" onclick="bulkIndAction('chartOn')" class="px-2 py-1 border-l font-semibold hover:bg-slate-50">ສະແດງ</button>
               </span>
-              <button type="button" onclick="bulkIndAction('archive')" class="px-2 py-1 rounded bg-white border font-semibold text-indigo-700">🙈 ເກັບໄວ້</button>` : ''}
+              <button type="button" onclick="bulkIndAction('archive')" class="px-2 py-1 rounded bg-white border font-semibold text-indigo-700">🙈 ເກັບໄວ້</button>
+              ${currentUserRole === 'SUPER_ADMIN' ? `<button type="button" onclick="bulkIndAction('delete')" class="px-2 py-1 rounded bg-rose-600 border border-rose-600 font-semibold text-white">🗑️ ລົບຖາວອນ</button>` : ''}` : ''}
             ${selArc ? `
               <button type="button" onclick="bulkIndAction('restore')" class="px-2 py-1 rounded bg-white border font-semibold text-emerald-700">↩️ ສະແດງຄືນ</button>
               <button type="button" onclick="bulkIndAction('delete')" class="px-2 py-1 rounded bg-white border font-semibold text-rose-600">🗑️ ລົບຖາວອນ</button>` : ''}
@@ -7293,6 +7334,7 @@
             const marker = L.marker([st.lat, st.lng], { icon: currentIcon }).addTo(markersGroup);
             markerIndex[`${item.fbKey}:${stIdx}`] = marker;
 
+            marker.bindPopup(() => {
             let customPopupHTML = '';
             valueInds().forEach(i => {
               const val = st.customs ? st.customs[i.key] : undefined;
@@ -7300,8 +7342,7 @@
                 customPopupHTML += `<b>${i.name}:</b> ${val} ${i.unit || ''}<br>`;
               }
             });
-
-            marker.bindPopup(`
+            return `
               <div style="font-family: sans-serif; font-size: 12px; line-height: 1.5;">
                 <b style="font-size: 14px; color: #4f46e5;">🏢 ${company}</b><br>
                 ${st.section ? `<span style="color:#6366f1;">📂 ${escAttr(st.section)}</span><br>` : ''}
@@ -7320,7 +7361,7 @@
                 ${customPopupHTML}
                 <b>ສະຖານະ:</b> <span style="font-weight: bold; color: ${st.status && st.status.isAlert ? '#dc2626' : '#16a34a'};">${st.status ? st.status.text : '✅ Normal'}</span>
               </div>
-            `);
+            `; });
 
             if (st.lat >= 13 && st.lat <= 23 && st.lng >= 100 && st.lng <= 108) {
               validLaosBounds.push([st.lat, st.lng]);
@@ -7400,10 +7441,12 @@
       }
 
       initApexChart(flatStationsForChart);
-      renderTrend();
+      const visible = id => { const el = document.getElementById(id); return !!(el && !el.classList.contains('hidden') && el.offsetParent !== null); };
+      if (visible('trendPanel')) renderTrend();
       render12MonthTrendSection();
       requestAnimationFrame(xlRefreshAll);
-      renderSettingsList(); // ອັບເດດຈຳນວນຄ່າຂອງໂຕຊີ້ວັດທີ່ເຊື່ອງໄວ້
+      // ລາຍການໂຕຊີ້ວັດ: ອັບເດດສະເພາະຕອນເປີດໜ້າຕັ້ງຄ່າ
+      if (!document.getElementById('settingsModal')?.classList.contains('hidden')) renderSettingsList();
       updateAppViewUI();
     }
 
