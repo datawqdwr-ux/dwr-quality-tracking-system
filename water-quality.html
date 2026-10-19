@@ -307,7 +307,7 @@
         <div id="kpiDashboardGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
         <div>
-          <p class="text-xs text-slate-500 font-medium">ຊຸດຂໍ້ມູນບໍລິສັດ/ຫົວຂໍ້ຫຼັກ</p>
+          <p class="text-xs text-slate-500 font-medium">ຊື່ຂໍ້ມູນ/ຫົວຂໍ້ຫຼັກ</p>
           <h3 class="text-2xl font-bold text-slate-800" id="kpiTotal">0</h3>
         </div>
         <div class="bg-rose-50 p-3 rounded-lg text-rose-600 text-xl">📍</div>
@@ -365,7 +365,7 @@
 
       <div class="flex flex-wrap items-center gap-2 text-xs">
         <select id="mapCompanySel" onchange="mapSelectCompany(this.value)" class="flex-1 min-w-[190px] border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400">
-          <option value="">🏢 ເລືອກບໍລິສັດ / ຊຸດຂໍ້ມູນ...</option>
+          <option value="">🏢 ເລືອກຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ...</option>
         </select>
         <select id="mapStationSel" onchange="mapSelectStation(this.value)" disabled class="flex-1 min-w-[190px] border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-sky-400 disabled:text-slate-300">
           <option value="">📍 ເລືອກສະຖານີ...</option>
@@ -487,9 +487,9 @@
       <!-- Filters & Controls Bar -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50/80 p-3.5 rounded-xl border border-slate-200 text-xs">
         <div>
-          <label class="block text-[11px] font-bold text-slate-600 mb-1">🏢 ບໍລິສັດ / ຊຸດຂໍ້ມູນ</label>
+          <label class="block text-[11px] font-bold text-slate-600 mb-1">🏢 ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</label>
           <select id="trend12CompanySel" onchange="change12MonthCompany(this.value)" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400">
-            <option value="ALL">🌐 ທຸກບໍລິສັດ / ທຸກຊຸດຂໍ້ມູນ</option>
+            <option value="ALL">🌐 ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</option>
           </select>
         </div>
 
@@ -597,8 +597,8 @@
         <!-- ສ່ວນຂໍ້ມູນ Master: ຊື່ບໍລິສັດ ແລະ ຜູ້ບັນທຶກ -->
         <div class="bg-indigo-50 p-3.5 rounded-xl border border-indigo-100 space-y-3 mb-4">
           <div>
-            <label class="block text-xs font-bold text-indigo-900 mb-1">🏢 ຊື່ບໍລິສັດ / ຫົວຂໍ້ຫຼັກ</label>
-            <input type="text" id="companyName" autocomplete="off" class="w-full border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white" placeholder="ລະບຸຊື່ບໍລິສັດ...">
+            <label class="block text-xs font-bold text-indigo-900 mb-1">🏢 ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</label>
+            <input type="text" id="companyName" autocomplete="off" class="w-full border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-white" placeholder="ລະບຸຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ...">
           </div>
           <div>
             <label class="block text-xs font-bold text-indigo-900 mb-1">📍 ຈຸດພິກັດ ຫຼື ທີ່ຕັ້ງ ຂອງໂຄງການ</label>
@@ -769,7 +769,7 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
-          <input type="text" id="searchInput" autocomplete="off" oninput="render()" placeholder="🔍 ຄົ້ນຫາ ຊື່ບໍລິສັດ, ລະຫັດ ຫຼື ສະຖານທີ່..." class="w-full border p-2 rounded-lg text-xs outline-none">
+          <input type="text" id="searchInput" autocomplete="off" oninput="render()" placeholder="🔍 ຄົ້ນຫາ ຊື່ຂໍ້ມູນ/ຫົວຂໍ້ຫຼັກ, ລະຫັດ ຫຼື ສະຖານທີ່..." class="w-full border p-2 rounded-lg text-xs outline-none">
           <select id="statusFilter" onchange="render()" class="w-full border p-2 rounded-lg text-xs outline-none bg-white">
             <option value="ALL">🌐 ສະຖານະທັງໝົດ</option>
             <option value="NORMAL">✅ Normal ປົກກະຕິ</option>
@@ -788,7 +788,7 @@
               <tr id="tableHeader" class="bg-slate-50 text-slate-600 border-b">
                 <th class="p-3 text-center">ລູກສອນ</th>
                 <th class="p-3 text-center w-12">ລຳດັບ</th>
-                <th class="p-3">ຊື່ບໍລິສັດ / ຫົວຂໍ້ຫຼັກ</th>
+                <th class="p-3">ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</th>
                 <th class="p-3 text-center">ຈຳນວນສະຖານີ</th>
                 <th class="p-3">ເວລາທີ່ບັນທຶກ</th>
                 <th class="p-3">ຜູ້ບັນທຶກ</th>
@@ -887,7 +887,7 @@
                 </select>
               </div>
               <div>
-                <label class="block text-[11px] font-bold text-slate-700 mb-1">ຄົ້ນຫາຊື່ບໍລິສັດ/ສະຖານີ</label>
+                <label class="block text-[11px] font-bold text-slate-700 mb-1">ຄົ້ນຫາຊື່ຂໍ້ມູນ/ຫົວຂໍ້ຫຼັກ/ສະຖານີ</label>
                 <input type="text" id="expFilterSearch" oninput="updateExportPreview()" placeholder="ພິມຊື່ ຫຼື ລະຫັດ..." class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 font-medium focus:ring-2 focus:ring-rose-500 outline-none">
               </div>
             </div>
@@ -993,7 +993,7 @@
                 <thead class="bg-slate-50 text-slate-600 border-b sticky top-0">
                   <tr>
                     <th class="p-2 text-center w-10">ລ/ດ</th>
-                    <th class="p-2">ບໍລິສັດ / ຫົວຂໍ້</th>
+                    <th class="p-2">ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</th>
                     <th class="p-2">ສະຖານີ</th>
                     <th class="p-2">ແຂວງ</th>
                     <th class="p-2 text-center">ວັນທີເກັບຕົວຢ່າງ</th>
@@ -3565,9 +3565,9 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
                   <!-- Company filter -->
                   <div>
-                    <label class="block text-[10px] font-bold text-slate-500 mb-1">🏢 ບໍລິສັດ / ຊຸດຂໍ້ມູນ:</label>
+                    <label class="block text-[10px] font-bold text-slate-500 mb-1">🏢 ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ:</label>
                     <select onchange="changeQwiCompany(this.value)" class="w-full border border-slate-300 rounded-lg p-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400">
-                      <option value="ALL" ${qwiModalState.company === 'ALL' ? 'selected' : ''}>🏢 ທຸກບໍລິສັດ (${companies.length})</option>
+                      <option value="ALL" ${qwiModalState.company === 'ALL' ? 'selected' : ''}>🏢 ທຸກຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ (${companies.length})</option>
                       ${companies.map(c => `<option value="${escAttr(c)}" ${qwiModalState.company === c ? 'selected' : ''}>${escAttr(c)}</option>`).join('')}
                     </select>
                   </div>
@@ -3731,7 +3731,7 @@
                         </th>
                         <th class="p-2.5 text-center w-12">ລ/ດ</th>
                         <th class="p-2.5">ລະຫັດ & ຊື່ສະຖານີ</th>
-                        <th class="p-2.5">ບໍລິສັດ / ຊຸດຂໍ້ມູນ</th>
+                        <th class="p-2.5">ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</th>
                         <th class="p-2.5">ແຂວງ</th>
                         <th class="p-2.5 text-center">ວັນທີເກັບ</th>
                         <th class="p-2.5 text-center">ຄະແນນ QWI</th>
@@ -4305,10 +4305,10 @@
               </div>
 
               <div class="bg-gradient-to-br from-amber-50 to-white p-3.5 rounded-xl border border-amber-200 flex flex-col justify-between">
-                <span class="text-slate-500 font-semibold text-[11px]">ບໍລິສັດ/ຊຸດຂໍ້ມູນທີ່ພົບ</span>
+                <span class="text-slate-500 font-semibold text-[11px]">ຊື່ຂໍ້ມູນ/ຫົວຂໍ້ຫຼັກທີ່ພົບ</span>
                 <div class="my-1 flex items-baseline gap-1.5">
                   <span class="text-2xl md:text-3xl font-extrabold text-amber-700">${affectedCompanies.size}</span>
-                  <span class="text-xs text-slate-400">ບໍລິສັດ</span>
+                  <span class="text-xs text-slate-400">ລາຍການ</span>
                 </div>
                 <span class="text-[10px] text-amber-700 font-medium">ມີຈຸດວັດແທກທີ່ຜິດປົກກະຕິ</span>
               </div>
@@ -4365,9 +4365,9 @@
                 </select>
               </div>
               <div>
-                <label class="block text-[10.5px] font-bold text-slate-500 mb-1">🏢 ບໍລິສັດ / ຊຸດຂໍ້ມູນ</label>
+                <label class="block text-[10.5px] font-bold text-slate-500 mb-1">🏢 ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</label>
                 <select id="alertModalCompSelect" onchange="onAlertFilterChange()" class="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-rose-400 bg-white font-medium text-slate-700">
-                  <option value="ALL">ທຸກບໍລິສັດ (${affectedCompanies.size})</option>
+                  <option value="ALL">ທຸກຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ (${affectedCompanies.size})</option>
                   ${[...affectedCompanies].sort().map(c => `<option value="${escAttr(c)}" ${alertModalState.company === c ? 'selected' : ''}>${escAttr(c)}</option>`).join('')}
                 </select>
               </div>
@@ -4670,7 +4670,7 @@
       let text = `🚨 ແຈ້ງເຕືອນຄຸນນະພາບນ້ຳ - ກົມຊັບພະຍາກອນນ້ຳ\n`;
       text += `• ລະຫັດສະຖານີ: ${target.code}\n`;
       text += `• ຊື່ສະຖານີ: ${target.name}\n`;
-      text += `• ບໍລິສັດ/ຊຸດຂໍ້ມູນ: ${target.comp}\n`;
+      text += `• ຊື່ຂໍ້ມູນ/ຫົວຂໍ້ຫຼັກ: ${target.comp}\n`;
       if (target.province && target.province !== '-') text += `• ແຂວງ: ${target.province}\n`;
       if (target.sampleDate) text += `• ວັນທີເກັບຕົວຢ່າງ: ${fmtSampleDate(target.sampleDate)}\n`;
       if (target.lat && target.lng) text += `• ພິກັດ: ${target.lat}, ${target.lng}\n`;
@@ -4786,7 +4786,7 @@
                 <th style="width:40px; text-align:center;">ລ/ດ</th>
                 <th style="width:80px;">ລະຫັດ</th>
                 <th>ຊື່ສະຖານີ</th>
-                <th>ບໍລິສັດ / ຊຸດຂໍ້ມູນ</th>
+                <th>ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</th>
                 <th>ແຂວງ</th>
                 <th style="text-align:center;">ວັນທີເກັບ</th>
                 <th>ພາຣາມິເຕີທີ່ເກີນເກນມາດຕະຖານ</th>
@@ -6527,7 +6527,7 @@
       const projectLocation = document.getElementById('projectLocation').value.trim();
       const recorderName = currentUserName || document.getElementById('recorderName').value.trim();
 
-      if (!companyName) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາລະບຸຊື່ບໍລິສັດ / ຫົວຂໍ້ຫຼັກ!' });
+      if (!companyName) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາລະບຸຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ!' });
       if (!recorderName) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາລະບຸຊື່ຜູ້ບັນທຶກ!' });
       if (tempStations.length === 0) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາເພີ່ມຢ່າງນ້ອຍ 1 ສະຖານີ!' });
 
@@ -6726,7 +6726,7 @@
       if (!cSel || !sSel) return;
       if (mapCompany && !waterData.some(d => d.fbKey === mapCompany)) mapCompany = '';
 
-      const cHtml = `<option value="">🏢 ເລືອກບໍລິສັດ / ຊຸດຂໍ້ມູນ... (${waterData.length})</option>` + waterData.map(d => {
+      const cHtml = `<option value="">🏢 ເລືອກຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ... (${waterData.length})</option>` + waterData.map(d => {
         const sts = stationsOf(d);
         const n = sts.filter(hasLL).length;
         return `<option value="${d.fbKey}" ${n ? '' : 'disabled'}>${escAttr(d.companyName || d.name || 'ບໍ່ລະບຸ')} (${n ? n + ' ຈຸດ' : 'ບໍ່ມີພິກັດ'})</option>`;
@@ -7255,7 +7255,7 @@
       document.getElementById('tableHeader').innerHTML = `
         <th class="p-3 text-center">ລູກສອນ</th>
         <th class="p-3 text-center w-12">ລຳດັບ</th>
-        <th class="p-3">ຊື່ບໍລິສັດ / ຫົວຂໍ້ຫຼັກ</th>
+        <th class="p-3">ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</th>
         <th class="p-3 text-center">ຈຳນວນສະຖານີ</th>
         <th class="p-3">ເວລາທີ່ບັນທຶກ</th>
         <th class="p-3">ຜູ້ບັນທຶກ</th>
@@ -7495,7 +7495,7 @@
       if (!isOpen) {
         return `
           <button onclick="openMasterEdit('${item.fbKey}')" class="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] px-3 py-1.5 rounded-lg border border-dashed border-indigo-300 transition">
-            ✏️ ແກ້ໄຂຂໍ້ມູນຫຼັກ (ຊື່ບໍລິສັດ / ທີ່ຕັ້ງ / ຜູ້ບັນທຶກ / ເວລາ)
+            ✏️ ແກ້ໄຂຂໍ້ມູນຫຼັກ (ຊື່ຂໍ້ມູນ/ຫົວຂໍ້ຫຼັກ / ທີ່ຕັ້ງ / ຜູ້ບັນທຶກ / ເວລາ)
           </button>
           ${renderMergeIntoControl(item)}`;
       }
@@ -7504,7 +7504,7 @@
         <div class="bg-white border border-indigo-200 rounded-xl p-3 space-y-3">
           <p class="text-[11px] font-bold text-indigo-800">✏️ ແກ້ໄຂຂໍ້ມູນຫຼັກຂອງຊຸດຂໍ້ມູນນີ້</p>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-            ${editInput(p + 'company', '🏢 ຊື່ບໍລິສັດ / ຫົວຂໍ້ຫຼັກ', item.companyName || item.name || '')}
+            ${editInput(p + 'company', '🏢 ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ', item.companyName || item.name || '')}
             ${editInput(p + 'location', '📍 ຈຸດພິກັດ / ທີ່ຕັ້ງ ຂອງໂຄງການ', item.projectLocation || '')}
             ${editInput(p + 'recorder', '👤 ຜູ້ບັນທຶກ', item.recordedBy || '')}
             ${editInput(p + 'date', '⏰ ເວລາບັນທຶກ', item.date || '')}
@@ -8613,7 +8613,7 @@
         <div class="space-y-3">
           <div class="flex flex-wrap items-center gap-2 text-[11px]">
             <select onchange="trendDataset=this.value; trendPoint='__AVG__'; renderTrend()" class="flex-1 min-w-[170px] border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400">
-              <option value="ALL" ${trendDataset === 'ALL' ? 'selected' : ''}>🌐 ທຸກຊຸດຂໍ້ມູນ / ທຸກບໍລິສັດ</option>
+              <option value="ALL" ${trendDataset === 'ALL' ? 'selected' : ''}>🌐 ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</option>
               ${waterData.map(d => `<option value="${d.fbKey}" ${d.fbKey === trendDataset ? 'selected' : ''}>🏢 ${escAttr(d.companyName || d.name || 'ບໍ່ລະບຸ')}</option>`).join('')}
             </select>
             <select onchange="trendPoint=this.value; renderTrend()" class="flex-1 min-w-[170px] border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400">
@@ -8963,7 +8963,7 @@
       // 1. Company Filter
       const compSel = document.getElementById('trend12CompanySel');
       if (compSel) {
-        let opts = `<option value="ALL">🌐 ທຸກບໍລິສັດ / ທຸກຊຸດຂໍ້ມູນ (${waterData.length})</option>`;
+        let opts = `<option value="ALL">🌐 ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</option>`;
         opts += waterData.map(d => `<option value="${d.fbKey}" ${d.fbKey === trend12Company ? 'selected' : ''}>${escAttr(d.companyName || d.name || 'ບໍ່ລະບຸ')} (${stationsOf(d).length} ຈຸດ)</option>`).join('');
         if (compSel.dataset.last !== opts) { compSel.innerHTML = opts; compSel.dataset.last = opts; }
         compSel.value = trend12Company;
