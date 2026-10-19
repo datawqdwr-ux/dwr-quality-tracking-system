@@ -403,8 +403,8 @@
         </div>
       </div>
 
-      <!-- ປຸ່ມໂຕຊີ້ວັດ ລວມຢູ່ໃນກ່ອງດຽວ ເລື່ອນພາຍໃນ + ຄົ້ນຫາ -->
-      <div id="chartIndBox" class="border border-slate-300 rounded-xl bg-slate-50/60 overflow-hidden">
+      <!-- ປຸ່ມໂຕຊີ້ວັດ (ເຊື່ອງໄວ້ຕາມຄວາມຕ້ອງການ) -->
+      <div id="chartIndBox" class="hidden border border-slate-300 rounded-xl bg-slate-50/60 overflow-hidden">
         <div class="p-2.5 border-b border-slate-200 bg-white">
           <input type="text" id="chartIndSearch" oninput="filterChartInds(this.value)" autocomplete="off" placeholder="🔍 ຄົ້ນຫາໂຕຊີ້ວັດ... (ເຊັ່ນ pH, BOD, COD, DO, Turbidity, EC, TSS)" class="w-full border border-slate-200 px-3 py-1.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50">
         </div>
@@ -413,11 +413,15 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-2 text-xs">
-        <select id="chartDatasetSel" onchange="setChartDataset(this.value)" class="flex-1 min-w-[200px] max-w-full border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400">
+        <!-- 🧪 ເລືອກໂຕຊີ້ວັດສະເພາະ (Dropdown ສະອາດຕາ) -->
+        <select id="chartIndicatorSel" onchange="switchChartIndicator(this.value)" class="flex-1 min-w-[210px] border border-indigo-300 rounded-xl px-3 py-2 bg-indigo-50/70 font-bold text-indigo-900 outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs cursor-pointer" title="ເລືອກໂຕຊີ້ວັດທີ່ຕ້ອງການສະແດງກຣາຟແຍກສະເພາະ">
+        </select>
+
+        <select id="chartDatasetSel" onchange="setChartDataset(this.value)" class="flex-1 min-w-[190px] border border-slate-300 rounded-xl px-3 py-2 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-400">
           <option value="ALL">🌐 ທຸກຊຸດ (15 ສະຖານີລ່າສຸດ)</option>
         </select>
         <div id="chartStationWrap" class="relative">
-          <button type="button" id="chartStationBtn" onclick="toggleStationPicker()" class="border border-slate-300 rounded-lg px-3 py-1.5 bg-white font-semibold text-slate-700 disabled:text-slate-300 disabled:cursor-not-allowed">📍 ສະຖານີ: ເລືອກຊຸດກ່ອນ</button>
+          <button type="button" id="chartStationBtn" onclick="toggleStationPicker()" class="border border-slate-300 rounded-xl px-3 py-2 bg-white font-semibold text-slate-700 disabled:text-slate-300 disabled:cursor-not-allowed">📍 ສະຖານີ: ເລືອກຊຸດກ່ອນ</button>
           <div id="chartStationPicker" class="hidden absolute right-0 z-40 mt-1 w-72 max-w-[85vw] bg-white border border-slate-300 rounded-xl shadow-xl p-2.5 space-y-2">
             <input type="text" id="chartStationSearch" oninput="renderStationPicker()" autocomplete="off" placeholder="🔍 ຄົ້ນຫາສະຖານີ..." class="w-full border rounded-lg px-2.5 py-1.5 outline-none text-xs">
             <div class="flex gap-2 text-xs">
@@ -427,12 +431,12 @@
             <div id="chartStationList" class="max-h-56 overflow-y-auto space-y-1 text-xs"></div>
           </div>
         </div>
-        <label id="chartLogWrap" class="hidden items-center gap-1.5 border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white font-semibold text-slate-600 cursor-pointer hover:bg-slate-50" title="ໃຊ້ເມື່ອຄ່າແຕ່ລະໂຕຊີ້ວັດຕ່າງກັນຫຼາຍ (ເຊັ່ນ EC 300 ກັບ NO2 0.03)">
+        <label id="chartLogWrap" class="hidden items-center gap-1.5 border border-slate-300 rounded-xl px-2.5 py-2 bg-white font-semibold text-slate-600 cursor-pointer hover:bg-slate-50" title="ໃຊ້ເມື່ອຄ່າແຕ່ລະໂຕຊີ້ວັດຕ່າງກັນຫຼາຍ (ເຊັ່ນ EC 300 ກັບ NO2 0.03)">
           <input type="checkbox" id="chartLogChk" checked onchange="setChartLog(this.checked)" class="rounded text-indigo-600 focus:ring-indigo-400"> ສະເກລ log
         </label>
-        <div id="chartTypeWrap" class="flex rounded-lg border border-slate-300 overflow-hidden font-bold">
-          <button type="button" data-charttype="bar" onclick="setChartType('bar')" class="px-3 py-1.5 text-xs transition" title="ກຣາຟແທ່ງ">📊</button>
-          <button type="button" data-charttype="area" onclick="setChartType('area')" class="px-3 py-1.5 text-xs border-l border-slate-300 transition" title="ກຣາຟເສັ້ນ">📈</button>
+        <div id="chartTypeWrap" class="flex rounded-xl border border-slate-300 overflow-hidden font-bold">
+          <button type="button" data-charttype="bar" onclick="setChartType('bar')" class="px-3 py-2 text-xs transition" title="ກຣາຟແທ່ງ">📊 ແທ່ງ</button>
+          <button type="button" data-charttype="area" onclick="setChartType('area')" class="px-3 py-2 text-xs border-l border-slate-300 transition" title="ກຣາຟເສັ້ນ">📈 ເສັ້ນ</button>
         </div>
       </div>
       <p id="chartCaption" class="text-xs text-slate-500"></p>
@@ -8131,11 +8135,11 @@
     }
 
     // ຕົວຊີ້ວັດທີ່ເລືອກຕ້ອງມີຢູ່ຈິງ — ຖ້າບໍ່ມີ (ເຊັ່ນ ຄ່າເກົ່າຈາກ localStorage ຫຼື ຖືກລົບ) ໃຫ້ເລືອກໂຕທຳອິດແທນ
+    // ຕົວຊີ້ວັດທີ່ເລືອກຕ້ອງມີຢູ່ຈິງ — ຖ້າບໍ່ມີ ຫຼື ເປັນ __ALL__ ໃຫ້ເລືອກໂຕຊີ້ວັດດ່ຽວຕົວທຳອິດແທນ ເພື່ອສະແດງກຣາຟແຍກສະເພາະຕົວຊີ້ວັດ
     function ensureSelectedIndicator() {
       const ci = chartInds();
       if (!ci.length) { currentSelectedIndicator = null; return; }
-      if (currentSelectedIndicator === '__ALL__') return;
-      if (!ci.some(i => i.key === currentSelectedIndicator)) {
+      if (!currentSelectedIndicator || currentSelectedIndicator === '__ALL__' || !ci.some(i => i.key === currentSelectedIndicator)) {
         currentSelectedIndicator = ci[0].key;
       }
     }
@@ -8162,7 +8166,17 @@
       const cur = document.getElementById('chartIndCurrent');
       if (cur) {
         const ind = chartInds().find(i => i.key === currentSelectedIndicator);
-        cur.textContent = allActive ? '🧪 ທຸກໂຕຊີ້ວັດ' : ind ? `ກຳລັງເບິ່ງ: ${ind.name}${ind.unit ? ' (' + ind.unit + ')' : ''}` : '';
+        if (ind) {
+          const tMin = sysThresholds[`cfg_${ind.key}_min`];
+          const tMax = sysThresholds[`cfg_${ind.key}_max`];
+          const hasT = (tMin !== undefined && tMin !== null && tMin !== '') || (tMax !== undefined && tMax !== null && tMax !== '');
+          const tStr = hasT ? ` (ມາດຕະຖານ: ${tMin ? '≥' + tMin : ''}${tMin && tMax ? ' · ' : ''}${tMax ? '≤' + tMax : ''}${ind.unit ? ' ' + ind.unit : ''})` : '';
+          cur.textContent = `📊 ກຳລັງສະແດງ: ${ind.name}${ind.unit ? ' (' + ind.unit + ')' : ''}${tStr}`;
+          cur.parentElement?.classList.remove('hidden');
+          cur.parentElement?.classList.add('flex');
+        } else {
+          cur.textContent = allActive ? '🧪 ທຸກໂຕຊີ້ວັດ (ພາບລວມ Profile)' : '';
+        }
       }
     }
 
@@ -8179,6 +8193,7 @@
 
     function switchChartIndicator(indKey) {
       currentSelectedIndicator = indKey;
+      renderChartFilterBar();
       renderChartIndicatorTabs();
       drawChartNow();
     }
@@ -8225,6 +8240,26 @@
     let chartType = 'bar';           // 'bar' | 'area'
 
     function renderChartFilterBar() {
+      // Dropdown ເລືອກໂຕຊີ້ວັດສະເພາະ
+      const indSel = document.getElementById('chartIndicatorSel');
+      if (indSel) {
+        const inds = chartInds();
+        ensureSelectedIndicator();
+        const opts = inds.map(i => {
+          const tMin = sysThresholds[`cfg_${i.key}_min`];
+          const tMax = sysThresholds[`cfg_${i.key}_max`];
+          const hasT = (tMin !== undefined && tMin !== null && tMin !== '') || (tMax !== undefined && tMax !== null && tMax !== '');
+          const tStr = hasT ? ` [ເກນ: ${tMin ? '≥' + tMin : ''}${tMin && tMax ? ' · ' : ''}${tMax ? '≤' + tMax : ''}]` : '';
+          return `<option value="${escAttr(i.key)}" ${i.key === currentSelectedIndicator ? 'selected' : ''}>🧪 ໂຕຊີ້ວັດ: ${escAttr(i.name)}${i.unit ? ' (' + escAttr(i.unit) + ')' : ''}${tStr}</option>`;
+        });
+        const html = opts.join('');
+        if (indSel.dataset.last !== html) {
+          indSel.innerHTML = html;
+          indSel.dataset.last = html;
+        }
+        indSel.value = currentSelectedIndicator || (inds[0] ? inds[0].key : '');
+      }
+
       const sel = document.getElementById('chartDatasetSel');
       if (!sel) return;
       if (chartDataset !== 'ALL' && !waterData.some(d => d.fbKey === chartDataset)) { chartDataset = 'ALL'; chartStationSel = null; }
@@ -8259,8 +8294,7 @@
     function setChartDataset(key) {
       chartDataset = key;
       chartStationSel = null;
-      const ds = waterData.find(d => d.fbKey === key);
-      if (ds && stationsOf(ds).length === 1) { currentSelectedIndicator = '__ALL__'; renderChartIndicatorTabs(); }
+      ensureSelectedIndicator();
       closeStationPicker();
       renderChartFilterBar();
       drawChartNow();
@@ -8315,9 +8349,7 @@
       if (!chartStationSel) chartStationSel = new Set([...Array(n).keys()]);
       on ? chartStationSel.add(i) : chartStationSel.delete(i);
       if (chartStationSel.size === n) chartStationSel = null;
-      // ເລືອກ 1 ສະຖານີ → ສະແດງທຸກໂຕຊີ້ວັດຂອງສະຖານີນັ້ນອັດຕະໂນມັດ (ຄ່າດຽວບໍ່ມີປະໂຫຍດ)
-      const count = chartStationSel ? chartStationSel.size : n;
-      if (count === 1 && currentSelectedIndicator !== '__ALL__') { currentSelectedIndicator = '__ALL__'; renderChartIndicatorTabs(); }
+      ensureSelectedIndicator();
       renderChartFilterBar();
       drawChartNow();
     }
@@ -8723,7 +8755,11 @@
       if (chartDataset === 'ALL' && !chartStations.length) return chartMessage(waterData.length ? '🔍 ບໍ່ມີຂໍ້ມູນທີ່ກົງກັບການຄົ້ນຫາ' : '⏳ ກຳລັງລໍຖ້າຂໍ້ມູນ...');
       if (el.offsetWidth === 0) { chartTimer = setTimeout(drawChartNow, 300); return; }
 
-      const ind = chartInds().find(i => i.key === currentSelectedIndicator);
+      let ind = chartInds().find(i => i.key === currentSelectedIndicator);
+      if (!ind && chartInds().length) {
+        currentSelectedIndicator = chartInds()[0].key;
+        ind = chartInds()[0];
+      }
       const { list: chartData, caption } = getChartSource();
       const capEl = document.getElementById('chartCaption');
       if (capEl) capEl.innerText = caption ? `ສະແດງ: ${caption}` : '';
