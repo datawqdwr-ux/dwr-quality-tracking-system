@@ -718,6 +718,66 @@
                   <input type="datetime-local" id="customDatetime" class="w-full border border-slate-200 p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 bg-white text-slate-800 transition">
                 </div>
               </div>
+
+              <!-- 🏛️ 1. ຂໍ້ມູນທີ່ໄດ້ຮັບການຢັ້ງຢືນຈາກພາກລັດ -->
+              <div class="rounded-xl border border-blue-200/90 bg-gradient-to-br from-blue-50/70 via-white to-sky-50/40 p-3 space-y-2 shadow-2xs">
+                <div class="flex items-center justify-between pb-1 border-b border-blue-100">
+                  <span class="text-xs font-bold text-blue-950 flex items-center gap-1.5">
+                    <span>🏛️</span> <span>1. ຂໍ້ມູນທີ່ໄດ້ຮັບການຢັ້ງຢືນຈາກພາກລັດ</span>
+                  </span>
+                  <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">Government Verified</span>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center gap-1">
+                    <span>🏢</span> ຊື່ຂອງພາກລັດທີ່ຢັ້ງຢືນ
+                  </label>
+                  <input type="text" id="govCertAgency" autocomplete="off" class="w-full border border-slate-200 p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 bg-white text-slate-800 transition" placeholder="ເຊັ່ນ: ກະຊວງຊັບພະຍາກອນທຳມະຊາດ ແລະ ສິ່ງແວດລ້ອມ / ພະແນກ ຊສ ແຂວງ...">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center gap-1">
+                      <span>📅</span> ວັນທີເດືອນປີ ໄດ້ຮັບການຢັ້ງຢືນ
+                    </label>
+                    <input type="date" id="govCertDate" class="w-full border border-slate-200 p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 bg-white text-slate-800 transition">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center gap-1">
+                      <span>📄</span> ເລກທີເອກະສານ
+                    </label>
+                    <input type="text" id="govCertDocNo" autocomplete="off" class="w-full border border-slate-200 p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 bg-white text-slate-800 transition" placeholder="ເຊັ່ນ: 1234/ກຊສ, 567/ພຊສ...">
+                  </div>
+                </div>
+              </div>
+
+              <!-- 🏢 2. ຂໍ້ມູນທີ່ໄດ້ຮັບການຢັ້ງຢືນຈາກພາກສ່ວນອື່ນ -->
+              <div class="rounded-xl border border-teal-200/90 bg-gradient-to-br from-teal-50/70 via-white to-emerald-50/40 p-3 space-y-2 shadow-2xs">
+                <div class="flex items-center justify-between pb-1 border-b border-teal-100">
+                  <span class="text-xs font-bold text-teal-950 flex items-center gap-1.5">
+                    <span>🏢</span> <span>2. ຂໍ້ມູນທີ່ໄດ້ຮັບການຢັ້ງຢືນຈາກພາກສ່ວນອື່ນ</span>
+                  </span>
+                  <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 border border-teal-200">Other Party Verified</span>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center gap-1">
+                    <span>🏢</span> ຊື່ຂອງພາກສ່ວນທີ່ຢັ້ງຢືນ
+                  </label>
+                  <input type="text" id="otherCertOrg" autocomplete="off" class="w-full border border-slate-200 p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 bg-white text-slate-800 transition" placeholder="ເຊັ່ນ: ບໍລິສັດທີ່ປຶກສາສິ່ງແວດລ້ອມ / ຫ້ອງວິເຄາະພາຍນອກ / ອົງການຈັດຕັ້ງ...">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center gap-1">
+                      <span>📅</span> ວັນທີເດືອນປີ ໄດ້ຮັບການຢັ້ງຢືນ
+                    </label>
+                    <input type="date" id="otherCertDate" class="w-full border border-slate-200 p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 bg-white text-slate-800 transition">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center gap-1">
+                      <span>📄</span> ເລກທີເອກະສານ
+                    </label>
+                    <input type="text" id="otherCertDocNo" autocomplete="off" class="w-full border border-slate-200 p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 bg-white text-slate-800 transition" placeholder="ເຊັ່ນ: LAB-2025-099, CERT-889...">
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- ນຳເຂົ້າຂໍ້ມູນຈາກ Excel -->
@@ -5620,7 +5680,7 @@
     }
 
     // ບັນທຶກເຂົ້າຊຸດເດີມ (merge) ຫຼື ສ້າງຊຸດໃໝ່ (new)
-    function saveToDataset({ title, stations, projectLocation = '', date, recorder, mode, source = '' }) {
+    function saveToDataset({ title, stations, projectLocation = '', date, recorder, mode, source = '', govVerification = null, otherVerification = null }) {
       const now = new Date().toLocaleString('lo-LA');
       const target = mode === 'merge' ? findDatasetByTitle(title) : null;
       const parsed = parseCompanyTitle(title);
@@ -5633,14 +5693,21 @@
       if (mode === 'merge' || parsed.section) title = parsed.company || title;
 
       if (!target) {
-        return db.ref('water_records').push({
+        const newRecordPayload = {
           id: Date.now() + Math.floor(Math.random() * 1000),
           companyName: title,
           projectLocation,
           date: date || now,
           recordedBy: recorder,
           stations
-        }).then(ref => {
+        };
+        if (govVerification && (govVerification.agency || govVerification.docNo || govVerification.date)) {
+          newRecordPayload.govVerification = govVerification;
+        }
+        if (otherVerification && (otherVerification.org || otherVerification.docNo || otherVerification.date)) {
+          newRecordPayload.otherVerification = otherVerification;
+        }
+        return db.ref('water_records').push(newRecordPayload).then(ref => {
           db.ref('activity_logs').push({ action: 'CREATE', itemCode: `${title} (${stations.length} ສະຖານີ${source})`, performedBy: recorder, timestamp: now, userRole: currentUserRole });
           return { type: 'new', title, added: stations.length, updated: 0, fbKey: ref.key };
         });
@@ -5661,6 +5728,12 @@
         }
         rec.stations = r.stations;
         if (!rec.projectLocation && projectLocation) rec.projectLocation = projectLocation;
+        if (govVerification && (govVerification.agency || govVerification.docNo || govVerification.date)) {
+          rec.govVerification = govVerification;
+        }
+        if (otherVerification && (otherVerification.org || otherVerification.docNo || otherVerification.date)) {
+          rec.otherVerification = otherVerification;
+        }
         rec.lastUpdated = now;
         rec.lastUpdatedBy = recorder;
         rec.lastUpdatedTs = Date.now();
@@ -7011,9 +7084,27 @@
 
       Swal.fire({ title: 'ກຳລັງບັນທຶກ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       (async () => {
+        const govCertAgency = document.getElementById('govCertAgency')?.value.trim() || '';
+        const govCertDate = document.getElementById('govCertDate')?.value.trim() || '';
+        const govCertDocNo = document.getElementById('govCertDocNo')?.value.trim() || '';
+        const otherCertOrg = document.getElementById('otherCertOrg')?.value.trim() || '';
+        const otherCertDate = document.getElementById('otherCertDate')?.value.trim() || '';
+        const otherCertDocNo = document.getElementById('otherCertDocNo')?.value.trim() || '';
+        const govVerification = { agency: govCertAgency, date: govCertDate, docNo: govCertDocNo };
+        const otherVerification = { org: otherCertOrg, date: otherCertDate, docNo: otherCertDocNo };
+
         const results = [];
         for (const g of groups) {  // ເຮັດເທື່ອລະກຸ່ມ ເພື່ອບໍ່ໃຫ້ຊົນກັນ
-          results.push(await saveToDataset({ title: g.title, stations: g.stations, date: g.date, recorder, mode: g.mode, source: ' · ຈາກ Excel' }));
+          results.push(await saveToDataset({
+            title: g.title,
+            stations: g.stations,
+            date: g.date,
+            recorder,
+            mode: g.mode,
+            source: ' · ຈາກ Excel',
+            govVerification,
+            otherVerification
+          }));
         }
         return results;
       })().then(results => {
@@ -7160,6 +7251,17 @@
       const projectLocation = document.getElementById('projectLocation').value.trim();
       const recorderName = currentUserName || document.getElementById('recorderName').value.trim();
 
+      const govCertAgency = document.getElementById('govCertAgency')?.value.trim() || '';
+      const govCertDate = document.getElementById('govCertDate')?.value.trim() || '';
+      const govCertDocNo = document.getElementById('govCertDocNo')?.value.trim() || '';
+
+      const otherCertOrg = document.getElementById('otherCertOrg')?.value.trim() || '';
+      const otherCertDate = document.getElementById('otherCertDate')?.value.trim() || '';
+      const otherCertDocNo = document.getElementById('otherCertDocNo')?.value.trim() || '';
+
+      const govVerification = { agency: govCertAgency, date: govCertDate, docNo: govCertDocNo };
+      const otherVerification = { org: otherCertOrg, date: otherCertDate, docNo: otherCertDocNo };
+
       if (!companyName) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາລະບຸຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ!' });
       if (!recorderName) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາລະບຸຊື່ຜູ້ບັນທຶກ!' });
       if (tempStations.length === 0) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາເພີ່ມຢ່າງນ້ອຍ 1 ສະຖານີ!' });
@@ -7172,10 +7274,23 @@
 
       Swal.fire({ title: 'ກຳລັງບັນທຶກ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
       try {
-        const res = await saveToDataset({ title: companyName, stations: tempStations, projectLocation, date: recordDate, recorder: recorderName, mode });
+        const res = await saveToDataset({
+          title: companyName,
+          stations: tempStations,
+          projectLocation,
+          date: recordDate,
+          recorder: recorderName,
+          mode,
+          govVerification,
+          otherVerification
+        });
         tempStations = [];
         document.getElementById('companyName').value = '';
         document.getElementById('projectLocation').value = '';
+        ['govCertAgency', 'govCertDate', 'govCertDocNo', 'otherCertOrg', 'otherCertDate', 'otherCertDocNo'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
         document.getElementById('waterForm').reset();
         renderTempList();
         applyRecorderLock();
@@ -8409,26 +8524,49 @@
       if (!isOpen) {
         return `
           <button onclick="openMasterEdit('${item.fbKey}')" class="w-full bg-white hover:bg-indigo-50 text-indigo-700 font-bold text-[11px] px-3 py-2 rounded-xl border border-indigo-200 shadow-2xs transition flex items-center justify-center gap-1.5">
-            <span>✏️</span> ແກ້ໄຂຂໍ້ມູນຫຼັກ (ຊື່ຂໍ້ມູນ/ຫົວຂໍ້ຫຼັກ / ທີ່ຕັ້ງ / ຜູ້ບັນທຶກ / ເວລາ)
+            <span>✏️</span> ແກ້ໄຂຂໍ້ມູນຫຼັກ (ຊື່ຂໍ້ມູນ/ຫົວຂໍ້ຫຼັກ / ທີ່ຕັ້ງ / ຜູ້ບັນທຶກ / ການຢັ້ງຢືນ)
           </button>
           ${renderMergeIntoControl(item)}`;
       }
       const p = `editm_${item.fbKey}_`;
+      const gov = item.govVerification || {};
+      const oth = item.otherVerification || {};
       return `
-        <div class="bg-white border border-indigo-200 rounded-xl p-3 space-y-3">
+        <div class="bg-white border border-indigo-200 rounded-xl p-3.5 space-y-3">
           <p class="text-[11px] font-bold text-indigo-800">✏️ ແກ້ໄຂຂໍ້ມູນຫຼັກຂອງຊຸດຂໍ້ມູນນີ້</p>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             ${editInput(p + 'company', '🏢 ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ', item.companyName || item.name || '')}
             ${editInput(p + 'location', '📍 ຈຸດພິກັດ / ທີ່ຕັ້ງ ຂອງໂຄງການ', item.projectLocation || '')}
             ${editInput(p + 'recorder', '👤 ຜູ້ບັນທຶກ', item.recordedBy || '')}
             ${editInput(p + 'date', '⏰ ເວລາບັນທຶກ', item.date || '')}
           </div>
+
+          <!-- 🏛️ 1. ຂໍ້ມູນທີ່ໄດ້ຮັບການຢັ້ງຢືນຈາກພາກລັດ -->
+          <div class="p-2.5 rounded-xl border border-blue-200 bg-blue-50/50 space-y-2">
+            <span class="text-[11px] font-bold text-blue-900 flex items-center gap-1">🏛️ 1. ຂໍ້ມູນທີ່ໄດ້ຮັບການຢັ້ງຢືນຈາກພາກລັດ</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+              ${editInput(p + 'govAgency', 'ຊື່ພາກລັດທີ່ຢັ້ງຢືນ', gov.agency || item.govCertAgency || '')}
+              ${editInput(p + 'govDate', '📅 ວັນທີເດືອນປີ ຢັ້ງຢືນ', gov.date || item.govCertDate || '', 'placeholder="YYYY-MM-DD"')}
+              ${editInput(p + 'govDoc', '📄 ເລກທີເອກະສານ', gov.docNo || item.govCertDocNo || '')}
+            </div>
+          </div>
+
+          <!-- 🏢 2. ຂໍ້ມູນທີ່ໄດ້ຮັບການຢັ້ງຢືນຈາກພາກສ່ວນອື່ນ -->
+          <div class="p-2.5 rounded-xl border border-teal-200 bg-teal-50/50 space-y-2">
+            <span class="text-[11px] font-bold text-teal-900 flex items-center gap-1">🏢 2. ຂໍ້ມູນທີ່ໄດ້ຮັບການຢັ້ງຢືນຈາກພາກສ່ວນອື່ນ</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+              ${editInput(p + 'otherOrg', 'ຊື່ພາກສ່ວນທີ່ຢັ້ງຢືນ', oth.org || item.otherCertOrg || '')}
+              ${editInput(p + 'otherDate', '📅 ວັນທີເດືອນປີ ຢັ້ງຢືນ', oth.date || item.otherCertDate || '', 'placeholder="YYYY-MM-DD"')}
+              ${editInput(p + 'otherDoc', '📄 ເລກທີເອກະສານ', oth.docNo || item.otherCertDocNo || '')}
+            </div>
+          </div>
+
           <div class="flex flex-wrap items-end gap-2 border-t border-indigo-100 pt-2">
             <div class="flex-1 min-w-[160px]">
               ${editorField(p)}
             </div>
-            <button onclick="saveMasterEdit('${item.fbKey}')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] px-3 py-2 rounded-lg shadow transition">💾 ບັນທຶກການແກ້ໄຂ</button>
-            <button onclick="cancelEdit()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-[11px] px-3 py-2 rounded-lg transition">ຍົກເລີກ</button>
+            <button onclick="saveMasterEdit('${item.fbKey}')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] px-3.5 py-2 rounded-xl shadow transition">💾 ບັນທຶກການແກ້ໄຂ</button>
+            <button onclick="cancelEdit()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-[11px] px-3 py-2 rounded-xl transition">ຍົກເລີກ</button>
           </div>
         </div>`;
     }
@@ -8544,11 +8682,21 @@
       if (!companyName) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາລະບຸຊື່ບໍລິສັດ / ຫົວຂໍ້ຫຼັກ!' });
       if (!recordedBy) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາລະບຸຊື່ຜູ້ບັນທຶກ!' });
 
+      const govAgency = get('govAgency');
+      const govDate = get('govDate');
+      const govDoc = get('govDoc');
+
+      const otherOrg = get('otherOrg');
+      const otherDate = get('otherDate');
+      const otherDoc = get('otherDoc');
+
       db.ref(`water_records/${fbKey}`).update({
         companyName,
         projectLocation: get('location'),
         recordedBy,
-        date: get('date') || item.date || ''
+        date: get('date') || item.date || '',
+        govVerification: { agency: govAgency, date: govDate, docNo: govDoc },
+        otherVerification: { org: otherOrg, date: otherDate, docNo: otherDoc }
       }).then(() => {
         db.ref('activity_logs').push({
           action: 'EDIT_MASTER',
@@ -8833,6 +8981,10 @@
       const qwiAvg = qwiVals.length ? +(qwiVals.reduce((a, b) => a + b, 0) / qwiVals.length).toFixed(1) : '-';
       const qwiInterp = interpretQWI(qwiAvg);
       const dateRange = sampleDateRange(stations);
+      const gov = item.govVerification || { agency: item.govCertAgency || '', date: item.govCertDate || '', docNo: item.govCertDocNo || '' };
+      const oth = item.otherVerification || { org: item.otherCertOrg || '', date: item.otherCertDate || '', docNo: item.otherCertDocNo || '' };
+      const hasGovCert = Boolean(gov.agency || gov.docNo || gov.date);
+      const hasOtherCert = Boolean(oth.org || oth.docNo || oth.date);
 
       // 1. ຫ້ອງສະແດງຂໍ້ມູນຫຼັກ & ຜູ້ບັນທຶກ (ສະແດງຜູ້ບັນທຶກຢ່າງຊັດເຈນໃນໜ້າຕ່າງສະເພາະນີ້)
       const masterCardHtml = `
@@ -8878,6 +9030,61 @@
             <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between">
               <span class="text-[11px] font-semibold text-slate-500 block mb-1">📍 ທີ່ຕັ້ງໂຄງການ / ຈຸດພິກັດ</span>
               <span class="text-xs sm:text-sm font-bold text-slate-800 break-words">${escAttr(item.projectLocation || 'ບໍ່ລະບຸ')}</span>
+            </div>
+          </div>
+
+          <!-- 🏛️ & 🏢 ຂໍ້ມູນການຢັ້ງຢືນ (ພາກລັດ ແລະ ພາກສ່ວນອື່ນ) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            <!-- 🏛️ 1. ຂໍ້ມູນທີ່ໄດ້ຮັບການຢັ້ງຢືນຈາກພາກລັດ -->
+            <div class="p-3.5 rounded-xl ${hasGovCert ? 'bg-gradient-to-br from-blue-50/90 to-sky-50/50 border border-blue-200 ring-1 ring-blue-500/15' : 'bg-slate-50 border border-slate-200/80'} shadow-2xs space-y-2">
+              <div class="flex items-center justify-between pb-1.5 border-b ${hasGovCert ? 'border-blue-200/70' : 'border-slate-200'}">
+                <span class="text-xs font-bold ${hasGovCert ? 'text-blue-950' : 'text-slate-700'} flex items-center gap-1.5">
+                  <span>🏛️</span> <span>1. ຂໍ້ມູນທີ່ໄດ້ຮັບການຢັ້ງຢືນຈາກພາກລັດ</span>
+                </span>
+                <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full ${hasGovCert ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-slate-200 text-slate-500'}">
+                  ${hasGovCert ? '✅ ໄດ້ຮັບການຢັ້ງຢືນ' : 'ຍັງບໍ່ມີຂໍ້ມູນ'}
+                </span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                <div class="sm:col-span-3">
+                  <span class="text-[10.5px] font-semibold text-slate-500 block mb-0.5">🏢 ຊື່ຂອງພາກລັດທີ່ຢັ້ງຢືນ:</span>
+                  <span class="font-bold text-slate-900 break-words">${escAttr(gov.agency || '—')}</span>
+                </div>
+                <div>
+                  <span class="text-[10.5px] font-semibold text-slate-500 block mb-0.5">📅 ວັນທີເດືອນປີ ຢັ້ງຢືນ:</span>
+                  <span class="font-mono font-bold text-slate-800">${escAttr(gov.date || '—')}</span>
+                </div>
+                <div class="sm:col-span-2">
+                  <span class="text-[10.5px] font-semibold text-slate-500 block mb-0.5">📄 ເລກທີເອກະສານ:</span>
+                  <span class="font-mono font-bold text-blue-700 bg-white px-2 py-0.5 rounded border border-blue-200 inline-block break-words">${escAttr(gov.docNo || '—')}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 🏢 2. ຂໍ້ມູນທີ່ໄດ້ຮັບການຢັ້ງຢືນຈາກພາກສ່ວນອື່ນ -->
+            <div class="p-3.5 rounded-xl ${hasOtherCert ? 'bg-gradient-to-br from-teal-50/90 to-emerald-50/50 border border-teal-200 ring-1 ring-teal-500/15' : 'bg-slate-50 border border-slate-200/80'} shadow-2xs space-y-2">
+              <div class="flex items-center justify-between pb-1.5 border-b ${hasOtherCert ? 'border-teal-200/70' : 'border-slate-200'}">
+                <span class="text-xs font-bold ${hasOtherCert ? 'text-teal-950' : 'text-slate-700'} flex items-center gap-1.5">
+                  <span>🏢</span> <span>2. ຂໍ້ມູນທີ່ໄດ້ຮັບການຢັ້ງຢືນຈາກພາກສ່ວນອື່ນ</span>
+                </span>
+                <span class="text-[9.5px] font-bold px-2 py-0.5 rounded-full ${hasOtherCert ? 'bg-teal-100 text-teal-800 border border-teal-200' : 'bg-slate-200 text-slate-500'}">
+                  ${hasOtherCert ? '📑 ໄດ້ຮັບການຢັ້ງຢືນ' : 'ຍັງບໍ່ມີຂໍ້ມູນ'}
+                </span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                <div class="sm:col-span-3">
+                  <span class="text-[10.5px] font-semibold text-slate-500 block mb-0.5">🏢 ຊື່ຂອງພາກສ່ວນທີ່ຢັ້ງຢືນ:</span>
+                  <span class="font-bold text-slate-900 break-words">${escAttr(oth.org || 'ບໍ່ລະບຸ')}</span>
+                </div>
+                <div>
+                  <span class="text-[10.5px] font-semibold text-slate-500 block mb-0.5">📅 ວັນທີເດືອນປີ ຢັ້ງຢືນ:</span>
+                  <span class="font-mono font-bold text-slate-800">${escAttr(oth.date || '—')}</span>
+                </div>
+                <div class="sm:col-span-2">
+                  <span class="text-[10.5px] font-semibold text-slate-500 block mb-0.5">📄 ເລກທີເອກະສານ:</span>
+                  <span class="font-mono font-bold text-teal-700 bg-white px-2 py-0.5 rounded border border-teal-200 inline-block break-words">${escAttr(oth.docNo || '—')}</span>
+                </div>
+              </div>
             </div>
           </div>
 
