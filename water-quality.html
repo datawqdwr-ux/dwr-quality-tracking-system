@@ -47,13 +47,15 @@
       font-display: swap;
     }
     *, ::before, ::after {
-      font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', 'phetsarath', 'Saysettha OT', 'Noto Sans Lao', serif;
+      font-family: 'Noto Sans Lao', 'Phetsarath OT', 'Phetsarath', 'phetsarath', 'Saysettha OT', 'Times New Roman', Times, serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
     html, body {
-      font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', 'phetsarath', 'Saysettha OT', 'Noto Sans Lao', serif;
+      font-family: 'Noto Sans Lao', 'Phetsarath OT', 'Phetsarath', 'phetsarath', 'Saysettha OT', 'Times New Roman', Times, serif;
     }
     body, button, input, select, textarea, div, span, p, h1, h2, h3, h4, h5, h6, a, table, th, td {
-      font-family: 'Times New Roman', Times, 'Phetsarath OT', 'Phetsarath', 'phetsarath', 'Saysettha OT', 'Noto Sans Lao', serif;
+      font-family: 'Noto Sans Lao', 'Phetsarath OT', 'Phetsarath', 'phetsarath', 'Saysettha OT', 'Times New Roman', Times, serif;
     }
     #map { height: 460px; min-height: 400px; z-index: 1; background-color: #aad3df; }
     @media (min-width: 768px) { #map { height: 520px; } }
@@ -991,7 +993,7 @@
                 <table class="w-full text-left text-sm border-collapse">
                   <thead class="sticky top-0 z-10 bg-slate-100 shadow-2xs">
                     <tr id="tableHeader" class="text-slate-600 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
-                      <th class="p-3 text-center w-12">ລູກສອນ</th>
+                      <th class="p-3 text-center w-14">🔍 ເລືອກ</th>
                       <th class="p-3 text-center w-12">ລຳດັບ</th>
                       <th class="p-3">ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</th>
                       <th class="p-3 text-center">ຈຳນວນສະຖານີ</th>
@@ -1731,6 +1733,106 @@
           <!-- Download / Export buttons -->
         </div>
         <button type="button" onclick="closeDatasetDetailModal()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer shadow-md">
+          ປິດໜ້າຕ່າງ (Close)
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 🚨 Modal ລາຍລະອຽດການເກີນເກນມາດຕະຖານສະເພາະຊຸດຂໍ້ມູນ (Dataset Exceedance Detail Modal) -->
+  <div id="datasetExceedanceModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-2 sm:p-4 z-[95] overflow-y-auto" onclick="if(event.target === this) closeDatasetExceedanceModal()">
+    <div class="bg-white rounded-3xl max-w-5xl w-full shadow-2xl border border-rose-200 overflow-hidden flex flex-col my-auto max-h-[92vh] animate-in fade-in zoom-in-95 duration-200" onclick="event.stopPropagation()">
+      
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-slate-900 via-rose-950 to-slate-900 text-white p-4 sm:p-5 border-b border-rose-800/40 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-white text-lg sm:text-xl shadow-lg shadow-rose-500/25 ring-2 ring-white/10 shrink-0">
+            🚨
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-sm sm:text-lg font-bold text-white tracking-tight truncate">ລາຍລະອຽດການເກີນເກນມາດຕະຖານຄຸນນະພາບນໍ້າ</h3>
+              <span id="dsExceedanceBadge" class="text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30">
+                0 ລາຍການ
+              </span>
+            </div>
+            <p id="dsExceedanceSubtitle" class="text-xs text-rose-200/80 mt-0.5 truncate flex items-center gap-1.5">
+              <span>🏢</span> <span id="dsExceedanceCompanyTitle" class="font-semibold text-white"></span>
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" onclick="closeDatasetExceedanceModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition text-sm cursor-pointer" title="ປິດໜ້າຕ່າງ">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="p-4 sm:p-6 overflow-y-auto space-y-4 bg-slate-50/60" id="dsExceedanceBody">
+        <!-- Dynamically populated -->
+      </div>
+
+      <!-- Footer -->
+      <div class="p-3 sm:p-4 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <button type="button" onclick="exportDatasetExceedanceCSV()" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer border border-rose-200 shadow-2xs">
+            <span>📥</span>
+            <span>ສົ່ງອອກລາຍການເກີນເກນ (CSV)</span>
+          </button>
+        </div>
+        <button type="button" onclick="closeDatasetExceedanceModal()" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer shadow-md">
+          ປິດໜ້າຕ່າງ (Close)
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 🌊 Modal ລາຍລະອຽດດັດຊະນີຄຸນນະພາບນໍ້າ QWI ສະເພາະຊຸດຂໍ້ມູນ (Dataset QWI Detail Modal) -->
+  <div id="datasetQwiModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-2 sm:p-4 z-[95] overflow-y-auto" onclick="if(event.target === this) closeDatasetQwiModal()">
+    <div class="bg-white rounded-3xl max-w-5xl w-full shadow-2xl border border-indigo-200 overflow-hidden flex flex-col my-auto max-h-[92vh] animate-in fade-in zoom-in-95 duration-200" onclick="event.stopPropagation()">
+      
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-4 sm:p-5 border-b border-indigo-800/40 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-indigo-500 via-sky-500 to-teal-400 flex items-center justify-center text-white text-lg sm:text-xl shadow-lg shadow-indigo-500/25 ring-2 ring-white/10 shrink-0">
+            🌊
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-sm sm:text-lg font-bold text-white tracking-tight truncate">ລາຍລະອຽດດັດຊະນີຄຸນນະພາບນໍ້າ (Water Quality Index - QWI)</h3>
+              <span id="dsQwiBadge" class="text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                Water Quality Index
+              </span>
+            </div>
+            <p id="dsQwiSubtitle" class="text-xs text-indigo-200/80 mt-0.5 truncate flex items-center gap-1.5">
+              <span>🏢</span> <span id="dsQwiCompanyTitle" class="font-semibold text-white"></span>
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" onclick="closeDatasetQwiModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition text-sm cursor-pointer" title="ປິດໜ້າຕ່າງ">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="p-4 sm:p-6 overflow-y-auto space-y-4 bg-slate-50/60" id="dsQwiBody">
+        <!-- Dynamically populated -->
+      </div>
+
+      <!-- Footer -->
+      <div class="p-3 sm:p-4 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <button type="button" onclick="exportDatasetQwiCSV()" class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer border border-indigo-200 shadow-2xs">
+            <span>📥</span>
+            <span>ສົ່ງອອກຜົນ QWI (CSV)</span>
+          </button>
+        </div>
+        <button type="button" onclick="closeDatasetQwiModal()" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer shadow-md">
           ປິດໜ້າຕ່າງ (Close)
         </button>
       </div>
@@ -7921,7 +8023,7 @@
       const canDelete = currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'STAFF';
 
       document.getElementById('tableHeader').innerHTML = `
-        <th class="p-3 text-center w-12 text-slate-500 font-bold">ລູກສອນ</th>
+        <th class="p-3 text-center w-14 text-slate-700 font-bold">🔍 ເລືອກ</th>
         <th class="p-3 text-center w-12 text-slate-500 font-bold">ລຳດັບ</th>
         <th class="p-3 text-slate-700 font-bold">ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</th>
         <th class="p-3 text-center text-slate-700 font-bold">ຈຳນວນສະຖານີ</th>
@@ -8112,6 +8214,26 @@
               <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60 shadow-2xs">
                 <span>📍</span> ${stations.length} ສະຖານີ
               </span>
+              ${(() => {
+                const alertCount = stations.filter(st => st.status && st.status.isAlert).length;
+                const qwiVals = stations.map(st => {
+                  const q = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-') ? st.qwi : calculateAutoQWI(st.customs || {});
+                  return (!isNaN(q) && q !== null && q !== '') ? Number(q) : null;
+                }).filter(v => v !== null);
+                const qwiAvg = qwiVals.length ? +(qwiVals.reduce((a, b) => a + b, 0) / qwiVals.length).toFixed(1) : '-';
+                return `
+                  <div class="flex items-center justify-center gap-1 mt-1 flex-wrap" onclick="event.stopPropagation()">
+                    <button type="button" onclick="openDatasetExceedanceModal('${item.fbKey}')" class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-md ${alertCount > 0 ? 'bg-rose-100 text-rose-700 hover:bg-rose-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'} transition cursor-pointer" title="ກົດເພື່ອເບິ່ງລາຍລະອຽດເກນມາດຕະຖານ">
+                      ${alertCount > 0 ? '🚨 ' + alertCount + ' ເກີນເກນ' : '✅ ປົກກະຕິ'}
+                    </button>
+                    ${qwiAvg !== '-' ? `
+                      <button type="button" onclick="openDatasetQwiModal('${item.fbKey}')" class="text-[9.5px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/60 transition cursor-pointer font-mono" title="ກົດເພື່ອເບິ່ງລາຍລະອຽດດັດຊະນີ QWI">
+                        🌊 QWI: ${qwiAvg}
+                      </button>
+                    ` : ''}
+                  </div>
+                `;
+              })()}
               ${(() => { const n = new Set(stations.map(x => x && x.section).filter(Boolean)).size; return n ? `<div class="text-[10px] text-indigo-600 font-semibold mt-0.5">📂 ${n} ໂຄງການ</div>` : ''; })()}
             </td>
             <td class="py-2.5 px-3 text-xs text-slate-600 whitespace-nowrap">
@@ -8163,6 +8285,12 @@
         if (modalItem) {
           renderDatasetDetailModalContent(modalItem);
         }
+      }
+      if (activeExceedanceModalFbKey) {
+        openDatasetExceedanceModal(activeExceedanceModalFbKey);
+      }
+      if (activeQwiModalFbKey) {
+        openDatasetQwiModal(activeQwiModalFbKey);
       }
 
       Object.keys(draftEditValues).forEach(id => {
@@ -8539,18 +8667,18 @@
           const val = st.customs ? (st.customs[i.key] ?? '-') : '-';
           const bad = isOutOfThreshold(i.key, val);
           const isNum = val !== '-' && !isNaN(val);
-          return `<td class="${td} ${isNum ? 'text-right tabular-nums' : 'text-center'} ${bad ? 'bg-rose-100 text-rose-700 font-bold' : ''}" ${bad ? 'title="ເກີນເກນເຕືອນໄພ"' : ''}>${val}</td>`;
+          return `<td class="${td} ${isNum ? 'text-right tabular-nums' : 'text-center'} ${bad ? 'bg-rose-100 text-rose-700 font-bold cursor-pointer hover:bg-rose-200' : ''}" ${bad ? `onclick="openDatasetExceedanceModal('${item.fbKey}')" title="ເກີນເກນມາດຕະຖານ: ກົດເພື່ອເບິ່ງລາຍລະອຽດສະເພາະ"` : ''}>${val}</td>`;
         }).join('');
 
         const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-')
           ? st.qwi
           : calculateAutoQWI(st.customs || {});
         const qi = interpretQWI(qRaw);
-        const qwiCell = `<td class="${td} text-center">
+        const qwiCell = `<td class="${td} text-center cursor-pointer hover:bg-indigo-50/80 transition" onclick="openDatasetQwiModal('${item.fbKey}')" title="ກົດເພື່ອເປີດໜ້າຕ່າງລາຍລະອຽດດັດຊະນີ QWI">
           ${qi ? `
             <div class="inline-flex items-center gap-1">
               <span class="font-mono font-bold text-slate-800">${qi.score !== '-' ? qi.score : ''}</span>
-              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border ${qi.badgeClass}" title="${escAttr(qi.desc || qi.text)}">
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border ${qi.badgeClass}">
                 ${qi.dot} ${qi.label}
               </span>
             </div>` : `<span class="text-slate-400 font-normal">-</span>`}
@@ -8568,7 +8696,7 @@
             <td class="${td} text-right tabular-nums text-slate-500">${st.lng ?? '<span class="text-amber-500">—</span>'}</td>
             ${indCells}
             ${qwiCell}
-            <td class="${td} text-center">
+            <td class="${td} text-center cursor-pointer hover:bg-rose-50/80 transition" onclick="openDatasetExceedanceModal('${item.fbKey}')" title="ກົດເພື່ອເປີດໜ້າຕ່າງລາຍລະອຽດເກນມາດຕະຖານ">
               <span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${st.status ? st.status.class : 'bg-emerald-100 text-emerald-800'}">${st.status ? st.status.text : '✅ Normal'}</span>
             </td>
             ${canEdit ? `
@@ -8765,7 +8893,7 @@
         </div>
       `;
 
-      // 2. ສະຖິຕິສະຫຼຸບ KPI
+      // 2. ສະຖິຕິສະຫຼຸບ KPI (ກົດຊ່ອງ ເກນມາດຕະຖານ ແລະ ຊ່ອງ ຄ່າສະເລ່ຍ QWI ເພື່ອເບິ່ງໜ້າຕ່າງລາຍລະອຽດສະເພາະ)
       const statsHtml = `
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div class="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
@@ -8776,30 +8904,58 @@
             <div class="text-xl sm:text-2xl font-black text-slate-900 mt-1 font-mono">${stations.length} <span class="text-xs font-medium text-slate-500">ຈຸດ</span></div>
           </div>
 
-          <div class="bg-white p-3.5 rounded-2xl border border-emerald-200/80 shadow-2xs">
+          <div onclick="openDatasetExceedanceModal('${item.fbKey}')" class="bg-white p-3.5 rounded-2xl border border-emerald-200/80 shadow-2xs cursor-pointer hover:border-emerald-400 hover:shadow-md hover:bg-emerald-50/20 transition group select-none" title="ກົດເພື່ອເບິ່ງລາຍລະອຽດເກນມາດຕະຖານ">
             <div class="text-emerald-700 text-xs font-semibold flex items-center justify-between">
-              <span>ປົກກະຕິ</span>
-              <span>✅</span>
+              <span class="group-hover:text-emerald-800 font-bold transition flex items-center gap-1">ປົກກະຕິ</span>
+              <span class="text-[10px] text-emerald-600 font-bold opacity-80 group-hover:opacity-100">✅ ຜ່ານເກນ</span>
             </div>
             <div class="text-xl sm:text-2xl font-black text-emerald-700 mt-1 font-mono">${normalCount} <span class="text-xs font-medium text-emerald-600">ຈຸດ</span></div>
           </div>
 
-          <div class="bg-white p-3.5 rounded-2xl border ${alertCount > 0 ? 'border-rose-300 ring-1 ring-rose-200' : 'border-slate-200/90'} shadow-2xs">
-            <div class="${alertCount > 0 ? 'text-rose-700 font-bold' : 'text-slate-500 font-semibold'} text-xs flex items-center justify-between">
-              <span>ເກີນເກນມາດຕະຖານ</span>
-              <span>🚨</span>
+          <!-- 🚨 ຊ່ອງ ເກນມາດຕະຖານ / ເກີນເກນ (ກົດເພື່ອສະແດງໜ້າຕ່າງລາຍລະອຽດສະເພາະ) -->
+          <div onclick="openDatasetExceedanceModal('${item.fbKey}')" class="bg-white p-3.5 rounded-2xl border ${alertCount > 0 ? 'border-rose-300 ring-2 ring-rose-200 bg-rose-50/30' : 'border-slate-200/90 hover:border-rose-300'} shadow-2xs cursor-pointer hover:shadow-md hover:bg-rose-50/40 transition-all duration-150 group select-none" title="ກົດເພື່ອເປີດໜ້າຕ່າງລາຍລະອຽດເກນມາດຕະຖານ ແລະ ລາຍການທີ່ເກີນເກນສະເພາະ">
+            <div class="${alertCount > 0 ? 'text-rose-700 font-bold' : 'text-slate-600 font-semibold'} text-xs flex items-center justify-between">
+              <span class="group-hover:text-rose-700 font-bold transition flex items-center gap-1">
+                <span>🚨</span> <span>ເກນມາດຕະຖານ</span>
+              </span>
+              <span class="text-[9.5px] font-bold px-1.5 py-0.5 rounded ${alertCount > 0 ? 'bg-rose-200 text-rose-900 animate-pulse' : 'bg-slate-100 text-slate-600 group-hover:bg-rose-100 group-hover:text-rose-800'} transition">
+                ℹ️ ລາຍລະອຽດສະເພາະ
+              </span>
             </div>
-            <div class="text-xl sm:text-2xl font-black ${alertCount > 0 ? 'text-rose-600' : 'text-slate-700'} mt-1 font-mono">${alertCount} <span class="text-xs font-medium text-slate-500">ຈຸດ</span></div>
+            <div class="mt-1 flex items-baseline justify-between">
+              <div class="text-xl sm:text-2xl font-black ${alertCount > 0 ? 'text-rose-600' : 'text-slate-700'} font-mono">
+                ${alertCount} <span class="text-xs font-medium text-slate-500">ຈຸດເກີນເກນ</span>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${alertCount > 0 ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-emerald-100 text-emerald-700'}">
+                ${alertCount > 0 ? '⚠️ ມີຄ່າເກີນເກນ' : '✅ ປົກກະຕິ'}
+              </span>
+            </div>
+            <div class="text-[10px] text-rose-600 font-semibold mt-1 flex items-center justify-between pt-1 border-t border-rose-100/80">
+              <span>ກວດສອບທຸກໂຕຊີ້ວັດ</span>
+              <span class="group-hover:translate-x-0.5 transition-transform">ເປີດໜ້າຕ່າງ ➔</span>
+            </div>
           </div>
 
-          <div class="bg-white p-3.5 rounded-2xl border border-indigo-200/80 shadow-2xs">
+          <!-- 🌊 ຊ່ອງ ຄ່າສະເລ່ຍ QWI (ກົດເພື່ອສະແດງໜ້າຕ່າງລາຍລະອຽດສະເພາະ) -->
+          <div onclick="openDatasetQwiModal('${item.fbKey}')" class="bg-white p-3.5 rounded-2xl border border-indigo-200/90 shadow-2xs cursor-pointer hover:border-indigo-400 hover:shadow-md hover:bg-indigo-50/40 transition-all duration-150 group select-none ring-1 ring-indigo-500/10" title="ກົດເພື່ອເປີດໜ້າຕ່າງລາຍລະອຽດດັດຊະນີ QWI, ການແປຄ່າ ແລະ ຄະແນນລາຍສະຖານີ">
             <div class="text-indigo-700 text-xs font-semibold flex items-center justify-between">
-              <span>ຄ່າສະເລ່ຍ QWI</span>
-              <span>🌊</span>
+              <span class="group-hover:text-indigo-900 font-bold transition flex items-center gap-1">
+                <span>🌊</span> <span>ຄ່າສະເລ່ຍ QWI</span>
+              </span>
+              <span class="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 group-hover:bg-indigo-200 transition">
+                ℹ️ ລາຍລະອຽດສະເພາະ
+              </span>
             </div>
-            <div class="mt-1 flex items-baseline gap-1.5">
-              <span class="text-xl sm:text-2xl font-black text-indigo-900 font-mono">${qwiAvg}</span>
-              ${qwiInterp ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${qwiInterp.badgeClass}">${qwiInterp.dot} ${qwiInterp.label}</span>` : ''}
+            <div class="mt-1 flex items-baseline justify-between">
+              <div class="flex items-baseline gap-1.5">
+                <span class="text-xl sm:text-2xl font-black text-indigo-900 font-mono">${qwiAvg}</span>
+                ${qwiInterp ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${qwiInterp.badgeClass}">${qwiInterp.dot} ${qwiInterp.label}</span>` : ''}
+              </div>
+              <span class="text-[10px] font-semibold text-indigo-500 font-mono">/ 100</span>
+            </div>
+            <div class="text-[10px] text-indigo-600 font-semibold mt-1 flex items-center justify-between pt-1 border-t border-indigo-100/80">
+              <span>ດັດຊະນີຄຸນນະພາບນໍ້າ</span>
+              <span class="group-hover:translate-x-0.5 transition-transform">ເປີດໜ້າຕ່າງ ➔</span>
             </div>
           </div>
         </div>
@@ -8836,12 +8992,660 @@
     // ກວດຈັບປຸ່ມ Esc ເພື່ອປິດໜ້າຕ່າງລາຍລະອຽດ
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        const qwiModal = document.getElementById('datasetQwiModal');
+        if (qwiModal && !qwiModal.classList.contains('hidden')) {
+          closeDatasetQwiModal();
+          return;
+        }
+        const excModal = document.getElementById('datasetExceedanceModal');
+        if (excModal && !excModal.classList.contains('hidden')) {
+          closeDatasetExceedanceModal();
+          return;
+        }
         const modal = document.getElementById('datasetDetailModal');
         if (modal && !modal.classList.contains('hidden')) {
           closeDatasetDetailModal();
         }
       }
     });
+
+    /* ==========================================================================
+       🚨 ລະບົບໜ້າຕ່າງລາຍລະອຽດເກນມາດຕະຖານສະເພາະຊຸດຂໍ້ມູນ (Dataset Exceedance Detail Modal)
+       ========================================================================== */
+    let activeExceedanceModalFbKey = null;
+
+    function openDatasetExceedanceModal(fbKey) {
+      const item = waterData.find(d => d.fbKey === fbKey);
+      if (!item) return;
+      activeExceedanceModalFbKey = fbKey;
+
+      const compTitle = item.companyName || item.name || 'ບໍ່ລະບຸຊື່';
+      const companyEl = document.getElementById('dsExceedanceCompanyTitle');
+      if (companyEl) companyEl.innerText = compTitle;
+
+      const stations = item.stations || [item];
+      const allInds = valueInds();
+
+      // ລວບລວມລາຍການທີ່ເກີນເກນມາດຕະຖານ
+      const exceedances = [];
+      let totalCheckedValues = 0;
+
+      stations.forEach((st, stIdx) => {
+        if (!st) return;
+        allInds.forEach(ind => {
+          const val = st.customs ? st.customs[ind.key] : undefined;
+          if (val !== undefined && val !== null && val !== '' && val !== '-' && !isNaN(val)) {
+            totalCheckedValues++;
+            const numVal = Number(val);
+            const minVal = sysThresholds[`cfg_${ind.key}_min`];
+            const maxVal = sysThresholds[`cfg_${ind.key}_max`];
+
+            let isExceeded = false;
+            let statusText = '';
+            let limitText = '';
+            let diffText = '';
+
+            if (minVal !== null && minVal !== undefined && minVal !== '' && numVal < Number(minVal)) {
+              isExceeded = true;
+              statusText = 'ຕ່ຳກວ່າເກນຂັ້ນຕ່ຳ';
+              limitText = `≥ ${minVal} ${ind.unit || ''}`;
+              diffText = `-${(Number(minVal) - numVal).toFixed(2)}`;
+            } else if (maxVal !== null && maxVal !== undefined && maxVal !== '' && numVal > Number(maxVal)) {
+              isExceeded = true;
+              statusText = 'ສູງກວ່າເກນຂັ້ນສູງ';
+              limitText = `≤ ${maxVal} ${ind.unit || ''}`;
+              diffText = `+${(numVal - Number(maxVal)).toFixed(2)}`;
+            }
+
+            if (isExceeded) {
+              exceedances.push({
+                stationIdx: stIdx,
+                stationCode: st.code || '-',
+                stationName: st.name || '-',
+                province: st.province || '-',
+                sampleDate: st.sampleDate || item.date || '-',
+                section: st.section || '',
+                indKey: ind.key,
+                indName: ind.name,
+                unit: ind.unit || '',
+                val: numVal,
+                limitText,
+                diffText,
+                statusText
+              });
+            }
+          }
+        });
+      });
+
+      const badgeEl = document.getElementById('dsExceedanceBadge');
+      if (badgeEl) {
+        badgeEl.innerText = exceedances.length > 0 
+          ? `🚨 ພົບ ${exceedances.length} ຈຸດເກີນເກນ` 
+          : `✅ ຜ່ານມາດຕະຖານ 100%`;
+        badgeEl.className = `text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded-full ${
+          exceedances.length > 0 ? 'bg-rose-500/20 text-rose-300 border border-rose-400/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+        }`;
+      }
+
+      // ລະບຸສະຖານີທີ່ມີ ແລະ ບໍ່ມີຄ່າເກີນ
+      const alertStationsCount = new Set(exceedances.map(e => e.stationIdx)).size;
+      const normalStationsCount = stations.length - alertStationsCount;
+
+      // ລາຍການເກນມາດຕະຖານລະບົບສຳລັບໂຕຊີ້ວັດທັງໝົດ
+      const standardsList = allInds.map(ind => {
+        const minVal = sysThresholds[`cfg_${ind.key}_min`];
+        const maxVal = sysThresholds[`cfg_${ind.key}_max`];
+        const hasMin = minVal !== null && minVal !== undefined && minVal !== '';
+        const hasMax = maxVal !== null && maxVal !== undefined && maxVal !== '';
+        let rangeStr = 'ບໍ່ມີກຳນົດ';
+        if (hasMin && hasMax) rangeStr = `${minVal} - ${maxVal} ${ind.unit || ''}`;
+        else if (hasMin) rangeStr = `≥ ${minVal} ${ind.unit || ''}`;
+        else if (hasMax) rangeStr = `≤ ${maxVal} ${ind.unit || ''}`;
+        return { ind, hasMin, hasMax, minVal, maxVal, rangeStr };
+      }).filter(s => s.hasMin || s.hasMax);
+
+      const bodyEl = document.getElementById('dsExceedanceBody');
+      if (bodyEl) {
+        bodyEl.innerHTML = `
+          <!-- 1. ສະຫຼຸບສະຖານະ KPI ເກນມາດຕະຖານ -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
+              <span class="text-slate-500 text-xs font-semibold block">ຈຳນວນສະຖານີທັງໝົດ</span>
+              <span class="text-xl sm:text-2xl font-black text-slate-900 mt-1 font-mono block">${stations.length} <span class="text-xs font-normal text-slate-500">ຈຸດ</span></span>
+            </div>
+            <div class="bg-white p-3.5 rounded-2xl border border-emerald-200/80 shadow-2xs">
+              <span class="text-emerald-700 text-xs font-semibold block">ສະຖານີທີ່ຜ່ານເກນທຸກຄ່າ</span>
+              <span class="text-xl sm:text-2xl font-black text-emerald-700 mt-1 font-mono block">${normalStationsCount} <span class="text-xs font-normal text-emerald-600">ຈຸດ</span></span>
+            </div>
+            <div class="bg-white p-3.5 rounded-2xl border ${alertStationsCount > 0 ? 'border-rose-300 ring-1 ring-rose-200 bg-rose-50/20' : 'border-slate-200/90'} shadow-2xs">
+              <span class="${alertStationsCount > 0 ? 'text-rose-700 font-bold' : 'text-slate-500 font-semibold'} text-xs block">ສະຖານີທີ່ມີຄ່າເກີນເກນ</span>
+              <span class="text-xl sm:text-2xl font-black ${alertStationsCount > 0 ? 'text-rose-600' : 'text-slate-700'} mt-1 font-mono block">${alertStationsCount} <span class="text-xs font-normal text-slate-500">ຈຸດ</span></span>
+            </div>
+            <div class="bg-white p-3.5 rounded-2xl border border-amber-200/80 shadow-2xs">
+              <span class="text-amber-800 text-xs font-semibold block">ຈຳນວນຄ່າທີ່ເກີນເກນລວມ</span>
+              <span class="text-xl sm:text-2xl font-black text-amber-700 mt-1 font-mono block">${exceedances.length} <span class="text-xs font-normal text-amber-600">ຄ່າ / ${totalCheckedValues} ຄ່າວັດ</span></span>
+            </div>
+          </div>
+
+          <!-- 2. ລາຍການທີ່ເກີນເກນມາດຕະຖານ -->
+          <div class="bg-white rounded-2xl border border-rose-200/90 p-4 shadow-2xs space-y-3">
+            <div class="flex items-center justify-between border-b border-rose-100 pb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-rose-900 flex items-center gap-1.5">
+                  <span>🚨</span> <span>ລາຍການຄ່າທີ່ເກີນເກນມາດຕະຖານສິ່ງແວດລ້ອມ</span>
+                </span>
+                <span class="text-xs px-2 py-0.5 rounded-full font-bold ${exceedances.length > 0 ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}">
+                  ${exceedances.length} ລາຍການ
+                </span>
+              </div>
+            </div>
+
+            ${exceedances.length > 0 ? `
+              <div class="overflow-x-auto rounded-xl border border-rose-100">
+                <table class="w-full text-xs text-left border-collapse">
+                  <thead class="bg-rose-50 text-rose-900 font-bold uppercase tracking-wider border-b border-rose-200">
+                    <tr>
+                      <th class="p-2.5 text-center w-10">ລຳດັບ</th>
+                      <th class="p-2.5">ວັນທີ</th>
+                      <th class="p-2.5">ສະຖານີ / ຈຸດເກັບຕົວຢ່າງ</th>
+                      <th class="p-2.5">ແຂວງ</th>
+                      <th class="p-2.5">ພາຣາມິເຕີ / ໂຕຊີ້ວັດ</th>
+                      <th class="p-2.5 text-right">ຄ່າທີ່ກວດວັດໄດ້</th>
+                      <th class="p-2.5 text-center">ເກນມາດຕະຖານ</th>
+                      <th class="p-2.5 text-right">ສ່ວນຕ່າງ</th>
+                      <th class="p-2.5 text-center">ສະຖານະ</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-rose-100 bg-white">
+                    ${exceedances.map((ex, idx) => `
+                      <tr class="hover:bg-rose-50/60 transition font-medium">
+                        <td class="p-2.5 text-center font-bold text-slate-400">${idx + 1}</td>
+                        <td class="p-2.5 font-mono text-slate-700 whitespace-nowrap">${escAttr(fmtSampleDate(ex.sampleDate))}</td>
+                        <td class="p-2.5 whitespace-nowrap">
+                          <span class="font-mono font-bold text-indigo-700">[${escAttr(ex.stationCode)}]</span>
+                          <span class="text-slate-900 ml-1 font-semibold">${escAttr(ex.stationName)}</span>
+                          ${ex.section ? `<span class="text-[10px] text-indigo-600 block">📂 ${escAttr(ex.section)}</span>` : ''}
+                        </td>
+                        <td class="p-2.5 text-slate-600 whitespace-nowrap">${escAttr(ex.province)}</td>
+                        <td class="p-2.5 whitespace-nowrap">
+                          <span class="font-bold text-slate-900">${escAttr(ex.indName)}</span>
+                          ${ex.unit ? `<span class="text-[10px] text-slate-400 ml-1">(${escAttr(ex.unit)})</span>` : ''}
+                        </td>
+                        <td class="p-2.5 text-right font-mono font-black text-rose-600 text-sm whitespace-nowrap bg-rose-50/50">
+                          ${ex.val}
+                        </td>
+                        <td class="p-2.5 text-center font-mono font-semibold text-slate-700 whitespace-nowrap">
+                          ${escAttr(ex.limitText)}
+                        </td>
+                        <td class="p-2.5 text-right font-mono font-bold text-rose-700 whitespace-nowrap">
+                          ${escAttr(ex.diffText)}
+                        </td>
+                        <td class="p-2.5 text-center whitespace-nowrap">
+                          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                            <span>🚨</span> ${escAttr(ex.statusText)}
+                          </span>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            ` : `
+              <div class="p-6 text-center bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-2">
+                <div class="text-3xl">🎉</div>
+                <h4 class="text-sm sm:text-base font-bold text-emerald-800">ຊຸດຂໍ້ມູນນີ້ຜ່ານເກນມາດຕະຖານຄຸນນະພາບນໍ້າ 100%!</h4>
+                <p class="text-xs text-emerald-700">ບໍ່ພົບພາຣາມິເຕີໃດເກີນເກນຄວບຄຸມມາດຕະຖານສິ່ງແວດລ້ອມ (ທຸກສະຖານີຢູ່ໃນເກນປົກກະຕິ).</p>
+              </div>
+            `}
+          </div>
+
+          <!-- 3. ຕາຕະລາງເກນມາດຕະຖານຄວບຄຸມຄຸນນະພາບນໍ້າແຫ່ງຊາດ -->
+          <div class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                  <span>📋</span> <span>ຕາຕະລາງເກນມາດຕະຖານຄຸນນະພາບນໍ້າທີ່ໃຊ້ກວດສອບ (National Standards Reference)</span>
+                </span>
+                <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                  ${standardsList.length} ພາຣາມິເຕີ
+                </span>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-200">
+              <table class="w-full text-xs text-left border-collapse">
+                <thead class="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th class="p-2.5 text-center w-10">ລຳດັບ</th>
+                    <th class="p-2.5">ພາຣາມິເຕີ / ໂຕຊີ້ວັດ</th>
+                    <th class="p-2.5 text-center">ຫົວໜ່ວຍ</th>
+                    <th class="p-2.5 text-right">ຄ່າຕໍ່າສຸດ (Min)</th>
+                    <th class="p-2.5 text-right">ຄ່າສູງສຸດ (Max)</th>
+                    <th class="p-2.5 text-center">ຊ່ວງມາດຕະຖານທີ່ກຳນົດ</th>
+                    <th class="p-2.5 text-center">ສະຖານະໃນຊຸດຂໍ້ມູນນີ້</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                  ${standardsList.map((st, i) => {
+                    const failCount = exceedances.filter(e => e.indKey === st.ind.key).length;
+                    return `
+                      <tr class="hover:bg-slate-50 transition">
+                        <td class="p-2.5 text-center font-bold text-slate-400">${i + 1}</td>
+                        <td class="p-2.5 font-bold text-slate-800">${escAttr(st.ind.name)}</td>
+                        <td class="p-2.5 text-center font-mono text-slate-500">${escAttr(st.ind.unit || '-')}</td>
+                        <td class="p-2.5 text-right font-mono text-slate-600">${st.hasMin ? st.minVal : '-'}</td>
+                        <td class="p-2.5 text-right font-mono text-slate-600">${st.hasMax ? st.maxVal : '-'}</td>
+                        <td class="p-2.5 text-center font-mono font-semibold text-indigo-700 bg-indigo-50/50">${escAttr(st.rangeStr)}</td>
+                        <td class="p-2.5 text-center">
+                          ${failCount > 0 ? `
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">
+                              🚨 ເກີນເກນ ${failCount} ຄັ້ງ
+                            </span>
+                          ` : `
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                              ✅ ປົກກະຕິ
+                            </span>
+                          `}
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+
+      const modal = document.getElementById('datasetExceedanceModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+      }
+    }
+
+    function closeDatasetExceedanceModal() {
+      activeExceedanceModalFbKey = null;
+      const modal = document.getElementById('datasetExceedanceModal');
+      if (modal) modal.classList.add('hidden');
+      const parentModal = document.getElementById('datasetDetailModal');
+      if (!parentModal || parentModal.classList.contains('hidden')) {
+        document.body.classList.remove('overflow-hidden');
+      }
+    }
+
+    function exportDatasetExceedanceCSV() {
+      if (!activeExceedanceModalFbKey) return;
+      const item = waterData.find(d => d.fbKey === activeExceedanceModalFbKey);
+      if (!item) return;
+
+      const stations = item.stations || [item];
+      const allInds = valueInds();
+      const rows = [];
+      rows.push(['ລຳດັບ', 'ວັນທີ', 'ລະຫັດສະຖານີ', 'ຊື່ສະຖານີ', 'ແຂວງ', 'ໂຄງການ', 'ພາຣາມິເຕີ', 'ຫົວໜ່ວຍ', 'ຄ່າທີ່ວັດແທກໄດ້', 'ເກນມາດຕະຖານ', 'ສ່ວນຕ່າງ', 'ສະຖານະ']);
+
+      let count = 0;
+      stations.forEach(st => {
+        allInds.forEach(ind => {
+          const val = st.customs ? st.customs[ind.key] : undefined;
+          if (val !== undefined && val !== null && val !== '' && val !== '-' && !isNaN(val)) {
+            const numVal = Number(val);
+            const minVal = sysThresholds[`cfg_${ind.key}_min`];
+            const maxVal = sysThresholds[`cfg_${ind.key}_max`];
+
+            let isExceeded = false;
+            let statusText = '';
+            let limitText = '';
+            let diffText = '';
+
+            if (minVal !== null && minVal !== undefined && minVal !== '' && numVal < Number(minVal)) {
+              isExceeded = true;
+              statusText = 'ຕ່ຳກວ່າເກນຂັ້ນຕ່ຳ';
+              limitText = `>= ${minVal}`;
+              diffText = `-${(Number(minVal) - numVal).toFixed(2)}`;
+            } else if (maxVal !== null && maxVal !== undefined && maxVal !== '' && numVal > Number(maxVal)) {
+              isExceeded = true;
+              statusText = 'ສູງກວ່າເກນຂັ້ນສູງ';
+              limitText = `<= ${maxVal}`;
+              diffText = `+${(numVal - Number(maxVal)).toFixed(2)}`;
+            }
+
+            if (isExceeded) {
+              count++;
+              rows.push([
+                count,
+                st.sampleDate || item.date || '',
+                st.code || '',
+                st.name || '',
+                st.province || '',
+                st.section || '',
+                ind.name,
+                ind.unit || '',
+                numVal,
+                limitText,
+                diffText,
+                statusText
+              ]);
+            }
+          }
+        });
+      });
+
+      if (count === 0) {
+        Swal.fire({ icon: 'info', title: 'ບໍ່ມີຂໍ້ມູນເກີນເກນ', text: 'ຊຸດຂໍ້ມູນນີ້ບໍ່ມີຄ່າໃດເກີນເກນມາດຕະຖານ' });
+        return;
+      }
+
+      const csvContent = '\uFEFF' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ລາຍການເກີນເກນມາດຕະຖານ_${item.companyName || 'Dataset'}_${Date.now()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    /* ==========================================================================
+       🌊 ລະບົບໜ້າຕ່າງລາຍລະອຽດດັດຊະນີຄຸນນະພາບນໍ້າ QWI ສະເພາະຊຸດຂໍ້ມູນ (Dataset QWI Detail Modal)
+       ========================================================================== */
+    let activeQwiModalFbKey = null;
+
+    function openDatasetQwiModal(fbKey) {
+      const item = waterData.find(d => d.fbKey === fbKey);
+      if (!item) return;
+      activeQwiModalFbKey = fbKey;
+
+      const compTitle = item.companyName || item.name || 'ບໍ່ລະບຸຊື່';
+      const companyEl = document.getElementById('dsQwiCompanyTitle');
+      if (companyEl) companyEl.innerText = compTitle;
+
+      const stations = item.stations || [item];
+      const stationQwis = stations.map((st, i) => {
+        const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-')
+          ? st.qwi
+          : calculateAutoQWI(st.customs || {});
+        const qi = interpretQWI(qRaw);
+        return {
+          idx: i,
+          stationCode: st.code || '-',
+          stationName: st.name || '-',
+          province: st.province || '-',
+          sampleDate: st.sampleDate || item.date || '-',
+          section: st.section || '',
+          qRaw,
+          qi,
+          customs: st.customs || {}
+        };
+      });
+
+      const validScores = stationQwis
+        .map(s => (s.qi && s.qi.score !== '-' && !isNaN(s.qi.score)) ? Number(s.qi.score) : null)
+        .filter(v => v !== null);
+
+      const qwiAvg = validScores.length ? +(validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(1) : '-';
+      const qwiInterp = interpretQWI(qwiAvg);
+      const minScore = validScores.length ? Math.min(...validScores).toFixed(1) : '-';
+      const maxScore = validScores.length ? Math.max(...validScores).toFixed(1) : '-';
+
+      // ນັບຕາມລະດັບ
+      const counts = {
+        EXCELLENT: stationQwis.filter(s => s.qi && s.qi.level === 'EXCELLENT').length,
+        GOOD: stationQwis.filter(s => s.qi && s.qi.level === 'GOOD').length,
+        MODERATE: stationQwis.filter(s => s.qi && s.qi.level === 'MODERATE').length,
+        POOR: stationQwis.filter(s => s.qi && s.qi.level === 'POOR').length,
+        VERY_POOR: stationQwis.filter(s => s.qi && s.qi.level === 'VERY_POOR').length
+      };
+
+      const badgeEl = document.getElementById('dsQwiBadge');
+      if (badgeEl) {
+        badgeEl.innerText = qwiInterp ? `🌊 ຄ່າສະເລ່ຍ: ${qwiAvg} (${qwiInterp.label})` : `🌊 QWI Analysis`;
+        badgeEl.className = `text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded-full ${
+          qwiInterp ? qwiInterp.badgeClass : 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/30'
+        }`;
+      }
+
+      const bodyEl = document.getElementById('dsQwiBody');
+      if (bodyEl) {
+        bodyEl.innerHTML = `
+          <!-- 1. ສະຖິຕິ KPI ຂອງ QWI -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-gradient-to-br from-indigo-50 via-white to-blue-50/50 p-4 rounded-2xl border border-indigo-200/90 shadow-2xs">
+              <span class="text-indigo-700 text-xs font-bold block">ຄ່າສະເລ່ຍ QWI ຂອງຊຸດຂໍ້ມູນ</span>
+              <div class="mt-1 flex items-baseline gap-2">
+                <span class="text-2xl sm:text-3xl font-black text-indigo-950 font-mono">${qwiAvg}</span>
+                <span class="text-xs text-indigo-500 font-semibold">/ 100</span>
+              </div>
+              ${qwiInterp ? `
+                <div class="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold border ${qwiInterp.badgeClass}">
+                  <span>${qwiInterp.dot}</span> <span>${qwiInterp.text}</span>
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
+              <span class="text-slate-500 text-xs font-semibold block">ຈຳນວນສະຖານີວັດແທກ</span>
+              <span class="text-xl sm:text-2xl font-black text-slate-800 mt-1 font-mono block">${stations.length} <span class="text-xs font-normal text-slate-500">ຈຸດ</span></span>
+              <span class="text-[11px] text-slate-400 mt-0.5 block">ມີຄະແນນ: ${validScores.length} ຈຸດ</span>
+            </div>
+
+            <div class="bg-white p-3.5 rounded-2xl border border-emerald-200/80 shadow-2xs">
+              <span class="text-emerald-700 text-xs font-semibold block">ຄະແນນສູງສຸດ (Max)</span>
+              <div class="text-xl sm:text-2xl font-black text-emerald-700 mt-1 font-mono flex items-baseline gap-1">
+                <span>${maxScore}</span>
+                <span class="text-xs font-normal text-emerald-600">/ 100</span>
+              </div>
+              <span class="text-[11px] text-emerald-600 mt-0.5 block">ຄຸນນະພາບດີທີ່ສຸດ</span>
+            </div>
+
+            <div class="bg-white p-3.5 rounded-2xl border border-rose-200/80 shadow-2xs">
+              <span class="text-rose-700 text-xs font-semibold block">ຄະແນນຕ່ຳສຸດ (Min)</span>
+              <div class="text-xl sm:text-2xl font-black text-rose-600 mt-1 font-mono flex items-baseline gap-1">
+                <span>${minScore}</span>
+                <span class="text-xs font-normal text-rose-500">/ 100</span>
+              </div>
+              <span class="text-[11px] text-rose-600 mt-0.5 block">ຈຸດທີ່ຄວນເຝົ້າລະວັງ</span>
+            </div>
+          </div>
+
+          <!-- 2. ເກນການແປຜົນຄຸນນະພາບນໍ້າ (QWI Rating Scale) -->
+          <div class="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-2xs space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+              <span class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                <span>📐</span> <span>ເກນມາດຕະຖານການແປຜົນຄຸນນະພາບນໍ້າ (Water Quality Rating Criteria)</span>
+              </span>
+              <span class="text-[11px] text-slate-400">ສູດດັດຊະນີ QWI / WQI</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-5 gap-2 text-xs">
+              <div class="p-2.5 rounded-xl border border-emerald-300 bg-emerald-50/60 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-emerald-900">🟢 ດີຫຼາຍ (Excellent)</span>
+                    <span class="font-mono font-bold text-emerald-800 text-[11px] bg-emerald-200/80 px-1.5 py-0.2 rounded">91-100</span>
+                  </div>
+                  <p class="text-[10.5px] text-emerald-800 mt-1">ນໍ້າສະອາດຫຼາຍ: ເໝາະສົມສຳລັບການອຸປະໂພກ-ບໍລິໂພກ (ຂ້າເຊື້ອ) ແລະ ອະນຸລັກທຳມະຊາດ.</p>
+                </div>
+                <div class="mt-2 text-[11px] font-bold text-emerald-900 border-t border-emerald-200 pt-1">
+                  ໃນຊຸດນີ້: <span class="font-mono text-sm">${counts.EXCELLENT}</span> ຈຸດ
+                </div>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-sky-300 bg-sky-50/60 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-sky-900">🔵 ດີ (Good)</span>
+                    <span class="font-mono font-bold text-sky-800 text-[11px] bg-sky-200/80 px-1.5 py-0.2 rounded">71-90</span>
+                  </div>
+                  <p class="text-[10.5px] text-sky-800 mt-1">ນໍ້າສະອາດ: ເໝາະສົມສຳລັບການກະສິກຳ, ການລ້ຽງສັດນໍ້າ ແລະ ການນຳໃຊ້ທົ່ວໄປ.</p>
+                </div>
+                <div class="mt-2 text-[11px] font-bold text-sky-900 border-t border-sky-200 pt-1">
+                  ໃນຊຸດນີ້: <span class="font-mono text-sm">${counts.GOOD}</span> ຈຸດ
+                </div>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-amber-300 bg-amber-50/60 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-amber-900">🟡 ປານກາງ (Moderate)</span>
+                    <span class="font-mono font-bold text-amber-800 text-[11px] bg-amber-200/80 px-1.5 py-0.2 rounded">51-70</span>
+                  </div>
+                  <p class="text-[10.5px] text-amber-800 mt-1">ມີມົນລະພິດປານກາງ: ຕ້ອງຜ່ານການບຳບັດຕາມມາດຕະຖານກ່ອນນຳໃຊ້.</p>
+                </div>
+                <div class="mt-2 text-[11px] font-bold text-amber-900 border-t border-amber-200 pt-1">
+                  ໃນຊຸດນີ້: <span class="font-mono text-sm">${counts.MODERATE}</span> ຈຸດ
+                </div>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-orange-300 bg-orange-50/60 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-orange-900">🟠 ບໍ່ດີ / ຕ່ຳ (Poor)</span>
+                    <span class="font-mono font-bold text-orange-800 text-[11px] bg-orange-200/80 px-1.5 py-0.2 rounded">31-50</span>
+                  </div>
+                  <p class="text-[10.5px] text-orange-800 mt-1">ນໍ້າເສື່ອມໂຊມ: ມີມົນລະພິດສູງ ບໍ່ຄວນນຳໃຊ້ໂດຍກົງຕໍ່ຄົນ ແລະ ສັດ.</p>
+                </div>
+                <div class="mt-2 text-[11px] font-bold text-orange-900 border-t border-orange-200 pt-1">
+                  ໃນຊຸດນີ້: <span class="font-mono text-sm">${counts.POOR}</span> ຈຸດ
+                </div>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-rose-300 bg-rose-50/60 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-rose-900">🔴 ເສື່ອມໂຊມຫຼາຍ</span>
+                    <span class="font-mono font-bold text-rose-800 text-[11px] bg-rose-200/80 px-1.5 py-0.2 rounded">0-30</span>
+                  </div>
+                  <p class="text-[10.5px] text-rose-800 mt-1">ນໍ້າເນົ່າເສຍຮຸນແຮງ: ມີມົນລະພິດສູງຫຼາຍ ເປັນອັນຕະລາຍຕໍ່ສິ່ງແວດລ້ອມ.</p>
+                </div>
+                <div class="mt-2 text-[11px] font-bold text-rose-900 border-t border-rose-200 pt-1">
+                  ໃນຊຸດນີ້: <span class="font-mono text-sm">${counts.VERY_POOR}</span> ຈຸດ
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. ຕາຕະລາງລາຍລະອຽດ QWI ຕາມແຕ່ລະສະຖານີ -->
+          <div class="bg-white rounded-2xl border border-indigo-200/90 p-4 shadow-2xs space-y-3">
+            <div class="flex items-center justify-between border-b border-indigo-100 pb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-indigo-950 flex items-center gap-1.5">
+                  <span>📊</span> <span>ຕາຕະລາງຄະແນນດັດຊະນີ QWI ລາຍສະຖານີ</span>
+                </span>
+                <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                  ${stations.length} ສະຖານີ
+                </span>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-200">
+              <table class="w-full text-xs text-left border-collapse">
+                <thead class="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200">
+                  <tr>
+                    <th class="p-2.5 text-center w-10">ລຳດັບ</th>
+                    <th class="p-2.5">ວັນທີ</th>
+                    <th class="p-2.5">ລະຫັດສະຖານີ</th>
+                    <th class="p-2.5">ຊື່ສະຖານີ / ຈຸດເກັບຕົວຢ່າງ</th>
+                    <th class="p-2.5">ແຂວງ</th>
+                    <th class="p-2.5 text-center">ຄະແນນ QWI</th>
+                    <th class="p-2.5 text-center">ລະດັບຄຸນນະພາບນໍ້າ</th>
+                    <th class="p-2.5">ການແປຜົນ & ຄຳແນະນຳ</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                  ${stationQwis.map((sq, i) => {
+                    const qi = sq.qi;
+                    return `
+                      <tr class="hover:bg-slate-50 transition">
+                        <td class="p-2.5 text-center font-bold text-slate-400">${i + 1}</td>
+                        <td class="p-2.5 font-mono text-slate-700 whitespace-nowrap">${escAttr(fmtSampleDate(sq.sampleDate))}</td>
+                        <td class="p-2.5 font-mono font-bold text-indigo-700 whitespace-nowrap">${escAttr(sq.stationCode)}</td>
+                        <td class="p-2.5 font-medium text-slate-900 whitespace-nowrap">
+                          <span>${escAttr(sq.stationName)}</span>
+                          ${sq.section ? `<span class="text-[10px] text-indigo-600 block">📂 ${escAttr(sq.section)}</span>` : ''}
+                        </td>
+                        <td class="p-2.5 text-slate-600 whitespace-nowrap">${escAttr(sq.province)}</td>
+                        <td class="p-2.5 text-center font-mono font-black text-sm whitespace-nowrap">
+                          ${qi && qi.score !== '-' ? `<span style="color: ${qi.color}">${qi.score}</span>` : '<span class="text-slate-400 font-normal">-</span>'}
+                        </td>
+                        <td class="p-2.5 text-center whitespace-nowrap">
+                          ${qi ? `
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold border ${qi.badgeClass}">
+                              <span>${qi.dot}</span> <span>${qi.label}</span>
+                            </span>
+                          ` : '<span class="text-slate-400">-</span>'}
+                        </td>
+                        <td class="p-2.5 text-slate-600 max-w-[280px]">
+                          ${qi ? escAttr(qi.desc) : '<span class="text-slate-400">ບໍ່ມີຂໍ້ມູນພຽງພໍສຳລັບການຄິດໄລ່</span>'}
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+
+      const modal = document.getElementById('datasetQwiModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+      }
+    }
+
+    function closeDatasetQwiModal() {
+      activeQwiModalFbKey = null;
+      const modal = document.getElementById('datasetQwiModal');
+      if (modal) modal.classList.add('hidden');
+      const parentModal = document.getElementById('datasetDetailModal');
+      if (!parentModal || parentModal.classList.contains('hidden')) {
+        document.body.classList.remove('overflow-hidden');
+      }
+    }
+
+    function exportDatasetQwiCSV() {
+      if (!activeQwiModalFbKey) return;
+      const item = waterData.find(d => d.fbKey === activeQwiModalFbKey);
+      if (!item) return;
+
+      const stations = item.stations || [item];
+      const rows = [];
+      rows.push(['ລຳດັບ', 'ວັນທີ', 'ລະຫັດສະຖານີ', 'ຊື່ສະຖານີ', 'ແຂວງ', 'ໂຄງການ', 'ຄະແນນ QWI', 'ລະດັບຄຸນນະພາບນໍ້າ', 'ການແປຜົນ']);
+
+      stations.forEach((st, i) => {
+        const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-')
+          ? st.qwi
+          : calculateAutoQWI(st.customs || {});
+        const qi = interpretQWI(qRaw);
+        rows.push([
+          i + 1,
+          st.sampleDate || item.date || '',
+          st.code || '',
+          st.name || '',
+          st.province || '',
+          st.section || '',
+          (qi && qi.score !== '-') ? qi.score : '',
+          qi ? qi.label : '',
+          qi ? qi.desc : ''
+        ]);
+      });
+
+      const csvContent = '\uFEFF' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ດັດຊະນີ_QWI_${item.companyName || 'Dataset'}_${Date.now()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
 
     /* ==========================================================================
        🔒 ການກວດສອບສິດດາວໂຫຼດ/ເອົາຂໍ້ມູນອອກ (Export Security & Passcode Check)
