@@ -1353,6 +1353,126 @@
     </div>
   </div>
 
+  <!-- Modal ລາຍລະອຽດການເກີນເກນມາດຕະຖານ 12 ເດືອນ (12-Month Exceedance Details Modal) -->
+  <div id="trend12ExceedanceModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5 z-[85] overflow-y-auto" onclick="if(event.target === this) close12MonthExceedanceModal()">
+    <div class="bg-white rounded-3xl max-w-5xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh] animate-in fade-in zoom-in-95 duration-200" onclick="event.stopPropagation()">
+      
+      <!-- Modal Header -->
+      <div class="bg-gradient-to-r from-slate-900 via-amber-950 to-slate-900 text-white p-5 sm:p-6 border-b border-amber-800/40 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center text-white text-xl shadow-lg shadow-amber-500/25 ring-2 ring-white/10 shrink-0">
+            🚨
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">ລາຍລະອຽດການເກີນເກນມາດຕະຖານຄຸນນະພາບນໍ້າ (12 ເດືອນ)</h3>
+              <span id="trend12ExceedanceTotalBadge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30">
+                0 ລາຍການ
+              </span>
+            </div>
+            <p id="trend12ExceedanceSubtitle" class="text-xs text-amber-200/80 mt-0.5">
+              ສະຖິຕິການກວດພົບຄ່າເກີນເກນມາດຕະຖານໃນຮອບ 12 ເດືອນ
+            </p>
+          </div>
+        </div>
+        <button type="button" onclick="close12MonthExceedanceModal()" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xl transition cursor-pointer" title="ປິດໜ້າຕ່າງ">
+          &times;
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 bg-slate-50/50">
+        
+        <!-- Summary 4 Cards -->
+        <div id="trend12ExceedanceSummaryCards" class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- Dynamic summary cards -->
+        </div>
+
+        <!-- Parameter Filter Chips -->
+        <div id="trend12ExceedanceChipsBox" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+            <span class="flex items-center gap-1.5">
+              <span>🏷️</span> <span>ຈຳແນກຕາມໂຕຊີ້ວັດທີ່ເກີນເກນ:</span>
+            </span>
+            <span id="trend12ExceedanceIndCountText" class="text-[11px] font-normal text-slate-500"></span>
+          </div>
+          <div id="trend12ExceedanceChips" class="flex flex-wrap gap-1.5">
+            <!-- Chips populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Filter Bar: Search, Month, Type -->
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex flex-wrap gap-2.5 items-center justify-between text-xs">
+          <div class="flex-1 min-w-[200px] relative">
+            <input type="text" id="trend12ExceedanceSearchInput" oninput="on12MonthExceedanceSearchChange(this.value)" placeholder="🔍 ຄົ້ນຫາຕາມສະຖານີ, ລະຫັດ, ໂຕຊີ້ວັດ, ເດືອນ, ບໍລິສັດ..." class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs rounded-xl pl-3 pr-8 py-2 outline-none focus:ring-2 focus:ring-amber-500">
+            <button type="button" onclick="document.getElementById('trend12ExceedanceSearchInput').value=''; on12MonthExceedanceSearchChange('');" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 font-bold cursor-pointer text-sm">&times;</button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="trend12ExceedanceMonthSel" onchange="on12MonthExceedanceMonthChange(this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 font-medium text-slate-700 outline-none focus:ring-2 focus:ring-amber-500 text-xs cursor-pointer">
+              <option value="ALL">📅 ທຸກເດືອນ (12 ເດືອນ)</option>
+            </select>
+
+            <select id="trend12ExceedanceTypeSel" onchange="on12MonthExceedanceTypeChange(this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 font-medium text-slate-700 outline-none focus:ring-2 focus:ring-amber-500 text-xs cursor-pointer">
+              <option value="ALL">🚨 ທຸກຮູບແບບການເກີນ</option>
+              <option value="HIGH">🔺 ສູງກວ່າເກນສູງສຸດ (&gt; Max)</option>
+              <option value="LOW">🔻 ຕ່ຳກວ່າເກນຕ່ຳສຸດ (&lt; Min)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="px-4 py-2.5 bg-slate-100/80 border-b border-slate-200 flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-700 flex items-center gap-1.5">
+              <span>📋</span> <span>ລາຍການຜົນກວດທີ່ເກີນເກນມາດຕະຖານ</span>
+            </span>
+            <span id="trend12ExceedanceFilteredCountText" class="text-slate-500 font-medium"></span>
+          </div>
+          <div class="overflow-x-auto max-h-[380px]">
+            <table class="min-w-full text-xs text-left border-collapse">
+              <thead class="bg-slate-50 text-slate-600 border-b border-slate-200 sticky top-0 z-10 font-bold">
+                <tr>
+                  <th class="p-2.5 text-center w-12">ລ/ດ</th>
+                  <th class="p-2.5">ເດືອນ / ວັນທີ</th>
+                  <th class="p-2.5">ສະຖານີ / ຈຸດເກັບ</th>
+                  <th class="p-2.5">ຫົວຂໍ້ / ແຫຼ່ງຂໍ້ມູນ</th>
+                  <th class="p-2.5">ໂຕຊີ້ວັດ</th>
+                  <th class="p-2.5 text-right">ຄ່າທີ່ວັດໄດ້</th>
+                  <th class="p-2.5 text-center">ເກນມາດຕະຖານ</th>
+                  <th class="p-2.5">ສ່ວນຕ່າງຈາກເກນ</th>
+                  <th class="p-2.5 text-center">ສະພາບການ</th>
+                </tr>
+              </thead>
+              <tbody id="trend12ExceedanceTableBody" class="divide-y divide-slate-100">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 sm:p-5 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <button type="button" onclick="export12MonthExceedanceCSV()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer border border-slate-200 shadow-2xs" title="ດາວໂຫຼດສະເພາະລາຍການເກີນເກນເປັນ CSV">
+            <span>📥</span>
+            <span>ສົ່ງອອກລາຍການເກີນເກນ (CSV)</span>
+          </button>
+          <button type="button" onclick="copy12MonthExceedanceSummary()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer border border-slate-200 shadow-2xs" title="ສຳເນົາສະຫຼຸບຫຍໍ້ໄວ້ໃນ Clipboard">
+            <span>📋</span>
+            <span>ສຳເນົາສະຫຼຸບ</span>
+          </button>
+        </div>
+        <button type="button" onclick="close12MonthExceedanceModal()" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer shadow-md">
+          ປິດໜ້າຕ່າງ
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <script>
     function escapeHtml(text) {
       if (text === null || text === undefined) return '';
@@ -9477,9 +9597,12 @@
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-amber-50/50 to-white p-3.5 rounded-xl border ${totalAlertsCount > 0 ? 'border-amber-300' : 'border-slate-200'} shadow-xs flex flex-col justify-between">
+        <div class="bg-gradient-to-br from-amber-50/50 to-white p-3.5 rounded-xl border ${totalAlertsCount > 0 ? 'border-amber-300 hover:border-amber-400' : 'border-slate-200 hover:border-slate-300'} shadow-xs hover:shadow-md flex flex-col justify-between cursor-pointer transition transform active:scale-[0.99] group" onclick="open12MonthExceedanceModal()" title="ກົດເພື່ອເບິ່ງລາຍລະອຽດການເກີນເກນມາດຕະຖານ 12 ເດືອນ">
           <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
-            <span>ການເກີນເກນມາດຕະຖານລວມ</span>
+            <span class="flex items-center gap-1.5 font-bold ${totalAlertsCount > 0 ? 'text-amber-800' : 'text-slate-700'}">
+              <span>ການເກີນເກນມາດຕະຖານລວມ</span>
+              <span class="text-[10px] text-amber-700 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 group-hover:bg-amber-100 transition inline-flex items-center gap-0.5">ເບິ່ງລາຍລະອຽດ 🔍</span>
+            </span>
             <span class="text-sm">🚨</span>
           </div>
           <div class="my-1 flex items-baseline justify-between">
@@ -9490,8 +9613,8 @@
           </div>
           <div class="text-[10px] font-bold">
             ${totalAlertsCount > 0
-              ? `<span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800">⚠️ ມີບາງໂຕຊີ້ວັດເກີນເກນ</span>`
-              : `<span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">✅ ທຸກໂຕຊີ້ວັດປົກກະຕິ</span>`
+              ? `<span class="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 inline-flex items-center gap-1">⚠️ ມີບາງໂຕຊີ້ວັດເກີນເກນ <span class="underline">ກົດເບິ່ງ</span></span>`
+              : `<span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 inline-flex items-center gap-1">✅ ທຸກໂຕຊີ້ວັດປົກກະຕິ <span class="underline">ກົດເບິ່ງ</span></span>`
             }
           </div>
         </div>
@@ -9936,9 +10059,12 @@
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-amber-50/50 to-white p-3.5 rounded-xl border ${totalAlertsCount > 0 ? 'border-amber-300' : 'border-slate-200'} shadow-xs flex flex-col justify-between">
+        <div class="bg-gradient-to-br from-amber-50/50 to-white p-3.5 rounded-xl border ${totalAlertsCount > 0 ? 'border-amber-300 hover:border-amber-400' : 'border-slate-200 hover:border-slate-300'} shadow-xs hover:shadow-md flex flex-col justify-between cursor-pointer transition transform active:scale-[0.99] group" onclick="open12MonthExceedanceModal()" title="ກົດເພື່ອເບິ່ງລາຍລະອຽດການເກີນເກນມາດຕະຖານ 12 ເດືອນ">
           <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
-            <span>ການເກີນເກນ & ທ່າອ່ຽງ</span>
+            <span class="flex items-center gap-1.5 font-bold ${totalAlertsCount > 0 ? 'text-amber-800' : 'text-slate-700'}">
+              <span>ການເກີນເກນ & ທ່າອ່ຽງ</span>
+              <span class="text-[10px] text-amber-700 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 group-hover:bg-amber-100 transition inline-flex items-center gap-0.5">ເບິ່ງລາຍລະອຽດ 🔍</span>
+            </span>
             <span class="text-sm">🚨</span>
           </div>
           <div class="my-1 flex items-baseline justify-between">
@@ -9947,8 +10073,9 @@
               <span class="text-xs text-slate-500">ຄັ້ງ (${alertRate}%)</span>
             </div>
           </div>
-          <div class="text-[10px] font-bold">
+          <div class="text-[10px] font-bold flex items-center justify-between">
             <span class="px-2 py-0.5 rounded-md ${trendClass}">${trendText}</span>
+            <span class="text-[10px] text-amber-700 group-hover:underline">ເບິ່ງລາຍລະອຽດ 🔍</span>
           </div>
         </div>
       `;
@@ -10423,6 +10550,536 @@
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
+
+    /* ==========================================================================
+       🚨 ລະບົບໜ້າຕ່າງສະແດງລາຍລະອຽດການເກີນເກນມາດຕະຖານ 12 ເດືອນ (12-Month Exceedance Modal)
+       ========================================================================== */
+    let cached12MonthExceedances = [];
+    let trend12ExceedanceFilterInd = 'ALL';
+    let trend12ExceedanceFilterMonth = 'ALL';
+    let trend12ExceedanceFilterType = 'ALL';
+    let trend12ExceedanceSearch = '';
+
+    // ດຶງລາຍການທີ່ເກີນເກນມາດຕະຖານທັງໝົດໃນຮອບ 12 ເດືອນ
+    function get12MonthExceedanceRecords() {
+      const months = get12MonthsList();
+      const activeInds = chartInds().length ? chartInds() : (customIndicators || []);
+      const records = [];
+
+      const num = v => {
+        if (v === undefined || v === null || v === '' || v === '-') return null;
+        const n = parseFloat(v);
+        return isNaN(n) ? null : n;
+      };
+
+      // ຖ້າເລືອກໂຕຊີ້ວັດສະເພາະໃຫ້ກັ່ນຕອງ, ຖ້າ ALL ແມ່ນກວດທຸກໂຕຊີ້ວັດ
+      const targetInds = (trend12Indicator === 'ALL' || !trend12Indicator)
+        ? activeInds
+        : activeInds.filter(i => i.key === trend12Indicator);
+
+      let totalTestsChecked = 0;
+
+      months.forEach(ym => {
+        waterData.forEach(rec => {
+          if (trend12Company !== 'ALL' && rec.fbKey !== trend12Company) return;
+          const sts = stationsOf(rec);
+          sts.forEach(st => {
+            if (trend12Station !== 'ALL') {
+              const stId = `${st.code || ''}|${st.name || ''}`;
+              if (stId !== trend12Station) return;
+            }
+            const sYM = getStationSampleMonth(st, rec);
+            if (sYM === ym) {
+              targetInds.forEach(ind => {
+                const rawVal = st.customs ? st.customs[ind.key] : undefined;
+                const val = num(rawVal);
+                if (val !== null) {
+                  totalTestsChecked++;
+                  if (isOutOfThreshold(ind.key, val)) {
+                    const minThr = sysThresholds[`cfg_${ind.key}_min`];
+                    const maxThr = sysThresholds[`cfg_${ind.key}_max`];
+                    const hasMin = minThr !== undefined && minThr !== null && minThr !== '';
+                    const hasMax = maxThr !== undefined && maxThr !== null && maxThr !== '';
+
+                    let exceedType = 'HIGH';
+                    let diff = 0;
+                    let diffText = '';
+                    let limitText = '';
+
+                    if (hasMax && val > Number(maxThr)) {
+                      exceedType = 'HIGH';
+                      diff = +(val - Number(maxThr)).toFixed(3);
+                      diffText = `+${diff}`;
+                      limitText = `ສູງກວ່າເກນສູງສຸດ (ເກນ ≤ ${maxThr})`;
+                    } else if (hasMin && val < Number(minThr)) {
+                      exceedType = 'LOW';
+                      diff = +(val - Number(minThr)).toFixed(3);
+                      diffText = `${diff}`;
+                      limitText = `ຕ່ຳກວ່າເກນຕ່ຳສຸດ (ເກນ ≥ ${minThr})`;
+                    }
+
+                    let standardRange = '-';
+                    if (hasMin && hasMax) standardRange = `${minThr} — ${maxThr}`;
+                    else if (hasMax) standardRange = `≤ ${maxThr}`;
+                    else if (hasMin) standardRange = `≥ ${minThr}`;
+
+                    const compName = waterData.find(d => d.fbKey === rec.fbKey)?.companyName || rec.companyName || rec.name || 'ບໍ່ລະບຸ';
+
+                    records.push({
+                      id: `${ym}_${st.code || ''}_${ind.key}_${records.length}`,
+                      ym,
+                      monthName: formatLaoMonthYear(ym),
+                      sampleDate: st.sampleDate || rec.date || '-',
+                      stationCode: st.code || '-',
+                      stationName: st.name || '-',
+                      stationSection: st.section || '',
+                      stationKey: `${st.code || ''}|${st.name || ''}`,
+                      companyName: compName,
+                      recKey: rec.fbKey,
+                      indKey: ind.key,
+                      indName: ind.name,
+                      indUnit: ind.unit || '',
+                      indGroup: ind.group || '',
+                      val,
+                      rawVal,
+                      minThr: hasMin ? minThr : null,
+                      maxThr: hasMax ? maxThr : null,
+                      standardRange,
+                      exceedType,
+                      diff,
+                      diffText,
+                      limitText
+                    });
+                  }
+                }
+              });
+            }
+          });
+        });
+      });
+
+      return { records, totalTestsChecked, months };
+    }
+
+    // ເປີດໜ້າຕ່າງລາຍລະອຽດການເກີນເກນ
+    function open12MonthExceedanceModal() {
+      const modal = document.getElementById('trend12ExceedanceModal');
+      if (!modal) return;
+
+      const { records, totalTestsChecked, months } = get12MonthExceedanceRecords();
+      cached12MonthExceedances = records;
+      trend12ExceedanceFilterInd = 'ALL';
+      trend12ExceedanceFilterMonth = 'ALL';
+      trend12ExceedanceFilterType = 'ALL';
+      trend12ExceedanceSearch = '';
+
+      const searchInput = document.getElementById('trend12ExceedanceSearchInput');
+      if (searchInput) searchInput.value = '';
+
+      // ອັບເດດ Subtitle ແລະ Badge
+      const totalBadge = document.getElementById('trend12ExceedanceTotalBadge');
+      if (totalBadge) {
+        totalBadge.innerText = `${records.length} ລາຍການ`;
+        totalBadge.className = records.length > 0
+          ? 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30'
+          : 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30';
+      }
+
+      const subTitleEl = document.getElementById('trend12ExceedanceSubtitle');
+      if (subTitleEl) {
+        const pStart = months.length ? formatLaoMonthYear(months[0]) : '';
+        const pEnd = months.length ? formatLaoMonthYear(months[months.length - 1]) : '';
+        const compText = trend12Company === 'ALL' ? 'ທຸກແຫຼ່ງຂໍ້ມູນ' : (waterData.find(d => d.fbKey === trend12Company)?.companyName || trend12Company);
+        const stText = trend12Station === 'ALL' ? 'ທຸກສະຖານີ' : trend12Station;
+        const indText = trend12Indicator === 'ALL' ? 'ທຸກໂຕຊີ້ວັດ' : (chartInds().find(i => i.key === trend12Indicator)?.name || trend12Indicator);
+        subTitleEl.innerHTML = `ຊ່ວງເວລາ: <b>${pStart} — ${pEnd}</b> · ແຫຼ່ງຂໍ້ມູນ: <b>${escAttr(compText)}</b> · ສະຖານີ: <b>${escAttr(stText)}</b> · ໂຕຊີ້ວັດ: <b>${escAttr(indText)}</b>`;
+      }
+
+      // 1. ສະຫຼຸບ 4 Cards
+      render12MonthExceedanceSummaryCards(records, totalTestsChecked, months);
+
+      // 2. Chips ໂຕຊີ້ວັດ
+      render12MonthExceedanceChips(records);
+
+      // 3. Dropdowns
+      render12MonthExceedanceDropdowns(records, months);
+
+      // 4. Render Table
+      filterAndRender12MonthExceedances();
+
+      // ສະແດງ modal
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // ປິດໜ້າຕ່າງ
+    function close12MonthExceedanceModal() {
+      const modal = document.getElementById('trend12ExceedanceModal');
+      if (modal) modal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // 4 Summary Cards ໃນ Modal
+    function render12MonthExceedanceSummaryCards(records, totalTests, months) {
+      const container = document.getElementById('trend12ExceedanceSummaryCards');
+      if (!container) return;
+
+      const totalExceed = records.length;
+      const affectedStations = new Set(records.map(r => r.stationKey)).size;
+      const affectedInds = new Set(records.map(r => r.indKey)).size;
+      const affectedMonths = new Set(records.map(r => r.ym)).size;
+      const rate = totalTests > 0 ? ((totalExceed / totalTests) * 100).toFixed(1) : '0.0';
+
+      container.innerHTML = `
+        <div class="bg-gradient-to-br from-rose-50 to-white p-3.5 rounded-2xl border ${totalExceed > 0 ? 'border-rose-200' : 'border-slate-200'} shadow-2xs">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>ຈຳນວນຄັ້ງທີ່ເກີນເກນ</span>
+            <span class="text-sm">🚨</span>
+          </div>
+          <div class="my-1 flex items-baseline gap-1.5">
+            <span class="text-xl md:text-2xl font-bold ${totalExceed > 0 ? 'text-rose-700' : 'text-emerald-700'}">${totalExceed}</span>
+            <span class="text-xs text-slate-500">ຄັ້ງ (${rate}%)</span>
+          </div>
+          <div class="text-[10px] text-slate-500 truncate">
+            ຈາກການກວດສອບ ${totalTests} ຄ່າ
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-amber-50 to-white p-3.5 rounded-2xl border border-amber-200 shadow-2xs">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>ສະຖານີທີ່ໄດ້ຮັບຜົນກະທົບ</span>
+            <span class="text-sm">📍</span>
+          </div>
+          <div class="my-1 flex items-baseline gap-1.5">
+            <span class="text-xl md:text-2xl font-bold text-amber-800">${affectedStations}</span>
+            <span class="text-xs text-slate-500">ຈຸດເກັບຕົວຢ່າງ</span>
+          </div>
+          <div class="text-[10px] text-amber-700 font-medium truncate">
+            ${affectedStations > 0 ? 'ພົບຄ່າເກີນໃນບາງຈຸດ' : 'ທຸກສະຖານີປົກກະຕິ'}
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-indigo-50 to-white p-3.5 rounded-2xl border border-indigo-200 shadow-2xs">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>ໂຕຊີ້ວັດທີ່ພົບເກີນເກນ</span>
+            <span class="text-sm">🧪</span>
+          </div>
+          <div class="my-1 flex items-baseline gap-1.5">
+            <span class="text-xl md:text-2xl font-bold text-indigo-900">${affectedInds}</span>
+            <span class="text-xs text-slate-500">ໂຕຊີ້ວັດ</span>
+          </div>
+          <div class="text-[10px] text-indigo-700 font-medium truncate">
+            ${affectedInds > 0 ? 'ມີພາຣາມິເຕີຫຼຸດ/ເກີນມາດຕະຖານ' : 'ທຸກພາຣາມິເຕີປົກກະຕິ'}
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-slate-50 to-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
+            <span>ເດືອນທີ່ພົບການເກີນ</span>
+            <span class="text-sm">📅</span>
+          </div>
+          <div class="my-1 flex items-baseline gap-1.5">
+            <span class="text-xl md:text-2xl font-bold text-slate-800">${affectedMonths}</span>
+            <span class="text-xs text-slate-500">/ 12 ເດືອນ</span>
+          </div>
+          <div class="text-[10px] text-slate-500 font-medium truncate">
+            ${affectedMonths === 0 ? '✅ ປົກກະຕິດຕະຫຼອດຮອບ 12 ເດືອນ' : `ກວມເອົາ ${(affectedMonths / 12 * 100).toFixed(0)}% ຂອງຮອບປີ`}
+          </div>
+        </div>
+      `;
+    }
+
+    // Chips ສຳລັບເລືອກກັ່ນຕອງໂຕຊີ້ວັດທີ່ເກີນເກນ
+    function render12MonthExceedanceChips(records) {
+      const container = document.getElementById('trend12ExceedanceChips');
+      const countEl = document.getElementById('trend12ExceedanceIndCountText');
+      if (!container) return;
+
+      const counts = {};
+      records.forEach(r => {
+        if (!counts[r.indKey]) counts[r.indKey] = { key: r.indKey, name: r.indName, unit: r.indUnit, count: 0 };
+        counts[r.indKey].count++;
+      });
+
+      const list = Object.values(counts).sort((a, b) => b.count - a.count);
+      if (countEl) countEl.innerText = `${list.length} ໂຕຊີ້ວັດທີ່ພົບເກີນເກນ`;
+
+      let chipsHtml = `
+        <button type="button" onclick="on12MonthExceedanceChipClick('ALL')" id="trend12Chip-ALL" class="px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5 ${trend12ExceedanceFilterInd === 'ALL' ? 'bg-amber-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+          <span>🌐 ທັງໝົດ</span>
+          <span class="px-1.5 py-0.2 rounded-full text-[10px] ${trend12ExceedanceFilterInd === 'ALL' ? 'bg-amber-700 text-white' : 'bg-slate-200 text-slate-700'}">${records.length}</span>
+        </button>
+      `;
+
+      list.forEach(item => {
+        const isActive = trend12ExceedanceFilterInd === item.key;
+        chipsHtml += `
+          <button type="button" onclick="on12MonthExceedanceChipClick('${item.key}')" id="trend12Chip-${item.key}" class="px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5 ${isActive ? 'bg-rose-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            <span>🧪 ${escAttr(item.name)}</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] ${isActive ? 'bg-rose-700 text-white' : 'bg-rose-100 text-rose-800'}">${item.count}</span>
+          </button>
+        `;
+      });
+
+      container.innerHTML = chipsHtml;
+    }
+
+    // Dropdown filters (Month & Type)
+    function render12MonthExceedanceDropdowns(records, months) {
+      const mSel = document.getElementById('trend12ExceedanceMonthSel');
+      if (mSel) {
+        const monthCounts = {};
+        records.forEach(r => {
+          monthCounts[r.ym] = (monthCounts[r.ym] || 0) + 1;
+        });
+
+        let opts = `<option value="ALL">📅 ທຸກເດືອນ (12 ເດືອນ)</option>`;
+        months.forEach(ym => {
+          const c = monthCounts[ym] || 0;
+          opts += `<option value="${ym}">📅 ${formatLaoMonthYear(ym)}${c > 0 ? ` (⚠️ ${c} ຄັ້ງ)` : ' (ປົກກະຕິ)'}</option>`;
+        });
+        mSel.innerHTML = opts;
+        mSel.value = trend12ExceedanceFilterMonth;
+      }
+
+      const tSel = document.getElementById('trend12ExceedanceTypeSel');
+      if (tSel) tSel.value = trend12ExceedanceFilterType;
+    }
+
+    function on12MonthExceedanceChipClick(indKey) {
+      trend12ExceedanceFilterInd = indKey;
+      document.querySelectorAll('#trend12ExceedanceChips button').forEach(b => {
+        b.className = 'px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200';
+      });
+      const activeBtn = document.getElementById(`trend12Chip-${indKey}`);
+      if (activeBtn) {
+        activeBtn.className = indKey === 'ALL'
+          ? 'px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5 bg-amber-600 text-white shadow-xs'
+          : 'px-3 py-1.5 rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1.5 bg-rose-600 text-white shadow-xs';
+      }
+      filterAndRender12MonthExceedances();
+    }
+
+    function on12MonthExceedanceSearchChange(val) {
+      trend12ExceedanceSearch = String(val || '').trim().toLowerCase();
+      filterAndRender12MonthExceedances();
+    }
+
+    function on12MonthExceedanceMonthChange(val) {
+      trend12ExceedanceFilterMonth = val;
+      filterAndRender12MonthExceedances();
+    }
+
+    function on12MonthExceedanceTypeChange(val) {
+      trend12ExceedanceFilterType = val;
+      filterAndRender12MonthExceedances();
+    }
+
+    // ກັ່ນຕອງ ແລະ Render ຕາຕະລາງລາຍລະອຽດ
+    function filterAndRender12MonthExceedances() {
+      const tbody = document.getElementById('trend12ExceedanceTableBody');
+      const countEl = document.getElementById('trend12ExceedanceFilteredCountText');
+      if (!tbody) return;
+
+      let list = cached12MonthExceedances.slice();
+
+      if (trend12ExceedanceFilterInd !== 'ALL') {
+        list = list.filter(r => r.indKey === trend12ExceedanceFilterInd);
+      }
+
+      if (trend12ExceedanceFilterMonth !== 'ALL') {
+        list = list.filter(r => r.ym === trend12ExceedanceFilterMonth);
+      }
+
+      if (trend12ExceedanceFilterType !== 'ALL') {
+        list = list.filter(r => r.exceedType === trend12ExceedanceFilterType);
+      }
+
+      if (trend12ExceedanceSearch) {
+        const q = trend12ExceedanceSearch;
+        list = list.filter(r => {
+          return (r.stationName && r.stationName.toLowerCase().includes(q)) ||
+                 (r.stationCode && r.stationCode.toLowerCase().includes(q)) ||
+                 (r.stationSection && r.stationSection.toLowerCase().includes(q)) ||
+                 (r.indName && r.indName.toLowerCase().includes(q)) ||
+                 (r.companyName && r.companyName.toLowerCase().includes(q)) ||
+                 (r.ym && r.ym.toLowerCase().includes(q)) ||
+                 (r.monthName && r.monthName.toLowerCase().includes(q)) ||
+                 (r.sampleDate && r.sampleDate.toLowerCase().includes(q));
+        });
+      }
+
+      if (countEl) countEl.innerText = `ສະແດງ ${list.length} ຈາກທັງໝົດ ${cached12MonthExceedances.length} ລາຍການ`;
+
+      if (list.length === 0) {
+        if (cached12MonthExceedances.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="9" class="py-12 px-4 text-center">
+                <div class="max-w-md mx-auto space-y-2">
+                  <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl shadow-xs">
+                    ✅
+                  </div>
+                  <h4 class="font-bold text-base text-slate-800">ທຸກຄ່າຢູ່ໃນເກນມາດຕະຖານປົກກະຕິ</h4>
+                  <p class="text-xs text-slate-500 leading-relaxed">
+                    ບໍ່ພົບຜົນກວດຄຸນນະພາບນໍ້າທີ່ເກີນເກນມາດຕະຖານໃນຮອບ 12 ເດືອນທີ່ເລືອກໄວ້.
+                  </p>
+                </div>
+              </td>
+            </tr>
+          `;
+        } else {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="9" class="py-10 px-4 text-center text-slate-500 text-xs">
+                <p class="font-bold text-slate-700">🔍 ບໍ່ພົບລາຍການທີ່ກົງກັບເງື່ອນໄຂການຄົ້ນຫາ</p>
+                <button type="button" onclick="reset12MonthExceedanceFilters()" class="mt-2 text-indigo-600 hover:underline font-bold">
+                  ລ້າງຕົວກອງທັງໝົດ
+                </button>
+              </td>
+            </tr>
+          `;
+        }
+        return;
+      }
+
+      let rowsHtml = '';
+      list.forEach((r, idx) => {
+        const isHigh = r.exceedType === 'HIGH';
+        const valBadge = isHigh
+          ? `<span class="px-2.5 py-1 rounded-lg font-mono font-bold bg-rose-100 text-rose-700 border border-rose-200 text-xs inline-block shadow-2xs">${r.val} <span class="text-[10px] font-normal text-rose-600">${escAttr(r.indUnit)}</span></span>`
+          : `<span class="px-2.5 py-1 rounded-lg font-mono font-bold bg-amber-100 text-amber-800 border border-amber-200 text-xs inline-block shadow-2xs">${r.val} <span class="text-[10px] font-normal text-amber-700">${escAttr(r.indUnit)}</span></span>`;
+
+        const diffBadge = isHigh
+          ? `<span class="text-rose-600 font-semibold inline-flex items-center gap-0.5 text-xs">▲ ${r.diffText}</span>`
+          : `<span class="text-amber-700 font-semibold inline-flex items-center gap-0.5 text-xs">▼ ${r.diffText}</span>`;
+
+        const statusBadge = isHigh
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap">⚠️ ເກີນເກນສູງສຸດ</span>`
+          : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 whitespace-nowrap">⚠️ ຫຼຸດເກນຕ່ຳສຸດ</span>`;
+
+        rowsHtml += `
+          <tr class="hover:bg-amber-50/40 transition">
+            <td class="p-2.5 text-center font-bold text-slate-400 text-xs">${idx + 1}</td>
+            <td class="p-2.5 whitespace-nowrap">
+              <div class="font-bold text-slate-800 text-xs">${escAttr(r.monthName)}</div>
+              <div class="text-[10px] text-slate-400 font-mono">${escAttr(r.sampleDate)}</div>
+            </td>
+            <td class="p-2.5">
+              <div class="font-bold text-slate-800 text-xs flex items-center gap-1.5 flex-wrap">
+                <span>${escAttr(r.stationName)}</span>
+                ${r.stationSection ? `<span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200">${escAttr(r.stationSection)}</span>` : ''}
+              </div>
+              <div class="text-[10px] text-slate-500 font-mono">${escAttr(r.stationCode)}</div>
+            </td>
+            <td class="p-2.5 text-slate-600 text-xs max-w-[160px] truncate" title="${escAttr(r.companyName)}">
+              ${escAttr(r.companyName)}
+            </td>
+            <td class="p-2.5">
+              <div class="font-bold text-indigo-950 text-xs">${escAttr(r.indName)}</div>
+              ${r.indGroup ? `<div class="text-[10px] text-indigo-600">${escAttr(r.indGroup)}</div>` : ''}
+            </td>
+            <td class="p-2.5 text-right whitespace-nowrap">
+              ${valBadge}
+            </td>
+            <td class="p-2.5 text-center font-mono text-xs text-slate-600 whitespace-nowrap">
+              ${escAttr(r.standardRange)}
+            </td>
+            <td class="p-2.5 whitespace-nowrap">
+              <div class="flex items-center gap-1">
+                ${diffBadge}
+                <span class="text-[10px] text-slate-400">(${r.limitText})</span>
+              </div>
+            </td>
+            <td class="p-2.5 text-center whitespace-nowrap">
+              ${statusBadge}
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = rowsHtml;
+    }
+
+    function reset12MonthExceedanceFilters() {
+      trend12ExceedanceFilterInd = 'ALL';
+      trend12ExceedanceFilterMonth = 'ALL';
+      trend12ExceedanceFilterType = 'ALL';
+      trend12ExceedanceSearch = '';
+      const s = document.getElementById('trend12ExceedanceSearchInput');
+      if (s) s.value = '';
+      const m = document.getElementById('trend12ExceedanceMonthSel');
+      if (m) m.value = 'ALL';
+      const t = document.getElementById('trend12ExceedanceTypeSel');
+      if (t) t.value = 'ALL';
+      on12MonthExceedanceChipClick('ALL');
+    }
+
+    // ສົ່ງອອກລາຍການເກີນເກນມາດຕະຖານ 12 ເດືອນ ເປັນ CSV
+    function export12MonthExceedanceCSV() {
+      if (!cached12MonthExceedances || cached12MonthExceedances.length === 0) {
+        return Swal.fire({ icon: 'info', title: 'ບໍ່ມີຂໍ້ມູນ', text: 'ບໍ່ມີລາຍການເກີນເກນມາດຕະຖານໃນຮອບ 12 ເດືອນ' });
+      }
+
+      let csv = '\uFEFF';
+      csv += `ບົດລາຍງານລາຍລະອຽດການເກີນເກນມາດຕະຖານຄຸນນະພາບນໍ້າ (12 ເດືອນ)\n`;
+      csv += `ວັນທີສົ່ງອອກ: ${new Date().toLocaleDateString('lo-LA')} ${new Date().toLocaleTimeString('lo-LA')}\n\n`;
+      csv += `ລ/ດ,ເດືອນ,ວັນທີເກັບຕົວຢ່າງ,ລະຫັດສະຖານີ,ຊື່ສະຖານີ,ເຂດ/ພາກສ່ວນ,ແຫຼ່ງຂໍ້ມູນ/ບໍລິສັດ,ໂຕຊີ້ວັດ,ຫົວໜ່ວຍ,ຄ່າທີ່ວັດໄດ້,ເກນມາດຕະຖານ,ສ່ວນຕ່າງຈາກເກນ,ລັກສະນະການເກີນ,ສະຖານະ\n`;
+
+      let rowNo = 1;
+      cached12MonthExceedances.forEach(r => {
+        const exceedDesc = r.exceedType === 'HIGH' ? 'ເກີນເກນສູງສຸດ' : 'ຫຼຸດເກນຕ່ຳສຸດ';
+        csv += `${rowNo++},"${r.monthName}","${r.sampleDate}","${r.stationCode}","${r.stationName}","${r.stationSection || ''}","${r.companyName}","${r.indName}","${r.indUnit}",${r.val},"${r.standardRange}","${r.diffText}","${r.limitText}","${exceedDesc}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `water_quality_12month_exceedances_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // ສຳເນົາບົດສະຫຼຸບຫຍໍ້
+    function copy12MonthExceedanceSummary() {
+      if (!cached12MonthExceedances.length) {
+        return Swal.fire({ icon: 'info', title: 'ບໍ່ມີຂໍ້ມູນເກີນເກນ', timer: 1500, showConfirmButton: false });
+      }
+      const affectedStations = new Set(cached12MonthExceedances.map(r => r.stationKey)).size;
+      const affectedInds = new Set(cached12MonthExceedances.map(r => r.indKey)).size;
+      const affectedMonths = new Set(cached12MonthExceedances.map(r => r.ym)).size;
+
+      const summaryText = `🚨 ສະຫຼຸບການເກີນເກນມາດຕະຖານຄຸນນະພາບນໍ້າ (12 ເດືອນ)
+- ຈຳນວນຄັ້ງທີ່ເກີນເກນລວມ: ${cached12MonthExceedances.length} ຄັ້ງ
+- ສະຖານີທີ່ໄດ້ຮັບຜົນກະທົບ: ${affectedStations} ຈຸດ
+- ໂຕຊີ້ວັດທີ່ເກີນເກນ: ${affectedInds} ໂຕຊີ້ວັດ
+- ເດືອນທີ່ພົບການເກີນເກນ: ${affectedMonths} ເດືອນ
+ລະບົບຕິດຕາມກວດກາຄຸນນະພາບນໍ້າ · ກົມຊັບພະຍາກອນນໍ້າ`;
+
+      navigator.clipboard.writeText(summaryText).then(() => {
+        Swal.fire({
+          icon: 'success',
+          title: 'ສຳເນົາສະຫຼຸບສຳເລັດ!',
+          timer: 1500,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
+      }).catch(() => {
+        Swal.fire({ icon: 'error', title: 'ບໍ່ສາມາດສຳເນົາໄດ້' });
+      });
+    }
+
+    // ຮອງຮັບການກົດປຸ່ມ Escape ເພື່ອປິດ Modal
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        const m = document.getElementById('trend12ExceedanceModal');
+        if (m && !m.classList.contains('hidden')) close12MonthExceedanceModal();
+      }
+    });
 
     function exportCSV() {
       requireExportPermission(() => {
