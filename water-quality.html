@@ -965,7 +965,6 @@
                     <th class="p-3.5">ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</th>
                     <th class="p-3.5 text-center">ຈຳນວນສະຖານີ</th>
                     <th class="p-3.5">ເວລາທີ່ບັນທຶກ</th>
-                    <th class="p-3.5">ຜູ້ບັນທຶກ</th>
                     <th class="p-3.5 text-center no-print">ຈັດການ</th>
                   </tr>
                 </thead>
@@ -1638,6 +1637,53 @@
         </div>
         <button type="button" onclick="close12MonthExceedanceModal()" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer shadow-md">
           ປິດໜ້າຕ່າງ
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 🌊 Modal ລາຍລະອຽດຊຸດຂໍ້ມູນຜົນການວັດແທກຄຸນນະພາບນໍ້າ (Dedicated Dataset Detail Modal) -->
+  <div id="datasetDetailModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md hidden flex items-center justify-center p-2 sm:p-4 z-[90] overflow-y-auto" onclick="if(event.target === this) closeDatasetDetailModal()">
+    <div class="bg-white rounded-3xl max-w-6xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[94vh] animate-in fade-in zoom-in-95 duration-200" onclick="event.stopPropagation()">
+      
+      <!-- Modal Header -->
+      <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-4 sm:p-5 border-b border-indigo-800/40 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-indigo-500 via-blue-500 to-teal-400 flex items-center justify-center text-white text-lg sm:text-xl shadow-lg shadow-indigo-500/25 ring-2 ring-white/10 shrink-0">
+            📊
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-sm sm:text-lg font-bold text-white tracking-tight truncate">ລາຍລະອຽດຊຸດຂໍ້ມູນຜົນການວັດແທກຄຸນນະພາບນໍ້າ</h3>
+              <span id="modalDatasetBadge" class="text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                ຖານຂໍ້ມູນຜົນການກວດວັດ
+              </span>
+            </div>
+            <p id="modalDatasetSubtitle" class="text-xs text-indigo-200/80 mt-0.5 truncate flex items-center gap-1.5">
+              <span>🏢</span> <span id="modalHeaderCompany" class="font-semibold text-white"></span>
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <button type="button" onclick="closeDatasetDetailModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition text-sm cursor-pointer" title="ປິດໜ້າຕ່າງ">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="p-4 sm:p-6 overflow-y-auto space-y-4 bg-slate-50/60" id="modalDatasetContent">
+        <!-- Dynamically rendered content -->
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3 sm:p-4 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+        <div class="flex items-center gap-2 flex-wrap" id="modalFooterActions">
+          <!-- Download / Export buttons -->
+        </div>
+        <button type="button" onclick="closeDatasetDetailModal()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer shadow-md">
+          ປິດໜ້າຕ່າງ (Close)
         </button>
       </div>
 
@@ -7778,7 +7824,6 @@
         <th class="p-3.5 text-slate-700 font-bold">ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</th>
         <th class="p-3.5 text-center text-slate-700 font-bold">ຈຳນວນສະຖານີ</th>
         <th class="p-3.5 text-slate-700 font-bold">ເວລາທີ່ບັນທຶກ</th>
-        <th class="p-3.5 text-slate-700 font-bold">ຜູ້ບັນທຶກ</th>
         <th class="p-3.5 text-center text-slate-700 font-bold no-print">ຈັດການ</th>
       `;
 
@@ -7791,7 +7836,7 @@
       if (filterKey !== lastFilterKey) { tableLimit = 50; lastFilterKey = filterKey; }
 
       if (!dataLoaded) {
-        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-400">⏳ ກຳລັງໂຫລດຂໍ້ມູນ...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">⏳ ກຳລັງໂຫລດຂໍ້ມູນ...</td></tr>';
       }
 
       filteredData.forEach((item, index) => {
@@ -7848,13 +7893,13 @@
         if (index >= tableLimit) return;
 
         rowsHtml.push(`
-          <tr id="row_${item.fbKey}" class="group ${isExpanded ? 'bg-indigo-50/40 border-indigo-200' : 'bg-white hover:bg-slate-50/80'} font-semibold border-b border-slate-200/90 transition-all duration-150 cursor-pointer select-none" onclick="toggleRow('${item.fbKey}')"
+          <tr id="row_${item.fbKey}" class="group ${isExpanded ? 'bg-indigo-50/40 border-indigo-200' : 'bg-white hover:bg-slate-50/80'} font-semibold border-b border-slate-200/90 transition-all duration-150 cursor-pointer select-none" onclick="openDatasetDetailModal('${item.fbKey}')"
               ${canDelete ? `draggable="true" ondragstart="dsDragStart(event, '${item.fbKey}')" ondragend="dsDragEnd(event)"` : ''}
               ondragover="dsDragOver(event, '${item.fbKey}')" ondragleave="dsDragLeave(event)" ondrop="dsDrop(event, '${item.fbKey}')">
-            <td class="p-3.5 text-center whitespace-nowrap">
-              <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg ${isExpanded ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600'} transition text-xs font-bold">
-                ${isExpanded ? '▼' : '▶'}
-              </span>
+            <td class="p-3.5 text-center whitespace-nowrap" onclick="event.stopPropagation()">
+              <button type="button" onclick="openDatasetDetailModal('${item.fbKey}')" title="ເປີດໜ້າຕ່າງລາຍລະອຽດ" class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition text-xs font-bold shadow-2xs">
+                🔍
+              </button>
               ${canDelete ? '<span class="drag-handle ml-1 text-slate-400 hover:text-slate-600 cursor-grab" title="ລາກໄປວາງໃສ່ຊຸດອື່ນເພື່ອລວມ">⠿</span>' : ''}
             </td>
             <td class="p-3.5 text-center font-bold text-slate-400 group-hover:text-slate-600">${index + 1}</td>
@@ -7874,16 +7919,10 @@
               <div class="font-medium">${item.date || '-'}</div>
               ${sampleDateRange(stations) ? `<div class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded mt-0.5 inline-block">📅 ${sampleDateRange(stations)}</div>` : ''}
             </td>
-            <td class="p-3.5 text-xs text-slate-700">
-              <div class="inline-flex items-center gap-1.5 font-medium">
-                <span class="w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[10px] font-bold flex items-center justify-center">👤</span>
-                <span>${escAttr(item.recordedBy || 'ບໍ່ລະບຸ')}</span>
-              </div>
-            </td>
             <td class="p-3.5 text-center no-print" onclick="event.stopPropagation()">
               <div class="flex items-center justify-center gap-1.5">
-                <button onclick="toggleRow('${item.fbKey}')" class="inline-flex items-center gap-1 bg-white hover:bg-indigo-50 text-indigo-700 font-bold text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-indigo-300 shadow-2xs transition">
-                  <span>${isExpanded ? '🔼 ຫຍໍ້' : '👁️ ລາຍລະອຽດ'}</span>
+                <button type="button" onclick="openDatasetDetailModal('${item.fbKey}')" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 text-indigo-700 font-bold text-xs px-3 py-1.5 rounded-xl border border-indigo-200/90 shadow-2xs hover:shadow transition" title="ເປີດໜ້າຕ່າງສະແດງລາຍລະອຽດສະເພາະ">
+                  <span>👁️ ລາຍລະອຽດ</span>
                 </button>
                 ${canDelete ? `
                   <button data-name="${escAttr(company)}" onclick="deleteItem('${item.fbKey}', this.dataset.name)" class="inline-flex items-center gap-1 bg-white hover:bg-rose-50 text-rose-600 font-bold text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-rose-300 shadow-2xs transition" title="ລົບຊຸດຂໍ້ມູນນີ້">
@@ -7899,7 +7938,7 @@
           rowsHtml.push(`
             <tr class="bg-gradient-to-b from-indigo-50/20 via-white to-slate-50/40 text-xs border-b border-indigo-200/80">
               <td class="p-2"></td>
-              <td colspan="6" class="p-3.5">${renderExcelDetailTable(item, stations, canDelete)}</td>
+              <td colspan="5" class="p-3.5">${renderExcelDetailTable(item, stations, canDelete)}</td>
             </tr>
           `);
 
@@ -7907,7 +7946,7 @@
             rowsHtml.push(`
               <tr class="bg-indigo-50/40 text-xs border-b border-slate-200">
                 <td class="p-2"></td>
-                <td colspan="6" class="p-3 pl-8">${renderMasterEditSection(item)}</td>
+                <td colspan="5" class="p-3 pl-8">${renderMasterEditSection(item)}</td>
               </tr>
             `);
           }
@@ -7916,16 +7955,24 @@
 
       if (filteredData.length > tableLimit) {
         rowsHtml.push(`
-          <tr><td colspan="7" class="p-3 text-center no-print">
+          <tr><td colspan="6" class="p-3 text-center no-print">
             <button onclick="showMoreRecords()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs px-4 py-2 rounded-lg border border-indigo-200">
               ⬇️ ສະແດງເພີ່ມ (${Math.min(50, filteredData.length - tableLimit)} ຊຸດ) · ສະແດງຢູ່ ${tableLimit} ຈາກ ${filteredData.length}
             </button>
           </td></tr>`);
       }
       if (dataLoaded && !filteredData.length) {
-        rowsHtml.push(`<tr><td colspan="7" class="p-6 text-center text-slate-400">${waterData.length ? '🔍 ບໍ່ພົບຂໍ້ມູນທີ່ກົງກັບການຄົ້ນຫາ' : '📭 ຍັງບໍ່ມີຂໍ້ມູນ'}</td></tr>`);
+        rowsHtml.push(`<tr><td colspan="6" class="p-6 text-center text-slate-400">${waterData.length ? '🔍 ບໍ່ພົບຂໍ້ມູນທີ່ກົງກັບການຄົ້ນຫາ' : '📭 ຍັງບໍ່ມີຂໍ້ມູນ'}</td></tr>`);
       }
       if (dataLoaded || rowsHtml.length) tbody.innerHTML = rowsHtml.join('');
+
+      // ຖ້າມີໜ້າຕ່າງລາຍລະອຽດສະເພາະເປີດຢູ່ → ອັບເດດເນື້ອຫາໃຫ້ເປັນປັດຈຸບັນ
+      if (activeDetailModalFbKey) {
+        const modalItem = waterData.find(d => d.fbKey === activeDetailModalFbKey);
+        if (modalItem) {
+          renderDatasetDetailModalContent(modalItem);
+        }
+      }
 
       Object.keys(draftEditValues).forEach(id => {
         const el = document.getElementById(id);
@@ -8422,6 +8469,188 @@
           ${canEdit && editIdx >= 0 && stations[editIdx] ? renderStationEditSection(item.fbKey, editIdx, stations[editIdx]) : ''}
         </div>`;
     }
+
+    /* ==========================================================================
+       🌊 ລະບົບໜ້າຕ່າງສະແດງລາຍລະອຽດຊຸດຂໍ້ມູນສະເພາະ (Dedicated Dataset Detail Modal)
+       ========================================================================== */
+    let activeDetailModalFbKey = null;
+
+    function openDatasetDetailModal(fbKey) {
+      const item = waterData.find(d => d.fbKey === fbKey);
+      if (!item) return;
+      activeDetailModalFbKey = fbKey;
+      renderDatasetDetailModalContent(item);
+      const modal = document.getElementById('datasetDetailModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+      }
+    }
+
+    function closeDatasetDetailModal() {
+      activeDetailModalFbKey = null;
+      const modal = document.getElementById('datasetDetailModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+      }
+    }
+
+    function renderDatasetDetailModalContent(item) {
+      const modalContent = document.getElementById('modalDatasetContent');
+      if (!modalContent) return;
+
+      const headerCompany = document.getElementById('modalHeaderCompany');
+      if (headerCompany) headerCompany.innerText = item.companyName || item.name || 'ບໍ່ລະບຸຊື່';
+
+      const stations = item.stations || [item];
+      const canDelete = currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'STAFF';
+      const alertCount = stations.filter(st => st.status && st.status.isAlert).length;
+      const normalCount = stations.length - alertCount;
+      const qwiVals = stations.map(st => {
+        const q = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-') ? st.qwi : calculateAutoQWI(st.customs || {});
+        return (!isNaN(q) && q !== null && q !== '') ? Number(q) : null;
+      }).filter(v => v !== null);
+      const qwiAvg = qwiVals.length ? +(qwiVals.reduce((a, b) => a + b, 0) / qwiVals.length).toFixed(1) : '-';
+      const qwiInterp = interpretQWI(qwiAvg);
+      const dateRange = sampleDateRange(stations);
+
+      // 1. ຫ້ອງສະແດງຂໍ້ມູນຫຼັກ & ຜູ້ບັນທຶກ (ສະແດງຜູ້ບັນທຶກຢ່າງຊັດເຈນໃນໜ້າຕ່າງສະເພາະນີ້)
+      const masterCardHtml = `
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-2xs space-y-3.5">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-base font-bold text-slate-800">📋 ຂໍ້ມູນຫຼັກຂອງຊຸດຂໍ້ມູນ</span>
+              <span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">ID: ${escAttr(item.fbKey)}</span>
+            </div>
+            ${canDelete ? `
+              <button onclick="openMasterEdit('${item.fbKey}')" class="text-xs px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold border border-indigo-200 transition flex items-center gap-1 cursor-pointer">
+                ✏️ ແກ້ໄຂຂໍ້ມູນຫຼັກ
+              </button>
+            ` : ''}
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <!-- 🏢 ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ -->
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between">
+              <span class="text-[11px] font-semibold text-slate-500 block mb-1">🏢 ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</span>
+              <span class="text-xs sm:text-sm font-bold text-slate-900 break-words">${escAttr(item.companyName || item.name || 'ບໍ່ລະບຸ')}</span>
+            </div>
+
+            <!-- 👤 ຜູ້ບັນທຶກ (ໄຮໄລ້ພິເສດສະເພາະໃນໜ້າຕ່າງນີ້) -->
+            <div class="p-3.5 rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50/80 border border-indigo-200 shadow-2xs ring-1 ring-indigo-500/15 flex flex-col justify-between">
+              <div class="text-[11px] font-bold text-indigo-800 mb-1 flex items-center justify-between">
+                <span>👤 ຜູ້ບັນທຶກຂໍ້ມູນ</span>
+                <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-200 text-indigo-900 uppercase">Recorded By</span>
+              </div>
+              <div class="text-xs sm:text-sm font-black text-indigo-950 flex items-center gap-2 break-words mt-0.5">
+                <span class="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0 shadow-xs">👤</span>
+                <span class="tracking-tight text-indigo-900">${escAttr(item.recordedBy || 'ບໍ່ລະບຸ')}</span>
+              </div>
+            </div>
+
+            <!-- ⏰ ເວລາທີ່ບັນທຶກ -->
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between">
+              <span class="text-[11px] font-semibold text-slate-500 block mb-1">⏰ ເວລາທີ່ບັນທຶກ</span>
+              <span class="text-xs sm:text-sm font-bold text-slate-800 font-mono">${escAttr(item.date || '-')}</span>
+            </div>
+
+            <!-- 📍 ທີ່ຕັ້ງໂຄງການ -->
+            <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between">
+              <span class="text-[11px] font-semibold text-slate-500 block mb-1">📍 ທີ່ຕັ້ງໂຄງການ / ຈຸດພິກັດ</span>
+              <span class="text-xs sm:text-sm font-bold text-slate-800 break-words">${escAttr(item.projectLocation || 'ບໍ່ລະບຸ')}</span>
+            </div>
+          </div>
+
+          ${dateRange ? `
+            <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-600 gap-2">
+              <div class="flex items-center gap-1.5">
+                <span class="text-slate-500 font-medium">📅 ຊ່ວງວັນທີເກັບຕົວຢ່າງ:</span>
+                <span class="font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">${escAttr(dateRange)}</span>
+              </div>
+              ${item.lastModified ? `<div class="text-[11px] text-slate-400">🕒 ແກ້ໄຂຫຼ້າສຸດ: ${escAttr(item.lastModified)}</div>` : ''}
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      // 2. ສະຖິຕິສະຫຼຸບ KPI
+      const statsHtml = `
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
+            <div class="text-slate-500 text-xs font-semibold flex items-center justify-between">
+              <span>ຈຳນວນສະຖານີ</span>
+              <span>📍</span>
+            </div>
+            <div class="text-xl sm:text-2xl font-black text-slate-900 mt-1 font-mono">${stations.length} <span class="text-xs font-medium text-slate-500">ຈຸດ</span></div>
+          </div>
+
+          <div class="bg-white p-3.5 rounded-2xl border border-emerald-200/80 shadow-2xs">
+            <div class="text-emerald-700 text-xs font-semibold flex items-center justify-between">
+              <span>ປົກກະຕິ</span>
+              <span>✅</span>
+            </div>
+            <div class="text-xl sm:text-2xl font-black text-emerald-700 mt-1 font-mono">${normalCount} <span class="text-xs font-medium text-emerald-600">ຈຸດ</span></div>
+          </div>
+
+          <div class="bg-white p-3.5 rounded-2xl border ${alertCount > 0 ? 'border-rose-300 ring-1 ring-rose-200' : 'border-slate-200/90'} shadow-2xs">
+            <div class="${alertCount > 0 ? 'text-rose-700 font-bold' : 'text-slate-500 font-semibold'} text-xs flex items-center justify-between">
+              <span>ເກີນເກນມາດຕະຖານ</span>
+              <span>🚨</span>
+            </div>
+            <div class="text-xl sm:text-2xl font-black ${alertCount > 0 ? 'text-rose-600' : 'text-slate-700'} mt-1 font-mono">${alertCount} <span class="text-xs font-medium text-slate-500">ຈຸດ</span></div>
+          </div>
+
+          <div class="bg-white p-3.5 rounded-2xl border border-indigo-200/80 shadow-2xs">
+            <div class="text-indigo-700 text-xs font-semibold flex items-center justify-between">
+              <span>ຄ່າສະເລ່ຍ QWI</span>
+              <span>🌊</span>
+            </div>
+            <div class="mt-1 flex items-baseline gap-1.5">
+              <span class="text-xl sm:text-2xl font-black text-indigo-900 font-mono">${qwiAvg}</span>
+              ${qwiInterp ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${qwiInterp.badgeClass}">${qwiInterp.dot} ${qwiInterp.label}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+
+      // 3. ຕາຕະລາງລາຍລະອຽດຜົນການວັດແທກ (Excel Table)
+      const tableHtml = renderExcelDetailTable(item, stations, canDelete);
+
+      // 4. ຫ້ອງແກ້ໄຂຂໍ້ມູນຫຼັກ (ຖ້າມີສິດ)
+      const masterEditHtml = (canDelete && editingMaster === item.fbKey) ? `
+        <div class="bg-white p-4 rounded-2xl border border-indigo-200 shadow-2xs">
+          ${renderMasterEditSection(item)}
+        </div>
+      ` : '';
+
+      modalContent.innerHTML = masterCardHtml + statsHtml + tableHtml + masterEditHtml;
+
+      // 5. ປຸ່ມ Footer
+      const footerActions = document.getElementById('modalFooterActions');
+      if (footerActions) {
+        footerActions.innerHTML = `
+          <button type="button" onclick="exportBatchCSV('${item.fbKey}')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer">
+            <span>📥</span>
+            <span>ດາວໂຫຼດ Excel ຊຸດນີ້</span>
+          </button>
+          <button type="button" onclick="window.print()" class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer border border-slate-200 shadow-2xs">
+            <span>🖨️</span>
+            <span>ພິມລາຍລະອຽດ</span>
+          </button>
+        `;
+      }
+    }
+
+    // ກວດຈັບປຸ່ມ Esc ເພື່ອປິດໜ້າຕ່າງລາຍລະອຽດ
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('datasetDetailModal');
+        if (modal && !modal.classList.contains('hidden')) {
+          closeDatasetDetailModal();
+        }
+      }
+    });
 
     /* ==========================================================================
        🔒 ການກວດສອບສິດດາວໂຫຼດ/ເອົາຂໍ້ມູນອອກ (Export Security & Passcode Check)
