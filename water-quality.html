@@ -1184,7 +1184,7 @@
           <div class="flex items-center justify-between mb-2">
             <span class="text-xs font-bold text-slate-300">ລາຍການດັດຊະນີທັງໝົດໃນລະບົບ</span>
           </div>
-          <div id="customIndicatorsList" class="text-xs space-y-2 max-h-72 overflow-y-auto p-1 bg-slate-850/60 border border-slate-800 rounded-2xl"></div>
+          <div id="customIndicatorsList" class="text-xs space-y-2 p-3 bg-slate-850/60 border border-slate-800 rounded-2xl"></div>
         </div>
       </div>
 
@@ -2951,18 +2951,91 @@
 
     function archivedInds() { return masterIndicators.filter(m => !customIndicators.some(c => c.key === m.key)); }
 
-    function saveIndicatorConfig() {
+    function saveIndicatorConfig(skipSettingsRender = false) {
       db.ref('system_config/indicators').set(customIndicators);
-      renderSettingsList();
+      if (!skipSettingsRender) renderSettingsList();
       renderFormCustomInputs();
       renderThresholdFields();
-      render();
+      render(true);
     }
 
     function toggleIndCollapse(g) { indCollapsed[g] = !indCollapsed[g]; renderSettingsList(); }
     function setIndSearch(v) { indSearch = v; renderSettingsList(); const el = document.getElementById('indSearchBox'); if (el) { el.focus(); el.setSelectionRange(v.length, v.length); } }
-    function toggleIndSel(key, on) { on ? indSel.add(key) : indSel.delete(key); renderSettingsList(); }
     function toggleIndSelMenu() { document.getElementById('indSelMenu')?.classList.toggle('hidden'); }
+
+    // Helper: Bulk Action Bar HTML
+    function getBulkActionBarHTML() {
+      const selN = indSel.size;
+      if (!selN) return '';
+      const keys = [...indSel];
+      const selAct = customIndicators.filter(i => keys.includes(i.key)).length;
+      const selArc = archivedInds().filter(i => keys.includes(i.key)).length;
+
+      return `
+        <div class="flex flex-wrap items-center gap-1.5 mb-2 p-2 rounded-xl bg-indigo-950/70 border border-indigo-500/40 text-indigo-200">
+          <span class="font-bold text-indigo-300 mr-1 text-xs">ເລືອກ ${selN}</span>
+          ${selAct ? `
+            <span class="inline-flex rounded-lg border border-slate-700 bg-slate-900 overflow-hidden text-[11px]">
+              <span class="px-1.5 py-1 bg-slate-800 text-slate-400">✏️ ຟອມ</span>
+              <button type="button" onclick="bulkIndAction('formOff')" class="px-2 py-1 border-l border-slate-700 font-semibold hover:bg-slate-700 cursor-pointer">ເຊື່ອງ</button>
+              <button type="button" onclick="bulkIndAction('formOn')" class="px-2 py-1 border-l border-slate-700 font-semibold hover:bg-slate-700 cursor-pointer">ສະແດງ</button>
+            </span>
+            <span class="inline-flex rounded-lg border border-slate-700 bg-slate-900 overflow-hidden text-[11px]">
+              <span class="px-1.5 py-1 bg-slate-800 text-slate-400">📋 ຕາຕະລາງ</span>
+              <button type="button" onclick="bulkIndAction('tableOff')" class="px-2 py-1 border-l border-slate-700 font-semibold hover:bg-slate-700 cursor-pointer">ເຊື່ອງ</button>
+              <button type="button" onclick="bulkIndAction('tableOn')" class="px-2 py-1 border-l border-slate-700 font-semibold hover:bg-slate-700 cursor-pointer">ສະແດງ</button>
+            </span>
+            <span class="inline-flex rounded-lg border border-slate-700 bg-slate-900 overflow-hidden text-[11px]">
+              <span class="px-1.5 py-1 bg-slate-800 text-slate-400">📈 ກຣາຟ</span>
+              <button type="button" onclick="bulkIndAction('chartOff')" class="px-2 py-1 border-l border-slate-700 font-semibold hover:bg-slate-700 cursor-pointer">ເຊື່ອງ</button>
+              <button type="button" onclick="bulkIndAction('chartOn')" class="px-2 py-1 border-l border-slate-700 font-semibold hover:bg-slate-700 cursor-pointer">ສະແດງ</button>
+            </span>
+            <button type="button" onclick="bulkIndAction('archive')" class="px-2 py-1 rounded-lg bg-indigo-600/80 hover:bg-indigo-600 border border-indigo-500 font-semibold text-white text-[11px] cursor-pointer">🙈 ເກັບໄວ້</button>
+            ${currentUserRole === 'SUPER_ADMIN' ? `<button type="button" onclick="bulkIndAction('delete')" class="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 border border-rose-500 font-semibold text-white text-[11px] cursor-pointer">🗑️ ລົບຖາວອນ</button>` : ''}` : ''}
+          ${selArc ? `
+            <button type="button" onclick="bulkIndAction('restore')" class="px-2 py-1 rounded-lg bg-emerald-600/80 hover:bg-emerald-600 border border-emerald-500 font-semibold text-white text-[11px] cursor-pointer">↩️ ສະແດງຄືນ</button>
+            <button type="button" onclick="bulkIndAction('delete')" class="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 border border-rose-500 font-semibold text-white text-[11px] cursor-pointer">🗑️ ລົບຖາວອນ</button>` : ''}
+          <button type="button" onclick="selectInds('')" class="ml-auto text-xs text-indigo-400 hover:text-indigo-200 underline cursor-pointer">ລ້າງການເລືອກ</button>
+        </div>
+      `;
+    }
+
+    // Direct in-place UI update without re-rendering or resetting scroll
+    function updateIndSelUI() {
+      document.querySelectorAll('label[data-ind-row]').forEach(el => {
+        const k = el.getAttribute('data-ind-row');
+        const isSel = indSel.has(k);
+        const isArc = el.getAttribute('data-archived') === '1';
+        const cb = el.querySelector('input.ind-checkbox');
+        if (cb && cb.checked !== isSel) cb.checked = isSel;
+
+        if (isSel) {
+          el.className = 'flex items-center gap-2 px-2.5 py-2 rounded-xl border bg-sky-950/60 border-rose-500 text-white shadow-sm ring-1 ring-rose-500/50 cursor-pointer hover:border-slate-600 transition select-none';
+        } else if (isArc) {
+          el.className = 'flex items-center gap-2 px-2.5 py-2 rounded-xl border bg-slate-900/60 border-slate-800 text-slate-400 border-dashed cursor-pointer hover:border-slate-600 transition select-none';
+        } else {
+          el.className = 'flex items-center gap-2 px-2.5 py-2 rounded-xl border bg-slate-800/80 border-slate-700/80 text-slate-200 cursor-pointer hover:border-slate-600 transition select-none';
+        }
+      });
+
+      const allCount = customIndicators.length + archivedInds().length;
+      const selN = indSel.size;
+      const selectAllCb = document.getElementById('selectAllIndsCheckbox');
+      if (selectAllCb) {
+        selectAllCb.checked = (selN > 0 && selN === allCount);
+        selectAllCb.indeterminate = (selN > 0 && selN < allCount);
+      }
+
+      const container = document.getElementById('indBulkActionBarContainer');
+      if (container) {
+        container.innerHTML = getBulkActionBarHTML();
+      }
+    }
+
+    function toggleIndSel(key, on) {
+      if (on) indSel.add(key); else indSel.delete(key);
+      updateIndSelUI();
+    }
 
     // ເລືອກຕາມເງື່ອນໄຂ (ຄືເມນູ ☐▾ ຂອງ Gmail)
     function selectInds(mode) {
@@ -2978,12 +3051,14 @@
       if (mode === 'excel') pick(customIndicators.filter(i => i.source === 'excel'));
       if (mode === 'empty') pick(customIndicators.filter(i => countValuesFor(i.key) === 0));
       if (mode === 'archived') pick(archivedInds());
-      renderSettingsList();
+      document.getElementById('indSelMenu')?.classList.add('hidden');
+      updateIndSelUI();
     }
+
     function toggleSelectAllInds() {
       const all = [...customIndicators, ...archivedInds()];
       if (indSel.size && indSel.size === all.length) indSel.clear(); else all.forEach(i => indSel.add(i.key));
-      renderSettingsList();
+      updateIndSelUI();
     }
 
     function setIndFlag(key, flag, value) {
@@ -2991,7 +3066,21 @@
       const ind = customIndicators.find(i => i.key === key);
       if (!ind) return;
       ind[flag] = value;
-      saveIndicatorConfig();
+
+      const flagSuffix = flag === 'noForm' ? 'form' : flag === 'noTable' ? 'table' : 'chart';
+      const pillBtn = document.getElementById(`pill_${flagSuffix}_${key}`);
+      if (pillBtn) {
+        const on = !value;
+        const onTxt = flag === 'noForm' ? '✏️ ຟອມ' : flag === 'noTable' ? '📋 ຕາຕະລາງ' : '📈 ກຣາຟ';
+        pillBtn.className = `px-2 py-0.5 rounded-lg border text-[10px] font-bold whitespace-nowrap cursor-pointer transition ${on ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'bg-slate-800 border-slate-700 text-slate-500 line-through'}`;
+        pillBtn.title = flag === 'noForm'
+          ? (value ? 'ຊ່ອງປ້ອນຄ່າຖືກເຊື່ອງ — ກົດເພື່ອສະແດງ' : 'ມີຊ່ອງປ້ອນຄ່າໃນຟອມ — ກົດເພື່ອເຊື່ອງ')
+          : flag === 'noTable'
+            ? (value ? 'ເຊື່ອງຈາກຕາຕະລາງ/ແຜນທີ່/Export — ກົດເພື່ອສະແດງ' : 'ສະແດງໃນຕາຕະລາງ — ກົດເພື່ອເຊື່ອງ')
+            : (value ? 'ເຊື່ອງຈາກກຣາຟ — ກົດເພື່ອສະແດງ' : 'ສະແດງໃນກຣາຟ — ກົດເພື່ອເຊື່ອງ');
+      }
+
+      saveIndicatorConfig(true);
     }
 
     // ຄຳສັ່ງກັບໂຕທີ່ເລືອກທັງໝົດ
@@ -3028,6 +3117,18 @@
     function renderSettingsList() {
       const box = document.getElementById('customIndicatorsList');
       if (!box) return;
+
+      const tabContent = document.getElementById('tabContent-indicators');
+      const activeList = document.getElementById('indActiveListContainer');
+      const archivedList = document.getElementById('indArchivedListContainer');
+      const modal = document.getElementById('settingsModal');
+
+      const savedTabScroll = tabContent ? tabContent.scrollTop : 0;
+      const savedBoxScroll = box ? box.scrollTop : 0;
+      const savedActiveScroll = activeList ? activeList.scrollTop : 0;
+      const savedArchivedScroll = archivedList ? archivedList.scrollTop : 0;
+      const savedModalScroll = modal ? modal.scrollTop : 0;
+
       const q = normHeader(indSearch);
       const match = i => !q || normHeader(`${i.name} ${i.unit || ''}`).includes(q);
       const active = customIndicators.filter(match);
@@ -3035,24 +3136,27 @@
       const allCount = customIndicators.length + archivedInds().length;
       [...indSel].forEach(k => { if (![...customIndicators, ...archivedInds()].some(i => i.key === k)) indSel.delete(k); });
       const selN = indSel.size;
-      const selAct = customIndicators.filter(i => indSel.has(i.key)).length;
-      const selArc = archivedInds().filter(i => indSel.has(i.key)).length;
 
-      const pill = (on, onTxt, offTxt, click, title) =>
-        `<button type="button" onclick="${click}" title="${title}" class="px-2 py-0.5 rounded-lg border text-[10px] font-bold whitespace-nowrap cursor-pointer transition ${on ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'bg-slate-800 border-slate-700 text-slate-500 line-through'}">${on ? onTxt : offTxt}</button>`;
+      const pill = (on, onTxt, offTxt, click, title, id) =>
+        `<button type="button" id="${id}" onclick="${click}" title="${title}" class="px-2 py-0.5 rounded-lg border text-[10px] font-bold whitespace-nowrap cursor-pointer transition ${on ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'bg-slate-800 border-slate-700 text-slate-500 line-through'}">${on ? onTxt : offTxt}</button>`;
 
       const row = (i, archivedRow) => {
         const n = countValuesFor(i.key);
+        const isSelected = indSel.has(i.key);
+        const activeClass = isSelected
+          ? 'bg-sky-950/60 border-rose-500 text-white shadow-sm ring-1 ring-rose-500/50'
+          : (archivedRow ? 'bg-slate-900/60 border-slate-800 text-slate-400 border-dashed' : 'bg-slate-800/80 border-slate-700/80 text-slate-200');
+
         return `
-          <label class="flex items-center gap-2 px-2.5 py-2 rounded-xl border ${indSel.has(i.key) ? 'bg-sky-950/50 border-rose-500/60 text-white' : archivedRow ? 'bg-slate-900/60 border-slate-800 text-slate-400 border-dashed' : 'bg-slate-800/80 border-slate-700/80 text-slate-200'} cursor-pointer hover:border-slate-600 transition">
-            <input type="checkbox" class="accent-sky-500" ${indSel.has(i.key) ? 'checked' : ''} onchange="toggleIndSel('${i.key}', this.checked)">
+          <label data-ind-row="${escAttr(i.key)}" data-archived="${archivedRow ? '1' : '0'}" class="flex items-center gap-2 px-2.5 py-2 rounded-xl border ${activeClass} cursor-pointer hover:border-slate-600 transition select-none">
+            <input type="checkbox" class="accent-sky-500 ind-checkbox shrink-0 cursor-pointer" data-key="${escAttr(i.key)}" ${isSelected ? 'checked' : ''} onchange="toggleIndSel('${escAttr(i.key)}', this.checked)">
             <span class="flex-1 min-w-0 truncate ${archivedRow ? 'text-slate-400' : ''}"><b>${escAttr(i.name)}</b> <span class="text-slate-400 text-xs">(${escAttr(i.unit || '-')})</span></span>
             <span class="text-[10px] ${n ? 'text-emerald-400 font-bold' : 'text-slate-500'} shrink-0">${n} ຄ່າ</span>
             ${archivedRow ? '' : `
-              ${pill(!i.noForm, '✏️ ຟອມ', '✏️ ຟອມ', `event.preventDefault(); setIndFlag('${i.key}', 'noForm', ${!i.noForm})`, i.noForm ? 'ຊ່ອງປ້ອນຄ່າຖືກເຊື່ອງ — ກົດເພື່ອສະແດງ' : 'ມີຊ່ອງປ້ອນຄ່າໃນຟອມ — ກົດເພື່ອເຊື່ອງ')}
-              ${pill(!i.noTable, '📋 ຕາຕະລາງ', '📋 ຕາຕະລາງ', `event.preventDefault(); setIndFlag('${i.key}', 'noTable', ${!i.noTable})`, i.noTable ? 'ເຊື່ອງຈາກຕາຕະລາງ/ແຜນທີ່/Export — ກົດເພື່ອສະແດງ' : 'ສະແດງໃນຕາຕະລາງ — ກົດເພື່ອເຊື່ອງ')}
-              ${pill(!i.noChart, '📈 ກຣາຟ', '📈 ກຣາຟ', `event.preventDefault(); setIndFlag('${i.key}', 'noChart', ${!i.noChart})`, i.noChart ? 'ເຊື່ອງຈາກກຣາຟ — ກົດເພື່ອສະແດງ' : 'ສະແດງໃນກຣາຟ — ກົດເພື່ອເຊື່ອງ')}`}
-            ${currentUserRole === 'SUPER_ADMIN' ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); deleteIndicatorsPermanently(['${i.key}'])" class="shrink-0 px-2 py-0.5 rounded-md border border-rose-500/60 text-rose-400 hover:bg-rose-600 hover:text-white text-[11px] font-bold" title="ລົບໂຕຊີ້ວັດນີ້ ແລະ ຄ່າທັງໝົດ ອອກຖາວອນ">🗑️ ລົບ</button>` : ''}
+              ${pill(!i.noForm, '✏️ ຟອມ', '✏️ ຟອມ', `event.preventDefault(); event.stopPropagation(); setIndFlag('${escAttr(i.key)}', 'noForm', ${!i.noForm})`, i.noForm ? 'ຊ່ອງປ້ອນຄ່າຖືກເຊື່ອງ — ກົດເພື່ອສະແດງ' : 'ມີຊ່ອງປ້ອນຄ່າໃນຟອມ — ກົດເພື່ອເຊື່ອງ', `pill_form_${escAttr(i.key)}`)}
+              ${pill(!i.noTable, '📋 ຕາຕະລາງ', '📋 ຕາຕະລາງ', `event.preventDefault(); event.stopPropagation(); setIndFlag('${escAttr(i.key)}', 'noTable', ${!i.noTable})`, i.noTable ? 'ເຊື່ອງຈາກຕາຕະລາງ/ແຜນທີ່/Export — ກົດເພື່ອສະແດງ' : 'ສະແດງໃນຕາຕະລາງ — ກົດເພື່ອເຊື່ອງ', `pill_table_${escAttr(i.key)}`)}
+              ${pill(!i.noChart, '📈 ກຣາຟ', '📈 ກຣາຟ', `event.preventDefault(); event.stopPropagation(); setIndFlag('${escAttr(i.key)}', 'noChart', ${!i.noChart})`, i.noChart ? 'ເຊື່ອງຈາກກຣາຟ — ກົດເພື່ອສະແດງ' : 'ສະແດງໃນກຣາຟ — ກົດເພື່ອເຊື່ອງ', `pill_chart_${escAttr(i.key)}`)}`}
+            ${currentUserRole === 'SUPER_ADMIN' ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); deleteIndicatorsPermanently(['${escAttr(i.key)}'])" class="shrink-0 px-2 py-0.5 rounded-md border border-rose-500/60 text-rose-400 hover:bg-rose-600 hover:text-white text-[11px] font-bold" title="ລົບໂຕຊີ້ວັດນີ້ ແລະ ຄ່າທັງໝົດ ອອກຖາວອນ">🗑️ ລົບ</button>` : ''}
           </label>`;
       };
 
@@ -3061,11 +3165,13 @@
           <span class="inline-block w-3 text-slate-400">${indCollapsed[g] ? '▶' : '▼'}</span> ${label} <span class="font-normal text-slate-400 text-xs">(${count})</span>
         </button>`;
 
+      const bulkBarHTML = getBulkActionBarHTML();
+
       box.innerHTML = `
         <div class="flex flex-wrap items-center gap-2 mb-2">
           <div class="relative flex items-center border border-slate-700 rounded-xl bg-slate-800">
-            <input type="checkbox" class="m-2 accent-sky-500" title="ເລືອກທັງໝົດ" ${selN && selN === allCount ? 'checked' : ''} onclick="toggleSelectAllInds()" ${selN && selN < allCount ? 'data-partial="1"' : ''}>
-            <button type="button" onclick="toggleIndSelMenu()" class="pr-2.5 text-slate-400 hover:text-white" title="ເລືອກຕາມເງື່ອນໄຂ">▾</button>
+            <input id="selectAllIndsCheckbox" type="checkbox" class="m-2 accent-sky-500 cursor-pointer" title="ເລືອກທັງໝົດ" ${selN && selN === allCount ? 'checked' : ''} onclick="toggleSelectAllInds()" ${selN && selN < allCount ? 'data-partial="1"' : ''}>
+            <button type="button" onclick="toggleIndSelMenu()" class="pr-2.5 text-slate-400 hover:text-white cursor-pointer" title="ເລືອກຕາມເງື່ອນໄຂ">▾</button>
             <div id="indSelMenu" class="hidden absolute left-0 top-full mt-1 z-50 w-48 bg-slate-800 border border-slate-700 rounded-xl shadow-xl py-1 text-slate-200">
               ${[['all','ທັງໝົດ'],['','ບໍ່ເລືອກ'],['active','ທີ່ໃຊ້ຢູ່'],['chartOn','ທີ່ສະແດງໃນກຣາຟ'],['chartOff','ທີ່ເຊື່ອງຈາກກຣາຟ'],['formOff','ທີ່ເຊື່ອງຈາກຟອມ'],['formOn','ທີ່ມີຊ່ອງໃນຟອມ'],['excel','ທີ່ເພີ່ມຈາກ Excel'],['tableOff','ທີ່ເຊື່ອງຈາກຕາຕະລາງ'],['empty','ທີ່ບໍ່ມີຂໍ້ມູນ (0 ຄ່າ)'],['archived','ທີ່ເກັບໄວ້']]
                 .map(([m, t]) => `<button type="button" onclick="selectInds('${m}')" class="block w-full text-left px-3 py-1.5 hover:bg-slate-700 text-xs">${t}</button>`).join('')}
@@ -3074,46 +3180,36 @@
           <input id="indSearchBox" type="text" value="${escAttr(indSearch)}" oninput="setIndSearch(this.value)" placeholder="🔍 ຄົ້ນຫາໂຕຊີ້ວັດ..." class="flex-1 min-w-[120px] border border-slate-700 bg-slate-800 text-white placeholder-slate-500 rounded-xl px-3 py-2 outline-none text-xs focus:ring-2 focus:ring-rose-500">
         </div>
 
-        ${selN ? `
-          <div class="flex flex-wrap items-center gap-1.5 mb-2 p-2 rounded-lg bg-indigo-50 border border-indigo-200">
-            <span class="font-bold text-indigo-800 mr-1">ເລືອກ ${selN}</span>
-            ${selAct ? `
-              <span class="inline-flex rounded border bg-white overflow-hidden">
-                <span class="px-1.5 py-1 bg-slate-50 text-slate-500">✏️ ຟອມ</span>
-                <button type="button" onclick="bulkIndAction('formOff')" class="px-2 py-1 border-l font-semibold hover:bg-slate-50">ເຊື່ອງ</button>
-                <button type="button" onclick="bulkIndAction('formOn')" class="px-2 py-1 border-l font-semibold hover:bg-slate-50">ສະແດງ</button>
-              </span>
-              <span class="inline-flex rounded border bg-white overflow-hidden">
-                <span class="px-1.5 py-1 bg-slate-50 text-slate-500">📋 ຕາຕະລາງ</span>
-                <button type="button" onclick="bulkIndAction('tableOff')" class="px-2 py-1 border-l font-semibold hover:bg-slate-50">ເຊື່ອງ</button>
-                <button type="button" onclick="bulkIndAction('tableOn')" class="px-2 py-1 border-l font-semibold hover:bg-slate-50">ສະແດງ</button>
-              </span>
-              <span class="inline-flex rounded border bg-white overflow-hidden">
-                <span class="px-1.5 py-1 bg-slate-50 text-slate-500">📈 ກຣາຟ</span>
-                <button type="button" onclick="bulkIndAction('chartOff')" class="px-2 py-1 border-l font-semibold hover:bg-slate-50">ເຊື່ອງ</button>
-                <button type="button" onclick="bulkIndAction('chartOn')" class="px-2 py-1 border-l font-semibold hover:bg-slate-50">ສະແດງ</button>
-              </span>
-              <button type="button" onclick="bulkIndAction('archive')" class="px-2 py-1 rounded bg-white border font-semibold text-indigo-700">🙈 ເກັບໄວ້</button>
-              ${currentUserRole === 'SUPER_ADMIN' ? `<button type="button" onclick="bulkIndAction('delete')" class="px-2 py-1 rounded bg-rose-600 border border-rose-600 font-semibold text-white">🗑️ ລົບຖາວອນ</button>` : ''}` : ''}
-            ${selArc ? `
-              <button type="button" onclick="bulkIndAction('restore')" class="px-2 py-1 rounded bg-white border font-semibold text-emerald-700">↩️ ສະແດງຄືນ</button>
-              <button type="button" onclick="bulkIndAction('delete')" class="px-2 py-1 rounded bg-white border font-semibold text-rose-600">🗑️ ລົບຖາວອນ</button>` : ''}
-            <button type="button" onclick="selectInds('')" class="ml-auto text-slate-500 hover:underline">ລ້າງການເລືອກ</button>
-          </div>` : ''}
+        <div id="indBulkActionBarContainer">
+          ${bulkBarHTML}
+        </div>
 
         ${groupHead('active', '📊 ໂຕຊີ້ວັດທີ່ໃຊ້ຢູ່', customIndicators.length)}
-        ${indCollapsed.active ? '' : `<div class="space-y-1 max-h-60 overflow-y-auto pr-1">${active.map(i => row(i, false)).join('') || '<p class="text-slate-400 text-center py-2">ບໍ່ພົບ</p>'}</div>`}
+        ${indCollapsed.active ? '' : `<div id="indActiveListContainer" class="space-y-1 max-h-80 overflow-y-auto pr-1">${active.map(i => row(i, false)).join('') || '<p class="text-slate-400 text-center py-2">ບໍ່ພົບ</p>'}</div>`}
 
         ${archivedInds().length ? `
-          <div class="border-t mt-2 pt-1">
+          <div class="border-t border-slate-800 mt-2 pt-1">
             ${groupHead('archived', '🙈 ເກັບໄວ້ (ຂໍ້ມູນຍັງຢູ່ຄົບ)', archivedInds().length)}
-            ${indCollapsed.archived ? '' : `<div class="space-y-1 max-h-48 overflow-y-auto pr-1">${archived.map(i => row(i, true)).join('') || '<p class="text-slate-400 text-center py-2">ບໍ່ພົບ</p>'}</div>`}
+            ${indCollapsed.archived ? '' : `<div id="indArchivedListContainer" class="space-y-1 max-h-48 overflow-y-auto pr-1">${archived.map(i => row(i, true)).join('') || '<p class="text-slate-400 text-center py-2">ບໍ່ພົບ</p>'}</div>`}
           </div>` : ''}
 
         <p class="text-[10px] text-slate-400 mt-2 leading-relaxed">✏️ ຟອມ = ຊ່ອງປ້ອນຄ່າ · 📋 ຕາຕະລາງ = ຕາຕະລາງລາຍລະອຽດ, ແຜນທີ່, Export · 📈 ກຣາຟ = ກຣາຟ ແລະ ຕາຕະລາງຄ່າລຸ່ມກຣາຟ. ແຕ່ລະບ່ອນ ເປີດ/ປິດ ແຍກກັນ ບໍ່ກະທົບກັນ. ການເຊື່ອງບໍ່ລົບຂໍ້ມູນ.</p>`;
 
       const cb = box.querySelector('[data-partial]');
       if (cb) cb.indeterminate = true;
+
+      const restoreScrolls = () => {
+        if (tabContent && savedTabScroll) tabContent.scrollTop = savedTabScroll;
+        if (box && savedBoxScroll) box.scrollTop = savedBoxScroll;
+        const newActive = document.getElementById('indActiveListContainer');
+        if (newActive && savedActiveScroll) newActive.scrollTop = savedActiveScroll;
+        const newArchived = document.getElementById('indArchivedListContainer');
+        if (newArchived && savedArchivedScroll) newArchived.scrollTop = savedArchivedScroll;
+        if (modal && savedModalScroll) modal.scrollTop = savedModalScroll;
+      };
+      restoreScrolls();
+      requestAnimationFrame(restoreScrolls);
+      setTimeout(restoreScrolls, 30);
     }
 
     function renderFormCustomInputs() {
@@ -6720,7 +6816,9 @@
     }
 
     // ລວມການເອີ້ນ render() ຫຼາຍເທື່ອຕິດກັນ ໃຫ້ແຕ້ມເທື່ອດຽວ (ຕອນເປີດໜ້າ Firebase ສົ່ງຂໍ້ມູນມາຫຼາຍຊຸດ)
-    function render() {
+    let skipSettingsNextRender = false;
+    function render(skipSettingsReRender = false) {
+      if (skipSettingsReRender) skipSettingsNextRender = true;
       if (renderQueued) return;
       renderQueued = true;
       requestAnimationFrame(() => {
@@ -7446,7 +7544,8 @@
       render12MonthTrendSection();
       requestAnimationFrame(xlRefreshAll);
       // ລາຍການໂຕຊີ້ວັດ: ອັບເດດສະເພາະຕອນເປີດໜ້າຕັ້ງຄ່າ
-      if (!document.getElementById('settingsModal')?.classList.contains('hidden')) renderSettingsList();
+      if (!skipSettingsNextRender && !document.getElementById('settingsModal')?.classList.contains('hidden')) renderSettingsList();
+      skipSettingsNextRender = false;
       updateAppViewUI();
     }
 
