@@ -97,10 +97,6 @@
 
     .top-scrollbar-container {
       overflow-x: auto;
-      transform: rotateX(180deg);
-    }
-    .top-scrollbar-container > table {
-      transform: rotateX(180deg);
     }
   </style>
 </head>
@@ -956,20 +952,72 @@
             <div id="mergeBanner" class="no-print hidden mb-2"></div>
             <p id="dragTip" class="no-print hidden text-[11px] text-slate-400 mb-2">💡 ລາກແຖວ ⠿ ໄປວາງໃສ່ອີກຊຸດເພື່ອລວມກັນ · ລາກໄຟລ໌ Excel ມາວາງໃສ່ແຖວໃດ ຈະນຳເຂົ້າເຂົ້າຊຸດນັ້ນ</p>
             
-            <div id="printableTableContainer" class="top-scrollbar-container rounded-2xl border border-slate-200/90 overflow-hidden shadow-2xs">
-              <table class="w-full text-left text-sm border-collapse">
-                <thead>
-                  <tr id="tableHeader" class="bg-slate-100/90 text-slate-600 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
-                    <th class="p-3.5 text-center w-12">ລູກສອນ</th>
-                    <th class="p-3.5 text-center w-12">ລຳດັບ</th>
-                    <th class="p-3.5">ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</th>
-                    <th class="p-3.5 text-center">ຈຳນວນສະຖານີ</th>
-                    <th class="p-3.5">ເວລາທີ່ບັນທຶກ</th>
-                    <th class="p-3.5 text-center no-print">ຈັດການ</th>
-                  </tr>
-                </thead>
-                <tbody id="dataTable" class="divide-y divide-slate-100"></tbody>
-              </table>
+            <!-- ⚡ Toolbar ຄວບຄຸມການເລື່ອນຫາຂໍ້ມູນ ແລະ ຂະໜາດຕາຕະລາງ (Table Navigator & Page Controls) -->
+            <div class="bg-gradient-to-r from-indigo-50/80 via-white to-blue-50/80 border border-indigo-200/90 rounded-2xl p-2.5 sm:p-3 flex flex-wrap items-center justify-between gap-2.5 shadow-2xs">
+              <!-- ⚡ Dropdown ເລື່ອນຫາຂໍ້ມູນດ່ວນ -->
+              <div class="flex items-center gap-2 flex-1 min-w-[260px]">
+                <span class="text-xs font-bold text-indigo-900 flex items-center gap-1 shrink-0">
+                  <span>⚡</span> <span>ເລື່ອນຫາຂໍ້ມູນ:</span>
+                </span>
+                <select id="tableQuickScrollDropdown" onchange="scrollToTableRow(this.value)" class="flex-1 bg-white border border-indigo-200 hover:border-indigo-400 text-indigo-950 font-semibold text-xs rounded-xl px-3 py-1.5 outline-none focus:ring-2 focus:ring-indigo-500/30 transition shadow-2xs cursor-pointer" title="ເລືອກຊຸດຂໍ້ມູນເພື່ອເລື່ອນໄປຫາທັນທີ">
+                  <option value="">-- ເລືອກຊຸດຂໍ້ມູນເພື່ອເລື່ອນໄປຫາທັນທີ --</option>
+                </select>
+              </div>
+
+              <!-- Dropdown ຈຳນວນແຖວຕໍ່ໜ້າ & Dropdown ໜ້າ -->
+              <div class="flex items-center gap-2 flex-wrap">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[11.5px] font-semibold text-slate-600">ສະແດງ:</span>
+                  <select id="tablePageSizeDropdown" onchange="setTablePageSize(this.value)" class="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700 outline-none cursor-pointer" title="ຈຳນວນແຖວທີ່ສະແດງຕໍ່ໜ້າ">
+                    <option value="10">10 ແຖວ</option>
+                    <option value="15" selected>15 ແຖວ</option>
+                    <option value="25">25 ແຖວ</option>
+                    <option value="50">50 ແຖວ</option>
+                    <option value="ALL">ທັງໝົດ</option>
+                  </select>
+                </div>
+
+                <div class="flex items-center gap-1.5" id="pageSelectorBox">
+                  <span class="text-[11.5px] font-semibold text-slate-600">ໜ້າ:</span>
+                  <select id="tablePageDropdown" onchange="goToTablePage(Number(this.value))" class="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700 outline-none cursor-pointer" title="ເລືອກໜ້າ">
+                    <option value="1">1 / 1</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div id="printableTableContainer" class="rounded-2xl border border-slate-200/90 overflow-hidden shadow-2xs bg-white">
+              <div id="tableScrollBox" class="max-h-[520px] overflow-y-auto overflow-x-auto relative">
+                <table class="w-full text-left text-sm border-collapse">
+                  <thead class="sticky top-0 z-10 bg-slate-100 shadow-2xs">
+                    <tr id="tableHeader" class="text-slate-600 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                      <th class="p-3 text-center w-12">ລູກສອນ</th>
+                      <th class="p-3 text-center w-12">ລຳດັບ</th>
+                      <th class="p-3">ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</th>
+                      <th class="p-3 text-center">ຈຳນວນສະຖານີ</th>
+                      <th class="p-3">ເວລາທີ່ບັນທຶກ</th>
+                      <th class="p-3 text-center no-print">ຈັດການ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dataTable" class="divide-y divide-slate-100"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Table Pagination Footer -->
+            <div id="tablePaginationFooter" class="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-slate-600">
+              <div id="tablePageInfoText" class="font-medium text-slate-500">
+                ສະແດງ 0-0 ຈາກທັງໝົດ 0 ລາຍການ
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button type="button" onclick="goToTablePage(tableCurrentPage - 1)" id="prevPageBtn" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 font-bold text-slate-700 transition disabled:opacity-40 disabled:pointer-events-none shadow-2xs cursor-pointer">
+                  ◀ ກ່ອນໜ້າ
+                </button>
+                <div id="tablePageButtons" class="flex items-center gap-1"></div>
+                <button type="button" onclick="goToTablePage(tableCurrentPage + 1)" id="nextPageBtn" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 font-bold text-slate-700 transition disabled:opacity-40 disabled:pointer-events-none shadow-2xs cursor-pointer">
+                  ຖັດໄປ ▶
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -7165,6 +7213,9 @@
     /* --- ຄວາມໄວ ແລະ ຄວາມທົນທານ ເມື່ອຂໍ້ມູນຫຼາຍ --- */
     let dataLoaded = false;
     let tableLimit = 50;           // ຈຳນວນຊຸດຂໍ້ມູນທີ່ສະແດງໃນຕາຕະລາງ (ກົດ "ສະແດງເພີ່ມ" ເພື່ອເບິ່ງຕໍ່)
+    let tableCurrentPage = 1;      // ໜ້າປັດຈຸບັນຂອງຕາຕະລາງຫຼັກ
+    let tablePageSize = 15;        // ຈຳນວນແຖວຕໍ່ໜ້າ (Default 15 ແຖວ ເພື່ອບໍ່ໃຫ້ແຖວຍາວ)
+    let filteredDataGlobal = [];   // ເກັບຂໍ້ມູນທີ່ຜ່ານການກອງສຳລັບການເລື່ອນຫາ
     let lastFilterKey = '';
     let lastBoundsKey = '';
     let renderQueued = false;
@@ -7737,6 +7788,56 @@
       render();
     }
 
+    function setTablePageSize(val) {
+      tablePageSize = val;
+      tableCurrentPage = 1;
+      render();
+    }
+
+    function goToTablePage(page) {
+      tableCurrentPage = page;
+      render();
+      const container = document.getElementById('tableScrollBox');
+      if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function scrollToTableRow(fbKey) {
+      if (!fbKey) return;
+      const itemIndex = filteredDataGlobal.findIndex(d => d.fbKey === fbKey);
+      if (itemIndex === -1) return;
+
+      // ຖ້າມີການແບ່ງໜ້າ ແລະ ລາຍການຢູ່ໜ້າອື່ນ → ປ່ຽນໄປໜ້ານັ້ນກ່ອນ
+      if (tablePageSize !== 'ALL') {
+        const pageSize = Math.max(1, Number(tablePageSize));
+        const targetPage = Math.floor(itemIndex / pageSize) + 1;
+        if (tableCurrentPage !== targetPage) {
+          tableCurrentPage = targetPage;
+          render();
+        }
+      }
+
+      // ເລື່ອນໄປຫາແຖວໃນຕາຕະລາງພ້ອມໄຮໄລ້
+      setTimeout(() => {
+        const row = document.getElementById('row_' + fbKey);
+        const container = document.getElementById('tableScrollBox');
+        if (row) {
+          if (container) {
+            const rowTop = row.offsetTop;
+            container.scrollTo({ top: Math.max(0, rowTop - 45), behavior: 'smooth' });
+          } else {
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+          row.classList.add('bg-indigo-100', 'ring-2', 'ring-indigo-500');
+          setTimeout(() => {
+            row.classList.remove('bg-indigo-100', 'ring-2', 'ring-indigo-500');
+          }, 2500);
+        }
+      }, 100);
+
+      const dd = document.getElementById('tableQuickScrollDropdown');
+      if (dd) dd.value = '';
+    }
+
     function updateTableDropdownFilters() {
       // 1. Dataset (ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ) Dropdown
       const dSel = document.getElementById('datasetFilter');
@@ -7813,36 +7914,129 @@
       updateKPIs(filteredData);
       renderMergeBanner();
       document.getElementById('stationCount').innerText = `${filteredData.length} Records`;
-      const recFilteredBadge = document.getElementById('filteredRecordsCount');
-      if (recFilteredBadge) recFilteredBadge.innerText = `ສະແດງ ${Math.min(tableLimit, filteredData.length)} / ${filteredData.length} ລາຍການ`;
+
+      // ບັນທຶກ filteredDataGlobal ສຳລັບການເລື່ອນຫາ
+      filteredDataGlobal = filteredData;
 
       const canDelete = currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'STAFF';
 
       document.getElementById('tableHeader').innerHTML = `
-        <th class="p-3.5 text-center w-12 text-slate-500 font-bold">ລູກສອນ</th>
-        <th class="p-3.5 text-center w-12 text-slate-500 font-bold">ລຳດັບ</th>
-        <th class="p-3.5 text-slate-700 font-bold">ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</th>
-        <th class="p-3.5 text-center text-slate-700 font-bold">ຈຳນວນສະຖານີ</th>
-        <th class="p-3.5 text-slate-700 font-bold">ເວລາທີ່ບັນທຶກ</th>
-        <th class="p-3.5 text-center text-slate-700 font-bold no-print">ຈັດການ</th>
+        <th class="p-3 text-center w-12 text-slate-500 font-bold">ລູກສອນ</th>
+        <th class="p-3 text-center w-12 text-slate-500 font-bold">ລຳດັບ</th>
+        <th class="p-3 text-slate-700 font-bold">ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</th>
+        <th class="p-3 text-center text-slate-700 font-bold">ຈຳນວນສະຖານີ</th>
+        <th class="p-3 text-slate-700 font-bold">ເວລາທີ່ບັນທຶກ</th>
+        <th class="p-3 text-center text-slate-700 font-bold no-print">ຈັດການ</th>
       `;
 
       const validLaosBounds = [];
       const flatStationsForChart = [];
       const rowsHtml = [];
 
-      // ຄົ້ນຫາ/ກອງໃໝ່ → ເລີ່ມສະແດງ 50 ຊຸດທຳອິດໃໝ່
+      // ຄົ້ນຫາ/ກອງໃໝ່ → ປັບໜ້າກັບມາໜ້າ 1
       const filterKey = `${searchKeyword}|${statusVal}|${datasetVal}|${yearVal}`;
-      if (filterKey !== lastFilterKey) { tableLimit = 50; lastFilterKey = filterKey; }
+      if (filterKey !== lastFilterKey) { tableCurrentPage = 1; lastFilterKey = filterKey; }
+
+      // ຄຳນວນການແບ່ງໜ້າ (Pagination)
+      const totalRecords = filteredData.length;
+      const pageSize = tablePageSize === 'ALL' ? Math.max(1, totalRecords) : Math.max(1, Number(tablePageSize));
+      const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
+      if (tableCurrentPage > totalPages) tableCurrentPage = totalPages;
+      if (tableCurrentPage < 1) tableCurrentPage = 1;
+
+      const startIndex = tablePageSize === 'ALL' ? 0 : (tableCurrentPage - 1) * pageSize;
+      const endIndex = tablePageSize === 'ALL' ? totalRecords : Math.min(startIndex + pageSize, totalRecords);
+      const pagedData = filteredData.slice(startIndex, endIndex);
+
+      // ອັບເດດ ⚡ Dropdown ເລື່ອນຫາຂໍ້ມູນດ່ວນ
+      const quickScrollDropdown = document.getElementById('tableQuickScrollDropdown');
+      if (quickScrollDropdown) {
+        let optHtml = `<option value="">⚡ ເລື່ອນຫາຂໍ້ມູນ: ເລືອກຈາກ ${filteredData.length} ຊຸດ...</option>`;
+        filteredData.forEach((it, idx) => {
+          const title = it.companyName || it.name || 'ບໍ່ລະບຸຊື່';
+          const stCount = (it.stations || [it]).length;
+          const pageNum = tablePageSize === 'ALL' ? 1 : Math.floor(idx / pageSize) + 1;
+          optHtml += `<option value="${escAttr(it.fbKey)}">[${idx + 1}] ${escAttr(title)} (${stCount} ສະຖານີ${totalPages > 1 && tablePageSize !== 'ALL' ? ` · ໜ້າ ${pageNum}` : ''})</option>`;
+        });
+        quickScrollDropdown.innerHTML = optHtml;
+      }
+
+      // ອັບເດດ Dropdown ເລືອກໜ້າ (Page Dropdown)
+      const pageDropdown = document.getElementById('tablePageDropdown');
+      const pageSelectorBox = document.getElementById('pageSelectorBox');
+      if (pageDropdown) {
+        if (totalPages <= 1 || tablePageSize === 'ALL') {
+          if (pageSelectorBox) pageSelectorBox.classList.add('hidden');
+        } else {
+          if (pageSelectorBox) pageSelectorBox.classList.remove('hidden');
+          let pOpts = '';
+          for (let p = 1; p <= totalPages; p++) {
+            const pStart = (p - 1) * pageSize + 1;
+            const pEnd = Math.min(p * pageSize, totalRecords);
+            pOpts += `<option value="${p}" ${p === tableCurrentPage ? 'selected' : ''}>ໜ້າ ${p} / ${totalPages} (${pStart}-${pEnd})</option>`;
+          }
+          pageDropdown.innerHTML = pOpts;
+        }
+      }
+
+      // ອັບເດດ Dropdown Page Size
+      const sizeDropdown = document.getElementById('tablePageSizeDropdown');
+      if (sizeDropdown && sizeDropdown.value !== String(tablePageSize)) {
+        sizeDropdown.value = String(tablePageSize);
+      }
+
+      // ອັບເດດ Badge ຈຳນວນ
+      const recFilteredBadge = document.getElementById('filteredRecordsCount');
+      if (recFilteredBadge) {
+        recFilteredBadge.innerText = totalRecords === 0 
+          ? '0 Records' 
+          : `ສະແດງ ${startIndex + 1}-${endIndex} / ${totalRecords} ລາຍການ`;
+      }
+
+      // ອັບເດດ Pagination Footer
+      const pageInfoText = document.getElementById('tablePageInfoText');
+      if (pageInfoText) {
+        pageInfoText.innerText = totalRecords === 0 
+          ? 'ສະແດງ 0 ຈາກ 0 ລາຍການ' 
+          : `ສະແດງ ${startIndex + 1} - ${endIndex} ຈາກທັງໝົດ ${totalRecords} ລາຍການ (ໜ້າ ${tableCurrentPage}/${totalPages})`;
+      }
+
+      const prevBtn = document.getElementById('prevPageBtn');
+      const nextBtn = document.getElementById('nextPageBtn');
+      if (prevBtn) prevBtn.disabled = tableCurrentPage <= 1;
+      if (nextBtn) nextBtn.disabled = tableCurrentPage >= totalPages || tablePageSize === 'ALL';
+
+      const pageButtonsContainer = document.getElementById('tablePageButtons');
+      if (pageButtonsContainer) {
+        if (totalPages <= 1 || tablePageSize === 'ALL') {
+          pageButtonsContainer.innerHTML = '';
+        } else {
+          let btnsHtml = '';
+          const maxBtns = 5;
+          let startP = Math.max(1, tableCurrentPage - 2);
+          let endP = Math.min(totalPages, startP + maxBtns - 1);
+          if (endP - startP < maxBtns - 1) startP = Math.max(1, endP - maxBtns + 1);
+
+          for (let p = startP; p <= endP; p++) {
+            const isActive = p === tableCurrentPage;
+            btnsHtml += `
+              <button type="button" onclick="goToTablePage(${p})" class="w-7 h-7 rounded-lg text-xs font-bold transition flex items-center justify-center cursor-pointer ${isActive ? 'bg-indigo-600 text-white shadow-xs' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}">
+                ${p}
+              </button>
+            `;
+          }
+          pageButtonsContainer.innerHTML = btnsHtml;
+        }
+      }
 
       if (!dataLoaded) {
         tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">⏳ ກຳລັງໂຫລດຂໍ້ມູນ...</td></tr>';
       }
 
-      filteredData.forEach((item, index) => {
+      // 1. ປະມວນຜົນ Markers ໃນແຜນທີ່ສຳລັບທຸກລາຍການ
+      filteredData.forEach((item) => {
         const company = item.companyName || item.name || 'ບໍ່ລະບຸບໍລິສັດ';
         const stations = item.stations || [item];
-        const isExpanded = expandedRows[item.fbKey] || false;
 
         stations.forEach((st0, stIdx) => {
           if (!st0) return;
@@ -7888,44 +8082,49 @@
             }
           } catch (e) { console.warn('Marker error', st, e); }
         });
+      });
 
-        // ຕາຕະລາງສະແດງສະເພາະ N ຊຸດທຳອິດ (ແຜນທີ່ ແລະ ກຣາຟ ຍັງໃຊ້ຂໍ້ມູນທັງໝົດ)
-        if (index >= tableLimit) return;
+      // 2. ສະແດງແຖວຕາຕະລາງສະເພາະໜ້າປັດຈຸບັນ (ບໍ່ໃຫ້ແຖວຍາວ)
+      pagedData.forEach((item, indexInPage) => {
+        const overallIndex = startIndex + indexInPage;
+        const company = item.companyName || item.name || 'ບໍ່ລະບຸບໍລິສັດ';
+        const stations = item.stations || [item];
+        const isExpanded = expandedRows[item.fbKey] || false;
 
         rowsHtml.push(`
-          <tr id="row_${item.fbKey}" class="group ${isExpanded ? 'bg-indigo-50/40 border-indigo-200' : 'bg-white hover:bg-slate-50/80'} font-semibold border-b border-slate-200/90 transition-all duration-150 cursor-pointer select-none" onclick="openDatasetDetailModal('${item.fbKey}')"
+          <tr id="row_${item.fbKey}" class="group ${isExpanded ? 'bg-indigo-50/40 border-indigo-200' : 'bg-white hover:bg-slate-50/90'} font-semibold border-b border-slate-200/90 transition-all duration-150 cursor-pointer select-none" onclick="openDatasetDetailModal('${item.fbKey}')"
               ${canDelete ? `draggable="true" ondragstart="dsDragStart(event, '${item.fbKey}')" ondragend="dsDragEnd(event)"` : ''}
               ondragover="dsDragOver(event, '${item.fbKey}')" ondragleave="dsDragLeave(event)" ondrop="dsDrop(event, '${item.fbKey}')">
-            <td class="p-3.5 text-center whitespace-nowrap" onclick="event.stopPropagation()">
+            <td class="py-2.5 px-3 text-center whitespace-nowrap" onclick="event.stopPropagation()">
               <button type="button" onclick="openDatasetDetailModal('${item.fbKey}')" title="ເປີດໜ້າຕ່າງລາຍລະອຽດ" class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition text-xs font-bold shadow-2xs">
                 🔍
               </button>
               ${canDelete ? '<span class="drag-handle ml-1 text-slate-400 hover:text-slate-600 cursor-grab" title="ລາກໄປວາງໃສ່ຊຸດອື່ນເພື່ອລວມ">⠿</span>' : ''}
             </td>
-            <td class="p-3.5 text-center font-bold text-slate-400 group-hover:text-slate-600">${index + 1}</td>
-            <td class="p-3.5">
-              <div class="flex flex-col gap-1">
-                ${renderOrgBadge(company)}
-                ${item.projectLocation ? `<span class="text-[11px] text-slate-500 flex items-center gap-1 font-normal"><span class="text-rose-500">📍</span> ${escAttr(item.projectLocation)}</span>` : ''}
+            <td class="py-2.5 px-3 text-center font-bold text-slate-400 group-hover:text-slate-600">${overallIndex + 1}</td>
+            <td class="py-2.5 px-3 max-w-[260px]">
+              <div class="flex flex-col gap-0.5 min-w-0">
+                <div class="truncate">${renderOrgBadge(company)}</div>
+                ${item.projectLocation ? `<span class="text-[11px] text-slate-500 truncate flex items-center gap-1 font-normal" title="${escAttr(item.projectLocation)}"><span class="text-rose-500">📍</span> ${escAttr(item.projectLocation)}</span>` : ''}
               </div>
             </td>
-            <td class="p-3.5 text-center">
-              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60 shadow-2xs">
+            <td class="py-2.5 px-3 text-center whitespace-nowrap">
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60 shadow-2xs">
                 <span>📍</span> ${stations.length} ສະຖານີ
               </span>
-              ${(() => { const n = new Set(stations.map(x => x && x.section).filter(Boolean)).size; return n ? `<div class="text-[10px] text-indigo-600 font-semibold mt-1">📂 ${n} ໂຄງການ</div>` : ''; })()}
+              ${(() => { const n = new Set(stations.map(x => x && x.section).filter(Boolean)).size; return n ? `<div class="text-[10px] text-indigo-600 font-semibold mt-0.5">📂 ${n} ໂຄງການ</div>` : ''; })()}
             </td>
-            <td class="p-3.5 text-xs text-slate-600">
+            <td class="py-2.5 px-3 text-xs text-slate-600 whitespace-nowrap">
               <div class="font-medium">${item.date || '-'}</div>
-              ${sampleDateRange(stations) ? `<div class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded mt-0.5 inline-block">📅 ${sampleDateRange(stations)}</div>` : ''}
+              ${sampleDateRange(stations) ? `<div class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.2 rounded mt-0.5 inline-block">📅 ${sampleDateRange(stations)}</div>` : ''}
             </td>
-            <td class="p-3.5 text-center no-print" onclick="event.stopPropagation()">
+            <td class="py-2.5 px-3 text-center no-print whitespace-nowrap" onclick="event.stopPropagation()">
               <div class="flex items-center justify-center gap-1.5">
-                <button type="button" onclick="openDatasetDetailModal('${item.fbKey}')" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 text-indigo-700 font-bold text-xs px-3 py-1.5 rounded-xl border border-indigo-200/90 shadow-2xs hover:shadow transition" title="ເປີດໜ້າຕ່າງສະແດງລາຍລະອຽດສະເພາະ">
+                <button type="button" onclick="openDatasetDetailModal('${item.fbKey}')" class="inline-flex items-center gap-1.5 bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 text-indigo-700 font-bold text-xs px-2.5 py-1.5 rounded-xl border border-indigo-200/90 shadow-2xs hover:shadow transition" title="ເປີດໜ້າຕ່າງສະແດງລາຍລະອຽດສະເພາະ">
                   <span>👁️ ລາຍລະອຽດ</span>
                 </button>
                 ${canDelete ? `
-                  <button data-name="${escAttr(company)}" onclick="deleteItem('${item.fbKey}', this.dataset.name)" class="inline-flex items-center gap-1 bg-white hover:bg-rose-50 text-rose-600 font-bold text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-rose-300 shadow-2xs transition" title="ລົບຊຸດຂໍ້ມູນນີ້">
+                  <button data-name="${escAttr(company)}" onclick="deleteItem('${item.fbKey}', this.dataset.name)" class="inline-flex items-center gap-1 bg-white hover:bg-rose-50 text-rose-600 font-bold text-xs px-2 py-1.5 rounded-lg border border-slate-200 hover:border-rose-300 shadow-2xs transition" title="ລົບຊຸດຂໍ້ມູນນີ້">
                     <span>🗑️</span>
                   </button>
                 ` : ''}
@@ -7953,14 +8152,6 @@
         }
       });
 
-      if (filteredData.length > tableLimit) {
-        rowsHtml.push(`
-          <tr><td colspan="6" class="p-3 text-center no-print">
-            <button onclick="showMoreRecords()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs px-4 py-2 rounded-lg border border-indigo-200">
-              ⬇️ ສະແດງເພີ່ມ (${Math.min(50, filteredData.length - tableLimit)} ຊຸດ) · ສະແດງຢູ່ ${tableLimit} ຈາກ ${filteredData.length}
-            </button>
-          </td></tr>`);
-      }
       if (dataLoaded && !filteredData.length) {
         rowsHtml.push(`<tr><td colspan="6" class="p-6 text-center text-slate-400">${waterData.length ? '🔍 ບໍ່ພົບຂໍ້ມູນທີ່ກົງກັບການຄົ້ນຫາ' : '📭 ຍັງບໍ່ມີຂໍ້ມູນ'}</td></tr>`);
       }
