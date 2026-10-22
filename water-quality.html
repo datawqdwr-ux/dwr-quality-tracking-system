@@ -201,8 +201,84 @@
       </div>
 
       <!-- Sidebar Navigation Menu (ຫົວຂໍ້ຂອງແຕ່ລະຟັງຊັນ) -->
-      <div class="flex-1 overflow-y-auto px-3 py-4 space-y-5 text-xs">
+      <div class="flex-1 overflow-y-auto px-3 py-4 space-y-4 text-xs">
         
+        <!-- ==================== ຫ້ອງສະເພາະ ຢູ່ຟາກຊ້າຍມື: ກໍານົດມາດຕະຖານຄຸນນະພາບນໍ້າ (ຂໍ້ຕົກລົງ 81/ລບ) ==================== -->
+        <div id="sidebarStandardsBox" class="p-3 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950/40 border border-emerald-500/40 shadow-lg shadow-emerald-950/30 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="text-emerald-400 text-sm">⚖️</span>
+              <div class="min-w-0">
+                <h4 class="text-[11px] font-bold text-white tracking-tight truncate">ມາດຕະຖານ 81/ລບ</h4>
+                <p class="text-[9px] text-slate-400 truncate">21/02/2017 (5 ຊັ້ນຄຸນນະພາບ)</p>
+              </div>
+            </div>
+            <span id="sbActiveClassPill" class="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shrink-0">ປະເພດ 2</span>
+          </div>
+
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-[10px] text-slate-400 font-semibold px-0.5">
+              <span>ເລືອກປະເພດມາດຕະຖານ:</span>
+              <span id="sbClassShortDesc" class="text-emerald-300 text-[9.5px] font-bold truncate">ອຸປະໂພກ-ບໍລິໂພກ</span>
+            </div>
+            <div class="grid grid-cols-5 gap-1 p-1 bg-slate-950/80 rounded-xl border border-slate-800/80 text-center font-bold text-[11px]">
+              <button type="button" onclick="selectStandardClass(1)" id="sbClassBtn-1" class="py-1 rounded-lg transition-all text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer" title="ປະເພດ 1: ແຫຼ່ງນ້ຳທຳມະຊາດບໍລິສຸດ (ອະນຸລັກຕົ້ນນ້ຳ)">1</button>
+              <button type="button" onclick="selectStandardClass(2)" id="sbClassBtn-2" class="py-1 rounded-lg transition-all bg-emerald-600 text-white shadow-xs cursor-pointer" title="ປະເພດ 2: ແຫຼ່ງນ້ຳສະອາດຫຼາຍ (ອຸປະໂພກ-ບໍລິໂພກ & ສັດນ້ຳ)">2</button>
+              <button type="button" onclick="selectStandardClass(3)" id="sbClassBtn-3" class="py-1 rounded-lg transition-all text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer" title="ປະເພດ 3: ແຫຼ່ງນ້ຳສະອາດປານກາງ (ກະສິກຳ & ລ້ຽງສັດ)">3</button>
+              <button type="button" onclick="selectStandardClass(4)" id="sbClassBtn-4" class="py-1 rounded-lg transition-all text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer" title="ປະເພດ 4: ນ້ຳສະອາດໜ້ອຍ (ອຸດສາຫະກຳ & ຄົມມະນາຄົມ)">4</button>
+              <button type="button" onclick="selectStandardClass(5)" id="sbClassBtn-5" class="py-1 rounded-lg transition-all text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer" title="ປະເພດ 5: ນ້ຳລະບາຍ & ຄົມມະນາຄົມ">5</button>
+            </div>
+          </div>
+
+          <!-- Key limits preview in sidebar -->
+          <div class="p-2 rounded-xl bg-slate-900/90 border border-slate-800/80 text-[10px] space-y-1 font-mono text-slate-300">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 font-sans">pH:</span>
+              <span class="font-bold text-white" id="sbLimit-pH">6.5 - 8.5</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 font-sans">DO (min):</span>
+              <span class="font-bold text-emerald-400" id="sbLimit-DO">≥ 6.0 mg/L</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 font-sans">BOD5 (max):</span>
+              <span class="font-bold text-rose-300" id="sbLimit-BOD">≤ 1.5 mg/L</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 font-sans">COD (max):</span>
+              <span class="font-bold text-amber-300" id="sbLimit-COD">≤ 5.0 mg/L</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400 font-sans">TSS (max):</span>
+              <span class="font-bold text-sky-300" id="sbLimit-TSS">≤ 25 mg/L</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-1.5 pt-0.5">
+            <button type="button" onclick="applyStandardClassToSystem()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-1.5 px-2 rounded-xl text-[10.5px] shadow-sm transition flex items-center justify-center gap-1 cursor-pointer" title="ນຳໃຊ້ມາດຕະຖານປະເພດນີ້ເປັນເກນລະບົບ">
+              <span>⚡</span> <span>ນຳໃຊ້ເກນນີ້</span>
+            </button>
+            <button type="button" onclick="setAppView('standards81')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium py-1.5 px-2 rounded-xl text-[10.5px] border border-slate-700 transition flex items-center justify-center gap-1 cursor-pointer" title="ເປີດຫ້ອງກຳນົດມາດຕະຖານເຕັມຮູບແບບ">
+              <span>📜</span> <span>ຕາຕະລາງ ↗</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Group: ມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ -->
+        <div>
+          <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1.5 flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><span>⚖️</span> <span>ມາດຕະຖານແຫ່ງຊາດ</span></span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">81/ລບ</span>
+          </p>
+          <nav class="space-y-1">
+            <button type="button" data-nav-view="standards81" onclick="setAppView('standards81')" class="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-2.5 font-semibold transition-all cursor-pointer">
+              <span class="text-base">📜</span>
+              <span class="flex-1 truncate">ມາດຕະຖານຄຸນນະພາບນໍ້າ 81/ລບ</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-bold">5 ປະເພດ</span>
+            </button>
+          </nav>
+        </div>
+
         <!-- Group 1: ຕິດຕາມ & ວິເຄາະ -->
         <div>
           <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">📊 ຕິດຕາມ & ວິເຄາະ</p>
@@ -1085,7 +1161,506 @@
         </div>
       </div>
     </div>
-      </main>
+
+    <!-- ==================== ⚖️ ຫ້ອງກໍານົດມາດຕະຖານຄຸນນະພາບນໍ້າ (ຂໍ້ຕົກລົງ 81/ລບ, 21 ກຸມພາ 2017) ==================== -->
+    <div id="standards81Card" class="space-y-6 hidden">
+      
+      <!-- 🌟 Decree 81/GOL Official Header Banner -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 border border-emerald-500/30 text-white p-6 shadow-xl shadow-emerald-950/20">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div class="space-y-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-xs">
+                <span>⚖️</span> ຂໍ້ຕົກລົງແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ
+              </span>
+              <span class="text-xs text-slate-400 font-medium">ລົງວັນທີ 21 ກຸມພາ 2017</span>
+              <span class="text-slate-600">·</span>
+              <span class="text-xs text-emerald-400 font-medium">ລັດຖະບານ ແຫ່ງ ສປປ ລາວ</span>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
+              <span>📜</span>
+              <span>ກໍານົດມາດຕະຖານຄຸນນະພາບນໍ້າ ຕາມການຈັດປະເພດຄຸນນະພາບນໍ້າ 5 ຊັ້ນ</span>
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
+              ພາກທີ II: ມາດຕະຖານຄຸນນະພາບນ້ຳໜ້າດິນ ແລະ ການຈັດແບ່ງປະເພດຄຸນນະພາບນ້ຳ ຂອງ ສປປ ລາວ. ລະບົບສາມາດກຳນົດ, ປັບແຕ່ງ ແລະ ປະເມີນສະຖານະນ້ຳຕົວຈິງຂອງທຸກສະຖານີໃນທົ່ວປະເທດຕາມມາດຕະຖານນີ້ແບບອັດຕະໂນມັດ.
+            </p>
+          </div>
+
+          <!-- Action Controls in Banner -->
+          <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+            <button type="button" onclick="applyStandardClassToSystem()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition flex items-center gap-2 cursor-pointer">
+              <span>⚡</span>
+              <span>ນຳໃຊ້ມາດຕະຖານນີ້ເປັນເກນລະບົບ</span>
+            </button>
+            <button type="button" onclick="openCustomThresholdsModal()" class="px-3.5 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 border border-slate-700 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+              <span>✏️</span>
+              <span>ປັບແຕ່ງເກນສະເພາະ</span>
+            </button>
+            <button type="button" onclick="printStandardDocument()" class="px-3.5 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 border border-slate-700 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer" title="ພິມເອກະສານມາດຕະຖານ 81/ລບ ທາງການ">
+              <span>🖨️</span>
+              <span>ພິມເອກະສານ</span>
+            </button>
+            <button type="button" onclick="exportStandardTableToExcel()" class="px-3.5 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-emerald-300 border border-emerald-700/50 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer" title="ດາວໂຫລດຕາຕະລາງ Excel">
+              <span>📥</span>
+              <span>Excel</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🌊 5-Class Interactive Cards (ການຈັດແບ່ງປະເພດຄຸນນະພາບນ້ຳ 5 ຊັ້ນ) -->
+      <div>
+        <div class="flex items-center justify-between mb-3 px-1">
+          <div>
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <span>🏷️</span>
+              <span>ການຈັດປະເພດຄຸນນະພາບນໍ້າ 5 ປະເພດ ຕາມຂໍ້ຕົກລົງ 81/ລບ</span>
+            </h3>
+            <p class="text-xs text-slate-500">ຄລິກໃສ່ແຕ່ລະປະເພດ ເພື່ອກວດເບິ່ງເກນ, ປຽບທຽບຕົວຊີ້ວັດ ແລະ ປະເມີນຄຸນນະພາບນ້ຳຕົວຈິງ</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-500 font-medium">ມາດຕະຖານປັດຈຸບັນໃນລະບົບ:</span>
+            <span id="headerActiveClassBadge" class="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">ປະເພດ 2</span>
+          </div>
+        </div>
+
+        <div id="classCardsGrid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+          <!-- Populated dynamically via JS: Class 1 to Class 5 -->
+        </div>
+      </div>
+
+      <!-- 📋 Active Selected Class Scope & Designated Uses Card -->
+      <div id="selectedClassDetailCard" class="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+        <!-- Rendered dynamically via renderSelectedClassDetail() -->
+      </div>
+
+      <!-- 📊 Matrix Table of Water Quality Parameters (ຕາຕະລາງມາດຕະຖານທັງໝົດ) -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/70 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <span>📋</span>
+              <span>ຕາຕະລາງມາດຕະຖານຄຸນນະພາບນ້ຳໜ້າດິນ (Surface Water Quality Matrix)</span>
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">ປຽບທຽບເກນມາດຕະຖານທັງ 5 ປະເພດ ພ້ອມຄ່າເກນປັດຈຸບັນທີ່ລະບົບນຳໃຊ້</p>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <div class="relative w-full sm:w-64">
+              <input type="text" id="stdSearchInput" oninput="filterStandardsTable(this.value)" autocomplete="off" placeholder="🔍 ຄົ້ນຫາຕົວຊີ້ວັດ (pH, DO, BOD...)..." class="w-full border border-slate-300 bg-white px-3 py-1.5 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <button type="button" onclick="resetStandardsFilter()" class="px-2.5 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-medium transition cursor-pointer" title="ລ້າງການຄົ້ນຫາ">
+              ລ້າງ
+            </button>
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="overflow-x-auto max-h-[580px] relative">
+          <table class="w-full text-left text-xs border-collapse" id="standardsMatrixTable">
+            <thead class="sticky top-0 z-10 bg-slate-100/95 backdrop-blur-xs text-slate-700 shadow-2xs">
+              <tr class="border-b border-slate-200 font-bold uppercase text-[11px]">
+                <th class="p-3 text-center w-12">ລ/ດ</th>
+                <th class="p-3 min-w-[180px]">ຕົວຊີ້ວັດ (Parameter)</th>
+                <th class="p-3 text-center w-20">ຫົວໜ່ວຍ</th>
+                <th class="p-3 text-center min-w-[90px]" id="th-class-1">ປະເພດ 1<br><span class="text-[9px] font-normal text-slate-500">ທຳມະຊາດ</span></th>
+                <th class="p-3 text-center min-w-[90px]" id="th-class-2">ປະເພດ 2<br><span class="text-[9px] font-normal text-slate-500">ອຸປະໂພກ</span></th>
+                <th class="p-3 text-center min-w-[90px]" id="th-class-3">ປະເພດ 3<br><span class="text-[9px] font-normal text-slate-500">ກະສິກຳ</span></th>
+                <th class="p-3 text-center min-w-[90px]" id="th-class-4">ປະເພດ 4<br><span class="text-[9px] font-normal text-slate-500">ອຸດສາຫະກຳ</span></th>
+                <th class="p-3 text-center min-w-[90px]" id="th-class-5">ປະເພດ 5<br><span class="text-[9px] font-normal text-slate-500">ລະບາຍນ້ຳ</span></th>
+                <th class="p-3 text-center min-w-[120px] bg-emerald-50/80 text-emerald-900 border-x border-emerald-200">ເກນລະບົບປັດຈຸບັນ</th>
+                <th class="p-3 min-w-[180px]">ຈຸດປະສົງ / ໝາຍເຫດ</th>
+              </tr>
+            </thead>
+            <tbody id="standardsMatrixBody" class="divide-y divide-slate-100 bg-white">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="p-3 border-t border-slate-200 bg-slate-50 text-[11px] text-slate-500 flex flex-wrap items-center justify-between gap-2">
+          <span>* ອີງຕາມ ຂໍ້ຕົກລົງວ່າດ້ວຍມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ, 21 ກຸມພາ 2017</span>
+          <span class="text-emerald-700 font-semibold flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> ຖັນສີຂຽວໄຮໄລ້ຄືມາດຕະຖານທີ່ກຳລັງຖືກນຳໃຊ້ໃນການປະເມີນຜົນ
+          </span>
+        </div>
+      </div>
+
+      <!-- 🔍 Real-time Compliance Audit Section (ກວດສອບການປະຕິບັດຕາມມາດຕະຖານ 81/ລບ ຕົວຈິງ) -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xl">🧪</span>
+              <h3 class="text-sm font-bold text-slate-800">
+                ຜົນການກວດສອບສະຖານະຄຸນນະພາບນໍ້າຕົວຈິງ ທຽບກັບມາດຕະຖານ 81/ລບ
+              </h3>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                📍 ເລືອກພິກັດ &amp; ທຽບຂໍ້ມູນ
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">
+              ເລືອກຈຸດພິກັດສະຖານີ ຫຼື ປ້ອນຂໍ້ມູນວັດແທກຕົວຈິງ ເພື່ອປະເມີນສະຖານະ, ຫາຜົນຕ່າງ ແລະ ຈັດແບ່ງປະເພດຄຸນນະພາບນ້ຳຕາມຂໍ້ຕົກລົງ 81/ລບ (21 ກຸມພາ 2017)
+            </p>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="runLiveAuditAgainstStandard()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+              <span>🔄</span>
+              <span>ອັບເດດການກວດສອບ</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 📍 DEDICATED COORDINATE & DATA COMPARISON WORKBENCH (ຊ່ອງເລືອກຈຸດພິກັດ ຫຼື ຂໍ້ມູນ ເພື່ອທຽບສະຖານະຄຸນນະພາບນໍ້າຕົວຈິງ) -->
+        <div id="auditInspectorCard" class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-50 via-indigo-50/25 to-sky-50/30 border border-indigo-100 shadow-xs space-y-4">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0">
+                🧭
+              </div>
+              <div>
+                <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                  <span>ເຄື່ອງມືເລືອກຈຸດພິກັດ ຫຼື ຂໍ້ມູນ ເພື່ອທຽບສະຖານະຄຸນນະພາບນ້ຳຕົວຈິງ</span>
+                  <span class="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Live Comparator</span>
+                </h4>
+                <p class="text-[11px] text-slate-500 mt-0.5">
+                  ເລືອກສະຖານີພ້ອມພິກັດ GPS ທີ່ມີໃນລະບົບ ຫຼື ປ້ອນພິກັດ ແລະ ຄ່າວັດແທກຕົວຈິງເພື່ອປະເມີນທັນທີ
+                </p>
+              </div>
+            </div>
+
+            <!-- Mode Selector Tabs -->
+            <div class="flex items-center bg-white p-1 rounded-xl border border-slate-200 text-xs font-bold shadow-2xs self-start lg:self-auto">
+              <button type="button" id="auditModeStationBtn" onclick="switchAuditInspectMode('station')" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white shadow-xs transition cursor-pointer">
+                📍 ເລືອກຈາກສະຖານີ / ພິກັດ
+              </button>
+              <button type="button" id="auditModeCustomBtn" onclick="switchAuditInspectMode('custom')" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer">
+                ✍️ ກຳນົດພິກັດ &amp; ຂໍ້ມູນເອງ
+              </button>
+            </div>
+          </div>
+
+          <!-- Mode 1: Station / Coordinate Point Selector -->
+          <div id="auditStationSelectBox" class="space-y-3">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5">
+              <!-- 📁 Dataset Selector -->
+              <div class="md:col-span-4">
+                <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center gap-1">
+                  <span>📁</span> ເລືອກຊຸດຂໍ້ມູນ (Dataset):
+                </label>
+                <select id="auditDatasetSelect" onchange="onAuditDatasetChange()" class="w-full border border-slate-200 bg-white p-2.5 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs">
+                  <option value="ALL">📂 ທຸກຊຸດຂໍ້ມູນທັງໝົດ</option>
+                  <!-- Populated dynamically via JS -->
+                </select>
+              </div>
+
+              <!-- 📍 Station Selector -->
+              <div class="md:col-span-5">
+                <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center gap-1">
+                  <span>📍</span> ເລືອກຈຸດພິກັດ ຫຼື ສະຖານີເກັບຕົວຢ່າງ:
+                </label>
+                <select id="auditStationSelect" onchange="onAuditStationChange()" class="w-full border border-slate-200 bg-white p-2.5 rounded-xl text-xs font-medium text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs">
+                  <!-- Populated dynamically via JS -->
+                </select>
+              </div>
+
+              <!-- ⚖️ Target Decree 81 Class -->
+              <div class="md:col-span-3">
+                <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center gap-1">
+                  <span>⚖️</span> ມາດຕະຖານ 81/ລບ ທີ່ໃຊ້ທຽບ:
+                </label>
+                <select id="auditCompareClassSelect" onchange="onAuditCompareClassChange(this.value)" class="w-full border border-slate-200 bg-white p-2.5 rounded-xl text-xs font-bold text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs">
+                  <option value="1">ປະເພດ 1: ທຳມະຊາດບໍລິສຸດ</option>
+                  <option value="2" selected>ປະເພດ 2: ອຸປະໂພກ-ບໍລິໂພກ (ແນະນຳ)</option>
+                  <option value="3">ປະເພດ 3: ກະສິກຳ / ທົ່ວໄປ</option>
+                  <option value="4">ປະເພດ 4: ອຸດສາຫະກຳ</option>
+                  <option value="5">ປະເພດ 5: ຄົມມະນາຄົມ &amp; ລະບາຍນ້ຳ</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Quick Action & Map Tools Bar -->
+            <div class="flex items-center justify-between gap-2 pt-0.5">
+              <span id="auditDatasetSummaryLabel" class="text-[11px] text-slate-500 font-medium">
+                ສະແດງສະຖານີຈາກ: <span class="font-bold text-indigo-700">ທຸກຊຸດຂໍ້ມູນ</span>
+              </span>
+              <div class="flex items-center gap-1.5">
+                <button type="button" onclick="focusStationOnMap()" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs shadow-2xs transition flex items-center justify-center gap-1 cursor-pointer" title="ເບິ່ງຈຸດພິກັດນີ້ເທິງແຜນທີ່ໃຫຍ່">
+                  <span>🗺️</span>
+                  <span>ເບິ່ງເທິງແຜນທີ່</span>
+                </button>
+                <button type="button" onclick="getLiveGpsForAudit()" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs shadow-2xs transition flex items-center justify-center gap-1 cursor-pointer" title="ດຶງພິກັດປັດຈຸບັນຜ່ານ GPS">
+                  <span>🧭</span>
+                  <span>ດຶງ GPS</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Station Metadata Pill Bar -->
+            <div id="auditStationInfoBar" class="p-3 bg-white/95 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs shadow-2xs">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Mode 2: Custom Coordinate & Data Input Box -->
+          <div id="auditCustomInputBox" class="hidden space-y-3">
+            <div class="p-3.5 bg-white rounded-xl border border-slate-200 space-y-3 shadow-2xs">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span class="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                  <span>✍️</span> ກຳນົດຈຸດພິກັດ &amp; ຂໍ້ມູນຕົວຢ່າງເອງ:
+                </span>
+                <!-- Presets -->
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-[10.5px] text-slate-400 font-medium">ໂຫລດຕົວຢ່າງ:</span>
+                  <button type="button" onclick="loadAuditPreset('natural')" class="px-2 py-0.5 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10.5px] font-bold border border-emerald-200 cursor-pointer">🌿 ປະເພດ 1</button>
+                  <button type="button" onclick="loadAuditPreset('potable')" class="px-2 py-0.5 rounded-md bg-sky-50 hover:bg-sky-100 text-sky-700 text-[10.5px] font-bold border border-sky-200 cursor-pointer">💧 ປະເພດ 2</button>
+                  <button type="button" onclick="loadAuditPreset('agri')" class="px-2 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-700 text-[10.5px] font-bold border border-amber-200 cursor-pointer">🌾 ປະເພດ 3</button>
+                  <button type="button" onclick="loadAuditPreset('polluted')" class="px-2 py-0.5 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10.5px] font-bold border border-rose-200 cursor-pointer">🏭 ປົນເປື້ອນ</button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+                <div>
+                  <label class="block text-[10.5px] font-semibold text-slate-500 mb-0.5">ຊື່ຈຸດເກັບຕົວຢ່າງ</label>
+                  <input type="text" id="customAuditName" value="ຈຸດເກັບຕົວຢ່າງ ທົດສອບພາກສະໜາມ" oninput="recalcCustomAuditComparison()" class="w-full border border-slate-200 p-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50/50">
+                </div>
+                <div>
+                  <label class="block text-[10.5px] font-semibold text-slate-500 mb-0.5">ອ່າງແມ່ນ້ຳ / ແຫຼ່ງນ້ຳ</label>
+                  <input type="text" id="customAuditBasin" value="ອ່າງແມ່ນ້ຳຂອງ (Mekong Basin)" oninput="recalcCustomAuditComparison()" class="w-full border border-slate-200 p-2 rounded-lg text-xs outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50/50">
+                </div>
+                <div>
+                  <label class="block text-[10.5px] font-semibold text-slate-500 mb-0.5 flex items-center justify-between">
+                    <span>Latitude (WGS84)</span>
+                    <button type="button" onclick="getLiveGpsForAudit()" class="text-[9.5px] text-indigo-600 hover:underline">📍 ດຶງ GPS</button>
+                  </label>
+                  <input type="number" step="any" id="customAuditLat" value="17.9621" oninput="recalcCustomAuditComparison()" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-mono outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50/50">
+                </div>
+                <div>
+                  <label class="block text-[10.5px] font-semibold text-slate-500 mb-0.5">Longitude (WGS84)</label>
+                  <input type="number" step="any" id="customAuditLng" value="102.6105" oninput="recalcCustomAuditComparison()" class="w-full border border-slate-200 p-2 rounded-lg text-xs font-mono outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50/50">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Parameter Values Grid (Live Editable & Reactive) -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                <span>📊</span> ຂໍ້ມູນຄຸນນະພາບນ້ຳຕົວຈິງທີ່ວັດແທກໄດ້ (ປັບປ່ຽນຄ່າເພື່ອທົດສອບໄດ້):
+              </span>
+              <span class="text-[10px] text-slate-500">
+                ທຽບກັບ: <span id="auditTargetClassBadge" class="font-bold text-indigo-700">ປະເພດ 2: ອຸປະໂພກ-ບໍລິໂພກ</span>
+              </span>
+            </div>
+
+            <!-- Parameter inputs list -->
+            <div id="auditParamInputsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-2">
+              <!-- Dynamically generated parameter input cards -->
+            </div>
+          </div>
+
+          <!-- Detailed Comparison Result & Actual Classification Card -->
+          <div id="auditEvaluationResultCard" class="p-4 rounded-xl bg-white border border-slate-200 space-y-3.5 shadow-2xs">
+            <!-- Dynamic comparison results inserted here -->
+          </div>
+        </div>
+
+        <!-- Audit Summary KPIs (ທຸກສະຖານີໃນລະບົບ) -->
+        <div class="space-y-2 pt-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide">
+              📊 ສະຖິຕິການກວດສອບສະຖານີທັງໝົດໃນລະບົບ
+            </h4>
+            <span class="text-[11px] text-slate-400">ທຽບຕາມມາດຕະຖານ 81/ລບ ປະເພດທີ່ເລືອກ</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <!-- 1. Total Stations Audited Card (Clickable) -->
+            <div onclick="openAuditKpiDetailModal('TOTAL')" class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/90 hover:bg-slate-100 hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer group relative overflow-hidden" title="ຄລິກເພື່ອເບິ່ງລາຍຊື່ສະຖານີທັງໝົດທີ່ກວດສອບ">
+              <div class="flex items-center justify-between">
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-tight">ສະຖານີທັງໝົດທີ່ກວດສອບ</p>
+                <span class="text-xs text-slate-400 group-hover:text-indigo-600 transition">🔍</span>
+              </div>
+              <p class="text-2xl font-black text-slate-800 font-mono mt-1" id="auditTotalStations">0</p>
+              <div class="flex items-center justify-between text-[10px] text-slate-400 mt-0.5">
+                <span>ຈຸດວັດແທກໃນລະບົບ</span>
+                <span class="text-indigo-600 font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-0.5">ເບິ່ງລາຍລະອຽດ →</span>
+              </div>
+            </div>
+
+            <!-- 2. Pass Stations Card (Clickable) -->
+            <div onclick="openAuditKpiDetailModal('PASS')" class="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/90 hover:bg-emerald-100/80 hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer group relative overflow-hidden" title="ຄລິກເພື່ອເບິ່ງລາຍຊື່ສະຖານີທີ່ຜ່ານມາດຕະຖານ 100%">
+              <div class="flex items-center justify-between">
+                <p class="text-[10px] font-bold text-emerald-700 uppercase tracking-tight">ຜ່ານມາດຕະຖານ (100%)</p>
+                <span class="text-xs text-emerald-500 group-hover:text-emerald-700 transition">🔍</span>
+              </div>
+              <div class="flex items-baseline gap-1.5 mt-1">
+                <span class="text-2xl font-black text-emerald-700 font-mono" id="auditPassStations">0</span>
+                <span class="text-xs font-bold text-emerald-600" id="auditPassRate">(0%)</span>
+              </div>
+              <div class="flex items-center justify-between text-[10px] text-emerald-600 mt-0.5">
+                <span>ຄ່າທຸກຕົວຊີ້ວັດຢູ່ໃນເກນ</span>
+                <span class="text-emerald-700 font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-0.5">ເບິ່ງລາຍລະອຽດ →</span>
+              </div>
+            </div>
+
+            <!-- 3. Warning Stations Card (Clickable) -->
+            <div onclick="openAuditKpiDetailModal('WARN')" class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/90 hover:bg-amber-100/80 hover:border-amber-400 hover:shadow-md transition-all cursor-pointer group relative overflow-hidden" title="ຄລິກເພື່ອເບິ່ງລາຍຊື່ສະຖານີທີ່ໃກ້ເກີນເກນ / ເຝົ້າລະວັງ">
+              <div class="flex items-center justify-between">
+                <p class="text-[10px] font-bold text-amber-700 uppercase tracking-tight">ໃກ້ເກີນເກນ / ເຝົ້າລະວັງ</p>
+                <span class="text-xs text-amber-500 group-hover:text-amber-700 transition">🔍</span>
+              </div>
+              <p class="text-2xl font-black text-amber-700 font-mono mt-1" id="auditWarnStations">0</p>
+              <div class="flex items-center justify-between text-[10px] text-amber-600 mt-0.5">
+                <span>ຄ່າເຂົ້າໃກ້ຂອບເຂດມາດຕະຖານ</span>
+                <span class="text-amber-700 font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-0.5">ເບິ່ງລາຍລະອຽດ →</span>
+              </div>
+            </div>
+
+            <!-- 4. Exceeded Stations Card (Clickable) -->
+            <div onclick="openAuditKpiDetailModal('EXCEED')" class="p-3.5 rounded-2xl bg-rose-50/70 border border-rose-200/90 hover:bg-rose-100/80 hover:border-rose-400 hover:shadow-md transition-all cursor-pointer group relative overflow-hidden" title="ຄລິກເພື່ອເບິ່ງລາຍຊື່ສະຖານີທີ່ເກີນມາດຕະຖານ 81/ລບ">
+              <div class="flex items-center justify-between">
+                <p class="text-[10px] font-bold text-rose-700 uppercase tracking-tight">ເກີນມາດຕະຖານ (Exceeded)</p>
+                <span class="text-xs text-rose-500 group-hover:text-rose-700 transition">🔍</span>
+              </div>
+              <p class="text-2xl font-black text-rose-700 font-mono mt-1" id="auditExceedStations">0</p>
+              <div class="flex items-center justify-between text-[10px] text-rose-600 mt-0.5">
+                <span>ຕ້ອງມີມາດຕະການແກ້ໄຂດ່ວນ</span>
+                <span class="text-rose-700 font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-0.5">ເບິ່ງລາຍລະອຽດ →</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Bar for Station Audit Table -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2">
+          <div class="flex items-center gap-2">
+            <h4 class="text-xs font-bold text-slate-800">
+              📋 ຕາຕະລາງລາຍລະອຽດສະຖານີ ແລະ ຈຸດພິກັດທັງໝົດ
+            </h4>
+            <span class="text-[10px] text-slate-400">ຄລິກ "🔍 ທຽບຂໍ້ມູນນີ້" ເພື່ອດຶງຂໍ້ມູນຂຶ້ນເຄື່ອງມືທຽບ</span>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <!-- Search -->
+            <div class="relative">
+              <input type="text" id="auditSearchInput" oninput="filterAuditStationsTable()" placeholder="ຄົ້ນຫາຊື່, ພິກັດ Lat/Lng, ແຂວງ..." class="pl-7 pr-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs outline-none focus:ring-1 focus:ring-indigo-500 w-52">
+              <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
+            </div>
+
+            <!-- Status filter buttons -->
+            <div class="flex items-center bg-slate-100 p-0.5 rounded-lg text-[11px] font-bold">
+              <button type="button" onclick="setAuditStatusFilter('ALL')" id="auditFilterAllBtn" class="px-2 py-1 rounded bg-white text-slate-800 shadow-2xs">ທັງໝົດ</button>
+              <button type="button" onclick="setAuditStatusFilter('PASS')" id="auditFilterPassBtn" class="px-2 py-1 rounded text-emerald-700 hover:text-emerald-900">ຜ່ານ</button>
+              <button type="button" onclick="setAuditStatusFilter('WARN')" id="auditFilterWarnBtn" class="px-2 py-1 rounded text-amber-700 hover:text-amber-900">ເຝົ້າລະວັງ</button>
+              <button type="button" onclick="setAuditStatusFilter('EXCEED')" id="auditFilterExceedBtn" class="px-2 py-1 rounded text-rose-700 hover:text-rose-900">ເກີນເກນ</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Station-by-Station Audit Table -->
+        <div class="overflow-x-auto rounded-xl border border-slate-200 max-h-96">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="sticky top-0 bg-slate-100 z-10 text-slate-700 font-bold">
+              <tr class="border-b border-slate-200">
+                <th class="p-2.5 text-center w-12">ລຳດັບ</th>
+                <th class="p-2.5 min-w-[160px]">ສະຖານີ / ຈຸດເກັບຕົວຢ່າງ</th>
+                <th class="p-2.5 min-w-[130px]">📍 ຈຸດພິກັດ GPS (Lat, Lng)</th>
+                <th class="p-2.5 min-w-[110px]">ອ່າງແມ່ນ້ຳ / ແຂວງ</th>
+                <th class="p-2.5 text-center min-w-[90px]">ສະຖານະກວດສອບ</th>
+                <th class="p-2.5 min-w-[180px]">ຕົວຊີ້ວັດທີ່ເກີນ ຫຼື ຜິດປົກກະຕິ</th>
+                <th class="p-2.5 text-center min-w-[100px]">ຈັດການ</th>
+              </tr>
+            </thead>
+            <tbody id="auditStationsTableBody" class="divide-y divide-slate-100 bg-white">
+              <!-- Populated dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+  <!-- Modal: ສະຖິຕິການກວດສອບສະຖານີສະເພາະ (Audit KPI Detail Modal) -->
+  <div id="auditKpiDetailModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5 z-[90] overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-5xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Modal Header -->
+      <div id="auditKpiModalHeader" class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 sm:p-6 border-b border-indigo-800/40 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div id="auditKpiModalIcon" class="w-11 h-11 rounded-2xl bg-white/10 flex items-center justify-center text-white text-2xl shadow-inner ring-1 ring-white/20">
+            📊
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="auditKpiModalTitle" class="text-base sm:text-lg font-bold text-white tracking-tight">
+                ລາຍລະອຽດສະຖານີທີ່ກວດສອບ
+              </h3>
+              <span id="auditKpiModalBadge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                0 ສະຖານີ
+              </span>
+            </div>
+            <p id="auditKpiModalSub" class="text-xs text-slate-300 mt-0.5">
+              ທຽບຕາມມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ ຂໍ້ຕົກລົງ 81/ລບ (21 ກຸມພາ 2017)
+            </p>
+          </div>
+        </div>
+        <button type="button" onclick="closeAuditKpiDetailModal()" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xl transition cursor-pointer" title="ປິດໜ້າຕ່າງ">
+          &times;
+        </button>
+      </div>
+
+      <!-- Modal Toolbar -->
+      <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2 flex-1">
+          <div class="relative flex-1 max-w-sm">
+            <input type="text" id="modalAuditSearchInput" oninput="filterModalAuditStations()" placeholder="ຄົ້ນຫາຊື່ສະຖານີ, ພິກັດ Lat/Lng, ແຂວງ, ອ່າງແມ່ນ້ຳ..." class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 bg-white text-xs outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+            <span class="absolute left-2.5 top-2.5 text-slate-400 text-xs">🔍</span>
+          </div>
+          <span id="modalAuditCountText" class="text-xs font-semibold text-slate-500 whitespace-nowrap">ສະແດງ 0 ຈາກ 0 ສະຖານີ</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="exportModalAuditToExcel()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+            <span>📊</span>
+            <span>ສົ່ງອອກ Excel</span>
+          </button>
+          <button type="button" onclick="printModalAuditList()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+            <span>🖨️</span>
+            <span>ພິມລາຍຊື່</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Table Body -->
+      <div class="overflow-x-auto flex-1 p-4 max-h-[60vh]">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead class="sticky top-0 bg-slate-100 z-10 text-slate-700 font-bold border-b border-slate-200">
+            <tr>
+              <th class="p-2.5 text-center w-12">ລຳດັບ</th>
+              <th class="p-2.5 min-w-[180px]">ສະຖານີ / ຊຸດຂໍ້ມູນ</th>
+              <th class="p-2.5 min-w-[130px]">📍 ຈຸດພິກັດ GPS (Lat, Lng)</th>
+              <th class="p-2.5 min-w-[120px]">ອ່າງແມ່ນ້ຳ / ແຂວງ</th>
+              <th class="p-2.5 text-center min-w-[90px]">ສະຖານະກວດສອບ</th>
+              <th class="p-2.5 min-w-[220px]">ຕົວຊີ້ວັດທີ່ເກີນ ຫຼື ຜິດປົກກະຕິ</th>
+              <th class="p-2.5 text-center min-w-[100px]">ຈັດການ</th>
+            </tr>
+          </thead>
+          <tbody id="modalAuditTableBody" class="divide-y divide-slate-100 bg-white">
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+        <span>💡 ຄລິກ "🔍 ທຽບຂໍ້ມູນນີ້" ເພື່ອດຶງສະຖານີນັ້ນຂຶ້ນເຄື່ອງມືທຽບພິກັດ &amp; ຄຸນນະພາບນ້ຳ</span>
+        <button type="button" onclick="closeAuditKpiDetailModal()" class="px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold transition cursor-pointer">
+          ປິດ
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1633,6 +2208,55 @@
     </div>
   </div>
 
+  <!-- Modal ປັບແຕ່ງເກນມາດຕະຖານສະເພາະ 81/ລບ (Custom Standards Modal) -->
+  <div id="customThresholdsModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5 z-[88] overflow-y-auto" onclick="if(event.target === this) closeCustomThresholdsModal()">
+    <div class="bg-white rounded-3xl max-w-4xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh] animate-in fade-in zoom-in-95 duration-200" onclick="event.stopPropagation()">
+      <div class="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white p-5 border-b border-emerald-800/40 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 flex items-center justify-center text-xl shadow-xs">
+            ✏️
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white tracking-tight">ປັບແຕ່ງເກນມາດຕະຖານຄຸນນະພາບນໍ້າ (Custom Thresholds)</h3>
+            <p class="text-xs text-slate-300">ອີງຕາມຂໍ້ຕົກລົງ 81/ລບ ຫຼື ກຳນົດເກນສະເພາະຕາມຄວາມຕ້ອງການຂອງແຕ່ລະອ່າງແມ່ນ້ຳ</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeCustomThresholdsModal()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-lg transition cursor-pointer">
+          &times;
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 overflow-y-auto flex-1 bg-slate-50/50">
+        <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-base">💡</span>
+            <span>ທ່ານສາມາດປັບແຕ່ງຄ່າຕ່ຳສຸດ (Min) ແລະ ສູງສຸດ (Max) ຂອງແຕ່ລະຕົວຊີ້ວັດ. ຫາກຕ້ອງການກັບຄືນຄ່າມາດຕະຖານ ໃຫ້ກົດ "ຣີເຊັດເປັນມາດຕະຖານ 81/ລບ".</span>
+          </div>
+          <button type="button" onclick="resetToOfficial81Defaults()" class="shrink-0 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-emerald-700 border border-emerald-300 font-bold text-xs transition cursor-pointer shadow-2xs">
+            🔄 ຣີເຊັດເປັນ 81/ລບ
+          </button>
+        </div>
+
+        <div id="modalThresholdInputsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <!-- Dynamically populated parameter inputs -->
+        </div>
+      </div>
+
+      <div class="p-4 bg-white border-t border-slate-200 flex items-center justify-between shrink-0">
+        <span class="text-xs text-slate-500">* ການປ່ຽນແປງຈະມີຜົນຕໍ່ການປະເມີນສະຖານະນ້ຳໃນທົ່ວລະບົບທັນທີ</span>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="closeCustomThresholdsModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-xs transition cursor-pointer">
+            ຍົກເລີກ
+          </button>
+          <button type="button" onclick="saveCustomModalThresholds()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/30 transition cursor-pointer flex items-center gap-1.5">
+            <span>💾</span>
+            <span>ບັນທຶກເກນມາດຕະຖານ</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal ລາຍລະອຽດການເກີນເກນມາດຕະຖານ 12 ເດືອນ (12-Month Exceedance Details Modal) -->
   <div id="trend12ExceedanceModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5 z-[85] overflow-y-auto" onclick="if(event.target === this) close12MonthExceedanceModal()">
     <div class="bg-white rounded-3xl max-w-5xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[92vh] animate-in fade-in zoom-in-95 duration-200" onclick="event.stopPropagation()">
@@ -1985,6 +2609,7 @@
       const trendCard = document.getElementById('monthlyTrendCard');
       const twelveCard = document.getElementById('twelveMonthCard');
       const dataSec = document.getElementById('dataSection');
+      const stdCard = document.getElementById('standards81Card');
 
       if (kpiGrid) kpiGrid.classList.toggle('hidden', currentAppView !== 'map');
       if (mapCard) mapCard.classList.toggle('hidden', currentAppView !== 'map');
@@ -1992,6 +2617,7 @@
       if (trendCard) trendCard.classList.toggle('hidden', currentAppView !== 'trend');
       if (twelveCard) twelveCard.classList.toggle('hidden', currentAppView !== 'stats12');
       if (dataSec) dataSec.classList.toggle('hidden', currentAppView !== 'records');
+      if (stdCard) stdCard.classList.toggle('hidden', currentAppView !== 'standards81');
 
       // 3. Update Header Title and Breadcrumb
       const viewMeta = {
@@ -1999,7 +2625,8 @@
         chart: { title: '📈 ກຣາຟແຍກສະເພາະຕົວຊີ້ວັດ', sub: 'ປຽບທຽບຄ່າວິເຄາະຕົວຊີ້ວັດແຕ່ລະສະຖານີ ພ້ອມເສັ້ນມາດຕະຖານຄຸນນະພາບນ້ຳແຫ່ງຊາດ' },
         trend: { title: '📊 ແນວໂນ້ມລາຍເດືອນ (Monthly Trend Analytics)', sub: 'ວິເຄາະທ່າອ່ຽງຄຸນນະພາບນ້ຳຕາມເດືອນ, ປຽບທຽບຫຼາຍໂຕຊີ້ວັດພ້ອມກັນ ພ້ອມອັດຕາຜ່ານມາດຕະຖານ' },
         stats12: { title: '📅 ສະຖິຕິການປ່ຽນແປງຄຸນນະພາບນໍ້າໃນຮອບ 12 ເດືອນ', sub: 'ຕິດຕາມທ່າອ່ຽງຄຸນນະພາບນ້ຳ, ຄ່າສະເລ່ຍລາຍເດືອນ, ຈຳນວນຕົວຢ່າງທີ່ກວດ ແລະ ອັດຕາການເກີນເກນ' },
-        records: { title: '📝 ຟອມບັນທຶກ & ຖານຂໍ້ມູນຜົນການວັດແທກຄຸນນະພາບນໍ້າ', sub: 'ບັນທຶກຜົນວິເຄາະຄຸນນະພາບນ້ຳໃໝ່, ນຳເຂົ້າຈາກ Excel ແລະ ຈັດການຖານຂໍ້ມູນ' }
+        records: { title: '📝 ຟອມບັນທຶກ & ຖານຂໍ້ມູນຜົນການວັດແທກຄຸນນະພາບນໍ້າ', sub: 'ບັນທຶກຜົນວິເຄາະຄຸນນະພາບນ້ຳໃໝ່, ນຳເຂົ້າຈາກ Excel ແລະ ຈັດການຖານຂໍ້ມູນ' },
+        standards81: { title: '⚖️ ກໍານົດມາດຕະຖານຄຸນນະພາບນໍ້າ (ຂໍ້ຕົກລົງ 81/ລບ, 21 ກຸມພາ 2017)', sub: 'ການຈັດແບ່ງປະເພດຄຸນນະພາບນ້ຳໜ້າດິນ 5 ປະເພດ, ຕາຕະລາງເກນມາດຕະຖານ, ປັບແຕ່ງເກນ ແລະ ກວດສອບການປະຕິບັດຕາມມາດຕະຖານ' }
       };
       const cur = viewMeta[currentAppView] || viewMeta.map;
       const titleEl = document.getElementById('topbarViewTitle');
@@ -2020,16 +2647,21 @@
       if (currentAppView === 'stats12') {
         setTimeout(() => { if (typeof render12MonthTrendSection === 'function') render12MonthTrendSection(); }, 150);
       }
+      if (currentAppView === 'standards81') {
+        setTimeout(() => { if (typeof renderStandards81View === 'function') renderStandards81View(); }, 50);
+      }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
       updateAppViewUI();
+      if (typeof updateStandardClassUI === 'function') updateStandardClassUI();
     });
 
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
         closeWqMenus();
         closeSidebarMobile();
+        if (typeof closeAuditKpiDetailModal === 'function') closeAuditKpiDetailModal();
       }
     });
 
@@ -2521,6 +3153,15 @@
         localStorage.setItem('ENT_THRESHOLDS_CONFIG_V3', JSON.stringify(sysThresholds));
         renderFormCustomInputs();
         render();
+      });
+
+      db.ref('system_config/active_standard_class').on('value', snapshot => {
+        const cls = snapshot.val();
+        if (cls) {
+          selectedStandardClass = Number(cls) || 2;
+          localStorage.setItem('dwr_wq_active_standard_class', selectedStandardClass);
+          updateStandardClassUI();
+        }
       });
 
       db.ref('system_config/users').on('value', snapshot => {
@@ -3277,6 +3918,2427 @@
       Swal.fire({ icon: 'success', title: 'ບັນທຶກເກນເຕືອນໄພຮຽບຮ້ອຍແລ້ວ!' });
       renderFormCustomInputs();
       render();
+    }
+
+    /* ================================================================
+       ⚖️ ມາດຕະຖານສິ່ງແວດລ້ອມ ແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ, 21 ກຸມພາ 2017
+       ພາກທີ II: ມາດຕະຖານຄຸນນະພາບນ້ຳໜ້າດິນ ແລະ ການຈັດແບ່ງປະເພດຄຸນນະພາບນ້ຳ 5 ຊັ້ນ
+       ================================================================ */
+    let selectedStandardClass = 2;
+    try {
+      const savedClass = localStorage.getItem('dwr_wq_active_standard_class');
+      if (savedClass) selectedStandardClass = parseInt(savedClass, 10) || 2;
+    } catch (e) {
+      selectedStandardClass = 2;
+    }
+
+    const LAO_STANDARD_81 = {
+      decreeNo: '81/ລບ',
+      date: '21 ກຸມພາ 2017',
+      title: 'ຂໍ້ຕົກລົງວ່າດ້ວຍມາດຕະຖານສິ່ງແວດລ້ອມ ແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ',
+      part: 'ພາກທີ II: ມາດຕະຖານຄຸນນະພາບນ້ຳໜ້າດິນ ແລະ ການຈັດແບ່ງປະເພດຄຸນນະພາບນ້ຳ 5 ປະເພດ',
+      authority: 'ລັດຖະບານ ແຫ່ງ ສປປ ລາວ',
+      classes: [
+        {
+          id: 1,
+          name: 'ປະເພດ 1',
+          title: 'ແຫຼ່ງນ້ຳທຳມະຊາດບໍລິສຸດ (Pristine / High Conservation)',
+          desc: 'ແຫຼ່ງນ້ຳທຳມະຊາດທີ່ບໍລິສຸດດີເລີດ ບໍ່ມີນ້ຳເປື້ອນປົນເປື້ອນ ເພື່ອການອະນຸລັກແຫຼ່ງຕົ້ນນ້ຳ, ສິ່ງແວດລ້ອມ ແລະ ລະບົບນິເວດທຳມະຊາດ. ຫ້າມປ່ອຍນ້ຳເສຍທຸກຊະນິດ.',
+          shortUse: 'ອະນຸລັກຕົ້ນນ້ຳທຳມະຊາດ',
+          badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40',
+          activeBgClass: 'bg-emerald-600 text-white',
+          icon: '🏔️'
+        },
+        {
+          id: 2,
+          name: 'ປະເພດ 2',
+          title: 'ແຫຼ່ງນ້ຳສະອາດຫຼາຍ (Very Clean / Consumption & Aquatic Life)',
+          desc: 'ແຫຼ່ງນ້ຳທີ່ສະອາດດີຫຼາຍ ເໝາະສົມສຳລັບການອຸປະໂພກ-ບໍລິໂພກ ໂດຍຜ່ານການຂ້າເຊື້ອໂລກ ແລະ ການບຳບັດທຳມະດາ, ການອະນຸລັກສັດນ້ຳ, ການປະມົງ ແລະ ການທ່ອງທ່ຽວ.',
+          shortUse: 'ອຸປະໂພກ-ບໍລິໂພກ (ບຳບັດທຳມະດາ)',
+          badgeClass: 'bg-sky-500/20 text-sky-300 border border-sky-400/40',
+          activeBgClass: 'bg-sky-600 text-white',
+          icon: '💧'
+        },
+        {
+          id: 3,
+          name: 'ປະເພດ 3',
+          title: 'ແຫຼ່ງນ້ຳສະອາດປານກາງ (Medium / Standard Consumption & Agriculture)',
+          desc: 'ແຫຼ່ງນ້ຳທີ່ສະອາດປານກາງ ສາມາດນຳໃຊ້ເຂົ້າໃນການອຸປະໂພກ-ບໍລິໂພກ ໂດຍຜ່ານການປຸງແຕ່ງ/ບຳບັດຕາມມາດຕະຖານທົ່ວໄປ, ການກະສິກຳ ແລະ ການລ້ຽງສັດ.',
+          shortUse: 'ກະສິກຳ & ລ້ຽງສັດ',
+          badgeClass: 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/40',
+          activeBgClass: 'bg-indigo-600 text-white',
+          icon: '🌾'
+        },
+        {
+          id: 4,
+          name: 'ປະເພດ 4',
+          title: 'ແຫຼ່ງນ້ຳສະອາດໜ້ອຍ (Fair / Industry & Navigation)',
+          desc: 'ແຫຼ່ງນ້ຳທີ່ສະອາດໜ້ອຍ ຫຼື ໄດ້ຮັບຜົນກະທົບຈາກການນຳໃຊ້ ສາມາດໃຊ້ເຂົ້າໃນການອຸດສາຫະກຳ ແລະ ການຄົມມະນາຄົມທາງນ້ຳ.',
+          shortUse: 'ອຸດສາຫະກຳ & ຄົມມະນາຄົມ',
+          badgeClass: 'bg-amber-500/20 text-amber-300 border border-amber-400/40',
+          activeBgClass: 'bg-amber-600 text-white',
+          icon: '🏭'
+        },
+        {
+          id: 5,
+          name: 'ປະເພດ 5',
+          title: 'ແຫຼ່ງນ້ຳທີ່ໄດ້ຮັບຜົນກະທົບຫຼາຍ (Drainage & Navigation)',
+          desc: 'ແຫຼ່ງນ້ຳທີ່ໄດ້ຮັບຜົນກະທົບຫຼາຍ ສາມາດນຳໃຊ້ເຂົ້າໃນການຄົມມະນາຄົມ ແລະ ການລະບາຍນ້ຳເທົ່ານັ້ນ.',
+          shortUse: 'ຄົມມະນາຄົມ & ລະບາຍນ້ຳ',
+          badgeClass: 'bg-rose-500/20 text-rose-300 border border-rose-400/40',
+          activeBgClass: 'bg-rose-600 text-white',
+          icon: '🚢'
+        }
+      ],
+      parameters: [
+        {
+          id: 'ph',
+          name: 'ຄ່າຄວາມເປັນກົດ-ດ່າງ (pH)',
+          en: 'pH Value',
+          unit: '-',
+          aliases: ['ph', 'p-h'],
+          classLimits: {
+            1: { min: 6.5, max: 8.5, label: '6.5 - 8.5' },
+            2: { min: 6.5, max: 8.5, label: '6.5 - 8.5' },
+            3: { min: 6.5, max: 8.5, label: '6.5 - 8.5' },
+            4: { min: 6.0, max: 9.0, label: '6.0 - 9.0' },
+            5: { min: 5.0, max: 9.0, label: '5.0 - 9.0' }
+          },
+          note: 'ວັດແທກດ້ວຍ pH Meter ຢູ່ພາກສະໜາມ ຫຼື ຫ້ອງທົດລອງ'
+        },
+        {
+          id: 'do',
+          name: 'ອົກຊີເຈນລະລາຍໃນນ້ຳ (DO)',
+          en: 'Dissolved Oxygen',
+          unit: 'mg/L',
+          aliases: ['do'],
+          classLimits: {
+            1: { min: 6.0, max: null, label: '≥ 6.0' },
+            2: { min: 6.0, max: null, label: '≥ 6.0' },
+            3: { min: 4.0, max: null, label: '≥ 4.0' },
+            4: { min: 2.0, max: null, label: '≥ 2.0' },
+            5: { min: 1.0, max: null, label: '< 2.0' }
+          },
+          note: 'ຄ່າ DO ສູງສະແດງເຖິງຄວາມສົມບູນຂອງລະບົບນິເວດ'
+        },
+        {
+          id: 'bod',
+          name: 'ຄວາມຕ້ອງການອົກຊີເຈນທາງຊີວະເຄມີ (BOD5)',
+          en: 'Biochemical Oxygen Demand (5-day)',
+          unit: 'mg/L',
+          aliases: ['bod', 'bod5'],
+          classLimits: {
+            1: { min: null, max: 1.5, label: '≤ 1.5' },
+            2: { min: null, max: 1.5, label: '≤ 1.5' },
+            3: { min: null, max: 2.0, label: '≤ 2.0' },
+            4: { min: null, max: 4.0, label: '≤ 4.0' },
+            5: { min: null, max: 6.0, label: '≤ 6.0' }
+          },
+          note: 'ວັດແທກການຍ່ອຍສະຫຼາຍທາດອິນຊີໃນ 5 ວັນ ທີ່ 20°C'
+        },
+        {
+          id: 'cod',
+          name: 'ຄວາມຕ້ອງການອົກຊີເຈນທາງເຄມີ (COD)',
+          en: 'Chemical Oxygen Demand',
+          unit: 'mg/L',
+          aliases: ['cod', 'codmn'],
+          classLimits: {
+            1: { min: null, max: 5.0, label: '≤ 5.0' },
+            2: { min: null, max: 5.0, label: '≤ 5.0' },
+            3: { min: null, max: 10.0, label: '≤ 10.0' },
+            4: { min: null, max: 20.0, label: '≤ 20.0' },
+            5: { min: null, max: 30.0, label: '≤ 30.0' }
+          },
+          note: 'ປະລິມານສານອິນຊີ ແລະ ສານເຄມີທີ່ຖືກອອກຊີໄດສ໌'
+        },
+        {
+          id: 'tss',
+          name: 'ທາດແຂງແຂວນລອຍລວມ (TSS)',
+          en: 'Total Suspended Solids',
+          unit: 'mg/L',
+          aliases: ['tss', 'ss'],
+          classLimits: {
+            1: { min: null, max: 25.0, label: '≤ 25' },
+            2: { min: null, max: 25.0, label: '≤ 25' },
+            3: { min: null, max: 30.0, label: '≤ 30' },
+            4: { min: null, max: 50.0, label: '≤ 50' },
+            5: { min: null, max: 100.0, label: '≤ 100' }
+          },
+          note: 'ຕະກອນແຂວນລອຍທີ່ກັ່ນຕອງໄດ້'
+        },
+        {
+          id: 'turbidity',
+          name: 'ຄວາມຂຸ່ນ (Turbidity)',
+          en: 'Turbidity',
+          unit: 'NTU',
+          aliases: ['turb', 'ntu', 'turbidity', 'turbi'],
+          classLimits: {
+            1: { min: null, max: 5.0, label: '< 5.0' },
+            2: { min: null, max: 20.0, label: '≤ 20.0' },
+            3: { min: null, max: 50.0, label: '≤ 50.0' },
+            4: { min: null, max: 100.0, label: '≤ 100.0' },
+            5: { min: null, max: null, label: 'ບໍ່ກຳນົດ' }
+          },
+          note: 'ວັດແທກດ້ວຍ Nephelometric Turbidimeter'
+        },
+        {
+          id: 'ec',
+          name: 'ການນຳໄຟຟ້າ (Conductivity - EC)',
+          en: 'Electrical Conductivity',
+          unit: 'µS/cm',
+          aliases: ['ec', 'conductivity'],
+          classLimits: {
+            1: { min: null, max: 250.0, label: '≤ 250' },
+            2: { min: null, max: 500.0, label: '≤ 500' },
+            3: { min: null, max: 1000.0, label: '≤ 1,000' },
+            4: { min: null, max: 2000.0, label: '≤ 2,000' },
+            5: { min: null, max: null, label: 'ບໍ່ກຳນົດ' }
+          },
+          note: 'ບົ່ງບອກປະລິມານໄອອອນ ແລະ ເກືອແຮ່ທາດໃນນ້ຳ'
+        },
+        {
+          id: 'tds',
+          name: 'ທາດລະລາຍລວມ (TDS)',
+          en: 'Total Dissolved Solids',
+          unit: 'mg/L',
+          aliases: ['tds'],
+          classLimits: {
+            1: { min: null, max: 500.0, label: '≤ 500' },
+            2: { min: null, max: 500.0, label: '≤ 500' },
+            3: { min: null, max: 1000.0, label: '≤ 1,000' },
+            4: { min: null, max: 1500.0, label: '≤ 1,500' },
+            5: { min: null, max: null, label: 'ບໍ່ກຳນົດ' }
+          },
+          note: 'ທາດແຂງທັງໝົດທີ່ລະລາຍໃນນ້ຳ'
+        },
+        {
+          id: 'temp',
+          name: 'ອຸນຫະພູມ (Temperature)',
+          en: 'Temperature',
+          unit: '°C',
+          aliases: ['temp', 'temperature', 'tem'],
+          classLimits: {
+            1: { min: null, max: null, label: 'ທຳມະຊາດ' },
+            2: { min: null, max: null, label: 'ບໍ່ເກີນ +3°C' },
+            3: { min: null, max: null, label: 'ບໍ່ເກີນ +3°C' },
+            4: { min: null, max: null, label: 'ບໍ່ເກີນ +3°C' },
+            5: { min: null, max: null, label: 'ບໍ່ກຳນົດ' }
+          },
+          note: 'ການປ່ຽນແປງອຸນຫະພູມບໍ່ເກີນ 3°C ຈາກທຳມະຊາດ'
+        },
+        {
+          id: 'coliform_total',
+          name: 'ແບັກທີເຣຍໂຄລິຟອມລວມ (Total Coliform)',
+          en: 'Total Coliform Bacteria',
+          unit: 'MPN/100 mL',
+          aliases: ['total coliform', 'coliform', 'coliforms'],
+          classLimits: {
+            1: { min: null, max: null, label: 'ທຳມະຊາດ' },
+            2: { min: null, max: 1000.0, label: '≤ 1,000' },
+            3: { min: null, max: 4000.0, label: '≤ 4,000' },
+            4: { min: null, max: 10000.0, label: '≤ 10,000' },
+            5: { min: null, max: null, label: 'ບໍ່ກຳນົດ' }
+          },
+          note: 'Multiple Tube Fermentation Technique'
+        },
+        {
+          id: 'coliform_fecal',
+          name: 'ຟີຄໍລ ໂຄລິຟອມ / ອີໂຄໄລ (Fecal Coliform / E. coli)',
+          en: 'Fecal Coliform / E. coli',
+          unit: 'MPN/100 mL',
+          aliases: ['fecal coliform', 'feacal coliform', 'f-coliform', 'e.coli'],
+          classLimits: {
+            1: { min: null, max: null, label: 'ທຳມະຊາດ' },
+            2: { min: null, max: 100.0, label: '≤ 100' },
+            3: { min: null, max: 1000.0, label: '≤ 1,000' },
+            4: { min: null, max: 4000.0, label: '≤ 4,000' },
+            5: { min: null, max: null, label: 'ບໍ່ກຳນົດ' }
+          },
+          note: 'ຕົວຊີ້ວັດການປົນເປື້ອນສິ່ງເສຍຈາກຄົນ ແລະ ສັດ'
+        },
+        {
+          id: 'nh3_n',
+          name: 'ອາມໂມເນຍ-ໄນໂຕຣເຈນ (Ammonia-N)',
+          en: 'Ammonia-Nitrogen (NH3-N)',
+          unit: 'mg/L',
+          aliases: ['nh3', 'nh3-n', 'nh4'],
+          classLimits: {
+            1: { min: null, max: 0.1, label: '≤ 0.1' },
+            2: { min: null, max: 0.2, label: '≤ 0.2' },
+            3: { min: null, max: 0.5, label: '≤ 0.5' },
+            4: { min: null, max: 0.5, label: '≤ 0.5' },
+            5: { min: null, max: null, label: 'ບໍ່ກຳນົດ' }
+          },
+          note: 'Phenate Method / Nesslerization'
+        },
+        {
+          id: 'no3_n',
+          name: 'ໄນເຕຣດ-ໄນໂຕຣເຈນ (Nitrate-N)',
+          en: 'Nitrate-Nitrogen (NO3-N)',
+          unit: 'mg/L',
+          aliases: ['no3', 'no3-n', 'tn', 'nitrate'],
+          classLimits: {
+            1: { min: null, max: 5.0, label: '≤ 5.0' },
+            2: { min: null, max: 5.0, label: '≤ 5.0' },
+            3: { min: null, max: 5.0, label: '≤ 5.0' },
+            4: { min: null, max: 5.0, label: '≤ 5.0' },
+            5: { min: null, max: null, label: 'ບໍ່ກຳນົດ' }
+          },
+          note: 'Cadmium Reduction Method'
+        },
+        {
+          id: 'tp',
+          name: 'ຟົດສະຟໍລວມ (Total Phosphorus - TP)',
+          en: 'Total Phosphorus',
+          unit: 'mg/L',
+          aliases: ['tp', 'po4', 'po4p'],
+          classLimits: {
+            1: { min: null, max: 0.05, label: '≤ 0.05' },
+            2: { min: null, max: 0.1, label: '≤ 0.1' },
+            3: { min: null, max: 0.2, label: '≤ 0.2' },
+            4: { min: null, max: 0.4, label: '≤ 0.4' },
+            5: { min: null, max: null, label: 'ບໍ່ກຳນົດ' }
+          },
+          note: 'Ascorbic Acid Method ຫຼັງການຍ່ອຍ'
+        },
+        {
+          id: 'pb',
+          name: 'ສານຕະກົ່ວ (Lead - Pb)',
+          en: 'Lead (Pb)',
+          unit: 'mg/L',
+          aliases: ['pb', 'lead'],
+          classLimits: {
+            1: { min: null, max: 0.01, label: '≤ 0.01' },
+            2: { min: null, max: 0.05, label: '≤ 0.05' },
+            3: { min: null, max: 0.05, label: '≤ 0.05' },
+            4: { min: null, max: 0.05, label: '≤ 0.05' },
+            5: { min: null, max: null, label: 'ບໍ່ກຳນົດ' }
+          },
+          note: 'Atomic Absorption Spectrophotometry (AAS)'
+        },
+        {
+          id: 'cd',
+          name: 'ແຄັດມຽມ (Cadmium - Cd)',
+          en: 'Cadmium (Cd)',
+          unit: 'mg/L',
+          aliases: ['cd', 'cadmium'],
+          classLimits: {
+            1: { min: null, max: 0.005, label: '≤ 0.005' },
+            2: { min: null, max: 0.005, label: '≤ 0.005' },
+            3: { min: null, max: 0.005, label: '≤ 0.005' },
+            4: { min: null, max: 0.005, label: '≤ 0.005' },
+            5: { min: null, max: null, label: 'ບໍ່ກຳນົດ' }
+          },
+          note: 'AAS / ICP-MS'
+        },
+        {
+          id: 'as',
+          name: 'ສານໜູ (Arsenic - As)',
+          en: 'Arsenic (As)',
+          unit: 'mg/L',
+          aliases: ['as', 'arsenic'],
+          classLimits: {
+            1: { min: null, max: 0.01, label: '≤ 0.01' },
+            2: { min: null, max: 0.01, label: '≤ 0.01' },
+            3: { min: null, max: 0.01, label: '≤ 0.01' },
+            4: { min: null, max: 0.01, label: '≤ 0.01' },
+            5: { min: null, max: null, label: 'ບໍ່ກຳນົດ' }
+          },
+          note: 'Hydride Generation AAS'
+        }
+      ]
+    };
+
+    function selectStandardClass(clsId) {
+      selectedStandardClass = Number(clsId) || 2;
+      updateStandardClassUI();
+      if (currentAppView === 'standards81') {
+        renderStandards81View();
+      }
+    }
+
+    function updateStandardClassUI() {
+      // 1. Sidebar Buttons & Labels
+      for (let i = 1; i <= 5; i++) {
+        const btn = document.getElementById(`sbClassBtn-${i}`);
+        if (btn) {
+          const isSel = i === selectedStandardClass;
+          btn.className = `py-1 rounded-lg transition-all text-[11px] font-bold cursor-pointer ${
+            isSel ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+          }`;
+        }
+      }
+
+      const activeCls = LAO_STANDARD_81.classes.find(c => c.id === selectedStandardClass) || LAO_STANDARD_81.classes[1];
+      const pill = document.getElementById('sbActiveClassPill');
+      if (pill) pill.innerText = activeCls.name;
+      const desc = document.getElementById('sbClassShortDesc');
+      if (desc) desc.innerText = activeCls.shortUse;
+
+      // Sidebar Key limits
+      const getLimitLabel = (id) => {
+        const p = LAO_STANDARD_81.parameters.find(x => x.id === id);
+        return p && p.classLimits[selectedStandardClass] ? p.classLimits[selectedStandardClass].label : '-';
+      };
+
+      const setLimitEl = (elId, val, unit = '') => {
+        const el = document.getElementById(elId);
+        if (el) el.innerText = val ? `${val}${unit ? ' ' + unit : ''}` : '-';
+      };
+
+      setLimitEl('sbLimit-pH', getLimitLabel('ph'));
+      setLimitEl('sbLimit-DO', getLimitLabel('do'), 'mg/L');
+      setLimitEl('sbLimit-BOD', getLimitLabel('bod'), 'mg/L');
+      setLimitEl('sbLimit-COD', getLimitLabel('cod'), 'mg/L');
+      setLimitEl('sbLimit-TSS', getLimitLabel('tss'), 'mg/L');
+
+      // Banner / Header badges
+      const headerBadge = document.getElementById('headerActiveClassBadge');
+      if (headerBadge) headerBadge.innerText = activeCls.name;
+
+      const auditLabel = document.getElementById('auditSelectedClassLabel');
+      if (auditLabel) auditLabel.innerText = `${activeCls.name} (${activeCls.shortUse})`;
+    }
+
+    function applyStandardClassToSystem(targetClassId) {
+      const clsId = targetClassId || selectedStandardClass;
+      selectedStandardClass = clsId;
+
+      const activeCls = LAO_STANDARD_81.classes.find(c => c.id === clsId) || LAO_STANDARD_81.classes[1];
+
+      // Map parameters from LAO_STANDARD_81 to customIndicators
+      let updatedCount = 0;
+      const newThresholds = { ...sysThresholds };
+
+      LAO_STANDARD_81.parameters.forEach(param => {
+        const lim = param.classLimits[clsId];
+        if (!lim) return;
+
+        // Find all matching indicators in customIndicators
+        customIndicators.forEach(ind => {
+          const norm = (ind.name || '').trim().toLowerCase();
+          const isMatch = param.aliases.some(alias => norm === alias || norm.includes(alias));
+          if (isMatch) {
+            newThresholds[`cfg_${ind.key}_min`] = lim.min !== undefined ? lim.min : null;
+            newThresholds[`cfg_${ind.key}_max`] = lim.max !== undefined ? lim.max : null;
+            updatedCount++;
+          }
+        });
+      });
+
+      sysThresholds = newThresholds;
+      localStorage.setItem('dwr_wq_active_standard_class', clsId);
+      localStorage.setItem('ENT_THRESHOLDS_CONFIG_V3', JSON.stringify(sysThresholds));
+
+      if (typeof db !== 'undefined' && db) {
+        db.ref('system_config/thresholds').set(sysThresholds);
+        db.ref('system_config/active_standard_class').set(clsId);
+        db.ref('activity_logs').push({
+          action: 'UPDATE_STANDARD_81',
+          itemCode: `ມາດຕະຖານ 81/ລບ - ${activeCls.name}`,
+          performedBy: currentUserName || 'ຜູ້ຮັບຜິດຊອບ',
+          timestamp: new Date().toLocaleString('lo-LA'),
+          userRole: currentUserRole
+        });
+      }
+
+      updateStandardClassUI();
+      renderFormCustomInputs();
+      renderThresholdFields();
+      render();
+
+      if (currentAppView === 'standards81') {
+        renderStandards81View();
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'ນຳໃຊ້ມາດຕະຖານສຳເລັດ!',
+        html: `<b>${activeCls.name}:</b> ${activeCls.title}<br><span class="text-xs text-slate-500">ອັບເດດເກນເຕືອນໄພໃຫ້ ${updatedCount} ຕົວຊີ້ວັດໃນລະບົບຮຽບຮ້ອຍແລ້ວ</span>`,
+        timer: 2500,
+        showConfirmButton: false
+      });
+    }
+
+    function renderStandards81View() {
+      // 1. Render 5 Class Cards
+      const grid = document.getElementById('classCardsGrid');
+      if (grid) {
+        grid.innerHTML = LAO_STANDARD_81.classes.map(cls => {
+          const isSel = cls.id === selectedStandardClass;
+          return `
+            <div onclick="selectStandardClass(${cls.id})" class="cursor-pointer p-4 rounded-2xl border-2 transition-all relative flex flex-col justify-between ${
+              isSel
+                ? 'border-emerald-500 bg-emerald-50/70 shadow-md ring-2 ring-emerald-500/20'
+                : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs'
+            }">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-2xl">${cls.icon}</span>
+                  <span class="text-[10px] font-black px-2 py-0.5 rounded-full ${
+                    isSel ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600'
+                  }">
+                    ${isSel ? '⭐ ກຳລັງເລືອກ' : cls.name}
+                  </span>
+                </div>
+                <h4 class="text-xs font-bold text-slate-900 leading-snug">${escapeHtml(cls.name)}: ${escapeHtml(cls.shortUse)}</h4>
+                <p class="text-[11px] text-slate-500 mt-1 leading-relaxed line-clamp-3">${escapeHtml(cls.desc)}</p>
+              </div>
+
+              <div class="pt-3 mt-3 border-t border-slate-100/90 flex items-center justify-between text-[10.5px]">
+                <span class="text-slate-400 font-medium">ເກນ 81/ລບ</span>
+                <span class="font-bold ${isSel ? 'text-emerald-700 font-black' : 'text-indigo-600'}">
+                  ${isSel ? 'ກຳລັງເບິ່ງເກນ ✓' : 'ຄລິກເບິ່ງ →'}
+                </span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 2. Render Selected Class Scope & Detail
+      const curCls = LAO_STANDARD_81.classes.find(c => c.id === selectedStandardClass) || LAO_STANDARD_81.classes[1];
+      const detailCard = document.getElementById('selectedClassDetailCard');
+      if (detailCard) {
+        detailCard.innerHTML = `
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 flex items-center justify-center text-2xl shrink-0">
+                ${curCls.icon}
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-base font-bold text-slate-900">${escapeHtml(curCls.name)}: ${escapeHtml(curCls.title)}</h3>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">ຂໍ້ຕົກລົງ 81/ລບ</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">${escapeHtml(curCls.desc)}</p>
+              </div>
+            </div>
+
+            <button type="button" onclick="applyStandardClassToSystem(${curCls.id})" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition flex items-center gap-2 shrink-0 cursor-pointer">
+              <span>⚡</span>
+              <span>ນຳໃຊ້ ${escapeHtml(curCls.name)} ເປັນເກນລະບົບທັນທີ</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <span class="text-slate-400 font-bold text-[10px] uppercase block mb-1">🎯 ຈຸດປະສົງການນຳໃຊ້ນ້ຳ (Permitted Uses)</span>
+              <p class="font-bold text-slate-800">${escapeHtml(curCls.shortUse)}</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">ອີງຕາມມາດຕາການຈັດປະເພດແຫຼ່ງນ້ຳໜ້າດິນແຫ່ງຊາດ</p>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <span class="text-slate-400 font-bold text-[10px] uppercase block mb-1">🛡️ ການປົກປັກຮັກສາສິ່ງແວດລ້ອມ</span>
+              <p class="font-bold text-slate-800">${curCls.id === 1 ? 'ຫ້າມປ່ອຍນ້ຳເສຍທຸກກໍລະນີ' : curCls.id === 2 ? 'ຕ້ອງບຳບັດ ແລະ ຂ້າເຊື້ອກ່ອນອຸປະໂພກ' : 'ຄວບຄຸມການປ່ອຍນ້ຳເປື້ອນຢ່າງເຂັ້ມງວດ'}</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">ມາດຕະການຕິດຕາມກວດກາຄຸນນະພາບນ້ຳປະຈຳເດືອນ</p>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <span class="text-slate-400 font-bold text-[10px] uppercase block mb-1">📜 ເອກະສານອ້າງອີງທາງກົດໝາຍ</span>
+              <p class="font-bold text-slate-800">ເລກທີ 81/ລບ, ລົງວັນທີ 21 ກຸມພາ 2017</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">ລັດຖະບານ ແຫ່ງ ສປປ ລາວ / ກະຊວງ ຊສ</p>
+            </div>
+          </div>
+        `;
+      }
+
+      // 3. Render Matrix Table Rows
+      const tbody = document.getElementById('standardsMatrixBody');
+      if (tbody) {
+        tbody.innerHTML = LAO_STANDARD_81.parameters.map((p, idx) => {
+          // Find matching indicator in customIndicators to get current system threshold
+          const matchInd = customIndicators.find(i => {
+            const norm = (i.name || '').trim().toLowerCase();
+            return p.aliases.some(alias => norm === alias || norm.includes(alias));
+          });
+
+          let curSysThrStr = '-';
+          if (matchInd) {
+            const minT = sysThresholds[`cfg_${matchInd.key}_min`];
+            const maxT = sysThresholds[`cfg_${matchInd.key}_max`];
+            const hasMin = minT !== null && minT !== undefined && minT !== '';
+            const hasMax = maxT !== null && maxT !== undefined && maxT !== '';
+            if (hasMin && hasMax) curSysThrStr = `${minT} - ${maxT}`;
+            else if (hasMin) curSysThrStr = `≥ ${minT}`;
+            else if (hasMax) curSysThrStr = `≤ ${maxT}`;
+          }
+
+          // Active column highlight class
+          const activeCellClass = (cId) => cId === selectedStandardClass
+            ? 'bg-emerald-50/90 text-emerald-900 font-black border-x border-emerald-300'
+            : 'text-slate-700';
+
+          return `
+            <tr class="hover:bg-slate-50/80 transition-colors" data-param-name="${escapeHtml(p.name.toLowerCase())}" data-param-en="${escapeHtml(p.en.toLowerCase())}">
+              <td class="p-3 text-center text-slate-400 font-mono">${idx + 1}</td>
+              <td class="p-3 font-semibold text-slate-800">
+                <div class="font-bold text-slate-900">${escapeHtml(p.name)}</div>
+                <div class="text-[10px] text-slate-400 font-mono">${escapeHtml(p.en)}</div>
+              </td>
+              <td class="p-3 text-center font-mono text-slate-600">${escapeHtml(p.unit)}</td>
+              <td class="p-3 text-center font-mono ${activeCellClass(1)}">${p.classLimits[1].label}</td>
+              <td class="p-3 text-center font-mono ${activeCellClass(2)}">${p.classLimits[2].label}</td>
+              <td class="p-3 text-center font-mono ${activeCellClass(3)}">${p.classLimits[3].label}</td>
+              <td class="p-3 text-center font-mono ${activeCellClass(4)}">${p.classLimits[4].label}</td>
+              <td class="p-3 text-center font-mono ${activeCellClass(5)}">${p.classLimits[5].label}</td>
+              <td class="p-3 text-center font-mono font-bold text-emerald-800 bg-emerald-50/40 border-x border-emerald-100">${curSysThrStr}</td>
+              <td class="p-3 text-slate-500 text-[11px]">${escapeHtml(p.note)}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Update Column Headers Highlighting in Table
+      for (let i = 1; i <= 5; i++) {
+        const th = document.getElementById(`th-class-${i}`);
+        if (th) {
+          const isSel = i === selectedStandardClass;
+          th.className = `p-3 text-center min-w-[90px] transition-colors ${
+            isSel ? 'bg-emerald-100 text-emerald-950 font-black border-x-2 border-emerald-400' : 'text-slate-700'
+          }`;
+        }
+      }
+
+      // 4. Run Live Station Compliance Audit
+      runLiveAuditAgainstStandard();
+    }
+
+    function filterStandardsTable(query) {
+      const q = (query || '').trim().toLowerCase();
+      const rows = document.querySelectorAll('#standardsMatrixBody tr');
+      rows.forEach(r => {
+        const name = r.dataset.paramName || '';
+        const en = r.dataset.paramEn || '';
+        const show = !q || name.includes(q) || en.includes(q);
+        r.style.display = show ? '' : 'none';
+      });
+    }
+
+    function resetStandardsFilter() {
+      const input = document.getElementById('stdSearchInput');
+      if (input) input.value = '';
+      filterStandardsTable('');
+    }
+
+    /* =========================================================================
+       ⚖️ LAO DECREE 81/PM (2017) REAL-TIME COMPLIANCE AUDIT & COMPARATOR WORKBENCH
+       ========================================================================= */
+
+    const DEFAULT_BASELINE_DATASETS = [
+      {
+        key: 'ds_mekong_survey',
+        title: 'ໂຄງການຕິດຕາມກວດກາແລວແມ່ນ້ຳຂອງ (Mekong River Survey) - ສູນຄຸນນະພາບນ້ຳ',
+        date: '2026-10-15',
+        province: 'ນະຄອນຫຼວງວຽງຈັນ / ຈຳປາສັກ',
+        basin: 'ອ່າງແມ່ນ້ຳຂອງ (Mekong Basin)',
+        stations: [
+          {
+            id: 'st_vte_donchan',
+            name: 'ສະຖານີ ດອນຈັນ (ນະຄອນຫຼວງວຽງຈັນ)',
+            companyName: 'ກົມຊັບພະຍາກອນນ້ຳ - ສູນຕິດຕາມຄຸນນະພາບນ້ຳ',
+            basin: 'ອ່າງແມ່ນ້ຳຂອງ (Mekong Basin)',
+            province: 'ນະຄອນຫຼວງວຽງຈັນ',
+            lat: 17.9621,
+            lng: 102.6105,
+            sampleDate: '2026-10-15',
+            datasetKey: 'ds_mekong_survey',
+            datasetTitle: 'ໂຄງການຕິດຕາມກວດກາແລວແມ່ນ້ຳຂອງ',
+            customs: { ph: 7.4, do: 6.8, bod5: 1.8, cod: 4.2, tss: 28, temp: 27.5, tds: 185, no3_n: 1.2, nh3_n: 0.12, coliform_fecal: 85 }
+          },
+          {
+            id: 'st_cps_pakse',
+            name: 'ສະຖານີ ປາກເຊ (ຂົວມິດຕະພາບ ລາວ-ຍີ່ປຸ່ນ)',
+            companyName: 'ພະແນກ ຊສ ແຂວງຈຳປາສັກ',
+            basin: 'ອ່າງແມ່ນ້ຳຂອງ (ຕອນໃຕ້)',
+            province: 'ຈຳປາສັກ',
+            lat: 15.1205,
+            lng: 105.7981,
+            sampleDate: '2026-10-10',
+            datasetKey: 'ds_mekong_survey',
+            datasetTitle: 'ໂຄງການຕິດຕາມກວດກາແລວແມ່ນ້ຳຂອງ',
+            customs: { ph: 7.5, do: 6.2, bod5: 2.4, cod: 6.8, tss: 35, temp: 28.0, tds: 210, no3_n: 2.0, nh3_n: 0.18, coliform_fecal: 140 }
+          }
+        ]
+      },
+      {
+        key: 'ds_namou_survey',
+        title: 'ໂຄງການສຳຫຼວດ ແລະ ຕິດຕາມອ່າງນ້ຳອູ - ພະແນກ ຊສ ແຂວງຫຼວງພະບາງ',
+        date: '2026-10-14',
+        province: 'ຫຼວງພະບາງ',
+        basin: 'ອ່າງນ້ຳອູ (Nam Ou River)',
+        stations: [
+          {
+            id: 'st_lpq_pakou',
+            name: 'ສະຖານີ ປາກອູ (ແຂວງຫຼວງພະບາງ)',
+            companyName: 'ພະແນກ ຊສ ແຂວງຫຼວງພະບາງ',
+            basin: 'ອ່າງນ້ຳອູ - ແມ່ນ້ຳຂອງ',
+            province: 'ຫຼວງພະບາງ',
+            lat: 20.0573,
+            lng: 102.2132,
+            sampleDate: '2026-10-14',
+            datasetKey: 'ds_namou_survey',
+            datasetTitle: 'ໂຄງການສຳຫຼວດ ແລະ ຕິດຕາມອ່າງນ້ຳອູ',
+            customs: { ph: 7.8, do: 7.2, bod5: 1.2, cod: 3.0, tss: 20, temp: 25.0, tds: 140, no3_n: 0.8, nh3_n: 0.08, coliform_fecal: 45 }
+          }
+        ]
+      },
+      {
+        key: 'ds_namngum_project',
+        title: 'ໂຄງການຄຸ້ມຄອງອ່າງຮັບນ້ຳເຂື່ອນນ້ຳງື່ມ 1 - ແຂວງວຽງຈັນ',
+        date: '2026-10-12',
+        province: 'ແຂວງວຽງຈັນ',
+        basin: 'ອ່າງນ້ຳງື່ມ (Nam Ngum Basin)',
+        stations: [
+          {
+            id: 'st_vte_namngum',
+            name: 'ສະຖານີ ນ້ຳງື່ມ 1 (ແຂວງວຽງຈັນ)',
+            companyName: 'ໂຄງການຄຸ້ມຄອງອ່າງນ້ຳງື່ມ',
+            basin: 'ອ່າງນ້ຳງື່ມ (Nam Ngum Basin)',
+            province: 'ແຂວງວຽງຈັນ',
+            lat: 18.5298,
+            lng: 102.5539,
+            sampleDate: '2026-10-12',
+            datasetKey: 'ds_namngum_project',
+            datasetTitle: 'ໂຄງການຄຸ້ມຄອງອ່າງຮັບນ້ຳເຂື່ອນນ້ຳງື່ມ 1',
+            customs: { ph: 7.1, do: 6.5, bod5: 2.1, cod: 5.1, tss: 15, temp: 26.2, tds: 120, no3_n: 1.5, nh3_n: 0.15, coliform_fecal: 95 }
+          }
+        ]
+      },
+      {
+        key: 'ds_central_south_basins',
+        title: 'ໂຄງການຕິດຕາມກວດກາແມ່ນ້ຳເຂດພາກກາງ ແລະ ໃຕ້ (ເຊບັ້ງໄຟ-ເຊກອງ)',
+        date: '2026-10-08',
+        province: 'ຄຳມ່ວນ / ເຊກອງ',
+        basin: 'ອ່າງເຊບັ້ງໄຟ ແລະ ເຊກອງ',
+        stations: [
+          {
+            id: 'st_kmn_xebangfai',
+            name: 'ສະຖານີ ເຊບັ້ງໄຟ (ຂົວເຊບັ້ງໄຟ)',
+            companyName: 'ພະແນກ ຊສ ແຂວງຄຳມ່ວນ',
+            basin: 'ອ່າງເຊບັ້ງໄຟ (Xe Bang Fai)',
+            province: 'ຄຳມ່ວນ',
+            lat: 17.0722,
+            lng: 104.9814,
+            sampleDate: '2026-10-08',
+            datasetKey: 'ds_central_south_basins',
+            datasetTitle: 'ໂຄງການຕິດຕາມກວດກາແມ່ນ້ຳເຂດພາກກາງ ແລະ ໃຕ້',
+            customs: { ph: 7.2, do: 5.8, bod5: 3.2, cod: 8.5, tss: 45, temp: 27.8, tds: 260, no3_n: 2.5, nh3_n: 0.22, coliform_fecal: 220 }
+          },
+          {
+            id: 'st_skg_sekong',
+            name: 'ສະຖານີ ເຊກອງ (ຂົວເຊກອງ)',
+            companyName: 'ພະແນກ ຊສ ແຂວງເຊກອງ',
+            basin: 'ອ່າງເຊກອງ (Sekong Basin)',
+            province: 'ເຊກອງ',
+            lat: 15.3411,
+            lng: 106.7214,
+            sampleDate: '2026-10-06',
+            datasetKey: 'ds_central_south_basins',
+            datasetTitle: 'ໂຄງການຕິດຕາມກວດກາແມ່ນ້ຳເຂດພາກກາງ ແລະ ໃຕ້',
+            customs: { ph: 7.6, do: 7.0, bod5: 1.5, cod: 3.8, tss: 18, temp: 24.8, tds: 130, no3_n: 0.9, nh3_n: 0.09, coliform_fecal: 60 }
+          }
+        ]
+      },
+      {
+        key: 'ds_industrial_alert_unit',
+        title: 'ໜ່ວຍງານກວດກາມົນລະພິດ ນ້ຳເສຍເຂດອຸດສາຫະກຳ ແລະ ຊຸມຊົນ',
+        date: '2026-10-18',
+        province: 'ນະຄອນຫຼວງວຽງຈັນ',
+        basin: 'ຫ້ວຍລະບາຍນ້ຳ (ເຂດອຸດສາຫະກຳ)',
+        stations: [
+          {
+            id: 'st_vte_industrial_alert',
+            name: 'ສະຖານີ ຈຸດເຝົ້າລະວັງ ນ້ຳລະບາຍເຂດອຸດສາຫະກຳ',
+            companyName: 'ໜ່ວຍກວດກາສິ່ງແວດລ້ອມ ມົນລະພິດ',
+            basin: 'ຫ້ວຍລະບາຍນ້ຳ (ເຂດອຸດສາຫະກຳ)',
+            province: 'ນະຄອນຫຼວງວຽງຈັນ',
+            lat: 17.9150,
+            lng: 102.6820,
+            sampleDate: '2026-10-18',
+            datasetKey: 'ds_industrial_alert_unit',
+            datasetTitle: 'ໜ່ວຍງານກວດກາມົນລະພິດ ນ້ຳເສຍເຂດອຸດສາຫະກຳ',
+            customs: { ph: 6.2, do: 3.8, bod5: 5.8, cod: 18.5, tss: 68, temp: 30.2, tds: 750, no3_n: 6.2, nh3_n: 0.65, coliform_fecal: 1800 }
+          }
+        ]
+      }
+    ];
+
+    const DEFAULT_BASELINE_STATIONS = DEFAULT_BASELINE_DATASETS.flatMap(d => d.stations);
+
+    let currentAuditInspectMode = 'station'; // 'station' | 'custom'
+    let currentAuditStationIndex = 0;
+    let currentAuditCompareClass = 2; // Default to Class 2
+    let currentAuditStationList = [];
+    let currentAuditFilterStatus = 'ALL';
+    let currentAuditSearchResults = [];
+
+    const KEY_AUDIT_PARAMS = [
+      { id: 'ph', name: 'pH', unit: 'pH', defaultVal: 7.2, step: '0.1' },
+      { id: 'do', name: 'DO (ລະລາຍອົກຊີ)', unit: 'mg/L', defaultVal: 6.5, step: '0.1' },
+      { id: 'bod5', name: 'BOD₅', unit: 'mg/L', defaultVal: 1.8, step: '0.1' },
+      { id: 'cod', name: 'COD', unit: 'mg/L', defaultVal: 4.5, step: '0.1' },
+      { id: 'tss', name: 'TSS (ທາດແຂວນລອຍ)', unit: 'mg/L', defaultVal: 25, step: '1' },
+      { id: 'temp', name: 'ອຸນຫະພູມ (Temp)', unit: '°C', defaultVal: 26.5, step: '0.5' },
+      { id: 'tds', name: 'TDS', unit: 'mg/L', defaultVal: 150, step: '1' },
+      { id: 'no3_n', name: 'Nitrate-N (NO₃)', unit: 'mg/L', defaultVal: 1.2, step: '0.1' },
+      { id: 'nh3_n', name: 'Ammonia-N (NH₃)', unit: 'mg/L', defaultVal: 0.15, step: '0.01' },
+      { id: 'coliform_fecal', name: 'E. coli / Fecal', unit: 'MPN/100mL', defaultVal: 80, step: '5' }
+    ];
+
+    function getAllAvailableAuditStations() {
+      const dbStations = [];
+      if (Array.isArray(waterData) && waterData.length > 0) {
+        waterData.forEach((d, idx) => {
+          if (d.stations && Array.isArray(d.stations)) {
+            const dsKey = d.id || `ds_user_${idx}`;
+            d.stations.forEach(st => {
+              dbStations.push({
+                ...st,
+                companyName: d.companyName || 'ຖານຂໍ້ມູນລະບົບ',
+                sampleDate: st.sampleDate || d.date || '2026-10-15',
+                datasetKey: dsKey,
+                datasetTitle: d.companyName || `ຊຸດຂໍ້ມູນ ${idx + 1}`
+              });
+            });
+          }
+        });
+      }
+
+      // Always include baseline datasets' stations
+      DEFAULT_BASELINE_DATASETS.forEach(bDs => {
+        bDs.stations.forEach(st => {
+          dbStations.push({ ...st });
+        });
+      });
+
+      return dbStations;
+    }
+
+    function switchAuditInspectMode(mode) {
+      currentAuditInspectMode = mode;
+      const btnSt = document.getElementById('auditModeStationBtn');
+      const btnCust = document.getElementById('auditModeCustomBtn');
+      const boxSt = document.getElementById('auditStationSelectBox');
+      const boxCust = document.getElementById('auditCustomInputBox');
+
+      if (mode === 'station') {
+        if (btnSt) {
+          btnSt.className = 'px-3 py-1.5 rounded-lg bg-indigo-600 text-white shadow-xs transition cursor-pointer';
+        }
+        if (btnCust) {
+          btnCust.className = 'px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer';
+        }
+        if (boxSt) boxSt.classList.remove('hidden');
+        if (boxCust) boxCust.classList.add('hidden');
+        onAuditStationChange();
+      } else {
+        if (btnSt) {
+          btnSt.className = 'px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer';
+        }
+        if (btnCust) {
+          btnCust.className = 'px-3 py-1.5 rounded-lg bg-indigo-600 text-white shadow-xs transition cursor-pointer';
+        }
+        if (boxSt) boxSt.classList.add('hidden');
+        if (boxCust) boxCust.classList.remove('hidden');
+        recalcCustomAuditComparison();
+      }
+    }
+
+    function onAuditCompareClassChange(classVal) {
+      currentAuditCompareClass = Number(classVal) || 2;
+      const b = document.getElementById('auditTargetClassBadge');
+      const clsObj = LAO_STANDARD_81.classes.find(c => c.id === currentAuditCompareClass);
+      if (b && clsObj) {
+        b.innerText = `${clsObj.name}: ${clsObj.shortUse}`;
+      }
+      evaluateCurrentAuditComparison();
+    }
+
+    function onAuditStationChange() {
+      const select = document.getElementById('auditStationSelect');
+      if (!select) return;
+      const idx = Number(select.value) || 0;
+      currentAuditStationIndex = idx;
+      const st = currentAuditStationList[idx] || currentAuditStationList[0];
+      const bar = document.getElementById('auditStationInfoBar');
+      if (!st) {
+        if (bar) {
+          bar.innerHTML = `<div class="text-slate-400 italic text-xs py-1">ບໍ່ມີຂໍ້ມູນສະຖານີໃນຊຸດຂໍ້ມູນນີ້</div>`;
+        }
+        return;
+      }
+
+      // Update info bar
+      if (bar) {
+        const lat = st.lat !== undefined && st.lat !== null ? Number(st.lat).toFixed(4) : '-';
+        const lng = st.lng !== undefined && st.lng !== null ? Number(st.lng).toFixed(4) : '-';
+        const dms = (st.lat && st.lng) ? toDMS(Number(st.lat), Number(st.lng)) : '-';
+
+        bar.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <div>
+              <span class="font-bold text-slate-800">${escapeHtml(st.name || 'ສະຖານີ')}</span>
+              <span class="text-slate-400 ml-1.5 font-normal">| ${escapeHtml(st.companyName || '-')}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2.5 flex-wrap text-[11px] font-mono text-slate-600">
+            <span class="bg-violet-50 text-violet-700 px-2 py-0.5 rounded border border-violet-200 font-sans font-semibold">📁 ${escapeHtml(st.datasetTitle || st.companyName || 'ຊຸດຂໍ້ມູນ')}</span>
+            <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">📍 WGS84: ${lat}, ${lng}</span>
+            <span class="hidden md:inline bg-slate-100 px-2 py-0.5 rounded border border-slate-200">🧭 ${escapeHtml(dms)}</span>
+            <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 font-sans font-semibold">🌊 ${escapeHtml(st.basin || 'ອ່າງແມ່ນ້ຳ')}</span>
+            <span class="bg-sky-50 text-sky-700 px-2 py-0.5 rounded border border-sky-200 font-sans font-semibold">📅 ${escapeHtml(st.sampleDate || '-')}</span>
+          </div>
+        `;
+      }
+
+      // Populate parameter inputs from station customs
+      KEY_AUDIT_PARAMS.forEach(p => {
+        let val = undefined;
+        if (st.customs) {
+          if (st.customs[p.id] !== undefined) {
+            val = st.customs[p.id];
+          } else {
+            // Find by alias
+            const paramObj = LAO_STANDARD_81.parameters.find(x => x.id === p.id);
+            if (paramObj) {
+              for (const k of Object.keys(st.customs)) {
+                const norm = k.toLowerCase().trim();
+                if (paramObj.aliases.some(a => norm === a || norm.includes(a))) {
+                  val = st.customs[k];
+                  break;
+                }
+              }
+            }
+          }
+        }
+        if (val === undefined || val === null || val === '') {
+          val = p.defaultVal;
+        }
+
+        const input = document.getElementById(`auditParamVal_${p.id}`);
+        if (input) {
+          input.value = val;
+        }
+      });
+
+      evaluateCurrentAuditComparison();
+    }
+
+    function loadAuditPreset(type) {
+      const presets = {
+        natural: {
+          name: 'ຈຸດເກັບຕົວຢ່າງ ແຫຼ່ງນ້ຳທຳມະຊາດຕົ້ນນ້ຳ (Class 1)',
+          basin: 'ອ່າງນ້ຳຕົກຕາດ - ຕົ້ນນ້ຳບໍລິສຸດ',
+          lat: 19.8512,
+          lng: 102.1384,
+          values: { ph: 7.2, do: 7.5, bod5: 0.8, cod: 2.1, tss: 10, temp: 23.5, tds: 95, no3_n: 0.5, nh3_n: 0.05, coliform_fecal: 20 }
+        },
+        potable: {
+          name: 'ຈຸດເກັບຕົວຢ່າງ ແຫຼ່ງນ້ຳອຸປະໂພກ-ບໍລິໂພກ (Class 2)',
+          basin: 'ອ່າງແມ່ນ້ຳຂອງ (Mekong River Basin)',
+          lat: 17.9621,
+          lng: 102.6105,
+          values: { ph: 7.4, do: 6.8, bod5: 1.8, cod: 4.2, tss: 28, temp: 27.5, tds: 185, no3_n: 1.2, nh3_n: 0.12, coliform_fecal: 85 }
+        },
+        agri: {
+          name: 'ຈຸດເກັບຕົວຢ່າງ ແຫຼ່ງນ້ຳຊົນລະປະທານກະສິກຳ (Class 3)',
+          basin: 'ອ່າງນ້ຳງື່ມ - ເຂດຊົນລະປະທານ',
+          lat: 18.2340,
+          lng: 102.6210,
+          values: { ph: 7.8, do: 5.2, bod5: 3.5, cod: 8.8, tss: 48, temp: 28.5, tds: 320, no3_n: 3.8, nh3_n: 0.35, coliform_fecal: 650 }
+        },
+        polluted: {
+          name: 'ຈຸດເຝົ້າລະວັງ ໃກ້ເຂດລະບາຍນ້ຳເສຍຊຸມຊົນ/ໂຮງງານ (Class 4-5/Alert)',
+          basin: 'ຮ່ອງລະບາຍນ້ຳຫຼັກ ເຂດອຸດສາຫະກຳ',
+          lat: 17.9150,
+          lng: 102.6820,
+          values: { ph: 6.1, do: 3.4, bod5: 6.2, cod: 22.0, tss: 75, temp: 31.0, tds: 820, no3_n: 7.5, nh3_n: 0.85, coliform_fecal: 2500 }
+        }
+      };
+
+      const sel = presets[type] || presets.potable;
+      const elName = document.getElementById('customAuditName');
+      const elBasin = document.getElementById('customAuditBasin');
+      const elLat = document.getElementById('customAuditLat');
+      const elLng = document.getElementById('customAuditLng');
+
+      if (elName) elName.value = sel.name;
+      if (elBasin) elBasin.value = sel.basin;
+      if (elLat) elLat.value = sel.lat;
+      if (elLng) elLng.value = sel.lng;
+
+      KEY_AUDIT_PARAMS.forEach(p => {
+        const input = document.getElementById(`auditParamVal_${p.id}`);
+        if (input && sel.values[p.id] !== undefined) {
+          input.value = sel.values[p.id];
+        }
+      });
+
+      recalcCustomAuditComparison();
+    }
+
+    function recalcCustomAuditComparison() {
+      evaluateCurrentAuditComparison();
+    }
+
+    function evaluateCurrentAuditComparison() {
+      const targetClass = currentAuditCompareClass || 2;
+      const classInfo = LAO_STANDARD_81.classes.find(c => c.id === targetClass) || LAO_STANDARD_81.classes[1];
+
+      // Read current values from inputs
+      const currentValues = {};
+      KEY_AUDIT_PARAMS.forEach(p => {
+        const inp = document.getElementById(`auditParamVal_${p.id}`);
+        const v = inp ? parseFloat(inp.value) : p.defaultVal;
+        currentValues[p.id] = isNaN(v) ? p.defaultVal : v;
+      });
+
+      // Coordinates info
+      let coordTitle = '';
+      let coordLat = 17.9621;
+      let coordLng = 102.6105;
+      let coordBasin = 'ອ່າງແມ່ນ້ຳຂອງ';
+      let coordProvince = 'ນະຄອນຫຼວງວຽງຈັນ';
+
+      if (currentAuditInspectMode === 'station') {
+        const st = currentAuditStationList[currentAuditStationIndex] || currentAuditStationList[0];
+        if (st) {
+          coordTitle = st.name || 'ສະຖານີ';
+          coordLat = Number(st.lat) || 17.9621;
+          coordLng = Number(st.lng) || 102.6105;
+          coordBasin = st.basin || 'ອ່າງແມ່ນ້ຳ';
+          coordProvince = st.province || '-';
+        }
+      } else {
+        coordTitle = document.getElementById('customAuditName')?.value.trim() || 'ຈຸດເກັບຕົວຢ່າງພາກສະໜາມ';
+        coordBasin = document.getElementById('customAuditBasin')?.value.trim() || 'ອ່າງແມ່ນ້ຳ';
+        coordLat = parseFloat(document.getElementById('customAuditLat')?.value) || 17.9621;
+        coordLng = parseFloat(document.getElementById('customAuditLng')?.value) || 102.6105;
+      }
+
+      // Parameter evaluation against targetClass
+      let totalChecked = 0;
+      let passCount = 0;
+      let warnCount = 0;
+      let exceedCount = 0;
+      const paramBreakdown = [];
+
+      KEY_AUDIT_PARAMS.forEach(kp => {
+        const val = currentValues[kp.id];
+        const paramDef = LAO_STANDARD_81.parameters.find(x => x.id === kp.id);
+        if (!paramDef) return;
+
+        const limit = paramDef.classLimits[targetClass];
+        if (!limit) return;
+
+        totalChecked++;
+        let status = 'PASS';
+        let diffLabel = 'ຢູ່ໃນເກນມາດຕະຖານ';
+        let badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+        let badgeIcon = '✅';
+
+        if (limit.min !== null && limit.min !== undefined && val < limit.min) {
+          status = 'EXCEED';
+          diffLabel = `ຕ່ຳກວ່າເກນ (-${(limit.min - val).toFixed(2)} ${kp.unit})`;
+          badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+          badgeIcon = '❌';
+          exceedCount++;
+        } else if (limit.max !== null && limit.max !== undefined && val > limit.max) {
+          status = 'EXCEED';
+          const diff = (val - limit.max).toFixed(2);
+          const pct = Math.round(((val - limit.max) / limit.max) * 100);
+          diffLabel = `ເກີນເກນ (+${diff} ${kp.unit}, +${pct}%)`;
+          badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+          badgeIcon = '❌';
+          exceedCount++;
+        } else if (limit.max !== null && limit.max !== undefined && val >= limit.max * 0.9) {
+          status = 'WARN';
+          const remaining = (limit.max - val).toFixed(2);
+          diffLabel = `ໃກ້ເກີນເກນ (ເຫຼືອພຽງ ${remaining} ${kp.unit})`;
+          badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+          badgeIcon = '⚠️';
+          warnCount++;
+        } else {
+          passCount++;
+        }
+
+        // Live badge below each input
+        const miniBadge = document.getElementById(`auditMiniBadge_${kp.id}`);
+        if (miniBadge) {
+          miniBadge.className = `text-[9.5px] font-bold px-1.5 py-0.5 rounded text-center border ${badgeColor}`;
+          miniBadge.innerHTML = `${badgeIcon} ${status === 'PASS' ? 'ຜ່ານ' : status === 'WARN' ? 'ເຝົ້າລະວັງ' : 'ເກີນເກນ'}`;
+        }
+
+        paramBreakdown.push({
+          param: paramDef,
+          kp,
+          val,
+          limit,
+          status,
+          diffLabel,
+          badgeColor,
+          badgeIcon
+        });
+      });
+
+      // Best-Fit Class Algorithm: determine what class this sample ACTUALLY qualifies for
+      let bestFitClass = 5;
+      for (let c = 1; c <= 5; c++) {
+        let classPass = true;
+        for (const kp of KEY_AUDIT_PARAMS) {
+          const val = currentValues[kp.id];
+          const paramDef = LAO_STANDARD_81.parameters.find(x => x.id === kp.id);
+          if (!paramDef) continue;
+          const lim = paramDef.classLimits[c];
+          if (!lim) continue;
+          if (lim.min !== null && lim.min !== undefined && val < lim.min) {
+            classPass = false;
+            break;
+          }
+          if (lim.max !== null && lim.max !== undefined && val > lim.max) {
+            classPass = false;
+            break;
+          }
+        }
+        if (classPass) {
+          bestFitClass = c;
+          break;
+        }
+      }
+
+      const bestFitObj = LAO_STANDARD_81.classes.find(c => c.id === bestFitClass) || LAO_STANDARD_81.classes[4];
+      const isOverallPass = exceedCount === 0;
+      const isOverallWarn = exceedCount === 0 && warnCount > 0;
+
+      // Render Evaluation Result Card
+      const resCard = document.getElementById('auditEvaluationResultCard');
+      if (resCard) {
+        let statusBadge = '';
+        let statusTitle = '';
+        let statusDesc = '';
+
+        if (isOverallPass && !isOverallWarn) {
+          statusBadge = `<span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-600 text-white shadow-xs flex items-center gap-1.5"><span>✅</span> ຜ່ານມາດຕະຖານ 81/ລບ 100%</span>`;
+          statusTitle = `ຄຸນນະພາບນ້ຳຕົວຈິງ ສອດຄ່ອງຕາມເກນ ${escapeHtml(classInfo.name)} (${escapeHtml(classInfo.shortUse)})`;
+          statusDesc = `ທຸກຕົວຊີ້ວັດທີ່ກວດສອບ (${totalChecked} ຕົວຊີ້ວັດ) ຢູ່ໃນເກນມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ.`;
+        } else if (isOverallWarn) {
+          statusBadge = `<span class="px-3 py-1 rounded-full text-xs font-black bg-amber-500 text-white shadow-xs flex items-center gap-1.5"><span>⚠️</span> ຢູ່ໃນເກນເຝົ້າລະວັງ (${warnCount} ຕົວຊີ້ວັດໃກ້ເກີນ)</span>`;
+          statusTitle = `ຄຸນນະພາບນ້ຳຢູ່ໃນເກນ ${escapeHtml(classInfo.name)} ແຕ່ມີຕົວຊີ້ວັດເຂົ້າໃກ້ຂອບເຂດສູງສຸດ`;
+          statusDesc = `ຄວນເພີ່ມຄວາມຖີ່ໃນການຕິດຕາມກວດກາ ແລະ ລະມັດລະວັງການປ່ອຍສິ່ງເສດເຫຼືອເພີ່ມເຕີມ.`;
+        } else {
+          statusBadge = `<span class="px-3 py-1 rounded-full text-xs font-black bg-rose-600 text-white shadow-xs flex items-center gap-1.5"><span>❌</span> ບໍ່ຜ່ານເກນ (${exceedCount} ຕົວຊີ້ວັດເກີນມາດຕະຖານ)</span>`;
+          statusTitle = `ຄຸນນະພາບນ້ຳຕົວຈິງ ເກີນເກນມາດຕະຖານ ${escapeHtml(classInfo.name)}`;
+          statusDesc = `ມີຕົວຊີ້ວັດເກີນຄ່າຈຳກັດສູງສຸດທີ່ອະນຸຍາດ ຕ້ອງມີມາດຕະການຄວບຄຸມ ຫຼື ປັບປຸງຄຸນນະພາບນ້ຳຢ່າງຮີບດ່ວນ.`;
+        }
+
+        resCard.innerHTML = `
+          <!-- Header Banner -->
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                ${statusBadge}
+                <span class="text-xs font-bold text-slate-700">📍 ${escapeHtml(coordTitle)}</span>
+                <span class="text-[11px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">(${coordLat.toFixed(4)}, ${coordLng.toFixed(4)})</span>
+              </div>
+              <h4 class="text-sm font-bold text-slate-900 mt-1.5">${statusTitle}</h4>
+              <p class="text-xs text-slate-500 mt-0.5">${statusDesc}</p>
+            </div>
+
+            <!-- Best-fit classification badge -->
+            <div class="p-3 rounded-xl bg-gradient-to-br from-indigo-50 to-teal-50 border border-indigo-200/80 text-left shrink-0">
+              <span class="text-[10px] font-bold text-indigo-700 uppercase tracking-wide block">🎯 ການຈັດປະເພດຄຸນນະພາບນ້ຳຕົວຈິງ</span>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <span class="text-base">${bestFitObj.icon}</span>
+                <span class="text-xs font-black text-slate-900">${escapeHtml(bestFitObj.name)}</span>
+              </div>
+              <p class="text-[10.5px] text-slate-600 font-medium mt-0.5 max-w-[200px] leading-tight">${escapeHtml(bestFitObj.shortUse)}</p>
+            </div>
+          </div>
+
+          <!-- Parameter Comparison Table -->
+          <div class="overflow-x-auto rounded-xl border border-slate-200 max-h-72">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="sticky top-0 bg-slate-100 z-10 text-slate-700 font-bold border-b border-slate-200">
+                <tr>
+                  <th class="p-2.5">ຕົວຊີ້ວັດ (Parameter)</th>
+                  <th class="p-2.5 text-center">ຄ່າວັດແທກຕົວຈິງ</th>
+                  <th class="p-2.5 text-center">ເກນ 81/ລບ (${escapeHtml(classInfo.name)})</th>
+                  <th class="p-2.5 text-center">ສະຖານະ</th>
+                  <th class="p-2.5">ຜົນຕ່າງ / Deviation</th>
+                  <th class="p-2.5 min-w-[140px]">ການນຳໃຊ້ທີ່ອະນຸຍາດ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 bg-white">
+                ${paramBreakdown.map(pb => `
+                  <tr class="hover:bg-slate-50/70 transition">
+                    <td class="p-2.5">
+                      <span class="font-bold text-slate-800">${escapeHtml(pb.param.name)}</span>
+                      <span class="block text-[10px] text-slate-400 font-normal font-mono">${escapeHtml(pb.param.en)} (${escapeHtml(pb.param.unit)})</span>
+                    </td>
+                    <td class="p-2.5 text-center font-bold text-sm font-mono text-slate-900">
+                      ${pb.val} <span class="text-[10px] text-slate-400 font-normal">${escapeHtml(pb.param.unit)}</span>
+                    </td>
+                    <td class="p-2.5 text-center font-mono font-bold text-indigo-700 bg-indigo-50/40">
+                      ${escapeHtml(pb.limit.label)}
+                    </td>
+                    <td class="p-2.5 text-center">
+                      <span class="px-2 py-0.5 rounded-full text-[10.5px] font-bold border ${pb.badgeColor}">
+                        ${pb.badgeIcon} ${pb.status === 'PASS' ? 'ຜ່ານ' : pb.status === 'WARN' ? 'ເຝົ້າລະວັງ' : 'ເກີນເກນ'}
+                      </span>
+                    </td>
+                    <td class="p-2.5 text-[11px] font-medium text-slate-600">
+                      ${escapeHtml(pb.diffLabel)}
+                    </td>
+                    <td class="p-2.5 text-[11px] text-slate-500">
+                      ${escapeHtml(pb.param.note || '-')}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Bottom Action Buttons -->
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+            <div class="text-[11px] text-slate-500 flex items-center gap-1.5">
+              <span>🏛️</span>
+              <span>ອ້າງອີງ: ຂໍ້ຕົກລົງວ່າດ້ວຍມາດຕະຖານສິ່ງແວດລ້ອມ ແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ, ລົງວັນທີ 21 ກຸມພາ 2017</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="printAuditPointReport()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <span>🖨️</span>
+                <span>ພິມໃບກວດສອບຈຸດພິກັດນີ້</span>
+              </button>
+              <button type="button" onclick="exportAuditPointToExcel()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <span>📊</span>
+                <span>ສົ່ງອອກ Excel ຈຸດພິກັດ</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function renderAuditParamInputs() {
+      const container = document.getElementById('auditParamInputsGrid');
+      if (!container) return;
+
+      container.innerHTML = KEY_AUDIT_PARAMS.map(p => `
+        <div class="p-2.5 bg-white rounded-xl border border-slate-200/90 shadow-2xs space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[10.5px] font-bold text-slate-700 truncate" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</span>
+            <span class="text-[9.5px] text-slate-400 font-mono">${escapeHtml(p.unit)}</span>
+          </div>
+          <input type="number" step="${p.step}" id="auditParamVal_${p.id}" value="${p.defaultVal}" oninput="recalcCustomAuditComparison()" class="w-full border border-slate-200 p-1.5 rounded-lg text-xs font-mono font-bold text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50/60 text-center">
+          <div id="auditMiniBadge_${p.id}" class="text-[9.5px] font-bold px-1.5 py-0.5 rounded text-center border bg-emerald-100 text-emerald-800 border-emerald-300">
+            ✅ ຜ່ານ
+          </div>
+        </div>
+      `).join('');
+    }
+
+    let selectedAuditDatasetKey = 'ALL';
+    let allAvailableRawDatasets = [];
+
+    function populateAuditDatasetSelect() {
+      const select = document.getElementById('auditDatasetSelect');
+      if (!select) return;
+
+      allAvailableRawDatasets = [];
+
+      // 1. User uploaded / Firebase datasets
+      if (Array.isArray(waterData) && waterData.length > 0) {
+        waterData.forEach((d, idx) => {
+          if (d.stations && Array.isArray(d.stations) && d.stations.length > 0) {
+            const dsKey = d.id || `ds_user_${idx}`;
+            allAvailableRawDatasets.push({
+              key: dsKey,
+              title: d.companyName || `ຊຸດຂໍ້ມູນ ${idx + 1}`,
+              date: d.date || '-',
+              province: d.province || '-',
+              basin: d.waterSource || d.basin || 'ອ່າງແມ່ນ້ຳ',
+              isUserUploaded: true,
+              stations: d.stations.map((st, sIdx) => ({
+                ...st,
+                companyName: d.companyName || 'ຖານຂໍ້ມູນລະບົບ',
+                sampleDate: st.sampleDate || d.date || '2026-10-15',
+                datasetKey: dsKey,
+                datasetTitle: d.companyName || `ຊຸດຂໍ້ມູນ ${idx + 1}`
+              }))
+            });
+          }
+        });
+      }
+
+      // 2. Official baseline survey datasets (always available for instant comparison)
+      DEFAULT_BASELINE_DATASETS.forEach(bDs => {
+        allAvailableRawDatasets.push({
+          key: bDs.key,
+          title: bDs.title,
+          date: bDs.date,
+          province: bDs.province,
+          basin: bDs.basin,
+          isUserUploaded: false,
+          stations: bDs.stations.map(st => ({ ...st }))
+        });
+      });
+
+      const totalStationsCount = allAvailableRawDatasets.reduce((sum, d) => sum + d.stations.length, 0);
+
+      let optionsHtml = `<option value="ALL">📂 ທຸກຊຸດຂໍ້ມູນທັງໝົດ (${totalStationsCount} ສະຖານີ)</option>`;
+      allAvailableRawDatasets.forEach(d => {
+        const icon = d.isUserUploaded ? '📁' : '🏛️';
+        optionsHtml += `<option value="${d.key}">${icon} [${escapeHtml(d.date)}] ${escapeHtml(d.title)} (${d.stations.length} ສະຖານີ) - ${escapeHtml(d.province)}</option>`;
+      });
+
+      select.innerHTML = optionsHtml;
+      if (selectedAuditDatasetKey && (selectedAuditDatasetKey === 'ALL' || allAvailableRawDatasets.some(d => d.key === selectedAuditDatasetKey))) {
+        select.value = selectedAuditDatasetKey;
+      } else {
+        select.value = 'ALL';
+        selectedAuditDatasetKey = 'ALL';
+      }
+    }
+
+    function onAuditDatasetChange() {
+      const select = document.getElementById('auditDatasetSelect');
+      if (!select) return;
+      selectedAuditDatasetKey = select.value;
+
+      // Re-populate station selector with ONLY stations belonging to the selected dataset
+      populateAuditStationSelect();
+
+      const label = document.getElementById('auditDatasetSummaryLabel');
+      if (label) {
+        if (selectedAuditDatasetKey === 'ALL') {
+          label.innerHTML = `ສະແດງສະຖານີຈາກ: <span class="font-bold text-indigo-700">ທຸກຊຸດຂໍ້ມູນທັງໝົດ (${currentAuditStationList.length} ສະຖານີ)</span>`;
+        } else {
+          const ds = allAvailableRawDatasets.find(d => d.key === selectedAuditDatasetKey);
+          const title = ds ? ds.title : 'ຊຸດຂໍ້ມູນທີ່ເລືອກ';
+          label.innerHTML = `ສະແດງສະຖານີຈາກ: <span class="font-bold text-indigo-700">📁 ${escapeHtml(title)} (${currentAuditStationList.length} ສະຖານີ)</span>`;
+        }
+      }
+
+      // Automatically select the first station of the chosen dataset and trigger real-time evaluation
+      currentAuditStationIndex = 0;
+      onAuditStationChange();
+    }
+
+    function populateAuditStationSelect() {
+      const select = document.getElementById('auditStationSelect');
+      if (!select) return;
+
+      if (selectedAuditDatasetKey === 'ALL') {
+        currentAuditStationList = [];
+        allAvailableRawDatasets.forEach(ds => {
+          ds.stations.forEach(st => currentAuditStationList.push(st));
+        });
+        if (currentAuditStationList.length === 0) {
+          currentAuditStationList = getAllAvailableAuditStations();
+        }
+      } else {
+        const ds = allAvailableRawDatasets.find(d => d.key === selectedAuditDatasetKey);
+        currentAuditStationList = (ds && Array.isArray(ds.stations)) ? [...ds.stations] : [];
+      }
+
+      if (currentAuditStationList.length === 0) {
+        select.innerHTML = `<option value="">(ບໍ່ມີສະຖານີໃນຊຸດຂໍ້ມູນນີ້)</option>`;
+        select.disabled = true;
+        currentAuditStationIndex = 0;
+        return;
+      }
+
+      select.disabled = false;
+      select.innerHTML = currentAuditStationList.map((st, idx) => {
+        const lat = st.lat !== undefined && st.lat !== null ? Number(st.lat).toFixed(4) : '-';
+        const lng = st.lng !== undefined && st.lng !== null ? Number(st.lng).toFixed(4) : '-';
+        const prov = st.province || 'ລາວ';
+        return `<option value="${idx}">📍 [${escapeHtml(prov)}] ${escapeHtml(st.name || `ສະຖານີ ${idx + 1}`)} (${lat}, ${lng}) - ${escapeHtml(st.basin || 'ອ່າງແມ່ນ້ຳ')}</option>`;
+      }).join('');
+
+      if (currentAuditStationIndex >= currentAuditStationList.length || currentAuditStationIndex < 0) {
+        currentAuditStationIndex = 0;
+      }
+      select.value = currentAuditStationIndex;
+    }
+
+    function getLiveGpsForAudit() {
+      if (!navigator.geolocation) {
+        return Swal.fire({ icon: 'warning', title: 'ອຸປະກອນບໍ່ຮອງຮັບ GPS', text: 'ກະລຸນາປ້ອນພິກັດ Latitude ແລະ Longitude ດ້ວຍຕົນເອງ.' });
+      }
+
+      Swal.fire({
+        title: 'ກຳລັງດຶງພິກັດ GPS...',
+        text: 'ກະລຸນາອະນຸຍາດການເຂົ້າເຖິງສະຖານທີ່',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          Swal.close();
+          const lat = parseFloat(pos.coords.latitude.toFixed(6));
+          const lng = parseFloat(pos.coords.longitude.toFixed(6));
+
+          switchAuditInspectMode('custom');
+          const elLat = document.getElementById('customAuditLat');
+          const elLng = document.getElementById('customAuditLng');
+          const elName = document.getElementById('customAuditName');
+
+          if (elLat) elLat.value = lat;
+          if (elLng) elLng.value = lng;
+          if (elName) elName.value = `ຈຸດພິກັດ GPS ພາກສະໜາມ (${lat}, ${lng})`;
+
+          recalcCustomAuditComparison();
+
+          Swal.fire({
+            icon: 'success',
+            title: 'ດຶງພິກັດ GPS ສຳເລັດ!',
+            text: `Latitude: ${lat}, Longitude: ${lng}`,
+            timer: 2000,
+            showConfirmButton: false
+          });
+        },
+        err => {
+          Swal.fire({
+            icon: 'error',
+            title: 'ດຶງພິກັດ GPS ບໍ່ສຳເລັດ',
+            text: err.message || 'ກະລຸນາເປີດ GPS ຫຼື ປ້ອນພິກັດດ້ວຍຕົນເອງ.'
+          });
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    function focusStationOnMap() {
+      let lat = 17.9621;
+      let lng = 102.6105;
+      let name = 'ສະຖານີ';
+
+      if (currentAuditInspectMode === 'station') {
+        const st = currentAuditStationList[currentAuditStationIndex];
+        if (st && st.lat && st.lng) {
+          lat = Number(st.lat);
+          lng = Number(st.lng);
+          name = st.name || 'ສະຖານີ';
+        }
+      } else {
+        lat = parseFloat(document.getElementById('customAuditLat')?.value) || 17.9621;
+        lng = parseFloat(document.getElementById('customAuditLng')?.value) || 102.6105;
+        name = document.getElementById('customAuditName')?.value || 'ຈຸດເກັບຕົວຢ່າງ';
+      }
+
+      setAppView('map');
+      setTimeout(() => {
+        if (typeof map !== 'undefined' && map) {
+          map.setView([lat, lng], 13);
+          L.popup()
+            .setLatLng([lat, lng])
+            .setContent(`
+              <div style="font-family:Noto Sans Lao, sans-serif; padding:4px;">
+                <b style="color:#0f172a; font-size:13px;">📍 ${escapeHtml(name)}</b><br>
+                <span style="font-size:11px; color:#475569;">ພິກັດ: ${lat.toFixed(4)}, ${lng.toFixed(4)}</span><br>
+                <span style="font-size:11px; color:#059669; font-weight:bold;">⚖️ ມາດຕະຖານ 81/ລບ: ກຳລັງກວດສອບ</span>
+              </div>
+            `)
+            .openOn(map);
+        }
+      }, 300);
+    }
+
+    function printAuditPointReport() {
+      let title = '';
+      let basin = '';
+      let province = '';
+      let lat = 17.9621;
+      let lng = 102.6105;
+      let sampleDate = new Date().toLocaleDateString('lo-LA');
+
+      if (currentAuditInspectMode === 'station') {
+        const st = currentAuditStationList[currentAuditStationIndex] || currentAuditStationList[0];
+        if (st) {
+          title = st.name || 'ສະຖານີ';
+          basin = st.basin || 'ອ່າງແມ່ນ້ຳຂອງ';
+          province = st.province || 'ນະຄອນຫຼວງວຽງຈັນ';
+          lat = Number(st.lat) || 17.9621;
+          lng = Number(st.lng) || 102.6105;
+          sampleDate = st.sampleDate || sampleDate;
+        }
+      } else {
+        title = document.getElementById('customAuditName')?.value || 'ຈຸດເກັບຕົວຢ່າງພາກສະໜາມ';
+        basin = document.getElementById('customAuditBasin')?.value || 'ອ່າງແມ່ນ້ຳຂອງ';
+        lat = parseFloat(document.getElementById('customAuditLat')?.value) || 17.9621;
+        lng = parseFloat(document.getElementById('customAuditLng')?.value) || 102.6105;
+        province = 'ສປປ ລາວ';
+      }
+
+      const targetClass = currentAuditCompareClass || 2;
+      const classInfo = LAO_STANDARD_81.classes.find(c => c.id === targetClass) || LAO_STANDARD_81.classes[1];
+
+      const rows = KEY_AUDIT_PARAMS.map((kp, idx) => {
+        const inp = document.getElementById(`auditParamVal_${kp.id}`);
+        const val = inp ? parseFloat(inp.value) : kp.defaultVal;
+        const pDef = LAO_STANDARD_81.parameters.find(x => x.id === kp.id);
+        const lim = pDef ? pDef.classLimits[targetClass] : null;
+
+        let status = 'ຜ່ານມາດຕະຖານ';
+        let statusColor = '#059669';
+        if (lim) {
+          if (lim.min !== null && val < lim.min) {
+            status = 'ເກີນເກນ (ຕ່ຳກວ່າ)';
+            statusColor = '#dc2626';
+          } else if (lim.max !== null && val > lim.max) {
+            status = 'ເກີນເກນ (ສູງກວ່າ)';
+            statusColor = '#dc2626';
+          } else if (lim.max !== null && val >= lim.max * 0.9) {
+            status = 'ເຝົ້າລະວັງ';
+            statusColor = '#d97706';
+          }
+        }
+
+        return `
+          <tr>
+            <td style="text-align:center;">${idx + 1}</td>
+            <td><b>${escapeHtml(kp.name)}</b></td>
+            <td style="text-align:center;">${escapeHtml(kp.unit)}</td>
+            <td style="text-align:center; font-weight:bold;">${val}</td>
+            <td style="text-align:center;">${lim ? escapeHtml(lim.label) : '-'}</td>
+            <td style="text-align:center; font-weight:bold; color:${statusColor};">${status}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const printWin = window.open('', '_blank');
+      if (!printWin) return alert('ກະລຸນາອະນຸຍາດ Pop-up window ເພື່ອພິມໃບລາຍງານ');
+
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>ໃບລາຍງານຜົນການກວດສອບສະຖານະຄຸນນະພາບນ້ຳ 81/ລບ - ${escapeHtml(title)}</title>
+          <style>
+            body { font-family: 'Noto Sans Lao', Arial, sans-serif; padding: 25px; color: #1e293b; line-height: 1.5; }
+            .header { text-align: center; border-bottom: 2px solid #0284c7; padding-bottom: 12px; margin-bottom: 16px; }
+            .national-motto { font-size: 13px; font-weight: bold; margin-bottom: 4px; }
+            .ministry { font-size: 14px; font-weight: bold; }
+            .doc-title { font-size: 16px; font-weight: bold; color: #0369a1; margin-top: 10px; }
+            .meta-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 12px; }
+            .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+            table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 20px; }
+            th { background: #e2e8f0; border: 1px solid #94a3b8; padding: 7px; text-align: left; }
+            td { border: 1px solid #cbd5e1; padding: 6px 8px; }
+            .footer { margin-top: 30px; display: flex; justify-content: space-between; font-size: 12px; }
+            @media print { body { padding: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="national-motto">ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ<br>ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</div>
+            <div class="ministry">ກະຊວງຊັບພະຍາກອນທຳມະຊາດ ແລະ ສິ່ງແວດລ້ອມ<br>ກົມຊັບພະຍາກອນນ້ຳ</div>
+            <div class="doc-title">ໃບຢັ້ງຢືນຜົນການກວດສອບສະຖານະຄຸນນະພາບນ້ຳຕົວຈິງ ທຽບກັບມາດຕະຖານ 81/ລບ</div>
+            <div style="font-size: 11px; color:#64748b; margin-top:4px;">ອີງຕາມ ຂໍ້ຕົກລົງວ່າດ້ວຍມາດຕະຖານສິ່ງແວດລ້ອມ ແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ, ລົງວັນທີ 21 ກຸມພາ 2017</div>
+          </div>
+
+          <div class="meta-box">
+            <div class="meta-grid">
+              <div><b>📍 ສະຖານີ/ຈຸດເກັບຕົວຢ່າງ:</b> ${escapeHtml(title)}</div>
+              <div><b>🧭 ພິກັດ GPS (WGS84):</b> Lat ${lat.toFixed(5)}, Lng ${lng.toFixed(5)}</div>
+              <div><b>🌊 ອ່າງແມ່ນ້ຳ / ແຫຼ່ງນ້ຳ:</b> ${escapeHtml(basin)}</div>
+              <div><b>🏛️ ແຂວງ / ສະຖານທີ່:</b> ${escapeHtml(province)}</div>
+              <div><b>📅 ວັນທີເກັບຕົວຢ່າງ / ວິເຄາະ:</b> ${escapeHtml(sampleDate)}</div>
+              <div><b>⚖️ ມາດຕະຖານທີ່ໃຊ້ທຽບ:</b> ${escapeHtml(classInfo.name)} (${escapeHtml(classInfo.shortUse)})</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40px; text-align:center;">ລຳດັບ</th>
+                <th>ຕົວກຳນົດຄຸນນະພາບນ້ຳ</th>
+                <th style="width:90px; text-align:center;">ຫົວໜ່ວຍ</th>
+                <th style="width:110px; text-align:center;">ຄ່າວັດແທກຕົວຈິງ</th>
+                <th style="width:110px; text-align:center;">ເກນ 81/ລບ (${escapeHtml(classInfo.name)})</th>
+                <th style="width:130px; text-align:center;">ຜົນການປະເມີນ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <div>
+              <p>ວັນທີພິມເອກະສານ: ${new Date().toLocaleDateString('lo-LA')}</p>
+              <p>ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ ກົມຊັບພະຍາກອນນ້ຳ</p>
+            </div>
+            <div style="text-align: center;">
+              <p>ຜູ້ກວດກາ ແລະ ຢັ້ງຢືນ</p>
+              <br><br><br>
+              <p>(ລາຍເຊັນ ແລະ ປະທັບຕາ)</p>
+            </div>
+          </div>
+          ${'<'}script>
+            window.onload = function() { window.print(); };
+          ${'<'}/script>
+        </body>
+        </html>
+      `);
+      printWin.document.close();
+    }
+
+    function exportAuditPointToExcel() {
+      if (!window.XLSX) return alert('ກະລຸນາລໍຖ້າລະບົບໂຫລດໂປຣແກຣມ SheetJS');
+
+      let title = '';
+      let lat = 17.9621;
+      let lng = 102.6105;
+      let basin = '';
+
+      if (currentAuditInspectMode === 'station') {
+        const st = currentAuditStationList[currentAuditStationIndex] || currentAuditStationList[0];
+        if (st) {
+          title = st.name || 'ສະຖານີ';
+          basin = st.basin || 'ອ່າງແມ່ນ້ຳ';
+          lat = Number(st.lat) || 17.9621;
+          lng = Number(st.lng) || 102.6105;
+        }
+      } else {
+        title = document.getElementById('customAuditName')?.value || 'ຈຸດເກັບຕົວຢ່າງ';
+        basin = document.getElementById('customAuditBasin')?.value || 'ອ່າງແມ່ນ້ຳ';
+        lat = parseFloat(document.getElementById('customAuditLat')?.value) || 17.9621;
+        lng = parseFloat(document.getElementById('customAuditLng')?.value) || 102.6105;
+      }
+
+      const targetClass = currentAuditCompareClass || 2;
+      const classInfo = LAO_STANDARD_81.classes.find(c => c.id === targetClass) || LAO_STANDARD_81.classes[1];
+
+      const data = [
+        ['ໃບຢັ້ງຢືນຜົນການກວດສອບສະຖານະຄຸນນະພາບນ້ຳຕົວຈິງ ທຽບກັບມາດຕະຖານ 81/ລບ'],
+        ['ອີງຕາມ: ຂໍ້ຕົກລົງວ່າດ້ວຍມາດຕະຖານສິ່ງແວດລ້ອມ ແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ, ລົງວັນທີ 21 ກຸມພາ 2017'],
+        [],
+        ['ຈຸດເກັບຕົວຢ່າງ / ສະຖານີ:', title],
+        ['ພິກັດ Latitude (WGS84):', lat],
+        ['ພິກັດ Longitude (WGS84):', lng],
+        ['ອ່າງແມ່ນ້ຳ:', basin],
+        ['ມາດຕະຖານທີ່ໃຊ້ທຽບ:', `${classInfo.name} (${classInfo.shortUse})`],
+        ['ວັນທີກວດສອບ:', new Date().toLocaleDateString('lo-LA')],
+        [],
+        ['ລຳດັບ', 'ຕົວຊີ້ວັດ (Parameter)', 'ຫົວໜ່ວຍ', 'ຄ່າວັດແທກຕົວຈິງ', `ເກນ 81/ລບ (${classInfo.name})`, 'ສະຖານະກວດສອບ']
+      ];
+
+      KEY_AUDIT_PARAMS.forEach((kp, idx) => {
+        const inp = document.getElementById(`auditParamVal_${kp.id}`);
+        const val = inp ? parseFloat(inp.value) : kp.defaultVal;
+        const pDef = LAO_STANDARD_81.parameters.find(x => x.id === kp.id);
+        const lim = pDef ? pDef.classLimits[targetClass] : null;
+
+        let status = 'ຜ່ານມາດຕະຖານ';
+        if (lim) {
+          if (lim.min !== null && val < lim.min) status = 'ເກີນເກນ (ຕ່ຳກວ່າ)';
+          else if (lim.max !== null && val > lim.max) status = 'ເກີນເກນ (ສູງກວ່າ)';
+          else if (lim.max !== null && val >= lim.max * 0.9) status = 'ເຝົ້າລະວັງ';
+        }
+
+        data.push([
+          idx + 1,
+          kp.name,
+          kp.unit,
+          val,
+          lim ? lim.label : '-',
+          status
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Audit_Point_81');
+      XLSX.writeFile(wb, `Water_Audit_Point_Decree_81_${Date.now()}.xlsx`);
+    }
+
+    function setAuditStatusFilter(status) {
+      currentAuditFilterStatus = status;
+      ['ALL', 'PASS', 'WARN', 'EXCEED'].forEach(s => {
+        const btn = document.getElementById(`auditFilter${s.charAt(0) + s.slice(1).toLowerCase()}Btn`);
+        if (btn) {
+          const isAct = s === status;
+          btn.className = isAct
+            ? 'px-2 py-1 rounded bg-white text-slate-800 shadow-2xs font-bold'
+            : 'px-2 py-1 rounded text-slate-600 hover:text-slate-900';
+        }
+      });
+      filterAuditStationsTable();
+    }
+
+    function filterAuditStationsTable() {
+      const q = (document.getElementById('auditSearchInput')?.value || '').toLowerCase().trim();
+      const statusFilter = currentAuditFilterStatus;
+
+      const filtered = currentAuditSearchResults.filter(r => {
+        const matchQuery = !q ||
+          r.name.toLowerCase().includes(q) ||
+          r.company.toLowerCase().includes(q) ||
+          r.basin.toLowerCase().includes(q) ||
+          r.province.toLowerCase().includes(q) ||
+          String(r.lat).includes(q) ||
+          String(r.lng).includes(q);
+
+        const matchStatus = statusFilter === 'ALL' || r.status === statusFilter;
+        return matchQuery && matchStatus;
+      });
+
+      const tb = document.getElementById('auditStationsTableBody');
+      if (!tb) return;
+
+      if (filtered.length === 0) {
+        tb.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">ບໍ່ພົບສະຖານີທີ່ກົງກັບເງື່ອນໄຂການຄົ້ນຫາ</td></tr>`;
+        return;
+      }
+
+      tb.innerHTML = filtered.map(r => {
+        let badgeHtml = '';
+        if (r.status === 'PASS') {
+          badgeHtml = `<span class="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✅ ຜ່ານ</span>`;
+        } else if (r.status === 'WARN') {
+          badgeHtml = `<span class="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-100 text-amber-800 border border-amber-300">⚠️ ເຝົ້າລະວັງ</span>`;
+        } else {
+          badgeHtml = `<span class="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-rose-100 text-rose-800 border border-rose-300">❌ ເກີນເກນ</span>`;
+        }
+
+        const failedHtml = r.failedParams.length > 0
+          ? r.failedParams.map(f => `<span class="inline-block px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 text-[10px] font-mono border border-rose-200 mr-1 mb-1">${escapeHtml(f)}</span>`).join('')
+          : '<span class="text-slate-400 text-[11px]">- ຄ່າທຸກຕົວຊີ້ວັດປົກກະຕິ -</span>';
+
+        const latLngStr = (r.lat !== undefined && r.lat !== null && r.lng !== undefined && r.lng !== null)
+          ? `${Number(r.lat).toFixed(4)}, ${Number(r.lng).toFixed(4)}`
+          : '-';
+
+        return `
+          <tr class="hover:bg-slate-50/70 transition">
+            <td class="p-2.5 text-center text-slate-400 font-mono">${r.idx}</td>
+            <td class="p-2.5 font-bold text-slate-800">
+              ${escapeHtml(r.name)}
+              <div class="text-[10px] font-normal text-slate-400">📁 ${escapeHtml(r.datasetTitle || r.company)}</div>
+            </td>
+            <td class="p-2.5 font-mono text-[11px] text-slate-600">
+              <span class="inline-flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                <span>📍</span> ${latLngStr}
+              </span>
+            </td>
+            <td class="p-2.5 text-slate-600 text-[11px]">
+              <div>${escapeHtml(r.basin)}</div>
+              <div class="text-[10px] text-slate-400">${escapeHtml(r.province)}</div>
+            </td>
+            <td class="p-2.5 text-center">${badgeHtml}</td>
+            <td class="p-2.5">${failedHtml}</td>
+            <td class="p-2.5 text-center">
+              <button type="button" onclick="selectStationForAudit(${r.stListIndex})" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] border border-indigo-200 transition cursor-pointer flex items-center justify-center gap-1 mx-auto" title="ດຶງຂໍ້ມູນສະຖານີນີ້ຂຶ້ນເຄື່ອງມືທຽບ">
+                <span>🔍</span>
+                <span>ທຽບຂໍ້ມູນນີ້</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function selectStationForAudit(stIndex) {
+      switchAuditInspectMode('station');
+
+      const allStations = getAllAvailableAuditStations();
+      const targetSt = allStations[stIndex];
+
+      if (targetSt && targetSt.datasetKey) {
+        // Strict dataset linking: sync dataset selector to the station's dataset!
+        const dsSelect = document.getElementById('auditDatasetSelect');
+        if (dsSelect) {
+          const dsExists = allAvailableRawDatasets.some(d => d.key === targetSt.datasetKey);
+          selectedAuditDatasetKey = dsExists ? targetSt.datasetKey : 'ALL';
+          dsSelect.value = selectedAuditDatasetKey;
+
+          const label = document.getElementById('auditDatasetSummaryLabel');
+          if (label) {
+            if (selectedAuditDatasetKey === 'ALL') {
+              label.innerHTML = `ສະແດງສະຖານີຈາກ: <span class="font-bold text-indigo-700">ທຸກຊຸດຂໍ້ມູນທັງໝົດ</span>`;
+            } else {
+              const ds = allAvailableRawDatasets.find(d => d.key === selectedAuditDatasetKey);
+              const title = ds ? ds.title : 'ຊຸດຂໍ້ມູນທີ່ເລືອກ';
+              label.innerHTML = `ສະແດງສະຖານີຈາກ: <span class="font-bold text-indigo-700">📁 ${escapeHtml(title)}</span>`;
+            }
+          }
+        }
+      }
+
+      // Re-populate station selector with only stations from that dataset
+      populateAuditStationSelect();
+
+      // Find station index within currentAuditStationList
+      let targetIdx = 0;
+      if (targetSt) {
+        const found = currentAuditStationList.findIndex(s => 
+          (s.id && targetSt.id && s.id === targetSt.id) ||
+          (s.name === targetSt.name && s.lat === targetSt.lat && s.lng === targetSt.lng)
+        );
+        if (found >= 0) targetIdx = found;
+      } else if (stIndex < currentAuditStationList.length) {
+        targetIdx = stIndex;
+      }
+
+      const select = document.getElementById('auditStationSelect');
+      if (select) {
+        select.value = targetIdx;
+      }
+      currentAuditStationIndex = targetIdx;
+      onAuditStationChange();
+
+      // Smooth scroll up to inspector workbench
+      const card = document.getElementById('auditInspectorCard');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function runLiveAuditAgainstStandard() {
+      // 1. Populate Datasets, Stations & Parameter Controls
+      populateAuditDatasetSelect();
+      populateAuditStationSelect();
+      renderAuditParamInputs();
+
+      const stations = getAllAvailableAuditStations();
+      const totalSt = stations.length;
+      let passCount = 0;
+      let warnCount = 0;
+      let exceedCount = 0;
+
+      const targetClass = selectedStandardClass || 2;
+
+      currentAuditSearchResults = stations.map((st, idx) => {
+        let isExceed = false;
+        let isWarn = false;
+        const failedParams = [];
+
+        LAO_STANDARD_81.parameters.forEach(param => {
+          const lim = param.classLimits[targetClass];
+          if (!lim) return;
+
+          let raw = undefined;
+          if (st.customs) {
+            if (st.customs[param.id] !== undefined) {
+              raw = st.customs[param.id];
+            } else {
+              // Alias lookup
+              for (const k of Object.keys(st.customs)) {
+                const norm = k.toLowerCase().trim();
+                if (param.aliases.some(alias => norm === alias || norm.includes(alias))) {
+                  raw = st.customs[k];
+                  break;
+                }
+              }
+            }
+          }
+
+          if (raw !== undefined && raw !== null && raw !== '' && raw !== '-' && !isNaN(raw)) {
+            const val = Number(raw);
+            if (lim.min !== null && lim.min !== undefined && val < lim.min) {
+              isExceed = true;
+              failedParams.push(`${param.name}: ${val} < ${lim.min} ${param.unit || ''}`);
+            }
+            if (lim.max !== null && lim.max !== undefined && val > lim.max) {
+              isExceed = true;
+              failedParams.push(`${param.name}: ${val} > ${lim.max} ${param.unit || ''}`);
+            } else if (lim.max !== null && lim.max !== undefined && val >= lim.max * 0.9) {
+              isWarn = true;
+            }
+          }
+        });
+
+        if (isExceed) exceedCount++;
+        else if (isWarn) warnCount++;
+        else passCount++;
+
+        return {
+          idx: idx + 1,
+          stListIndex: idx,
+          datasetKey: st.datasetKey,
+          datasetTitle: st.datasetTitle || st.companyName || '-',
+          name: st.name || `ສະຖານີ ${idx + 1}`,
+          company: st.companyName || '-',
+          basin: st.basin || st.waterSource || 'ອ່າງແມ່ນ້ຳຂອງ',
+          province: st.province || '-',
+          lat: st.lat,
+          lng: st.lng,
+          status: isExceed ? 'EXCEED' : isWarn ? 'WARN' : 'PASS',
+          failedParams
+        };
+      });
+
+      // Update KPI counters
+      const elTotal = document.getElementById('auditTotalStations');
+      const elPass = document.getElementById('auditPassStations');
+      const elPassRate = document.getElementById('auditPassRate');
+      const elWarn = document.getElementById('auditWarnStations');
+      const elExceed = document.getElementById('auditExceedStations');
+
+      if (elTotal) elTotal.innerText = totalSt;
+      if (elPass) elPass.innerText = passCount;
+      if (elPassRate) elPassRate.innerText = totalSt > 0 ? `(${Math.round((passCount / totalSt) * 100)}%)` : '(0%)';
+      if (elWarn) elWarn.innerText = warnCount;
+      if (elExceed) elExceed.innerText = exceedCount;
+
+      // Filter and render table
+      filterAuditStationsTable();
+
+      // Trigger inspector evaluation
+      onAuditStationChange();
+    }
+
+    /* =========================================================================
+       🔍 MODAL: ສະຖິຕິການກວດສອບສະຖານີສະເພາະ (Audit KPI Detail Modal Functions)
+       ========================================================================= */
+
+    let currentModalKpiType = 'TOTAL';
+
+    function openAuditKpiDetailModal(kpiType) {
+      currentModalKpiType = kpiType || 'TOTAL';
+      const modal = document.getElementById('auditKpiDetailModal');
+      if (!modal) return;
+
+      const header = document.getElementById('auditKpiModalHeader');
+      const icon = document.getElementById('auditKpiModalIcon');
+      const title = document.getElementById('auditKpiModalTitle');
+      const sub = document.getElementById('auditKpiModalSub');
+
+      const targetClass = currentAuditCompareClass || selectedStandardClass || 2;
+      const classInfo = LAO_STANDARD_81.classes.find(c => c.id === targetClass) || LAO_STANDARD_81.classes[1];
+
+      if (kpiType === 'TOTAL') {
+        if (icon) icon.innerText = '📊';
+        if (title) title.innerText = 'ລາຍລະອຽດສະຖານີທັງໝົດທີ່ກວດສອບ (All Audited Stations)';
+        if (sub) sub.innerText = `ສະແດງທຸກສະຖານີທີ່ມີໃນລະບົບ ທຽບຕາມເກນ ${classInfo.name} (${classInfo.shortUse}) ຕາມຂໍ້ຕົກລົງ 81/ລບ`;
+        if (header) header.className = 'bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 sm:p-6 border-b border-indigo-800/40 flex items-center justify-between';
+      } else if (kpiType === 'PASS') {
+        if (icon) icon.innerText = '✅';
+        if (title) title.innerText = 'ລາຍລະອຽດສະຖານີທີ່ຜ່ານມາດຕະຖານ 100% (Compliant Stations)';
+        if (sub) sub.innerText = `ສະຖານີທີ່ຄ່າທຸກຕົວຊີ້ວັດຜ່ານເກນມາດຕະຖານ ${classInfo.name} (${classInfo.shortUse}) ຕາມຂໍ້ຕົກລົງ 81/ລບ`;
+        if (header) header.className = 'bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 text-white p-5 sm:p-6 border-b border-emerald-800/40 flex items-center justify-between';
+      } else if (kpiType === 'WARN') {
+        if (icon) icon.innerText = '⚠️';
+        if (title) title.innerText = 'ລາຍລະອຽດສະຖານີທີ່ໃກ້ເກີນເກນ / ເຝົ້າລະວັງ (Warning Stations)';
+        if (sub) sub.innerText = `ສະຖານີທີ່ມີຄ່າເຂົ້າໃກ້ຂອບເຂດສູງສຸດ (≥ 90% ຂອງເກນ) ຕາມມາດຕະຖານ ${classInfo.name} (ຄວນຕິດຕາມໃກ້ຊິດ)`;
+        if (header) header.className = 'bg-gradient-to-r from-amber-950 via-yellow-900 to-slate-900 text-white p-5 sm:p-6 border-b border-amber-800/40 flex items-center justify-between';
+      } else if (kpiType === 'EXCEED') {
+        if (icon) icon.innerText = '❌';
+        if (title) title.innerText = 'ລາຍລະອຽດສະຖານີທີ່ເກີນມາດຕະຖານ (Non-Compliant / Exceeded Stations)';
+        if (sub) sub.innerText = `ສະຖານີທີ່ມີຕົວຊີ້ວັດເກີນຄ່າຈຳກັດສູງສຸດຕາມມາດຕະຖານ ${classInfo.name} (ຕ້ອງມີມາດຕະການແກ້ໄຂດ່ວນ)`;
+        if (header) header.className = 'bg-gradient-to-r from-rose-950 via-red-900 to-slate-900 text-white p-5 sm:p-6 border-b border-rose-800/40 flex items-center justify-between';
+      }
+
+      const searchInput = document.getElementById('modalAuditSearchInput');
+      if (searchInput) searchInput.value = '';
+
+      modal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+      filterModalAuditStations();
+    }
+
+    function closeAuditKpiDetailModal() {
+      const modal = document.getElementById('auditKpiDetailModal');
+      if (modal) modal.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    function filterModalAuditStations() {
+      const q = (document.getElementById('modalAuditSearchInput')?.value || '').toLowerCase().trim();
+      const kpiType = currentModalKpiType || 'TOTAL';
+
+      const filtered = currentAuditSearchResults.filter(r => {
+        let matchKpi = true;
+        if (kpiType === 'PASS') matchKpi = r.status === 'PASS';
+        else if (kpiType === 'WARN') matchKpi = r.status === 'WARN';
+        else if (kpiType === 'EXCEED') matchKpi = r.status === 'EXCEED';
+
+        const matchQuery = !q ||
+          r.name.toLowerCase().includes(q) ||
+          r.company.toLowerCase().includes(q) ||
+          r.basin.toLowerCase().includes(q) ||
+          r.province.toLowerCase().includes(q) ||
+          String(r.lat).includes(q) ||
+          String(r.lng).includes(q);
+
+        return matchKpi && matchQuery;
+      });
+
+      const badge = document.getElementById('auditKpiModalBadge');
+      if (badge) badge.innerText = `${filtered.length} ສະຖານີ`;
+
+      const countText = document.getElementById('modalAuditCountText');
+      if (countText) {
+        const totalMatchingKpi = currentAuditSearchResults.filter(r => {
+          if (kpiType === 'PASS') return r.status === 'PASS';
+          if (kpiType === 'WARN') return r.status === 'WARN';
+          if (kpiType === 'EXCEED') return r.status === 'EXCEED';
+          return true;
+        }).length;
+        countText.innerText = `ສະແດງ ${filtered.length} ຈາກ ${totalMatchingKpi} ສະຖານີ`;
+      }
+
+      const tb = document.getElementById('modalAuditTableBody');
+      if (!tb) return;
+
+      if (filtered.length === 0) {
+        tb.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">ບໍ່ພົບສະຖານີໃນໝວດນີ້ທີ່ກົງກັບຄຳຄົ້ນຫາ</td></tr>`;
+        return;
+      }
+
+      tb.innerHTML = filtered.map((r, i) => {
+        let badgeHtml = '';
+        if (r.status === 'PASS') {
+          badgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✅ ຜ່ານມາດຕະຖານ</span>`;
+        } else if (r.status === 'WARN') {
+          badgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-100 text-amber-800 border border-amber-300">⚠️ ເຝົ້າລະວັງ</span>`;
+        } else {
+          badgeHtml = `<span class="px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-rose-100 text-rose-800 border border-rose-300">❌ ເກີນເກນ</span>`;
+        }
+
+        const failedHtml = r.failedParams.length > 0
+          ? r.failedParams.map(f => `<span class="inline-block px-2 py-0.5 rounded bg-rose-50 text-rose-700 text-[10.5px] font-mono border border-rose-200 mr-1 mb-1 font-semibold">${escapeHtml(f)}</span>`).join('')
+          : '<span class="text-slate-400 text-[11px] font-medium">- ຄ່າທຸກຕົວຊີ້ວັດຢູ່ໃນເກນ -</span>';
+
+        const latLngStr = (r.lat !== undefined && r.lat !== null && r.lng !== undefined && r.lng !== null)
+          ? `${Number(r.lat).toFixed(4)}, ${Number(r.lng).toFixed(4)}`
+          : '-';
+
+        return `
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="p-2.5 text-center text-slate-400 font-mono">${i + 1}</td>
+            <td class="p-2.5 font-bold text-slate-900">
+              <div class="text-xs text-slate-900 font-bold">${escapeHtml(r.name)}</div>
+              <div class="text-[10.5px] font-normal text-slate-500 mt-0.5">📁 ${escapeHtml(r.datasetTitle || r.company)}</div>
+            </td>
+            <td class="p-2.5 font-mono text-[11px] text-slate-600">
+              <span class="inline-flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                <span>📍</span> ${latLngStr}
+              </span>
+            </td>
+            <td class="p-2.5 text-slate-600 text-[11px]">
+              <div class="font-semibold text-slate-700">🌊 ${escapeHtml(r.basin)}</div>
+              <div class="text-[10.5px] text-slate-400">🏛️ ${escapeHtml(r.province)}</div>
+            </td>
+            <td class="p-2.5 text-center">${badgeHtml}</td>
+            <td class="p-2.5">${failedHtml}</td>
+            <td class="p-2.5 text-center">
+              <button type="button" onclick="selectStationFromModal(${r.stListIndex})" class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] border border-indigo-200 transition cursor-pointer flex items-center justify-center gap-1 mx-auto" title="ດຶງຂໍ້ມູນສະຖານີນີ້ຂຶ້ນເຄື່ອງມືທຽບ">
+                <span>🔍</span>
+                <span>ທຽບຂໍ້ມູນນີ້</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function selectStationFromModal(stListIdx) {
+      closeAuditKpiDetailModal();
+      selectStationForAudit(stListIdx);
+    }
+
+    function exportModalAuditToExcel() {
+      if (!window.XLSX) return alert('ກະລຸນາລໍຖ້າລະບົບໂຫລດໂປຣແກຣມ SheetJS');
+
+      const kpiType = currentModalKpiType || 'TOTAL';
+      const q = (document.getElementById('modalAuditSearchInput')?.value || '').toLowerCase().trim();
+
+      const filtered = currentAuditSearchResults.filter(r => {
+        let matchKpi = true;
+        if (kpiType === 'PASS') matchKpi = r.status === 'PASS';
+        else if (kpiType === 'WARN') matchKpi = r.status === 'WARN';
+        else if (kpiType === 'EXCEED') matchKpi = r.status === 'EXCEED';
+
+        const matchQuery = !q ||
+          r.name.toLowerCase().includes(q) ||
+          r.company.toLowerCase().includes(q) ||
+          r.basin.toLowerCase().includes(q) ||
+          r.province.toLowerCase().includes(q) ||
+          String(r.lat).includes(q) ||
+          String(r.lng).includes(q);
+
+        return matchKpi && matchQuery;
+      });
+
+      const targetClass = currentAuditCompareClass || selectedStandardClass || 2;
+      const classInfo = LAO_STANDARD_81.classes.find(c => c.id === targetClass) || LAO_STANDARD_81.classes[1];
+
+      const kpiTitles = {
+        TOTAL: 'ສະຖານີທັງໝົດທີ່ກວດສອບ',
+        PASS: 'ສະຖານີທີ່ຜ່ານມາດຕະຖານ 100%',
+        WARN: 'ສະຖານີທີ່ໃກ້ເກີນເກນ / ເຝົ້າລະວັງ',
+        EXCEED: 'ສະຖານີທີ່ເກີນມາດຕະຖານ 81/ລບ'
+      };
+
+      const data = [
+        ['ລາຍງານສະຖິຕິການກວດສອບສະຖານີຄຸນນະພາບນ້ຳ ຕາມມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ 81/ລບ'],
+        [`ໝວດສະຖິຕິ: ${kpiTitles[kpiType] || kpiType}`, `ມາດຕະຖານທີ່ໃຊ້ທຽບ: ${classInfo.name} (${classInfo.shortUse})`],
+        [`ວັນທີສ້າງບົດລາຍງານ: ${new Date().toLocaleDateString('lo-LA')}`, `ຈຳນວນສະຖານີ: ${filtered.length} ສະຖານີ`],
+        [],
+        ['ລຳດັບ', 'ຊື່ສະຖານີ', 'ຊຸດຂໍ້ມູນ / ບໍລິສັດ', 'Latitude', 'Longitude', 'ອ່າງແມ່ນ້ຳ', 'ແຂວງ', 'ສະຖານະກວດສອບ', 'ຕົວຊີ້ວັດທີ່ເກີນ ຫຼື ຜິດປົກກະຕິ']
+      ];
+
+      filtered.forEach((r, idx) => {
+        data.push([
+          idx + 1,
+          r.name,
+          r.company,
+          r.lat ?? '',
+          r.lng ?? '',
+          r.basin,
+          r.province,
+          r.status === 'PASS' ? 'ຜ່ານມາດຕະຖານ' : r.status === 'WARN' ? 'ເຝົ້າລະວັງ' : 'ເກີນມາດຕະຖານ',
+          r.failedParams.join('; ')
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, `Audit_${kpiType}`);
+      XLSX.writeFile(wb, `Water_Audit_List_${kpiType}_Decree81_${Date.now()}.xlsx`);
+    }
+
+    function printModalAuditList() {
+      const kpiType = currentModalKpiType || 'TOTAL';
+      const q = (document.getElementById('modalAuditSearchInput')?.value || '').toLowerCase().trim();
+
+      const filtered = currentAuditSearchResults.filter(r => {
+        let matchKpi = true;
+        if (kpiType === 'PASS') matchKpi = r.status === 'PASS';
+        else if (kpiType === 'WARN') matchKpi = r.status === 'WARN';
+        else if (kpiType === 'EXCEED') matchKpi = r.status === 'EXCEED';
+
+        const matchQuery = !q ||
+          r.name.toLowerCase().includes(q) ||
+          r.company.toLowerCase().includes(q) ||
+          r.basin.toLowerCase().includes(q) ||
+          r.province.toLowerCase().includes(q) ||
+          String(r.lat).includes(q) ||
+          String(r.lng).includes(q);
+
+        return matchKpi && matchQuery;
+      });
+
+      const targetClass = currentAuditCompareClass || selectedStandardClass || 2;
+      const classInfo = LAO_STANDARD_81.classes.find(c => c.id === targetClass) || LAO_STANDARD_81.classes[1];
+
+      const kpiTitles = {
+        TOTAL: 'ລາຍຊື່ສະຖານີທັງໝົດທີ່ກວດສອບ',
+        PASS: 'ລາຍຊື່ສະຖານີທີ່ຜ່ານມາດຕະຖານ 100%',
+        WARN: 'ລາຍຊື່ສະຖານີທີ່ໃກ້ເກີນເກນ / ເຝົ້າລະວັງ',
+        EXCEED: 'ລາຍຊື່ສະຖານີທີ່ເກີນມາດຕະຖານ 81/ລບ'
+      };
+
+      const rows = filtered.map((r, i) => `
+        <tr>
+          <td style="text-align:center;">${i + 1}</td>
+          <td><b>${escapeHtml(r.name)}</b><br><small style="color:#64748b;">${escapeHtml(r.company)}</small></td>
+          <td style="text-align:center; font-family:monospace;">${r.lat ? Number(r.lat).toFixed(4) : '-'}, ${r.lng ? Number(r.lng).toFixed(4) : '-'}</td>
+          <td>${escapeHtml(r.basin)}<br><small style="color:#64748b;">${escapeHtml(r.province)}</small></td>
+          <td style="text-align:center; font-weight:bold; color:${r.status === 'PASS' ? '#059669' : r.status === 'WARN' ? '#d97706' : '#dc2626'};">
+            ${r.status === 'PASS' ? '✅ ຜ່ານ' : r.status === 'WARN' ? '⚠️ ເຝົ້າລະວັງ' : '❌ ເກີນເກນ'}
+          </td>
+          <td style="font-size:11px;">${r.failedParams.length > 0 ? r.failedParams.map(f => escapeHtml(f)).join('<br>') : '<span style="color:#94a3b8;">- ປົກກະຕິ -</span>'}</td>
+        </tr>
+      `).join('');
+
+      const printWin = window.open('', '_blank');
+      if (!printWin) return alert('ກະລຸນາອະນຸຍາດ Pop-up window ເພື່ອພິມໃບລາຍງານ');
+
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>ບົດລາຍງານສະຖິຕິການກວດສອບສະຖານີ - ${escapeHtml(kpiTitles[kpiType])}</title>
+          <style>
+            body { font-family: 'Noto Sans Lao', Arial, sans-serif; padding: 25px; color: #1e293b; line-height: 1.5; }
+            .header { text-align: center; border-bottom: 2px solid #0284c7; padding-bottom: 12px; margin-bottom: 16px; }
+            .national-motto { font-size: 13px; font-weight: bold; margin-bottom: 4px; }
+            .ministry { font-size: 14px; font-weight: bold; }
+            .doc-title { font-size: 16px; font-weight: bold; color: #0369a1; margin-top: 10px; }
+            .meta-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 12px; display: flex; justify-content: space-between; }
+            table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-bottom: 20px; }
+            th { background: #e2e8f0; border: 1px solid #94a3b8; padding: 7px; text-align: left; }
+            td { border: 1px solid #cbd5e1; padding: 6px 8px; }
+            .footer { margin-top: 30px; display: flex; justify-content: space-between; font-size: 12px; }
+            @media print { body { padding: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="national-motto">ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ<br>ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</div>
+            <div class="ministry">ກະຊວງຊັບພະຍາກອນທຳມະຊາດ ແລະ ສິ່ງແວດລ້ອມ<br>ກົມຊັບພະຍາກອນນ້ຳ</div>
+            <div class="doc-title">${escapeHtml(kpiTitles[kpiType])}</div>
+            <div style="font-size: 11.5px; color:#64748b; margin-top:4px;">ທຽບຕາມ ຂໍ້ຕົກລົງວ່າດ້ວຍມາດຕະຖານສິ່ງແວດລ້ອມ ແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ, ລົງວັນທີ 21 ກຸມພາ 2017</div>
+          </div>
+
+          <div class="meta-box">
+            <div><b>⚖️ ມາດຕະຖານທີ່ໃຊ້ທຽບ:</b> ${escapeHtml(classInfo.name)} (${escapeHtml(classInfo.shortUse)})</div>
+            <div><b>📊 ຈຳນວນສະຖານີ:</b> ${filtered.length} ສະຖານີ</div>
+            <div><b>📅 ວັນທີພິມ:</b> ${new Date().toLocaleDateString('lo-LA')}</div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40px; text-align:center;">ລຳດັບ</th>
+                <th>ສະຖານີ / ຊຸດຂໍ້ມູນ</th>
+                <th style="width:130px; text-align:center;">📍 ພິກັດ GPS</th>
+                <th>ອ່າງແມ່ນ້ຳ / ແຂວງ</th>
+                <th style="width:110px; text-align:center;">ສະຖານະ</th>
+                <th>ຕົວຊີ້ວັດທີ່ເກີນ ຫຼື ຜິດປົກກະຕິ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <div>
+              <p>ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ ກົມຊັບພະຍາກອນນ້ຳ</p>
+            </div>
+            <div style="text-align: center;">
+              <p>ຜູ້ກວດກາ ແລະ ຢັ້ງຢືນ</p>
+              <br><br><br>
+              <p>(ລາຍເຊັນ ແລະ ປະທັບຕາ)</p>
+            </div>
+          </div>
+          ${'<'}script>
+            window.onload = function() { window.print(); };
+          ${'<'}/script>
+        </body>
+        </html>
+      `);
+      printWin.document.close();
+    }
+
+    function openCustomThresholdsModal() {
+      const modal = document.getElementById('customThresholdsModal');
+      const container = document.getElementById('modalThresholdInputsGrid');
+      if (!modal || !container) return;
+
+      if (customIndicators.length === 0) {
+        container.innerHTML = `<div class="col-span-full p-6 text-center text-slate-400 text-xs">ບໍ່ມີຕົວຊີ້ວັດໃນລະບົບ</div>`;
+      } else {
+        container.innerHTML = customIndicators.map(i => {
+          const minVal = sysThresholds[`cfg_${i.key}_min`] ?? '';
+          const maxVal = sysThresholds[`cfg_${i.key}_max`] ?? '';
+          const displayName = i.name + (i.unit ? ` (${i.unit})` : '');
+
+          return `
+            <div class="p-3 bg-white rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+              <div class="font-bold text-slate-900 text-xs truncate">🧪 ${escapeHtml(displayName)}</div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-semibold text-slate-500 mb-1">ຕ່ຳສຸດ (Min)</label>
+                  <input type="number" step="any" id="mcfg_${i.key}_min" autocomplete="off" value="${minVal}" placeholder="ບໍ່ກຳນົດ" class="w-full border border-slate-300 bg-slate-50 text-slate-800 p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-semibold text-slate-500 mb-1">ສູງສຸດ (Max)</label>
+                  <input type="number" step="any" id="mcfg_${i.key}_max" autocomplete="off" value="${maxVal}" placeholder="ບໍ່ກຳນົດ" class="w-full border border-slate-300 bg-slate-50 text-slate-800 p-2 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeCustomThresholdsModal() {
+      const modal = document.getElementById('customThresholdsModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function saveCustomModalThresholds() {
+      const newThresholds = {};
+      customIndicators.forEach(i => {
+        const minEl = document.getElementById(`mcfg_${i.key}_min`);
+        const maxEl = document.getElementById(`mcfg_${i.key}_max`);
+        newThresholds[`cfg_${i.key}_min`] = (minEl && minEl.value !== '') ? parseFloat(minEl.value) : null;
+        newThresholds[`cfg_${i.key}_max`] = (maxEl && maxEl.value !== '') ? parseFloat(maxEl.value) : null;
+      });
+
+      sysThresholds = newThresholds;
+      localStorage.setItem('ENT_THRESHOLDS_CONFIG_V3', JSON.stringify(sysThresholds));
+
+      if (typeof db !== 'undefined' && db) {
+        db.ref('system_config/thresholds').set(sysThresholds);
+        db.ref('activity_logs').push({
+          action: 'CUSTOMIZE_THRESHOLDS',
+          itemCode: 'ເກນມາດຕະຖານສະເພາະ',
+          performedBy: currentUserName || 'ຜູ້ຮັບຜິດຊອບ',
+          timestamp: new Date().toLocaleString('lo-LA'),
+          userRole: currentUserRole
+        });
+      }
+
+      closeCustomThresholdsModal();
+      renderFormCustomInputs();
+      renderThresholdFields();
+      render();
+
+      if (currentAppView === 'standards81') {
+        renderStandards81View();
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'ບັນທຶກເກນຮຽບຮ້ອຍແລ້ວ!',
+        text: 'ລະບົບໄດ້ອັບເດດເກນເຕືອນໄພ ແລະ ການປະເມີນຄຸນນະພາບນ້ຳທັງໝົດແລ້ວ',
+        timer: 1800,
+        showConfirmButton: false
+      });
+    }
+
+    function resetToOfficial81Defaults() {
+      Swal.fire({
+        title: 'ຣີເຊັດເປັນມາດຕະຖານ 81/ລບ?',
+        text: `ທ່ານຕ້ອງການຣີເຊັດຄ່າເກນທັງໝົດໃຫ້ກົງກັບ ມາດຕະຖານ 81/ລບ ປະເພດ ${selectedStandardClass} ຕົ້ນສະບັບ ຫຼື ບໍ່?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'ແມ່ນ, ຣີເຊັດເລີຍ',
+        cancelButtonText: 'ຍົກເລີກ'
+      }).then(res => {
+        if (res.isConfirmed) {
+          applyStandardClassToSystem(selectedStandardClass);
+          closeCustomThresholdsModal();
+        }
+      });
+    }
+
+    function printStandardDocument() {
+      const curCls = LAO_STANDARD_81.classes.find(c => c.id === selectedStandardClass) || LAO_STANDARD_81.classes[1];
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) return alert('ກະລຸນາອະນຸຍາດ Popup ເພື່ອພິມເອກະສານ');
+
+      const rowsHtml = LAO_STANDARD_81.parameters.map((p, idx) => `
+        <tr>
+          <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">${idx + 1}</td>
+          <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: bold;">${p.name} <br><span style="font-size: 10px; color: #64748b;">${p.en}</span></td>
+          <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">${p.unit}</td>
+          <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; ${selectedStandardClass === 1 ? 'background-color: #d1fae5; font-weight: bold;' : ''}">${p.classLimits[1].label}</td>
+          <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; ${selectedStandardClass === 2 ? 'background-color: #d1fae5; font-weight: bold;' : ''}">${p.classLimits[2].label}</td>
+          <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; ${selectedStandardClass === 3 ? 'background-color: #d1fae5; font-weight: bold;' : ''}">${p.classLimits[3].label}</td>
+          <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; ${selectedStandardClass === 4 ? 'background-color: #d1fae5; font-weight: bold;' : ''}">${p.classLimits[4].label}</td>
+          <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; ${selectedStandardClass === 5 ? 'background-color: #d1fae5; font-weight: bold;' : ''}">${p.classLimits[5].label}</td>
+          <td style="border: 1px solid #cbd5e1; padding: 6px; font-size: 11px;">${p.note}</td>
+        </tr>
+      `).join('');
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="lo">
+        <head>
+          <meta charset="UTF-8">
+          <title>ມາດຕະຖານຄຸນນະພາບນໍ້າໜ້າດິນ ແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ</title>
+          <style>
+            body { font-family: 'Noto Sans Lao', 'Phetsarath OT', Arial, sans-serif; padding: 24px; color: #0f172a; line-height: 1.5; font-size: 12px; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .header h2 { margin: 0; font-size: 16px; }
+            .header h3 { margin: 4px 0; font-size: 14px; font-weight: normal; }
+            .header h4 { margin: 8px 0; font-size: 14px; color: #047857; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }
+            th { border: 1px solid #94a3b8; background-color: #f1f5f9; padding: 8px; text-align: center; }
+            .footer { margin-top: 30px; display: flex; justify-content: space-between; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h3>ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</h3>
+            <h3>ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</h3>
+            <p>--------- ֎ ---------</p>
+            <h3>ກະຊວງຊັບພະຍາກອນທຳມະຊາດ ແລະ ສິ່ງແວດລ້ອມ<br>ກົມຊັບພະຍາກອນນ້ຳ</h3>
+            <h4>ຂໍ້ຕົກລົງວ່າດ້ວຍມາດຕະຖານສິ່ງແວດລ້ອມ ແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ, ລົງວັນທີ 21 ກຸມພາ 2017<br>ຕາຕະລາງມາດຕະຖານຄຸນນະພາບນ້ຳໜ້າດິນ ຕາມການຈັດປະເພດ 5 ຊັ້ນ (ປະເພດທີ່ນຳໃຊ້ປັດຈຸບັນ: ${curCls.name})</h4>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>ລ/ດ</th>
+                <th>ຕົວຊີ້ວັດ</th>
+                <th>ຫົວໜ່ວຍ</th>
+                <th>ປະເພດ 1</th>
+                <th>ປະເພດ 2</th>
+                <th>ປະເພດ 3</th>
+                <th>ປະເພດ 4</th>
+                <th>ປະເພດ 5</th>
+                <th>ໝາຍເຫດ / ວິທີວິເຄາະ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+
+          <div style="margin-top: 20px; font-size: 11px; color: #475569;">
+            <b>ຄຳອະທິບາຍປະເພດຄຸນນະພາບນ້ຳ:</b><br>
+            • <b>ປະເພດ 1:</b> ແຫຼ່ງນ້ຳທຳມະຊາດບໍລິສຸດດີເລີດ ບໍ່ມີນ້ຳເປື້ອນປົນເປື້ອນ ເພື່ອການອະນຸລັກຕົ້ນນ້ຳ.<br>
+            • <b>ປະເພດ 2:</b> ແຫຼ່ງນ້ຳສະອາດຫຼາຍ ສຳລັບອຸປະໂພກ-ບໍລິໂພກ (ບຳບັດທຳມະດາ) ແລະ ອະນຸລັກສັດນ້ຳ.<br>
+            • <b>ປະເພດ 3:</b> ແຫຼ່ງນ້ຳສະອາດປານກາງ ສຳລັບອຸປະໂພກ-ບໍລິໂພກ (ບຳບັດມາດຕະຖານ) ແລະ ກະສິກຳ/ລ້ຽງສັດ.<br>
+            • <b>ປະເພດ 4:</b> ແຫຼ່ງນ້ຳສະອາດໜ້ອຍ ສຳລັບອຸດສາຫະກຳ ແລະ ຄົມມະນາຄົມ.<br>
+            • <b>ປະເພດ 5:</b> ແຫຼ່ງນ້ຳສຳລັບຄົມມະນາຄົມ ແລະ ການລະບາຍນ້ຳ.
+          </div>
+
+          <div class="footer">
+            <div>
+              <p>ວັນທີພິມເອກະສານ: ${new Date().toLocaleDateString('lo-LA')}</p>
+              <p>ລະບົບຕິດຕາມຄຸນນະພາບນ້ຳ ກົມຊັບພະຍາກອນນ້ຳ</p>
+            </div>
+            <div style="text-align: center;">
+              <p>ຫົວໜ້າກົມຊັບພະຍາກອນນ້ຳ</p>
+              <br><br><br>
+              <p>(ລາຍເຊັນ ແລະ ປະທັບຕາ)</p>
+            </div>
+          </div>
+          ${'<'}script>
+            window.onload = function() { window.print(); };
+          ${'<'}/script>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+
+    function exportStandardTableToExcel() {
+      if (!window.XLSX) return alert('ກະລຸນາລໍຖ້າລະບົບໂຫລດໂປຣແກຣມ SheetJS');
+
+      const data = [
+        ['ຂໍ້ຕົກລົງວ່າດ້ວຍມາດຕະຖານສິ່ງແວດລ້ອມ ແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ, ລົງວັນທີ 21 ກຸມພາ 2017'],
+        ['ພາກທີ II: ມາດຕະຖານຄຸນນະພາບນ້ຳໜ້າດິນ ແລະ ການຈັດແບ່ງປະເພດຄຸນນະພາບນ້ຳ 5 ປະເພດ'],
+        ['ກົມຊັບພະຍາກອນນ້ຳ (Department of Water Resources)'],
+        [],
+        ['ລຳດັບ', 'ຕົວຊີ້ວັດ (ລາວ)', 'Parameter (Eng)', 'ຫົວໜ່ວຍ', 'ປະເພດ 1 (ທຳມະຊາດ)', 'ປະເພດ 2 (ອຸປະໂພກ)', 'ປະເພດ 3 (ກະສິກຳ)', 'ປະເພດ 4 (ອຸດສາຫະກຳ)', 'ປະເພດ 5 (ລະບາຍນ້ຳ)', 'ໝາຍເຫດ']
+      ];
+
+      LAO_STANDARD_81.parameters.forEach((p, idx) => {
+        data.push([
+          idx + 1,
+          p.name,
+          p.en,
+          p.unit,
+          p.classLimits[1].label,
+          p.classLimits[2].label,
+          p.classLimits[3].label,
+          p.classLimits[4].label,
+          p.classLimits[5].label,
+          p.note
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'ມາດຕະຖານ 81-ລບ');
+      XLSX.writeFile(wb, 'Lao_Water_Quality_Standards_Decree_81_GOL.xlsx');
     }
 
     function addCustomIndicator() {
@@ -12938,15 +16000,7 @@
       updateExportPreview();
     }
 
-    function escapeHtml(text) {
-      if (text === null || text === undefined) return '';
-      return String(text)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
+
 
     function getFilteredWaterQualityExportData() {
       const selProv = document.getElementById('expFilterProvince')?.value || 'ALL';
