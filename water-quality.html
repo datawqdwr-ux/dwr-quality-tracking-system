@@ -1351,7 +1351,7 @@
                   <span>📁</span> ເລືອກຊຸດຂໍ້ມູນ (Dataset):
                 </label>
                 <select id="auditDatasetSelect" onchange="onAuditDatasetChange()" class="w-full border border-slate-200 bg-white p-2.5 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs">
-                  <option value="ALL">📂 ທຸກຊຸດຂໍ້ມູນທັງໝົດ</option>
+                  <option value="">-- ເລືອກຊຸດຂໍ້ມູນ --</option>
                   <!-- Populated dynamically via JS -->
                 </select>
               </div>
@@ -4688,15 +4688,17 @@
       const dbStations = [];
       if (Array.isArray(waterData) && waterData.length > 0) {
         waterData.forEach((d, idx) => {
-          if (d.stations && Array.isArray(d.stations)) {
-            const dsKey = d.id || `ds_user_${idx}`;
-            d.stations.forEach(st => {
+          const sts = (typeof stationsOf === 'function') ? stationsOf(d) : (Array.isArray(d.stations) ? d.stations : (d.stations && typeof d.stations === 'object' ? Object.values(d.stations) : []));
+          if (sts && sts.length > 0) {
+            const dsKey = String(d.fbKey || d.id || `ds_user_${idx}`);
+            const compTitle = d.companyName || d.name || `ຊຸດຂໍ້ມູນ ${idx + 1}`;
+            sts.forEach((st, sIdx) => {
               dbStations.push({
                 ...st,
-                companyName: d.companyName || 'ຖານຂໍ້ມູນລະບົບ',
-                sampleDate: st.sampleDate || d.date || '2026-10-15',
+                companyName: compTitle,
+                sampleDate: st.sampleDate || d.date || '-',
                 datasetKey: dsKey,
-                datasetTitle: d.companyName || `ຊຸດຂໍ້ມູນ ${idx + 1}`
+                datasetTitle: compTitle
               });
             });
           }
@@ -4706,7 +4708,7 @@
       // Always include baseline datasets' stations
       DEFAULT_BASELINE_DATASETS.forEach(bDs => {
         bDs.stations.forEach(st => {
-          dbStations.push({ ...st });
+          dbStations.push({ ...st, datasetKey: String(bDs.key) });
         });
       });
 
@@ -4769,13 +4771,14 @@
 
       // Update info bar
       if (bar) {
-        const lat = st.lat !== undefined && st.lat !== null ? Number(st.lat).toFixed(4) : '-';
-        const lng = st.lng !== undefined && st.lng !== null ? Number(st.lng).toFixed(4) : '-';
-        const dms = (st.lat && st.lng) ? toDMS(Number(st.lat), Number(st.lng)) : '-';
+        const hasValidGps = st.lat !== undefined && st.lat !== null && st.lat !== '' && !isNaN(st.lat) && st.lng !== undefined && st.lng !== null && st.lng !== '' && !isNaN(st.lng);
+        const lat = hasValidGps ? Number(st.lat).toFixed(4) : 'ບໍ່ມີພິກັດ';
+        const lng = hasValidGps ? Number(st.lng).toFixed(4) : 'ບໍ່ມີພິກັດ';
+        const dms = hasValidGps ? toDMS(Number(st.lat), Number(st.lng)) : '-';
 
         bar.innerHTML = `
           <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="w-2.5 h-2.5 rounded-full ${hasValidGps ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}"></span>
             <div>
               <span class="font-bold text-slate-800">${escapeHtml(st.name || 'ສະຖານີ')}</span>
               <span class="text-slate-400 ml-1.5 font-normal">| ${escapeHtml(st.companyName || '-')}</span>
@@ -4785,7 +4788,7 @@
             <span class="bg-violet-50 text-violet-700 px-2 py-0.5 rounded border border-violet-200 font-sans font-semibold">📁 ${escapeHtml(st.datasetTitle || st.companyName || 'ຊຸດຂໍ້ມູນ')}</span>
             <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">📍 WGS84: ${lat}, ${lng}</span>
             <span class="hidden md:inline bg-slate-100 px-2 py-0.5 rounded border border-slate-200">🧭 ${escapeHtml(dms)}</span>
-            <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 font-sans font-semibold">🌊 ${escapeHtml(st.basin || 'ອ່າງແມ່ນ້ຳ')}</span>
+            <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 font-sans font-semibold">🌊 ${escapeHtml(st.basin || st.section || 'ແຫຼ່ງນ້ຳ')}</span>
             <span class="bg-sky-50 text-sky-700 px-2 py-0.5 rounded border border-sky-200 font-sans font-semibold">📅 ${escapeHtml(st.sampleDate || '-')}</span>
           </div>
         `;
@@ -5138,7 +5141,7 @@
       `).join('');
     }
 
-    let selectedAuditDatasetKey = 'ALL';
+    let selectedAuditDatasetKey = '';
     let allAvailableRawDatasets = [];
 
     function populateAuditDatasetSelect() {
@@ -5147,64 +5150,89 @@
 
       allAvailableRawDatasets = [];
 
-      // 1. User uploaded / Firebase datasets
+      // 1. User uploaded / Firebase datasets in system
       if (Array.isArray(waterData) && waterData.length > 0) {
         waterData.forEach((d, idx) => {
-          if (d.stations && Array.isArray(d.stations) && d.stations.length > 0) {
-            const dsKey = d.id || `ds_user_${idx}`;
+          const sts = (typeof stationsOf === 'function') ? stationsOf(d) : (Array.isArray(d.stations) ? d.stations : (d.stations && typeof d.stations === 'object' ? Object.values(d.stations) : []));
+          if (sts && sts.length > 0) {
+            const dsKey = String(d.fbKey || d.id || `ds_user_${idx}`);
+            const compTitle = d.companyName || d.name || `ຊຸດຂໍ້ມູນ ${idx + 1}`;
             allAvailableRawDatasets.push({
               key: dsKey,
-              title: d.companyName || `ຊຸດຂໍ້ມູນ ${idx + 1}`,
+              title: compTitle,
               date: d.date || '-',
               province: d.province || '-',
-              basin: d.waterSource || d.basin || 'ອ່າງແມ່ນ້ຳ',
+              basin: d.waterSource || d.basin || d.projectLocation || 'ອ່າງແມ່ນ້ຳ',
               isUserUploaded: true,
-              stations: d.stations.map((st, sIdx) => ({
+              stations: sts.map((st, sIdx) => ({
                 ...st,
-                companyName: d.companyName || 'ຖານຂໍ້ມູນລະບົບ',
-                sampleDate: st.sampleDate || d.date || '2026-10-15',
+                companyName: compTitle,
+                sampleDate: st.sampleDate || d.date || '-',
                 datasetKey: dsKey,
-                datasetTitle: d.companyName || `ຊຸດຂໍ້ມູນ ${idx + 1}`
+                datasetTitle: compTitle
               }))
             });
           }
         });
       }
 
-      // 2. Official baseline survey datasets (always available for instant comparison)
+      // 2. Official baseline survey datasets
       DEFAULT_BASELINE_DATASETS.forEach(bDs => {
+        const dsKey = String(bDs.key);
         allAvailableRawDatasets.push({
-          key: bDs.key,
+          key: dsKey,
           title: bDs.title,
           date: bDs.date,
           province: bDs.province,
           basin: bDs.basin,
           isUserUploaded: false,
-          stations: bDs.stations.map(st => ({ ...st }))
+          stations: bDs.stations.map(st => ({ ...st, datasetKey: dsKey }))
         });
       });
 
       const totalStationsCount = allAvailableRawDatasets.reduce((sum, d) => sum + d.stations.length, 0);
 
-      let optionsHtml = `<option value="ALL">📂 ທຸກຊຸດຂໍ້ມູນທັງໝົດ (${totalStationsCount} ສະຖານີ)</option>`;
-      allAvailableRawDatasets.forEach(d => {
-        const icon = d.isUserUploaded ? '📁' : '🏛️';
-        optionsHtml += `<option value="${d.key}">${icon} [${escapeHtml(d.date)}] ${escapeHtml(d.title)} (${d.stations.length} ສະຖານີ) - ${escapeHtml(d.province)}</option>`;
-      });
+      // Default to the FIRST specific dataset so stations are ALWAYS specific to that dataset!
+      if (!selectedAuditDatasetKey || selectedAuditDatasetKey === 'ALL' || !allAvailableRawDatasets.some(d => String(d.key) === String(selectedAuditDatasetKey))) {
+        if (allAvailableRawDatasets.length > 0) {
+          selectedAuditDatasetKey = String(allAvailableRawDatasets[0].key);
+        } else {
+          selectedAuditDatasetKey = 'ALL';
+        }
+      }
+
+      let optionsHtml = '';
+      const userDs = allAvailableRawDatasets.filter(d => d.isUserUploaded);
+      const baseDs = allAvailableRawDatasets.filter(d => !d.isUserUploaded);
+
+      if (userDs.length > 0) {
+        optionsHtml += `<optgroup label="🏢 ຖານຂໍ້ມູນຄຸນນະພາບນໍ້າໃນລະບົບ (${userDs.length} ຊຸດຂໍ້ມູນ)">`;
+        userDs.forEach(d => {
+          optionsHtml += `<option value="${escapeHtml(d.key)}">📁 ${escapeHtml(d.title)} (${d.stations.length} ຈຸດ) - [${escapeHtml(d.date)}]</option>`;
+        });
+        optionsHtml += `</optgroup>`;
+      }
+
+      if (baseDs.length > 0) {
+        optionsHtml += `<optgroup label="🏛️ ໂຄງການສຳຫຼວດແຫ່ງຊາດ / ອ້າງອີງ (${baseDs.length} ຊຸດຂໍ້ມູນ)">`;
+        baseDs.forEach(d => {
+          optionsHtml += `<option value="${escapeHtml(d.key)}">🏛️ ${escapeHtml(d.title)} (${d.stations.length} ຈຸດ) - ${escapeHtml(d.province)}</option>`;
+        });
+        optionsHtml += `</optgroup>`;
+      }
+
+      optionsHtml += `<optgroup label="🌐 ຕົວເລືອກລວມ">
+        <option value="ALL">🌐 ສະແດງລວມທຸກຈຸດໃນລະບົບ (${totalStationsCount} ຈຸດວັດແທກ)</option>
+      </optgroup>`;
 
       select.innerHTML = optionsHtml;
-      if (selectedAuditDatasetKey && (selectedAuditDatasetKey === 'ALL' || allAvailableRawDatasets.some(d => d.key === selectedAuditDatasetKey))) {
-        select.value = selectedAuditDatasetKey;
-      } else {
-        select.value = 'ALL';
-        selectedAuditDatasetKey = 'ALL';
-      }
+      select.value = selectedAuditDatasetKey;
     }
 
     function onAuditDatasetChange() {
       const select = document.getElementById('auditDatasetSelect');
       if (!select) return;
-      selectedAuditDatasetKey = select.value;
+      selectedAuditDatasetKey = String(select.value);
 
       // Re-populate station selector with ONLY stations belonging to the selected dataset
       populateAuditStationSelect();
@@ -5212,11 +5240,11 @@
       const label = document.getElementById('auditDatasetSummaryLabel');
       if (label) {
         if (selectedAuditDatasetKey === 'ALL') {
-          label.innerHTML = `ສະແດງສະຖານີຈາກ: <span class="font-bold text-indigo-700">ທຸກຊຸດຂໍ້ມູນທັງໝົດ (${currentAuditStationList.length} ສະຖານີ)</span>`;
+          label.innerHTML = `ສະແດງສະຖານີຈາກ: <span class="font-bold text-indigo-700">ທຸກຊຸດຂໍ້ມູນທັງໝົດ (${currentAuditStationList.length} ຈຸດວັດແທກ)</span>`;
         } else {
-          const ds = allAvailableRawDatasets.find(d => d.key === selectedAuditDatasetKey);
+          const ds = allAvailableRawDatasets.find(d => String(d.key) === String(selectedAuditDatasetKey));
           const title = ds ? ds.title : 'ຊຸດຂໍ້ມູນທີ່ເລືອກ';
-          label.innerHTML = `ສະແດງສະຖານີຈາກ: <span class="font-bold text-indigo-700">📁 ${escapeHtml(title)} (${currentAuditStationList.length} ສະຖານີ)</span>`;
+          label.innerHTML = `ສະແດງສະຖານີຈາກ: <span class="font-bold text-indigo-700">📁 ${escapeHtml(title)} (${currentAuditStationList.length} ຈຸດວັດແທກ)</span>`;
         }
       }
 
@@ -5231,31 +5259,53 @@
 
       if (selectedAuditDatasetKey === 'ALL') {
         currentAuditStationList = [];
+        let optGroupsHtml = '';
         allAvailableRawDatasets.forEach(ds => {
-          ds.stations.forEach(st => currentAuditStationList.push(st));
+          if (ds.stations && ds.stations.length > 0) {
+            optGroupsHtml += `<optgroup label="📁 ${escapeHtml(ds.title)} (${ds.stations.length} ຈຸດ)">`;
+            ds.stations.forEach(st => {
+              const globalIdx = currentAuditStationList.length;
+              currentAuditStationList.push(st);
+              const hasGps = st.lat !== undefined && st.lat !== null && st.lat !== '' && !isNaN(st.lat) && st.lng !== undefined && st.lng !== null && st.lng !== '' && !isNaN(st.lng);
+              const coordStr = hasGps ? `(${Number(st.lat).toFixed(4)}, ${Number(st.lng).toFixed(4)})` : '(ບໍ່ມີພິກັດ GPS)';
+              const prov = st.province ? `[${escapeHtml(st.province)}] ` : '';
+              const codeStr = st.code ? `[${escapeHtml(st.code)}] ` : '';
+              const basinStr = st.basin || st.section || 'ແຫຼ່ງນ້ຳ';
+              optGroupsHtml += `<option value="${globalIdx}">📍 ${prov}${codeStr}${escapeHtml(st.name || `ຈຸດທີ່ ${globalIdx + 1}`)} ${coordStr} - ${escapeHtml(basinStr)}</option>`;
+            });
+            optGroupsHtml += `</optgroup>`;
+          }
         });
-        if (currentAuditStationList.length === 0) {
-          currentAuditStationList = getAllAvailableAuditStations();
-        }
+        select.innerHTML = optGroupsHtml;
       } else {
-        const ds = allAvailableRawDatasets.find(d => d.key === selectedAuditDatasetKey);
+        const ds = allAvailableRawDatasets.find(d => String(d.key) === String(selectedAuditDatasetKey));
         currentAuditStationList = (ds && Array.isArray(ds.stations)) ? [...ds.stations] : [];
-      }
 
-      if (currentAuditStationList.length === 0) {
-        select.innerHTML = `<option value="">(ບໍ່ມີສະຖານີໃນຊຸດຂໍ້ມູນນີ້)</option>`;
-        select.disabled = true;
-        currentAuditStationIndex = 0;
-        return;
-      }
+        if (currentAuditStationList.length === 0 && allAvailableRawDatasets.length > 0) {
+          const fallbackDs = allAvailableRawDatasets[0];
+          selectedAuditDatasetKey = String(fallbackDs.key);
+          currentAuditStationList = [...fallbackDs.stations];
+          const dsSelect = document.getElementById('auditDatasetSelect');
+          if (dsSelect) dsSelect.value = selectedAuditDatasetKey;
+        }
 
-      select.disabled = false;
-      select.innerHTML = currentAuditStationList.map((st, idx) => {
-        const lat = st.lat !== undefined && st.lat !== null ? Number(st.lat).toFixed(4) : '-';
-        const lng = st.lng !== undefined && st.lng !== null ? Number(st.lng).toFixed(4) : '-';
-        const prov = st.province || 'ລາວ';
-        return `<option value="${idx}">📍 [${escapeHtml(prov)}] ${escapeHtml(st.name || `ສະຖານີ ${idx + 1}`)} (${lat}, ${lng}) - ${escapeHtml(st.basin || 'ອ່າງແມ່ນ້ຳ')}</option>`;
-      }).join('');
+        if (currentAuditStationList.length === 0) {
+          select.innerHTML = `<option value="">(ບໍ່ມີຈຸດພິກັດໃນຊຸດຂໍ້ມູນນີ້)</option>`;
+          select.disabled = true;
+          currentAuditStationIndex = 0;
+          return;
+        }
+
+        select.disabled = false;
+        select.innerHTML = currentAuditStationList.map((st, idx) => {
+          const hasGps = st.lat !== undefined && st.lat !== null && st.lat !== '' && !isNaN(st.lat) && st.lng !== undefined && st.lng !== null && st.lng !== '' && !isNaN(st.lng);
+          const coordStr = hasGps ? `(${Number(st.lat).toFixed(4)}, ${Number(st.lng).toFixed(4)})` : '(ບໍ່ມີພິກັດ GPS)';
+          const prov = st.province ? `[${escapeHtml(st.province)}] ` : '';
+          const codeStr = st.code ? `[${escapeHtml(st.code)}] ` : '';
+          const basinStr = st.basin || st.section || 'ຈຸດເກັບຕົວຢ່າງ';
+          return `<option value="${idx}">📍 ${prov}${codeStr}${escapeHtml(st.name || `ຈຸດທີ່ ${idx + 1}`)} ${coordStr} - ${escapeHtml(basinStr)}</option>`;
+        }).join('');
+      }
 
       if (currentAuditStationIndex >= currentAuditStationList.length || currentAuditStationIndex < 0) {
         currentAuditStationIndex = 0;
@@ -5653,19 +5703,16 @@
         // Strict dataset linking: sync dataset selector to the station's dataset!
         const dsSelect = document.getElementById('auditDatasetSelect');
         if (dsSelect) {
-          const dsExists = allAvailableRawDatasets.some(d => d.key === targetSt.datasetKey);
-          selectedAuditDatasetKey = dsExists ? targetSt.datasetKey : 'ALL';
+          const dsExists = allAvailableRawDatasets.some(d => String(d.key) === String(targetSt.datasetKey));
+          selectedAuditDatasetKey = dsExists ? String(targetSt.datasetKey) : (allAvailableRawDatasets[0]?.key || '');
           dsSelect.value = selectedAuditDatasetKey;
 
           const label = document.getElementById('auditDatasetSummaryLabel');
           if (label) {
-            if (selectedAuditDatasetKey === 'ALL') {
-              label.innerHTML = `ສະແດງສະຖານີຈາກ: <span class="font-bold text-indigo-700">ທຸກຊຸດຂໍ້ມູນທັງໝົດ</span>`;
-            } else {
-              const ds = allAvailableRawDatasets.find(d => d.key === selectedAuditDatasetKey);
-              const title = ds ? ds.title : 'ຊຸດຂໍ້ມູນທີ່ເລືອກ';
-              label.innerHTML = `ສະແດງສະຖານີຈາກ: <span class="font-bold text-indigo-700">📁 ${escapeHtml(title)}</span>`;
-            }
+            const ds = allAvailableRawDatasets.find(d => String(d.key) === String(selectedAuditDatasetKey));
+            const title = ds ? ds.title : 'ຊຸດຂໍ້ມູນທີ່ເລືອກ';
+            const stCount = ds && ds.stations ? ds.stations.length : 0;
+            label.innerHTML = `ສະແດງສະຖານີຈາກ: <span class="font-bold text-indigo-700">📁 ${escapeHtml(title)} (${stCount} ຈຸດວັດແທກ)</span>`;
           }
         }
       }
@@ -5677,7 +5724,8 @@
       let targetIdx = 0;
       if (targetSt) {
         const found = currentAuditStationList.findIndex(s => 
-          (s.id && targetSt.id && s.id === targetSt.id) ||
+          (s.id && targetSt.id && String(s.id) === String(targetSt.id)) ||
+          (s.code && targetSt.code && s.code === targetSt.code) ||
           (s.name === targetSt.name && s.lat === targetSt.lat && s.lng === targetSt.lng)
         );
         if (found >= 0) targetIdx = found;
@@ -6119,6 +6167,16 @@
       `);
       printWin.document.close();
     }
+
+    window.populateAuditDatasetSelect = populateAuditDatasetSelect;
+    window.populateAuditStationSelect = populateAuditStationSelect;
+    window.onAuditDatasetChange = onAuditDatasetChange;
+    window.onAuditStationChange = onAuditStationChange;
+    window.selectStationForAudit = selectStationForAudit;
+    window.selectStationFromModal = selectStationFromModal;
+    window.openAuditKpiDetailModal = openAuditKpiDetailModal;
+    window.closeAuditKpiDetailModal = closeAuditKpiDetailModal;
+    window.filterModalAuditStations = filterModalAuditStations;
 
     function openCustomThresholdsModal() {
       const modal = document.getElementById('customThresholdsModal');
@@ -11491,6 +11549,10 @@
       // ລາຍການໂຕຊີ້ວັດ: ອັບເດດສະເພາະຕອນເປີດໜ້າຕັ້ງຄ່າ
       if (!skipSettingsNextRender && !document.getElementById('settingsModal')?.classList.contains('hidden')) renderSettingsList();
       skipSettingsNextRender = false;
+      if (currentAppView === 'standards81' && typeof populateAuditDatasetSelect === 'function') {
+        populateAuditDatasetSelect();
+        populateAuditStationSelect();
+      }
       updateAppViewUI();
     }
 
