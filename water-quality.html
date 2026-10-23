@@ -4931,25 +4931,97 @@
     function onAuditStationChange() {
       const select = document.getElementById('auditStationSelect');
       if (!select) return;
-      const idx = Number(select.value) || 0;
-      currentAuditStationIndex = idx;
-      const st = currentAuditStationList[idx] || currentAuditStationList[0];
+
+      const isAll = (select.value === 'ALL');
+      currentAuditStationIndex = isAll ? 'ALL' : (Number(select.value) || 0);
+
       const bar = document.getElementById('auditStationInfoBar');
-      if (!st) {
+
+      if (isAll) {
+        const total = currentAuditStationList.length;
+        const withGps = currentAuditStationList.filter(s => s.lat !== undefined && s.lat !== null && s.lat !== '' && !isNaN(s.lat) && s.lng !== undefined && s.lng !== null && s.lng !== '' && !isNaN(s.lng));
+        const avgLat = withGps.length ? (withGps.reduce((acc, s) => acc + Number(s.lat), 0) / withGps.length).toFixed(4) : '-';
+        const avgLng = withGps.length ? (withGps.reduce((acc, s) => acc + Number(s.lng), 0) / withGps.length).toFixed(4) : '-';
+
+        const dsTitle = (selectedAuditDatasetKey === 'ALL')
+          ? 'ທຸກຊຸດຂໍ້ມູນ'
+          : (allAvailableRawDatasets.find(d => String(d.key) === String(selectedAuditDatasetKey))?.title || 'ຊຸດຂໍ້ມູນທີ່ເລືອກ');
+
         if (bar) {
-          bar.innerHTML = `<div class="text-slate-400 italic text-xs py-1">ບໍ່ມີຂໍ້ມູນສະຖານີໃນຊຸດຂໍ້ມູນນີ້</div>`;
+          bar.innerHTML = `
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
+              <div>
+                <span class="font-bold text-slate-800">🌐 ທຸກຈຸດພິກັດ (${total} ຈຸດ)</span>
+                <span class="text-slate-400 ml-1.5 font-normal">| ໂໝດສະເລ່ຍ &amp; ທຽບຄຸນນະພາບລວມທຸກຈຸດ</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2.5 flex-wrap text-[11px] font-mono text-slate-600">
+              <span class="bg-violet-50 text-violet-700 px-2 py-0.5 rounded border border-violet-200 font-sans font-semibold">📁 ${escapeHtml(dsTitle)}</span>
+              <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 font-sans font-semibold">📍 ຈຳນວນ: ${total} ຈຸດ (ມີ GPS ${withGps.length} ຈຸດ)</span>
+              ${withGps.length ? `<span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200">📍 ພິກັດໃຈກາງ: ${avgLat}, ${avgLng}</span>` : ''}
+              <span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200 font-sans font-semibold">⚖️ ທຽບຄ່າສະເລ່ຍທຸກຈຸດ</span>
+            </div>
+          `;
+        }
+
+        // Calculate average parameter values from all stations
+        KEY_AUDIT_PARAMS.forEach(p => {
+          let sum = 0;
+          let count = 0;
+          currentAuditStationList.forEach(st => {
+            if (st.customs) {
+              let v = st.customs[p.id];
+              if (v === undefined || v === null || v === '' || isNaN(v)) {
+                const paramObj = LAO_STANDARD_81.parameters.find(x => x.id === p.id);
+                if (paramObj) {
+                  for (const k of Object.keys(st.customs)) {
+                    const norm = k.toLowerCase().trim();
+                    if (paramObj.aliases.some(a => norm === a || norm.includes(a))) {
+                      const cand = parseFloat(st.customs[k]);
+                      if (!isNaN(cand)) { v = cand; break; }
+                    }
+                  }
+                }
+              }
+              const numVal = parseFloat(v);
+              if (!isNaN(numVal)) {
+                sum += numVal;
+                count++;
+              }
+            }
+          });
+
+          const precision = p.step && p.step.includes('.') ? p.step.split('.')[1].length : 1;
+          const finalVal = count > 0 ? (+(sum / count).toFixed(precision)) : p.defaultVal;
+          const input = document.getElementById(`auditParamVal_${p.id}`);
+          if (input) {
+            input.value = finalVal;
+          }
+        });
+
+        evaluateCurrentAuditComparison();
+        return;
+      }
+
+      const idx = currentAuditStationIndex;
+      const st = currentAuditStationList[idx] || currentAuditStationList[0];
+      const barSingle = document.getElementById('auditStationInfoBar');
+      if (!st) {
+        if (barSingle) {
+          barSingle.innerHTML = `<div class="text-slate-400 italic text-xs py-1">ບໍ່ມີຂໍ້ມູນສະຖານີໃນຊຸດຂໍ້ມູນນີ້</div>`;
         }
         return;
       }
 
       // Update info bar
-      if (bar) {
+      if (barSingle) {
         const hasValidGps = st.lat !== undefined && st.lat !== null && st.lat !== '' && !isNaN(st.lat) && st.lng !== undefined && st.lng !== null && st.lng !== '' && !isNaN(st.lng);
         const lat = hasValidGps ? Number(st.lat).toFixed(4) : 'ບໍ່ມີພິກັດ';
         const lng = hasValidGps ? Number(st.lng).toFixed(4) : 'ບໍ່ມີພິກັດ';
         const dms = hasValidGps ? toDMS(Number(st.lat), Number(st.lng)) : '-';
 
-        bar.innerHTML = `
+        barSingle.innerHTML = `
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full ${hasValidGps ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}"></span>
             <div>
@@ -5077,13 +5149,23 @@
       let coordProvince = 'ນະຄອນຫຼວງວຽງຈັນ';
 
       if (currentAuditInspectMode === 'station') {
-        const st = currentAuditStationList[currentAuditStationIndex] || currentAuditStationList[0];
-        if (st) {
-          coordTitle = st.name || 'ສະຖານີ';
-          coordLat = Number(st.lat) || 17.9621;
-          coordLng = Number(st.lng) || 102.6105;
-          coordBasin = st.basin || 'ອ່າງແມ່ນ້ຳ';
-          coordProvince = st.province || '-';
+        if (currentAuditStationIndex === 'ALL') {
+          const total = currentAuditStationList.length;
+          const withGps = currentAuditStationList.filter(s => s.lat !== undefined && s.lat !== null && s.lat !== '' && !isNaN(s.lat) && s.lng !== undefined && s.lng !== null && s.lng !== '' && !isNaN(s.lng));
+          coordTitle = `ທຸກຈຸດພິກັດ (${total} ຈຸດ) - ຄ່າສະເລ່ຍລວມ`;
+          coordLat = withGps.length ? (withGps.reduce((acc, s) => acc + Number(s.lat), 0) / withGps.length) : 17.9621;
+          coordLng = withGps.length ? (withGps.reduce((acc, s) => acc + Number(s.lng), 0) / withGps.length) : 102.6105;
+          coordBasin = 'ລວມທຸກຈຸດພິກັດ';
+          coordProvince = 'ທຸກພື້ນທີ່';
+        } else {
+          const st = currentAuditStationList[currentAuditStationIndex] || currentAuditStationList[0];
+          if (st) {
+            coordTitle = st.name || 'ສະຖານີ';
+            coordLat = Number(st.lat) || 17.9621;
+            coordLng = Number(st.lng) || 102.6105;
+            coordBasin = st.basin || 'ອ່າງແມ່ນ້ຳ';
+            coordProvince = st.province || '-';
+          }
         }
       } else {
         coordTitle = document.getElementById('customAuditName')?.value.trim() || 'ຈຸດເກັບຕົວຢ່າງພາກສະໜາມ';
@@ -5426,7 +5508,12 @@
             optGroupsHtml += `</optgroup>`;
           }
         });
-        select.innerHTML = optGroupsHtml;
+
+        let allOptionHtml = '';
+        if (currentAuditStationList.length > 0) {
+          allOptionHtml = `<option value="ALL">🌐 ທຸກຈຸດພິກັດ (All Coordinates - ລວມທຸກ ${currentAuditStationList.length} ຈຸດພິກັດ)</option>`;
+        }
+        select.innerHTML = allOptionHtml + optGroupsHtml;
       } else {
         const ds = allAvailableRawDatasets.find(d => String(d.key) === String(selectedAuditDatasetKey));
         currentAuditStationList = (ds && Array.isArray(ds.stations)) ? [...ds.stations] : [];
@@ -5447,7 +5534,13 @@
         }
 
         select.disabled = false;
-        select.innerHTML = currentAuditStationList.map((st, idx) => {
+
+        let allOptionHtml = '';
+        if (currentAuditStationList.length > 0) {
+          allOptionHtml = `<option value="ALL">🌐 ທຸກຈຸດພິກັດ (All Coordinates - ທັງໝົດ ${currentAuditStationList.length} ຈຸດໃນຊຸດນີ້)</option>`;
+        }
+
+        const stationsHtml = currentAuditStationList.map((st, idx) => {
           const hasGps = st.lat !== undefined && st.lat !== null && st.lat !== '' && !isNaN(st.lat) && st.lng !== undefined && st.lng !== null && st.lng !== '' && !isNaN(st.lng);
           const coordStr = hasGps ? `(${Number(st.lat).toFixed(4)}, ${Number(st.lng).toFixed(4)})` : '(ບໍ່ມີພິກັດ GPS)';
           const prov = st.province ? `[${escapeHtml(st.province)}] ` : '';
@@ -5455,12 +5548,18 @@
           const basinStr = st.basin || st.section || 'ຈຸດເກັບຕົວຢ່າງ';
           return `<option value="${idx}">📍 ${prov}${codeStr}${escapeHtml(st.name || `ຈຸດທີ່ ${idx + 1}`)} ${coordStr} - ${escapeHtml(basinStr)}</option>`;
         }).join('');
+
+        select.innerHTML = allOptionHtml + stationsHtml;
       }
 
-      if (currentAuditStationIndex >= currentAuditStationList.length || currentAuditStationIndex < 0) {
+      if (currentAuditStationIndex === 'ALL') {
+        select.value = 'ALL';
+      } else if (currentAuditStationIndex >= currentAuditStationList.length || currentAuditStationIndex < 0) {
         currentAuditStationIndex = 0;
+        select.value = 0;
+      } else {
+        select.value = currentAuditStationIndex;
       }
-      select.value = currentAuditStationIndex;
     }
 
     function openAddDatasetAuditModal() {
@@ -5771,12 +5870,30 @@
     }
 
     function focusStationOnMap() {
+      if (currentAuditInspectMode === 'station' && currentAuditStationIndex === 'ALL') {
+        const validCoords = currentAuditStationList.filter(s => s.lat && s.lng && !isNaN(s.lat) && !isNaN(s.lng));
+        if (validCoords.length > 0) {
+          setAppView('map');
+          setTimeout(() => {
+            if (typeof map !== 'undefined' && map) {
+              if (validCoords.length === 1) {
+                map.setView([Number(validCoords[0].lat), Number(validCoords[0].lng)], 13);
+              } else {
+                const bounds = L.latLngBounds(validCoords.map(s => [Number(s.lat), Number(s.lng)]));
+                map.fitBounds(bounds, { padding: [40, 40] });
+              }
+            }
+          }, 300);
+          return;
+        }
+      }
+
       let lat = 17.9621;
       let lng = 102.6105;
       let name = 'ສະຖານີ';
 
       if (currentAuditInspectMode === 'station') {
-        const st = currentAuditStationList[currentAuditStationIndex];
+        const st = currentAuditStationList[currentAuditStationIndex] || currentAuditStationList[0];
         if (st && st.lat && st.lng) {
           lat = Number(st.lat);
           lng = Number(st.lng);
@@ -5815,14 +5932,23 @@
       let sampleDate = new Date().toLocaleDateString('lo-LA');
 
       if (currentAuditInspectMode === 'station') {
-        const st = currentAuditStationList[currentAuditStationIndex] || currentAuditStationList[0];
-        if (st) {
-          title = st.name || 'ສະຖານີ';
-          basin = st.basin || 'ອ່າງແມ່ນ້ຳຂອງ';
-          province = st.province || 'ນະຄອນຫຼວງວຽງຈັນ';
-          lat = Number(st.lat) || 17.9621;
-          lng = Number(st.lng) || 102.6105;
-          sampleDate = st.sampleDate || sampleDate;
+        if (currentAuditStationIndex === 'ALL') {
+          title = `ທຸກຈຸດພິກັດ (${currentAuditStationList.length} ຈຸດ) - ຄ່າສະເລ່ຍລວມ`;
+          basin = 'ລວມທຸກຈຸດພິກັດ';
+          province = 'ທຸກພື້ນທີ່';
+          const withGps = currentAuditStationList.filter(s => s.lat && s.lng && !isNaN(s.lat) && !isNaN(s.lng));
+          lat = withGps.length ? Number((withGps.reduce((acc, s) => acc + Number(s.lat), 0) / withGps.length).toFixed(4)) : 17.9621;
+          lng = withGps.length ? Number((withGps.reduce((acc, s) => acc + Number(s.lng), 0) / withGps.length).toFixed(4)) : 102.6105;
+        } else {
+          const st = currentAuditStationList[currentAuditStationIndex] || currentAuditStationList[0];
+          if (st) {
+            title = st.name || 'ສະຖານີ';
+            basin = st.basin || 'ອ່າງແມ່ນ້ຳຂອງ';
+            province = st.province || 'ນະຄອນຫຼວງວຽງຈັນ';
+            lat = Number(st.lat) || 17.9621;
+            lng = Number(st.lng) || 102.6105;
+            sampleDate = st.sampleDate || sampleDate;
+          }
         }
       } else {
         title = document.getElementById('customAuditName')?.value || 'ຈຸດເກັບຕົວຢ່າງພາກສະໜາມ';
@@ -5956,12 +6082,20 @@
       let basin = '';
 
       if (currentAuditInspectMode === 'station') {
-        const st = currentAuditStationList[currentAuditStationIndex] || currentAuditStationList[0];
-        if (st) {
-          title = st.name || 'ສະຖານີ';
-          basin = st.basin || 'ອ່າງແມ່ນ້ຳ';
-          lat = Number(st.lat) || 17.9621;
-          lng = Number(st.lng) || 102.6105;
+        if (currentAuditStationIndex === 'ALL') {
+          title = `ທຸກຈຸດພິກັດ (${currentAuditStationList.length} ຈຸດ) - ຄ່າສະເລ່ຍລວມ`;
+          basin = 'ລວມທຸກຈຸດພິກັດ';
+          const withGps = currentAuditStationList.filter(s => s.lat && s.lng && !isNaN(s.lat) && !isNaN(s.lng));
+          lat = withGps.length ? Number((withGps.reduce((acc, s) => acc + Number(s.lat), 0) / withGps.length).toFixed(4)) : 17.9621;
+          lng = withGps.length ? Number((withGps.reduce((acc, s) => acc + Number(s.lng), 0) / withGps.length).toFixed(4)) : 102.6105;
+        } else {
+          const st = currentAuditStationList[currentAuditStationIndex] || currentAuditStationList[0];
+          if (st) {
+            title = st.name || 'ສະຖານີ';
+            basin = st.basin || 'ອ່າງແມ່ນ້ຳ';
+            lat = Number(st.lat) || 17.9621;
+            lng = Number(st.lng) || 102.6105;
+          }
         }
       } else {
         title = document.getElementById('customAuditName')?.value || 'ຈຸດເກັບຕົວຢ່າງ';
