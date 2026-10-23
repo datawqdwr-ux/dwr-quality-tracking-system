@@ -2646,6 +2646,10 @@
             <span>📥</span>
             <span>ສົ່ງອອກລາຍການເກີນເກນ (CSV)</span>
           </button>
+          <button type="button" onclick="if(activeExceedanceModalFbKey) openStationNationalStandardComparison(activeExceedanceModalFbKey, 0)" class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer border border-emerald-300 shadow-2xs">
+            <span>⚖️</span>
+            <span>ສົມທຽບກັບມາດຕະຖານແຫ່ງຊາດ (Decree 81/PM)</span>
+          </button>
         </div>
         <button type="button" onclick="closeDatasetExceedanceModal()" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer shadow-md">
           ປິດໜ້າຕ່າງ (Close)
@@ -6519,9 +6523,12 @@
             <td class="p-2.5 text-center">${badgeHtml}</td>
             <td class="p-2.5">${failedHtml}</td>
             <td class="p-2.5 text-center">
-              <button type="button" onclick="selectStationFromModal(${r.stListIndex})" class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] border border-indigo-200 transition cursor-pointer flex items-center justify-center gap-1 mx-auto" title="ດຶງຂໍ້ມູນສະຖານີນີ້ຂຶ້ນເຄື່ອງມືທຽບ">
+              <button type="button" onclick="selectStationFromModal(${r.stListIndex})" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] border border-indigo-200 transition cursor-pointer flex items-center justify-center gap-1 mx-auto" title="ດຶງຂໍ້ມູນສະຖານີນີ້ຂຶ້ນເຄື່ອງມືທຽບ">
                 <span>🔍</span>
                 <span>ທຽບຂໍ້ມູນນີ້</span>
+              </button>
+              <button type="button" onclick="openStationNationalStandardComparison('${r.datasetKey}', ${r.stListIndex})" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-[10.5px] border border-emerald-300 transition cursor-pointer flex items-center justify-center gap-1 mx-auto mt-1" title="ສົມທຽບກັບມາດຕະຖານແຫ່ງຊາດ 81/ລບ">
+                <span>⚖️</span> <span>ສົມທຽບ 81/ລບ</span>
               </button>
             </td>
           </tr>
@@ -8705,6 +8712,34 @@
               </div>
             ` : ''}
 
+            <!-- ⚖️ National Standards Decree 81 Comparator Banner -->
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3.5 rounded-xl border border-indigo-500/40 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-lg shadow-md shadow-emerald-500/20">
+                  ⚖️
+                </div>
+                <div>
+                  <div class="font-bold text-xs sm:text-sm text-white flex items-center gap-2 flex-wrap">
+                    <span>ສົມທຽບກັບມາດຕະຖານຄຸນນະພາບນ້ຳແຫ່ງຊາດ</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                      ຂໍ້ຕົກລົງ 81/ລບ (Decree 81/PM)
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-slate-300 mt-0.5">
+                    ປະເມີນຄຸນນະພາບນ້ຳຕົວຈິງຂອງສະຖານີເຕືອນໄພທຽບກັບມາດຕະຖານແຫ່ງຊາດ 5 ປະເພດ (Class 1-5)
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <button type="button" onclick="batchCompareAlertsWithNationalStandard()" class="cursor-pointer px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-xs flex items-center gap-1.5">
+                  <span>📊</span> <span>ຕາຕະລາງສົມທຽບທຸກສະຖານີ (81/ລບ)</span>
+                </button>
+                <button type="button" onclick="jumpAllAlertsToDecree81Workbench()" class="cursor-pointer px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition shadow-xs flex items-center gap-1.5">
+                  <span>🔍</span> <span>ເປີດຫ້ອງວິເຄາະ 81/ລບ ↗</span>
+                </button>
+              </div>
+            </div>
+
             <!-- Filter Controls Bar -->
             <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs grid grid-cols-1 sm:grid-cols-4 gap-2.5">
               <div class="sm:col-span-1">
@@ -8863,6 +8898,9 @@
 
                   <!-- Quick Action Buttons -->
                   <div class="flex items-center gap-1.5 flex-wrap">
+                    <button type="button" onclick="openStationNationalStandardComparison('${rec.fbKey}', ${stIdx})" class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] transition shadow-xs" title="ສົມທຽບຄຸນນະພາບນ້ຳສະຖານີນີ້ກັບມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ 81/ລບ ທຸກປະເພດ (Class 1-5)">
+                      ⚖️ <span>ສົມທຽບມາດຕະຖານແຫ່ງຊາດ</span>
+                    </button>
                     ${coordsValid ? `
                       <button type="button" onclick="jumpFromAlertToMap('${rec.fbKey}', ${stIdx})" class="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-[11px] transition" title="ເບິ່ງຈຸດນີ້ໃນແຜນທີ່ Google Maps GIS">
                         🗺️ <span>ແຜນທີ່</span>
@@ -9154,6 +9192,801 @@
         </html>
       `);
       printWin.document.close();
+    }
+
+    /* ==========================================================================
+       ⚖️ ລະບົບສົມທຽບຄຸນນະພາບນ້ຳສະຖານີເຕືອນໄພ ກັບມາດຕະຖານແຫ່ງຊາດ (Decree 81/PM)
+       ========================================================================== */
+    let activeStdCompareState = {
+      fbKey: null,
+      stIdx: 0,
+      classId: 2, // Default: Class 2 (ອຸປະໂພກ-ບໍລິໂພກ)
+      station: null,
+      record: null
+    };
+
+    function getStationParamValueForStandard(st, paramDef) {
+      if (!st || !st.customs) return null;
+      if (st.customs[paramDef.id] !== undefined) {
+        const v = st.customs[paramDef.id];
+        if (v !== null && v !== '' && v !== '-' && !isNaN(v)) return Number(v);
+      }
+      for (const k of Object.keys(st.customs)) {
+        const norm = k.toLowerCase().trim();
+        if (paramDef.aliases && paramDef.aliases.some(alias => norm === alias || norm.includes(alias))) {
+          const v = st.customs[k];
+          if (v !== null && v !== '' && v !== '-' && !isNaN(v)) return Number(v);
+        }
+      }
+      return null;
+    }
+
+    function evaluateStationForStandardClass(st, classId) {
+      const breakdown = [];
+      let passCount = 0;
+      let warnCount = 0;
+      let exceedCount = 0;
+      let totalChecked = 0;
+
+      if (!LAO_STANDARD_81 || !Array.isArray(LAO_STANDARD_81.parameters)) {
+        return { classId, totalChecked: 0, passCount: 0, warnCount: 0, exceedCount: 0, isPass: true, isWarn: false, breakdown: [] };
+      }
+
+      LAO_STANDARD_81.parameters.forEach(param => {
+        const lim = param.classLimits ? param.classLimits[classId] : null;
+        if (!lim) return;
+
+        const val = getStationParamValueForStandard(st, param);
+        if (val === null) return;
+
+        totalChecked++;
+        let status = 'PASS';
+        let diffLabel = 'ປົກກະຕິ (ຢູ່ໃນເກນ)';
+        let badgeColor = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+        let badgeIcon = '✅';
+
+        if (lim.min !== null && lim.min !== undefined && val < lim.min) {
+          status = 'EXCEED';
+          diffLabel = `ຕ່ຳກວ່າເກນ (-${(lim.min - val).toFixed(2)})`;
+          badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+          badgeIcon = '🚨';
+          exceedCount++;
+        } else if (lim.max !== null && lim.max !== undefined && val > lim.max) {
+          status = 'EXCEED';
+          diffLabel = `ສູງກວ່າເກນ (+${(val - lim.max).toFixed(2)})`;
+          badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+          badgeIcon = '🚨';
+          exceedCount++;
+        } else if (lim.max !== null && lim.max !== undefined && val >= lim.max * 0.9) {
+          status = 'WARN';
+          diffLabel = `ໃກ້ເກີນຂອບເຂດ (≥ 90% ຂອງເກນ)`;
+          badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+          badgeIcon = '⚠️';
+          warnCount++;
+        } else {
+          passCount++;
+        }
+
+        breakdown.push({
+          param,
+          val,
+          lim,
+          status,
+          diffLabel,
+          badgeColor,
+          badgeIcon
+        });
+      });
+
+      return {
+        classId,
+        totalChecked,
+        passCount,
+        warnCount,
+        exceedCount,
+        isPass: exceedCount === 0,
+        isWarn: exceedCount === 0 && warnCount > 0,
+        breakdown
+      };
+    }
+
+    function findStationBestFitClass(st) {
+      if (!LAO_STANDARD_81 || !Array.isArray(LAO_STANDARD_81.classes)) return null;
+      for (let c = 1; c <= 5; c++) {
+        const res = evaluateStationForStandardClass(st, c);
+        if (res.totalChecked > 0 && res.exceedCount === 0) {
+          return LAO_STANDARD_81.classes.find(cls => cls.id === c);
+        }
+      }
+      return LAO_STANDARD_81.classes[4];
+    }
+
+    function openStationNationalStandardComparison(fbKey, stIdx, preferredClass) {
+      const rec = (waterData || []).find(d => String(d.fbKey || d.id) === String(fbKey));
+      if (!rec) return Swal.fire({ icon: 'warning', title: 'ບໍ່ພົບຂໍ້ມູນຊຸດນີ້!' });
+      const stations = stationsOf(rec);
+      const st = stations[stIdx] || stations[0];
+      if (!st) return Swal.fire({ icon: 'warning', title: 'ບໍ່ພົບຂໍ້ມູນສະຖານີ!' });
+
+      activeStdCompareState = {
+        fbKey,
+        stIdx: Number(stIdx) || 0,
+        classId: Number(preferredClass) || 2,
+        station: st,
+        record: rec
+      };
+
+      let modal = document.getElementById('stationStandardComparisonModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'stationStandardComparisonModal';
+        modal.className = 'fixed inset-0 z-[1700] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto';
+        modal.onclick = (e) => { if (e.target === modal) closeStationStandardComparisonModal(); };
+        document.body.appendChild(modal);
+      }
+      document.body.style.overflow = 'hidden';
+
+      renderStationStandardComparisonModalContent();
+    }
+
+    function closeStationStandardComparisonModal() {
+      const modal = document.getElementById('stationStandardComparisonModal');
+      if (modal) modal.remove();
+      const alertModal = document.getElementById('alertStationsModal');
+      const dsExceedModal = document.getElementById('datasetExceedanceModal');
+      const auditKpiModal = document.getElementById('auditKpiDetailModal');
+      if (!alertModal && (!dsExceedModal || dsExceedModal.classList.contains('hidden')) && (!auditKpiModal || auditKpiModal.classList.contains('hidden'))) {
+        document.body.style.overflow = '';
+      }
+    }
+
+    function switchStationStandardClass(clsId) {
+      activeStdCompareState.classId = Number(clsId);
+      renderStationStandardComparisonModalContent();
+    }
+
+    function renderStationStandardComparisonModalContent() {
+      const modal = document.getElementById('stationStandardComparisonModal');
+      if (!modal) return;
+
+      const { fbKey, stIdx, classId, station: st, record: rec } = activeStdCompareState;
+      if (!st || !rec) return;
+
+      const compTitle = rec.companyName || rec.name || 'ບໍ່ລະບຸຊື່';
+      const stCode = st.code || '-';
+      const stName = st.name || '-';
+      const province = st.province || rec.province || '-';
+      const sampleDate = st.sampleDate || rec.date || '';
+      const lat = st.lat;
+      const lng = st.lng;
+      const coordsValid = lat !== null && lat !== undefined && lat !== '' && !isNaN(lat) && lng !== null && lng !== undefined && lng !== '' && !isNaN(lng);
+      const coordStr = coordsValid ? `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}` : 'ບໍ່ມີພິກັດ';
+
+      const targetClass = classId || 2;
+      const activeClassInfo = LAO_STANDARD_81.classes.find(c => c.id === targetClass) || LAO_STANDARD_81.classes[1];
+      const evalRes = evaluateStationForStandardClass(st, targetClass);
+      const bestFitCls = findStationBestFitClass(st) || LAO_STANDARD_81.classes[4];
+
+      const classSummaries = [1, 2, 3, 4, 5].map(cId => {
+        const clsObj = LAO_STANDARD_81.classes.find(c => c.id === cId);
+        const res = evaluateStationForStandardClass(st, cId);
+        return {
+          id: cId,
+          cls: clsObj,
+          exceedCount: res.exceedCount,
+          warnCount: res.warnCount,
+          passCount: res.passCount,
+          isPass: res.isPass,
+          isWarn: res.isWarn
+        };
+      });
+
+      let statusBadge = '';
+      let statusCardBorder = '';
+      let statusCardBg = '';
+      let statusHeadline = '';
+      let statusExplanation = '';
+
+      if (evalRes.isPass && !evalRes.isWarn) {
+        statusBadge = `<span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-600 text-white shadow-xs flex items-center gap-1.5"><span>✅</span> ຜ່ານເກນ 81/ລບ 100%</span>`;
+        statusCardBorder = 'border-emerald-300 ring-2 ring-emerald-200';
+        statusCardBg = 'bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/50';
+        statusHeadline = `ຄຸນນະພາບນ້ຳຕົວຈິງ ສອດຄ່ອງຕາມເກນ ${activeClassInfo.name} (${activeClassInfo.shortUse})`;
+        statusExplanation = `ທຸກຕົວຊີ້ວັດທີ່ກວດວັດໄດ້ (${evalRes.totalChecked} ຕົວຊີ້ວັດ) ຢູ່ໃນເກນມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ.`;
+      } else if (evalRes.isWarn) {
+        statusBadge = `<span class="px-3 py-1 rounded-full text-xs font-black bg-amber-500 text-white shadow-xs flex items-center gap-1.5"><span>⚠️</span> ຢູ່ໃນເກນເຝົ້າລະວັງ (${evalRes.warnCount} ຕົວຊີ້ວັດໃກ້ເກີນ)</span>`;
+        statusCardBorder = 'border-amber-300 ring-2 ring-amber-200';
+        statusCardBg = 'bg-gradient-to-br from-amber-50/90 via-white to-orange-50/50';
+        statusHeadline = `ຄຸນນະພາບນ້ຳຢູ່ໃນເກນ ${activeClassInfo.name} ແຕ່ມີຕົວຊີ້ວັດເຂົ້າໃກ້ຂອບເຂດສູງສຸດ`;
+        statusExplanation = `ມີ ${evalRes.warnCount} ຕົວຊີ້ວັດມີຄ່າເຂົ້າໃກ້ຂອບເຂດສູງສຸດ (≥ 90% ຂອງເກນ) ຄວນເພີ່ມຄວາມຖີ່ໃນການຕິດຕາມກວດກາ.`;
+      } else {
+        statusBadge = `<span class="px-3 py-1 rounded-full text-xs font-black bg-rose-600 text-white shadow-xs flex items-center gap-1.5"><span>🚨</span> ບໍ່ຜ່ານເກນ (${evalRes.exceedCount} ຕົວຊີ້ວັດເກີນມາດຕະຖານ)</span>`;
+        statusCardBorder = 'border-rose-300 ring-2 ring-rose-200';
+        statusCardBg = 'bg-gradient-to-br from-rose-50/90 via-white to-amber-50/50';
+        statusHeadline = `ຄຸນນະພາບນ້ຳຕົວຈິງ ເກີນເກນມາດຕະຖານ ${activeClassInfo.name}`;
+        statusExplanation = `ພົບ ${evalRes.exceedCount} ຕົວຊີ້ວັດເກີນຄ່າຈຳກັດສູງສຸດ ຫຼື ຕ່ຳກວ່າຄ່າຕ່ຳສຸດ ທີ່ກຳນົດໃນຂໍ້ຕົກລົງ 81/ລບ.`;
+      }
+
+      modal.innerHTML = `
+        <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-5xl w-full max-h-[94vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" onclick="event.stopPropagation()">
+          
+          <!-- Header -->
+          <div class="px-5 py-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between border-b border-indigo-800/40 shrink-0">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-indigo-500 flex items-center justify-center text-white text-xl shadow-lg shadow-emerald-500/25 ring-2 ring-white/10 shrink-0">
+                ⚖️
+              </div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h3 class="font-bold text-sm sm:text-base text-white tracking-tight">
+                    ສົມທຽບຄຸນນະພາບນ້ຳກັບມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ
+                  </h3>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-mono">
+                    ຂໍ້ຕົກລົງ 81/ລບ
+                  </span>
+                </div>
+                <p class="text-xs text-indigo-200/90 mt-0.5 flex items-center gap-2 flex-wrap">
+                  <span class="font-bold text-white">[${escAttr(stCode)}] ${escAttr(stName)}</span>
+                  <span>·</span>
+                  <span class="text-slate-300">🏢 ${escAttr(compTitle)}</span>
+                  <span>·</span>
+                  <span class="text-slate-300">📍 ${escAttr(province)} (${coordStr})</span>
+                  ${sampleDate ? `<span>·</span> <span class="text-emerald-300">📅 ${fmtSampleDate(sampleDate)}</span>` : ''}
+                </p>
+              </div>
+            </div>
+            <button type="button" onclick="closeStationStandardComparisonModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition text-sm cursor-pointer" title="ປິດໜ້າຕ່າງ">
+              ✕
+            </button>
+          </div>
+
+          <!-- Class Tabs Bar (Class 1-5) -->
+          <div class="bg-slate-100 p-2.5 border-b border-slate-200 shrink-0 overflow-x-auto">
+            <div class="flex items-center gap-2 min-w-max">
+              <span class="text-[11px] font-bold text-slate-500 px-1 flex items-center gap-1">
+                <span>🎯</span> <span>ເລືອກປະເພດມາດຕະຖານ:</span>
+              </span>
+              ${classSummaries.map(cs => {
+                const isSelected = cs.id === targetClass;
+                let badgeClass = '';
+                let badgeText = '';
+                if (cs.isPass && !cs.isWarn) {
+                  badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                  badgeText = '✅ ຜ່ານ';
+                } else if (cs.isWarn) {
+                  badgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
+                  badgeText = `⚠️ ໃກ້ເກີນ (${cs.warnCount})`;
+                } else {
+                  badgeClass = 'bg-rose-100 text-rose-800 border-rose-300';
+                  badgeText = `🚨 ເກີນ ${cs.exceedCount}`;
+                }
+
+                return `
+                  <button type="button" onclick="switchStationStandardClass(${cs.id})" class="cursor-pointer px-3 py-1.5 rounded-xl font-bold text-xs transition flex items-center gap-1.5 border shadow-2xs ${
+                    isSelected
+                      ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                      : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-300'
+                  }">
+                    <span>${cs.cls.icon}</span>
+                    <span>${escAttr(cs.cls.name)}: ${escAttr(cs.cls.shortUse)}</span>
+                    <span class="text-[9.5px] px-1.5 py-0.2 rounded border font-mono ${isSelected ? 'bg-white/20 text-white border-white/30' : badgeClass}">
+                      ${badgeText}
+                    </span>
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="p-4 sm:p-5 overflow-y-auto space-y-4 bg-slate-50/70 text-slate-700 text-xs">
+            
+            <!-- Result Overview Card -->
+            <div class="p-4 rounded-2xl border ${statusCardBorder} ${statusCardBg} shadow-2xs space-y-3">
+              <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
+                <div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    ${statusBadge}
+                    <span class="text-xs font-bold text-slate-800">ທຽບຕາມ: ${escAttr(activeClassInfo.name)} (${escAttr(activeClassInfo.title)})</span>
+                  </div>
+                  <h4 class="text-sm sm:text-base font-extrabold text-slate-900 mt-1">${statusHeadline}</h4>
+                  <p class="text-xs text-slate-600 mt-0.5">${statusExplanation}</p>
+                </div>
+
+                <!-- Best Fit Classification -->
+                <div class="p-3 rounded-xl bg-white/90 border border-slate-200 shadow-2xs shrink-0 text-left">
+                  <span class="text-[10px] font-bold text-indigo-700 uppercase tracking-wide block">🎯 ການຈັດປະເພດຕົວຈິງຕາມມາດຕະຖານ 81/ລບ:</span>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <span class="text-lg">${bestFitCls.icon}</span>
+                    <span class="text-xs sm:text-sm font-black text-slate-900">${escAttr(bestFitCls.name)}</span>
+                    <span class="text-[10.5px] px-2 py-0.2 rounded bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">
+                      ${escAttr(bestFitCls.shortUse)}
+                    </span>
+                  </div>
+                  <p class="text-[10.5px] text-slate-500 font-medium mt-1 max-w-[240px] leading-tight">${escAttr(bestFitCls.desc)}</p>
+                </div>
+              </div>
+
+              <!-- Metrics Stats -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+                <div class="bg-white/80 p-2.5 rounded-xl border border-slate-200">
+                  <span class="text-[10.5px] text-slate-500 font-semibold block">ຕົວຊີ້ວັດທີ່ກວດວັດ</span>
+                  <span class="text-lg font-black text-slate-800 font-mono">${evalRes.totalChecked}</span>
+                  <span class="text-[10px] text-slate-400 ml-1">ຕົວຊີ້ວັດ</span>
+                </div>
+                <div class="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
+                  <span class="text-[10.5px] text-emerald-700 font-semibold block">ຜ່ານເກນມາດຕະຖານ</span>
+                  <span class="text-lg font-black text-emerald-700 font-mono">${evalRes.passCount}</span>
+                  <span class="text-[10px] text-emerald-600 ml-1">ຕົວຊີ້ວັດ</span>
+                </div>
+                <div class="bg-white/80 p-2.5 rounded-xl border border-amber-200">
+                  <span class="text-[10.5px] text-amber-700 font-semibold block">ຢູ່ໃນເກນເຝົ້າລະວັງ</span>
+                  <span class="text-lg font-black text-amber-700 font-mono">${evalRes.warnCount}</span>
+                  <span class="text-[10px] text-amber-600 ml-1">ຕົວຊີ້ວັດ</span>
+                </div>
+                <div class="bg-white/80 p-2.5 rounded-xl border border-rose-200">
+                  <span class="text-[10.5px] text-rose-700 font-semibold block">ເກີນເກນມາດຕະຖານ</span>
+                  <span class="text-lg font-black text-rose-700 font-mono">${evalRes.exceedCount}</span>
+                  <span class="text-[10px] text-rose-600 ml-1">ຕົວຊີ້ວັດ</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detailed Parameter Comparison Table -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden space-y-2">
+              <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-slate-800 flex items-center gap-1.5 text-xs sm:text-sm">
+                    <span>📋</span> <span>ຕາຕະລາງຜົນການສົມທຽບຕົວຊີ້ວັດລາຍລະອຽດ (Decree 81/PM Matrix)</span>
+                  </span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    ${evalRes.breakdown.length} ຕົວຊີ້ວັດ
+                  </span>
+                </div>
+                <span class="text-[11px] text-slate-500 hidden sm:inline">ມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ 21 ກຸມພາ 2017</span>
+              </div>
+
+              <div class="overflow-x-auto max-h-80">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead class="sticky top-0 bg-slate-100 z-10 text-slate-700 font-bold border-b border-slate-200">
+                    <tr>
+                      <th class="p-2.5 text-center w-10">ລຳດັບ</th>
+                      <th class="p-2.5 min-w-[160px]">ຕົວຊີ້ວັດ (Parameter)</th>
+                      <th class="p-2.5 text-center min-w-[100px]">ຄ່າວັດແທກຕົວຈິງ</th>
+                      <th class="p-2.5 text-center min-w-[120px]">ເກນ 81/ລບ (${escAttr(activeClassInfo.name)})</th>
+                      <th class="p-2.5 text-center min-w-[95px]">ສະຖານະ</th>
+                      <th class="p-2.5 min-w-[130px]">ສ່ວນຕ່າງ / ຜົນການປະເມີນ</th>
+                      <th class="p-2.5 min-w-[160px]">ຂໍ້ແນະນຳ & ການນຳໃຊ້ທີ່ອະນຸຍາດ</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 bg-white">
+                    ${evalRes.breakdown.length > 0 ? evalRes.breakdown.map((pb, idx) => `
+                      <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-2.5 text-center font-bold text-slate-400 font-mono">${idx + 1}</td>
+                        <td class="p-2.5">
+                          <span class="font-bold text-slate-800">${escAttr(pb.param.name)}</span>
+                          <span class="block text-[10px] text-slate-400 font-mono">${escAttr(pb.param.en)} (${escAttr(pb.param.unit)})</span>
+                        </td>
+                        <td class="p-2.5 text-center font-mono font-bold text-sm ${pb.status === 'EXCEED' ? 'text-rose-600 bg-rose-50/50' : pb.status === 'WARN' ? 'text-amber-700 bg-amber-50/40' : 'text-slate-900'}">
+                          ${pb.val} <span class="text-[10px] text-slate-400 font-normal">${escAttr(pb.param.unit)}</span>
+                        </td>
+                        <td class="p-2.5 text-center font-mono font-bold text-indigo-700 bg-indigo-50/40">
+                          ${escAttr(pb.lim.label)}
+                        </td>
+                        <td class="p-2.5 text-center whitespace-nowrap">
+                          <span class="px-2 py-0.5 rounded-full text-[10.5px] font-bold border ${pb.badgeColor}">
+                            ${pb.badgeIcon} ${pb.status === 'PASS' ? 'ຜ່ານ' : pb.status === 'WARN' ? 'ເຝົ້າລະວັງ' : 'ເກີນເກນ'}
+                          </span>
+                        </td>
+                        <td class="p-2.5 text-[11px] font-medium ${pb.status === 'EXCEED' ? 'text-rose-700 font-bold' : pb.status === 'WARN' ? 'text-amber-800' : 'text-slate-600'}">
+                          ${escAttr(pb.diffLabel)}
+                        </td>
+                        <td class="p-2.5 text-[10.5px] text-slate-500 leading-tight">
+                          ${escAttr(pb.param.note || '-')}
+                        </td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td colspan="7" class="p-8 text-center text-slate-400">ບໍ່ມີຂໍ້ມູນພາຣາມິເຕີທີ່ສາມາດທຽບກັບມາດຕະຖານ 81/ລບ ໄດ້</td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Standard Reference Legal Footnote -->
+            <div class="bg-indigo-50/60 p-3 rounded-xl border border-indigo-200 text-[11px] text-indigo-900 space-y-1">
+              <span class="font-bold flex items-center gap-1.5">
+                <span>🏛️</span> <span>ເອກະສານອ້າງອີງທາງກົດໝາຍ:</span>
+              </span>
+              <p class="text-slate-600 leading-relaxed">
+                ຂໍ້ຕົກລົງວ່າດ້ວຍມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ, ລົງວັນທີ 21 ກຸມພາ 2017 ອອກໂດຍ ລັດຖະບານ ແຫ່ງ ສປປ ລາວ. ມາດຕະຖານຄຸນນະພາບນ້ຳໜ້າດິນ ແບ່ງອອກເປັນ 5 ປະເພດ ຕາມຈຸດປະສົງການນຳໃຊ້ ແລະ ຄວາມສະອາດຂອງແຫຼ່ງນ້ຳ.
+              </p>
+            </div>
+
+          </div>
+
+          <!-- Footer Actions -->
+          <div class="px-5 py-3.5 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <button type="button" onclick="jumpToDecree81Workbench('${fbKey}', ${stIdx}, ${targetClass})" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <span>🔍</span>
+                <span>ເປີດໃນເຄື່ອງມືທຽບພິກັດ 81/ລບ ເຕັມຮູບແບບ ↗</span>
+              </button>
+              <button type="button" onclick="printStationStandardComparison()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <span>🖨️</span>
+                <span>ພິມໃບສົມທຽບ 81/ລບ</span>
+              </button>
+              <button type="button" onclick="exportStationStandardComparisonToExcel()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <span>📊</span>
+                <span>ສົ່ງອອກ Excel</span>
+              </button>
+            </div>
+            <button type="button" onclick="closeStationStandardComparisonModal()" class="px-5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition cursor-pointer">
+              ປິດໜ້າຕ່າງ
+            </button>
+          </div>
+
+        </div>
+      `;
+    }
+
+    function jumpToDecree81Workbench(fbKey, stIdx, selectedClass) {
+      closeStationStandardComparisonModal();
+      closeAlertStationsModal();
+      closeDatasetExceedanceModal();
+      closeAuditKpiDetailModal();
+
+      if (typeof setAppView === 'function') {
+        setAppView('standards81');
+      }
+
+      if (selectedClass) {
+        currentAuditCompareClass = selectedClass;
+        selectedStandardClass = selectedClass;
+      }
+
+      setTimeout(() => {
+        if (fbKey && Array.isArray(allAvailableRawDatasets)) {
+          const dsExists = allAvailableRawDatasets.some(d => String(d.key) === String(fbKey));
+          if (dsExists) {
+            selectedAuditDatasetKey = String(fbKey);
+            const dsSelect = document.getElementById('auditDatasetSelect');
+            if (dsSelect) dsSelect.value = selectedAuditDatasetKey;
+            populateAuditStationSelect();
+          }
+        }
+
+        const allSt = getAllAvailableAuditStations();
+        const foundIdx = allSt.findIndex(s => 
+          String(s.datasetKey) === String(fbKey) && 
+          (s.stListIndex === stIdx || (s.code && s.code === s.code))
+        );
+
+        if (foundIdx >= 0) {
+          selectStationForAudit(foundIdx);
+        } else {
+          selectStationForAudit(0);
+        }
+
+        const card = document.getElementById('auditInspectorCard');
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+    }
+
+    function printStationStandardComparison() {
+      const { station: st, record: rec, classId } = activeStdCompareState;
+      if (!st || !rec) return Swal.fire({ icon: 'warning', title: 'ບໍ່ພົບຂໍ້ມູນ' });
+
+      const targetClass = classId || 2;
+      const classInfo = LAO_STANDARD_81.classes.find(c => c.id === targetClass) || LAO_STANDARD_81.classes[1];
+      const evalRes = evaluateStationForStandardClass(st, targetClass);
+      const bestFitCls = findStationBestFitClass(st) || LAO_STANDARD_81.classes[4];
+
+      const printWin = window.open('', '_blank');
+      if (!printWin) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາອະນຸຍາດ Pop-up ເພື່ອພິມ' });
+
+      const rowsHtml = evalRes.breakdown.map((pb, idx) => `
+        <tr>
+          <td style="text-align:center; padding:6px; border:1px solid #cbd5e1;">${idx + 1}</td>
+          <td style="padding:6px; border:1px solid #cbd5e1;">
+            <b>${escAttr(pb.param.name)}</b>
+            <div style="font-size:10px; color:#64748b;">${escAttr(pb.param.en)}</div>
+          </td>
+          <td style="text-align:center; padding:6px; border:1px solid #cbd5e1; font-weight:bold; font-family:monospace; font-size:13px; color:${pb.status === 'EXCEED' ? '#dc2626' : pb.status === 'WARN' ? '#d97706' : '#1e293b'};">
+            ${pb.val} ${escAttr(pb.param.unit)}
+          </td>
+          <td style="text-align:center; padding:6px; border:1px solid #cbd5e1; font-family:monospace; font-weight:bold; background:#eef2ff; color:#3730a3;">
+            ${escAttr(pb.lim.label)}
+          </td>
+          <td style="text-align:center; padding:6px; border:1px solid #cbd5e1; font-weight:bold; color:${pb.status === 'EXCEED' ? '#dc2626' : pb.status === 'WARN' ? '#d97706' : '#15803d'};">
+            ${pb.status === 'PASS' ? '✅ ຜ່ານ' : pb.status === 'WARN' ? '⚠️ ເຝົ້າລະວັງ' : '🚨 ເກີນເກນ'}
+          </td>
+          <td style="padding:6px; border:1px solid #cbd5e1; font-size:11px;">${escAttr(pb.diffLabel)}</td>
+          <td style="padding:6px; border:1px solid #cbd5e1; font-size:11px; color:#64748b;">${escAttr(pb.param.note || '-')}</td>
+        </tr>
+      `).join('');
+
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>ໃບສົມທຽບຄຸນນະພາບນ້ຳກັບມາດຕະຖານແຫ່ງຊາດ 81/ລບ</title>
+          <style>
+            body { font-family: 'Noto Sans Lao', sans-serif, system-ui; padding: 25px; color: #1e293b; line-height: 1.4; }
+            h2, h3, h4, p { margin: 0 0 4px 0; }
+            table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 15px; }
+            th { background: #f1f5f9; padding: 7px; border: 1px solid #cbd5e1; text-align: left; }
+            .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+            .footer-sign { margin-top: 35px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+            @media print {
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div style="text-align:center; border-bottom:2px solid #0f172a; padding-bottom:12px; margin-bottom:15px;">
+            <h3>ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</h3>
+            <p>ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</p>
+            <div style="margin: 8px 0; font-size:12px; color:#64748b;">---===***===---</div>
+            <h2>ໃບຢັ້ງຢືນຜົນການສົມທຽບຄຸນນະພາບນ້ຳຕົວຈິງ ທຽບກັບມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ</h2>
+            <h4 style="color:#0284c7;">ອີງຕາມຂໍ້ຕົກລົງວ່າດ້ວຍມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ, ລົງວັນທີ 21 ກຸມພາ 2017</h4>
+          </div>
+
+          <table style="margin-bottom:15px; border:none;">
+            <tr style="background:#f8fafc;">
+              <td style="padding:6px; border:none; width:50%;"><b>ລະຫັດ & ຊື່ສະຖານີ:</b> [${escAttr(st.code || '-')}] ${escAttr(st.name || '-')}</td>
+              <td style="padding:6px; border:none; width:50%;"><b>ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ:</b> ${escAttr(rec.companyName || rec.name || '-')}</td>
+            </tr>
+            <tr style="background:#f8fafc;">
+              <td style="padding:6px; border:none;"><b>ແຂວງ / ສະຖານທີ່:</b> ${escAttr(st.province || rec.province || '-')}</td>
+              <td style="padding:6px; border:none;"><b>ພິກັດ GPS:</b> ${st.lat && st.lng ? `${st.lat}, ${st.lng}` : 'ບໍ່ລະບຸ'}</td>
+            </tr>
+            <tr style="background:#f8fafc;">
+              <td style="padding:6px; border:none;"><b>ວັນທີເກັບຕົວຢ່າງ:</b> ${st.sampleDate ? fmtSampleDate(st.sampleDate) : (rec.date || '-')}</td>
+              <td style="padding:6px; border:none;"><b>ວັນທີອອກໃບສົມທຽບ:</b> ${new Date().toLocaleDateString('lo-LA')}</td>
+            </tr>
+            <tr style="background:#eef2ff;">
+              <td style="padding:6px; border:none;"><b>ມາດຕະຖານທີ່ໃຊ້ທຽບ:</b> <span class="badge" style="background:#4338ca; color:white;">${escAttr(classInfo.name)}: ${escAttr(classInfo.title)}</span></td>
+              <td style="padding:6px; border:none;"><b>ການຈັດປະເພດຄຸນນະພາບຕົວຈິງ:</b> <span class="badge" style="background:#059669; color:white;">${escAttr(bestFitCls.name)}: ${escAttr(bestFitCls.shortUse)}</span></td>
+            </tr>
+          </table>
+
+          <div style="background:#f1f5f9; padding:8px 12px; border-radius:6px; font-size:12px; font-weight:bold;">
+            ສະຫຼຸບຜົນ: ກວດວັດທັງໝົດ ${evalRes.totalChecked} ຕົວຊີ້ວັດ | ຜ່ານ ${evalRes.passCount} | ເຝົ້າລະວັງ ${evalRes.warnCount} | ເກີນເກນ ${evalRes.exceedCount}
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width:35px; text-align:center;">ລ/ດ</th>
+                <th>ຕົວຊີ້ວັດ (Parameter)</th>
+                <th style="text-align:center; width:110px;">ຄ່າທີ່ວັດແທກໄດ້</th>
+                <th style="text-align:center; width:100px;">ເກນ 81/ລບ (${escAttr(classInfo.name)})</th>
+                <th style="text-align:center; width:80px;">ສະຖານະ</th>
+                <th style="width:120px;">ສ່ວນຕ່າງ</th>
+                <th>ຂໍ້ແນະນຳການນຳໃຊ້</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+
+          <div class="footer-sign">
+            <div style="font-size:11px; color:#64748b;">
+              <p>ລະບົບຕິດຕາມກວດກາຄຸນນະພາບນ້ຳ ກົມຊັບພະຍາກອນນ້ຳ</p>
+              <p>ກະຊວງຊັບພະຍາກອນທຳມະຊາດ ແລະ ສິ່ງແວດລ້ອມ</p>
+            </div>
+            <div style="text-align:center; width:220px;">
+              <p style="font-weight:bold;">ຜູ້ກວດກາ ແລະ ອອກໃບຢັ້ງຢືນ</p>
+              <br><br><br>
+              <p style="border-top:1px dotted #94a3b8; padding-top:4px;">(ລາຍເຊັນ ແລະ ປະທັບຕາ)</p>
+            </div>
+          </div>
+          ${'<'}script>
+            window.onload = function() { window.print(); };
+          ${'<'}/script>
+        </body>
+        </html>
+      `);
+      printWin.document.close();
+    }
+
+    function exportStationStandardComparisonToExcel() {
+      if (!window.XLSX) return Swal.fire({ icon: 'warning', title: 'ກະລຸນາລໍຖ້າລະບົບໂຫລດໂປຣແກຣມ SheetJS' });
+
+      const { station: st, record: rec, classId } = activeStdCompareState;
+      if (!st || !rec) return;
+
+      const targetClass = classId || 2;
+      const classInfo = LAO_STANDARD_81.classes.find(c => c.id === targetClass) || LAO_STANDARD_81.classes[1];
+      const evalRes = evaluateStationForStandardClass(st, targetClass);
+      const bestFitCls = findStationBestFitClass(st) || LAO_STANDARD_81.classes[4];
+
+      const data = [
+        ['ໃບຢັ້ງຢືນຜົນການສົມທຽບຄຸນນະພາບນ້ຳກັບມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ (ຂໍ້ຕົກລົງ 81/ລບ)'],
+        ['ອີງຕາມ: ຂໍ້ຕົກລົງວ່າດ້ວຍມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ ສະບັບເລກທີ 81/ລບ, ລົງວັນທີ 21 ກຸມພາ 2017'],
+        [],
+        ['ລະຫັດສະຖານີ:', st.code || '-'],
+        ['ຊື່ສະຖານີ / ຈຸດເກັບຕົວຢ່າງ:', st.name || '-'],
+        ['ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ:', rec.companyName || rec.name || '-'],
+        ['ແຂວງ:', st.province || rec.province || '-'],
+        ['ພິກັດ GPS Latitude:', st.lat || ''],
+        ['ພິກັດ GPS Longitude:', st.lng || ''],
+        ['ວັນທີເກັບຕົວຢ່າງ:', st.sampleDate || rec.date || ''],
+        ['ມາດຕະຖານທີ່ໃຊ້ທຽບ:', `${classInfo.name} (${classInfo.title}) - ${classInfo.shortUse}`],
+        ['ການຈັດປະເພດຄຸນນະພາບຕົວຈິງ:', `${bestFitCls.name} (${bestFitCls.shortUse})`],
+        ['ວັນທີອອກລາຍງານ:', new Date().toLocaleDateString('lo-LA')],
+        [],
+        ['ລຳດັບ', 'ຕົວຊີ້ວັດ (Parameter)', 'ພາສາອັງກິດ', 'ຫົວໜ່ວຍ', 'ຄ່າທີ່ວັດແທກຕົວຈິງ', `ເກນ 81/ລບ (${classInfo.name})`, 'ສະຖານະ', 'ສ່ວນຕ່າງ / ຜົນການປະເມີນ', 'ຂໍ້ແນະນຳການນຳໃຊ້']
+      ];
+
+      evalRes.breakdown.forEach((pb, idx) => {
+        data.push([
+          idx + 1,
+          pb.param.name,
+          pb.param.en,
+          pb.param.unit,
+          pb.val,
+          pb.lim.label,
+          pb.status === 'PASS' ? 'ຜ່ານມາດຕະຖານ' : pb.status === 'WARN' ? 'ເຝົ້າລະວັງ' : 'ເກີນເກນ',
+          pb.diffLabel,
+          pb.param.note || ''
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Decree81_Comparison');
+      const safeCode = String(st.code || 'Station').replace(/[\\/:*?"<>|]/g, '_');
+      XLSX.writeFile(wb, `Decree81_Comparison_${safeCode}_${Date.now()}.xlsx`);
+    }
+
+    function jumpAllAlertsToDecree81Workbench() {
+      closeAlertStationsModal();
+      if (typeof setAppView === 'function') {
+        setAppView('standards81');
+      }
+      setTimeout(() => {
+        const card = document.getElementById('auditInspectorCard');
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (typeof setAuditStatusFilter === 'function') {
+          setAuditStatusFilter('EXCEED');
+        }
+      }, 300);
+    }
+
+    function batchCompareAlertsWithNationalStandard() {
+      const allAlertStations = getAllAlertStationsList();
+      if (!allAlertStations.length) {
+        return Swal.fire({ icon: 'info', title: 'ບໍ່ມີສະຖານີເຕືອນໄພ', text: 'ທຸກສະຖານີໃນລະບົບຢູ່ໃນເກນປົກກະຕິ' });
+      }
+
+      let modal = document.getElementById('batchAlertsCompareModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'batchAlertsCompareModal';
+        modal.className = 'fixed inset-0 z-[1750] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto';
+        modal.onclick = (e) => { if (e.target === modal) closeBatchAlertsCompareModal(); };
+        document.body.appendChild(modal);
+      }
+      document.body.style.overflow = 'hidden';
+
+      const stationEvaluations = allAlertStations.map((item, idx) => {
+        const st = item.st;
+        const bestFit = findStationBestFitClass(st) || LAO_STANDARD_81.classes[4];
+        const evalClass2 = evaluateStationForStandardClass(st, 2);
+        const evalClass3 = evaluateStationForStandardClass(st, 3);
+        return {
+          idx: idx + 1,
+          item,
+          st,
+          rec: item.rec,
+          bestFit,
+          evalClass2,
+          evalClass3
+        };
+      });
+
+      modal.innerHTML = `
+        <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" onclick="event.stopPropagation()">
+          
+          <!-- Header -->
+          <div class="px-5 py-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between border-b border-indigo-800/40 shrink-0">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-indigo-500 flex items-center justify-center text-xl shadow-lg">
+                📊
+              </div>
+              <div>
+                <h3 class="font-bold text-sm sm:text-base text-white">
+                  ຕາຕະລາງສົມທຽບສະຖານີເຕືອນໄພທັງໝົດ ກັບມາດຕະຖານແຫ່ງຊາດ 81/ລບ
+                </h3>
+                <p class="text-xs text-indigo-200/80 mt-0.5">
+                  ຈຳນວນ ${allAlertStations.length} ສະຖານີເຕືອນໄພ · ຈັດປະເພດຕາມຂໍ້ຕົກລົງ 81/ລບ (Class 1-5)
+                </p>
+              </div>
+            </div>
+            <button type="button" onclick="closeBatchAlertsCompareModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer">
+              ✕
+            </button>
+          </div>
+
+          <!-- Body Table -->
+          <div class="p-4 sm:p-5 overflow-y-auto space-y-3 bg-slate-50/70 text-xs">
+            <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="p-2.5 text-center w-10">ລຳດັບ</th>
+                    <th class="p-2.5">ລະຫັດ & ຊື່ສະຖານີ</th>
+                    <th class="p-2.5">ຊື່ຂໍ້ມູນ / ຫົວຂໍ້ຫຼັກ</th>
+                    <th class="p-2.5">ແຂວງ</th>
+                    <th class="p-2.5 text-center">ການຈັດປະເພດຕົວຈິງ (Best-fit)</th>
+                    <th class="p-2.5 text-center">ທຽບ ປະເພດ 2 (ອຸປະໂພກ)</th>
+                    <th class="p-2.5 text-center">ທຽບ ປະເພດ 3 (ກະສິກຳ)</th>
+                    <th class="p-2.5 text-center">ຈັດການ</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                  ${stationEvaluations.map(se => `
+                    <tr class="hover:bg-slate-50 transition">
+                      <td class="p-2.5 text-center font-bold text-slate-400 font-mono">${se.idx}</td>
+                      <td class="p-2.5 font-bold text-slate-800">
+                        <span class="font-mono text-rose-700">[${escAttr(se.item.code)}]</span> ${escAttr(se.item.name)}
+                      </td>
+                      <td class="p-2.5 text-slate-600 font-medium">${escAttr(se.item.comp)}</td>
+                      <td class="p-2.5 text-slate-500">${escAttr(se.item.province)}</td>
+                      <td class="p-2.5 text-center">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                          <span>${se.bestFit.icon}</span> <span>${escAttr(se.bestFit.name)}</span>
+                        </span>
+                      </td>
+                      <td class="p-2.5 text-center">
+                        ${se.evalClass2.isPass ? `
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✅ ຜ່ານ</span>
+                        ` : `
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">🚨 ເກີນ ${se.evalClass2.exceedCount} ຄ່າ</span>
+                        `}
+                      </td>
+                      <td class="p-2.5 text-center">
+                        ${se.evalClass3.isPass ? `
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✅ ຜ່ານ</span>
+                        ` : `
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">🚨 ເກີນ ${se.evalClass3.exceedCount} ຄ່າ</span>
+                        `}
+                      </td>
+                      <td class="p-2.5 text-center">
+                        <button type="button" onclick="closeBatchAlertsCompareModal(); openStationNationalStandardComparison('${se.rec.fbKey}', ${se.item.stIdx})" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] transition cursor-pointer shadow-2xs">
+                          ⚖️ ສົມທຽບລະອຽດ
+                        </button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="px-5 py-3.5 bg-white border-t border-slate-200 flex items-center justify-between">
+            <span class="text-xs text-slate-500">ຄລິກ "⚖️ ສົມທຽບລະອຽດ" ເພື່ອເບິ່ງຜົນການວັດແທກທຸກຕົວຊີ້ວັດທຽບກັບເກນ Class 1-5</span>
+            <button type="button" onclick="closeBatchAlertsCompareModal()" class="px-4 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition cursor-pointer">
+              ປິດ
+            </button>
+          </div>
+
+        </div>
+      `;
+    }
+
+    function closeBatchAlertsCompareModal() {
+      const modal = document.getElementById('batchAlertsCompareModal');
+      if (modal) modal.remove();
+      const alertModal = document.getElementById('alertStationsModal');
+      if (!alertModal) document.body.style.overflow = '';
     }
 
     /* --- BATCH SAVE & ACCORDION SYSTEM --- */
@@ -13541,6 +14374,7 @@
                       <th class="p-2.5 text-center">ເກນມາດຕະຖານ</th>
                       <th class="p-2.5 text-right">ສ່ວນຕ່າງ</th>
                       <th class="p-2.5 text-center">ສະຖານະ</th>
+                      <th class="p-2.5 text-center">ສົມທຽບມາດຕະຖານ 81/ລບ</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-rose-100 bg-white">
@@ -13571,6 +14405,11 @@
                           <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
                             <span>🚨</span> ${escAttr(ex.statusText)}
                           </span>
+                        </td>
+                        <td class="p-2.5 text-center whitespace-nowrap">
+                          <button type="button" onclick="openStationNationalStandardComparison('${item.fbKey}', ${ex.stationIdx})" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10.5px] transition cursor-pointer inline-flex items-center gap-1 shadow-2xs" title="ສົມທຽບກັບມາດຕະຖານແຫ່ງຊາດ 81/ລບ">
+                            <span>⚖️</span> <span>ສົມທຽບ 81/ລບ</span>
+                          </button>
                         </td>
                       </tr>
                     `).join('')}
