@@ -459,7 +459,7 @@
       <div id="map" class="rounded-xl border border-slate-200 w-full shadow-inner"></div>
 
       <!-- 📍 ຄຳອະທິບາຍສັນຍາລັກສະຖານະການແຈ້ງເຕືອນໄພໃນແຜນທີ່ (Map Alert & Standard Legend) -->
-      <div class="mt-2.5 bg-slate-50/90 border border-slate-200/90 rounded-xl p-2.5 md:px-3.5 md:py-2 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+      <div id="mapAlertLegendBar" class="mt-2.5 bg-slate-50/90 border border-slate-200/90 rounded-xl p-2.5 md:px-3.5 md:py-2 flex flex-wrap items-center justify-between gap-2.5 text-xs">
         <div class="flex items-center gap-1.5 font-bold text-slate-700">
           <span class="text-sm">📍</span>
           <span>ສັນຍາລັກສະຖານະຄຸນນະພາບນໍ້າ:</span>
@@ -3895,6 +3895,13 @@
       if (logColHeader) logColHeader.classList.toggle('hidden', currentUserRole !== 'SUPER_ADMIN');
       const expClearBtn = document.getElementById('expClearLogsSuperBtn');
       if (expClearBtn) expClearBtn.classList.toggle('hidden', currentUserRole !== 'SUPER_ADMIN');
+
+      // ສະເພາະ Super Admin ແລະ Staff ເທົ່ານັ້ນທີ່ເຫັນແຖບອະທິບາຍສັນຍາລັກເຕືອນໄພໃນແຜນທີ່
+      const canViewMapAlerts = currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'STAFF';
+      const mapAlertLegend = document.getElementById('mapAlertLegendBar');
+      if (mapAlertLegend) {
+        mapAlertLegend.classList.toggle('hidden', !canViewMapAlerts);
+      }
     }
 
     // ຖ້າເຂົ້າລະບົບດ້ວຍບັນຊີສ່ວນຕົວ → ໃສ່ຊື່ຜູ້ບັນທຶກໃຫ້ອັດຕະໂນມັດ ແລະ ລັອກບໍ່ໃຫ້ປ່ຽນ
@@ -12133,23 +12140,27 @@
       cSel.value = mapCompany;
 
       const ds = waterData.find(d => d.fbKey === mapCompany);
+      const canViewMapAlerts = currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'STAFF';
 
       const formatStationOpt = (st, i, item) => {
         const rec = item || ds;
-        const diag = (typeof getStationAlertDiagnosis === 'function')
-          ? getStationAlertDiagnosis(st, rec)
-          : { isAlert: Boolean(st.status && st.status.isAlert), causeType: 'NONE' };
-        
-        let alertBadge = ' ✅ [ປົກກະຕິ]';
-        if (diag.causeType === 'BOTH') {
-          alertBadge = ' 🚨 [ເຕືອນໄພ: 81/ລບ & QWI ເສື່ອມ]';
-        } else if (diag.causeType === 'NATIONAL_STANDARD') {
-          const names = (diag.violations || []).slice(0, 2).map(v => v.name).join(', ');
-          alertBadge = ` ⚠️ [ເກີນ 81/ລບ${names ? ': ' + names : ''}]`;
-        } else if (diag.causeType === 'QWI_DEGRADED') {
-          alertBadge = ` 🌊 [QWI ${diag.qi && diag.qi.score !== '-' ? diag.qi.score : ''}: ເສື່ອມໂຊມ]`;
-        } else if (diag.isAlert) {
-          alertBadge = ' 🚨 [ແຈ້ງເຕືອນໄພ]';
+        let alertBadge = '';
+        if (canViewMapAlerts) {
+          const diag = (typeof getStationAlertDiagnosis === 'function')
+            ? getStationAlertDiagnosis(st, rec)
+            : { isAlert: Boolean(st.status && st.status.isAlert), causeType: 'NONE' };
+          
+          alertBadge = ' ✅ [ປົກກະຕິ]';
+          if (diag.causeType === 'BOTH') {
+            alertBadge = ' 🚨 [ເຕືອນໄພ: 81/ລບ & QWI ເສື່ອມ]';
+          } else if (diag.causeType === 'NATIONAL_STANDARD') {
+            const names = (diag.violations || []).slice(0, 2).map(v => v.name).join(', ');
+            alertBadge = ` ⚠️ [ເກີນ 81/ລບ${names ? ': ' + names : ''}]`;
+          } else if (diag.causeType === 'QWI_DEGRADED') {
+            alertBadge = ` 🌊 [QWI ${diag.qi && diag.qi.score !== '-' ? diag.qi.score : ''}: ເສື່ອມໂຊມ]`;
+          } else if (diag.isAlert) {
+            alertBadge = ' 🚨 [ແຈ້ງເຕືອນໄພ]';
+          }
         }
         return `<option value="${rec.fbKey}:${i}">[${escAttr(st.code || '-')}] ${escAttr(st.name || '-')}${alertBadge}${st.sampleDate ? ' · 📅 ' + escAttr(fmtSampleDate(st.sampleDate)) : ''}</option>`;
       };
@@ -13326,6 +13337,11 @@
       filteredDataGlobal = filteredData;
 
       const canDelete = currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'STAFF';
+      const canViewMapAlerts = currentUserRole === 'SUPER_ADMIN' || currentUserRole === 'STAFF';
+      const mapAlertLegend = document.getElementById('mapAlertLegendBar');
+      if (mapAlertLegend) {
+        mapAlertLegend.classList.toggle('hidden', !canViewMapAlerts);
+      }
 
       document.getElementById('tableHeader').innerHTML = `
         <th class="p-3 text-center w-14 text-slate-700 font-bold">🔍 ເລືອກ</th>
@@ -13451,23 +13467,28 @@
           flatStationsForChart.push({ ...st, companyName: company });
           const hideOnMap = (mapOnly && ((mapStation && `${item.fbKey}:${stIdx}` !== mapStation) || (!mapStation && mapCompany && item.fbKey !== mapCompany))) || (mapYear !== 'ALL' && stationYear(st, item) !== mapYear);
           if (!hideOnMap && st.lat && st.lng && !isNaN(st.lat) && !isNaN(st.lng)) try {
-            const diag = getStationAlertDiagnosis(st, item);
+            const diag = canViewMapAlerts ? getStationAlertDiagnosis(st, item) : { isAlert: false, causeType: 'NONE' };
             let currentIcon = normalIcon;
-            if (diag.causeType === 'BOTH') {
-              currentIcon = alertDualIcon;
-            } else if (diag.causeType === 'NATIONAL_STANDARD') {
-              currentIcon = alertStdIcon;
-            } else if (diag.causeType === 'QWI_DEGRADED') {
-              currentIcon = alertQwiIcon;
-            } else if (diag.isAlert) {
-              currentIcon = alertStdIcon;
+            if (canViewMapAlerts) {
+              if (diag.causeType === 'BOTH') {
+                currentIcon = alertDualIcon;
+              } else if (diag.causeType === 'NATIONAL_STANDARD') {
+                currentIcon = alertStdIcon;
+              } else if (diag.causeType === 'QWI_DEGRADED') {
+                currentIcon = alertQwiIcon;
+              } else if (diag.isAlert) {
+                currentIcon = alertStdIcon;
+              }
+            } else {
+              // ຜູ້ນໍາໃຊ້ທົ່ວໄປ: ສະແດງພຽງແຕ່ຈຸດມາດຕະຖານປົກກະຕິ
+              currentIcon = normalIcon;
             }
 
             const marker = L.marker([st.lat, st.lng], { icon: currentIcon }).addTo(markersGroup);
             markerIndex[`${item.fbKey}:${stIdx}`] = marker;
 
             // Bind tooltip on hover
-            if (diag.isAlert) {
+            if (canViewMapAlerts && diag.isAlert) {
               let ttMsg = `<div style="font-family:'Noto Sans Lao',sans-serif;font-size:11px;line-height:1.4;">`;
               ttMsg += `<b style="color:#b91c1c;">🚨 [${escAttr(st.code || '-')}] ${escAttr(st.name || '-')}</b><br>`;
               if (diag.causeType === 'BOTH') {
@@ -13485,17 +13506,20 @@
               }
               ttMsg += `</div>`;
               marker.bindTooltip(ttMsg, { direction: 'top', offset: [0, -14] });
-            } else {
+            } else if (canViewMapAlerts) {
               marker.bindTooltip(`[${escAttr(st.code || '-')}] ${escAttr(st.name || '-')}<br><span style="color:#059669;font-size:10px;">✅ ຜ່ານມາດຕະຖານແຫ່ງຊາດ &amp; QWI ປົກກະຕິ</span>`, { direction: 'top', offset: [0, -14] });
+            } else {
+              // ຜູ້ນໍາໃຊ້ທົ່ວໄປ: ສະແດງພຽງແຕ່ລະຫັດ ແລະ ຊື່ຈຸດເກັບຕົວຢ່າງເທິງແຜນທີ່
+              marker.bindTooltip(`[${escAttr(st.code || '-')}] ${escAttr(st.name || '-')}`, { direction: 'top', offset: [0, -14] });
             }
 
             marker.bindPopup(() => {
-              const liveDiag = getStationAlertDiagnosis(st, item);
+              const liveDiag = canViewMapAlerts ? getStationAlertDiagnosis(st, item) : null;
               let customPopupHTML = '';
               valueInds().forEach(i => {
                 const val = st.customs ? st.customs[i.key] : undefined;
                 if (val !== undefined && val !== '-' && val !== '' && val !== null) {
-                  const isBad = isOutOfThreshold(i.key, val);
+                  const isBad = canViewMapAlerts && isOutOfThreshold(i.key, val);
                   customPopupHTML += `
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 0; border-bottom:1px dotted #e2e8f0; font-size:11px;">
                       <span style="color:${isBad ? '#dc2626' : '#334155'}; font-weight:${isBad ? 'bold' : 'normal'};">
@@ -13510,82 +13534,84 @@
               });
 
               let alertBannerHTML = '';
-              if (liveDiag.isAlert) {
-                alertBannerHTML = `
-                  <div style="margin:8px 0; padding:9px; border-radius:12px; background:#fff1f2; border:1.5px solid #fecdd3;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; padding-bottom:5px; border-bottom:1px solid #fecdd3;">
-                      <div style="font-weight:800; font-size:11.5px; color:#9f1239; display:flex; align-items:center; gap:4px;">
-                        <span>🚨</span> <span>${liveDiag.causeTitle}</span>
+              if (canViewMapAlerts && liveDiag) {
+                if (liveDiag.isAlert) {
+                  alertBannerHTML = `
+                    <div style="margin:8px 0; padding:9px; border-radius:12px; background:#fff1f2; border:1.5px solid #fecdd3;">
+                      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; padding-bottom:5px; border-bottom:1px solid #fecdd3;">
+                        <div style="font-weight:800; font-size:11.5px; color:#9f1239; display:flex; align-items:center; gap:4px;">
+                          <span>🚨</span> <span>${liveDiag.causeTitle}</span>
+                        </div>
+                        <span style="font-size:9.5px; font-weight:bold; padding:2px 6px; border-radius:9999px; background:#ffe4e6; color:#be123c; border:1px solid #fda4af; white-space:nowrap;">
+                          ${liveDiag.causeType === 'BOTH' ? '⚠️ 2 ສາເຫດ' : liveDiag.causeType === 'NATIONAL_STANDARD' ? '🏛️ ມາດຕະຖານ 81/ລບ' : '🌊 ດັດຊະນີ QWI'}
+                        </span>
                       </div>
-                      <span style="font-size:9.5px; font-weight:bold; padding:2px 6px; border-radius:9999px; background:#ffe4e6; color:#be123c; border:1px solid #fda4af; white-space:nowrap;">
-                        ${liveDiag.causeType === 'BOTH' ? '⚠️ 2 ສາເຫດ' : liveDiag.causeType === 'NATIONAL_STANDARD' ? '🏛️ ມາດຕະຖານ 81/ລບ' : '🌊 ດັດຊະນີ QWI'}
-                      </span>
-                    </div>
 
-                    ${liveDiag.exceedsNationalStandard ? `
-                      <div style="background:white; border:1px solid #fecdd3; border-radius:8px; padding:7px; margin-bottom:6px;">
-                        <div style="font-weight:bold; font-size:11px; color:#991b1b; margin-bottom:4px; display:flex; align-items:center; justify-content:space-between;">
-                          <span style="display:flex; align-items:center; gap:4px;">
-                            <span>🏛️</span> <span>ເກີນເກນມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ 81/ລບ:</span>
-                          </span>
-                          <span style="font-size:10px; font-weight:bold; color:#b91c1c; background:#fee2e2; padding:1px 5px; border-radius:4px;">
-                            ${liveDiag.violations.length} ພາຣາມິເຕີ
-                          </span>
-                        </div>
-                        <div style="font-size:10.5px; color:#334155; line-height:1.35;">
-                          ${liveDiag.violations.length > 0 ? liveDiag.violations.map(v => `
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 0; border-bottom:1px dashed #f1f5f9;">
-                              <span style="font-weight:600; color:#0f172a;">${escAttr(v.name)}:</span>
-                              <span>
-                                <b style="color:#dc2626; font-family:monospace;">${v.val} ${escAttr(v.unit)}</b>
-                                <span style="color:#64748b; font-size:9.5px;">(ເກນ: ${v.standardRange})</span>
-                                <span style="font-weight:bold; color:#b91c1c; font-size:9.5px;">${v.type === 'MAX' ? '🔺ເກີນ' : '🔻ຫຼຸດ'}</span>
-                              </span>
-                            </div>
-                          `).join('') : '<div style="color:#b91c1c;">ມີພາຣາມິເຕີເກີນເກນມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ</div>'}
-                        </div>
-                        ${liveDiag.bestFitCls ? `
-                          <div style="margin-top:5px; font-size:10px; color:#4338ca; background:#eef2ff; padding:3px 6px; border-radius:6px; border:1px solid #c7d2fe;">
-                            🎯 <b>ການຈັດປະເພດຕົວຈິງຕາມ 81/ລບ:</b> ${liveDiag.bestFitCls.icon} ${escAttr(liveDiag.bestFitCls.name)} (${escAttr(liveDiag.bestFitCls.shortUse)})
+                      ${liveDiag.exceedsNationalStandard ? `
+                        <div style="background:white; border:1px solid #fecdd3; border-radius:8px; padding:7px; margin-bottom:6px;">
+                          <div style="font-weight:bold; font-size:11px; color:#991b1b; margin-bottom:4px; display:flex; align-items:center; justify-content:space-between;">
+                            <span style="display:flex; align-items:center; gap:4px;">
+                              <span>🏛️</span> <span>ເກີນເກນມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ 81/ລບ:</span>
+                            </span>
+                            <span style="font-size:10px; font-weight:bold; color:#b91c1c; background:#fee2e2; padding:1px 5px; border-radius:4px;">
+                              ${liveDiag.violations.length} ພາຣາມິເຕີ
+                            </span>
                           </div>
-                        ` : ''}
-                      </div>
-                    ` : `
-                      <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:5px 7px; margin-bottom:6px; font-size:10.5px; color:#166534; display:flex; align-items:center; gap:4px;">
-                        <span>✅</span> <span><b>ມາດຕະຖານ 81/ລບ:</b> ທຸກຕົວຊີ້ວັດຜ່ານເກນມາດຕະຖານແຫ່ງຊາດ</span>
-                      </div>
-                    `}
+                          <div style="font-size:10.5px; color:#334155; line-height:1.35;">
+                            ${liveDiag.violations.length > 0 ? liveDiag.violations.map(v => `
+                              <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 0; border-bottom:1px dashed #f1f5f9;">
+                                <span style="font-weight:600; color:#0f172a;">${escAttr(v.name)}:</span>
+                                <span>
+                                  <b style="color:#dc2626; font-family:monospace;">${v.val} ${escAttr(v.unit)}</b>
+                                  <span style="color:#64748b; font-size:9.5px;">(ເກນ: ${v.standardRange})</span>
+                                  <span style="font-weight:bold; color:#b91c1c; font-size:9.5px;">${v.type === 'MAX' ? '🔺ເກີນ' : '🔻ຫຼຸດ'}</span>
+                                </span>
+                              </div>
+                            `).join('') : '<div style="color:#b91c1c;">ມີພາຣາມິເຕີເກີນເກນມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ</div>'}
+                          </div>
+                          ${liveDiag.bestFitCls ? `
+                            <div style="margin-top:5px; font-size:10px; color:#4338ca; background:#eef2ff; padding:3px 6px; border-radius:6px; border:1px solid #c7d2fe;">
+                              🎯 <b>ການຈັດປະເພດຕົວຈິງຕາມ 81/ລບ:</b> ${liveDiag.bestFitCls.icon} ${escAttr(liveDiag.bestFitCls.name)} (${escAttr(liveDiag.bestFitCls.shortUse)})
+                            </div>
+                          ` : ''}
+                        </div>
+                      ` : `
+                        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:5px 7px; margin-bottom:6px; font-size:10.5px; color:#166534; display:flex; align-items:center; gap:4px;">
+                          <span>✅</span> <span><b>ມາດຕະຖານ 81/ລບ:</b> ທຸກຕົວຊີ້ວັດຜ່ານເກນມາດຕະຖານແຫ່ງຊາດ</span>
+                        </div>
+                      `}
 
-                    ${liveDiag.qi ? `
-                      <div style="background:white; border:1px solid ${liveDiag.isQwiDegraded ? '#fdba74' : '#e2e8f0'}; border-radius:8px; padding:7px;">
-                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:3px;">
-                          <span style="font-weight:bold; font-size:11px; color:#1e293b; display:flex; align-items:center; gap:4px;">
-                            <span>🌊</span> <span>ດັດຊະນີຄຸນນະພາບນໍ້າ QWI:</span>
-                          </span>
-                          <span style="font-weight:800; font-family:monospace; font-size:12px; color:${liveDiag.qi.color};">
-                            ${liveDiag.qi.score !== '-' ? liveDiag.qi.score : ''} / 100
-                          </span>
+                      ${liveDiag.qi ? `
+                        <div style="background:white; border:1px solid ${liveDiag.isQwiDegraded ? '#fdba74' : '#e2e8f0'}; border-radius:8px; padding:7px;">
+                          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:3px;">
+                            <span style="font-weight:bold; font-size:11px; color:#1e293b; display:flex; align-items:center; gap:4px;">
+                              <span>🌊</span> <span>ດັດຊະນີຄຸນນະພາບນໍ້າ QWI:</span>
+                            </span>
+                            <span style="font-weight:800; font-family:monospace; font-size:12px; color:${liveDiag.qi.color};">
+                              ${liveDiag.qi.score !== '-' ? liveDiag.qi.score : ''} / 100
+                            </span>
+                          </div>
+                          <div style="font-size:10.5px; color:${liveDiag.qi.color}; font-weight:bold; display:flex; align-items:center; gap:4px;">
+                            <span>${liveDiag.qi.dot}</span> <span>${liveDiag.qi.text}</span>
+                            ${liveDiag.isQwiDegraded ? `<span style="font-size:9.5px; background:#ffedd5; color:#c2410c; padding:1px 5px; border-radius:4px; border:1px solid #fed7aa;">⚠️ ເສື່ອມໂຊມ</span>` : ''}
+                          </div>
+                          <p style="font-size:10px; color:#64748b; margin:3px 0 0 0; line-height:1.3;">
+                            ${escAttr(liveDiag.qi.desc)}
+                          </p>
                         </div>
-                        <div style="font-size:10.5px; color:${liveDiag.qi.color}; font-weight:bold; display:flex; align-items:center; gap:4px;">
-                          <span>${liveDiag.qi.dot}</span> <span>${liveDiag.qi.text}</span>
-                          ${liveDiag.isQwiDegraded ? `<span style="font-size:9.5px; background:#ffedd5; color:#c2410c; padding:1px 5px; border-radius:4px; border:1px solid #fed7aa;">⚠️ ເສື່ອມໂຊມ</span>` : ''}
-                        </div>
-                        <p style="font-size:10px; color:#64748b; margin:3px 0 0 0; line-height:1.3;">
-                          ${escAttr(liveDiag.qi.desc)}
-                        </p>
-                      </div>
-                    ` : ''}
-                  </div>
-                `;
-              } else {
-                alertBannerHTML = `
-                  <div style="margin:8px 0; padding:8px 10px; border-radius:10px; background:#f0fdf4; border:1px solid #bbf7d0; font-size:11px; color:#166534; display:flex; align-items:center; gap:6px;">
-                    <span style="font-size:14px;">✅</span>
-                    <div>
-                      <b>ສະຖານະປົກກະຕິ:</b> ຜ່ານເກນມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ 81/ລບ ແລະ ດັດຊະນີ QWI ຢູ່ໃນເກນດີ.
+                      ` : ''}
                     </div>
-                  </div>
-                `;
+                  `;
+                } else {
+                  alertBannerHTML = `
+                    <div style="margin:8px 0; padding:8px 10px; border-radius:10px; background:#f0fdf4; border:1px solid #bbf7d0; font-size:11px; color:#166534; display:flex; align-items:center; gap:6px;">
+                      <span style="font-size:14px;">✅</span>
+                      <div>
+                        <b>ສະຖານະປົກກະຕິ:</b> ຜ່ານເກນມາດຕະຖານສິ່ງແວດລ້ອມແຫ່ງຊາດ 81/ລບ ແລະ ດັດຊະນີ QWI ຢູ່ໃນເກນດີ.
+                      </div>
+                    </div>
+                  `;
+                }
               }
 
               return `
@@ -13616,9 +13642,11 @@
                   </div>
 
                   <div style="margin-top:8px; display:flex; flex-direction:column; gap:4px;">
-                    <button type="button" onclick="openStationNationalStandardComparison('${item.fbKey}', ${stIdx})" style="width:100%; padding:6px 10px; background:#059669; color:white; border:none; border-radius:8px; font-weight:bold; font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.1); transition:background 0.15s;">
-                      <span>⚖️</span> <span>ສົມທຽບມາດຕະຖານແຫ່ງຊາດ 81/ລບ</span>
-                    </button>
+                    ${canViewMapAlerts ? `
+                      <button type="button" onclick="openStationNationalStandardComparison('${item.fbKey}', ${stIdx})" style="width:100%; padding:6px 10px; background:#059669; color:white; border:none; border-radius:8px; font-weight:bold; font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.1); transition:background 0.15s;">
+                        <span>⚖️</span> <span>ສົມທຽບມາດຕະຖານແຫ່ງຊາດ 81/ລບ</span>
+                      </button>
+                    ` : ''}
                     <button type="button" onclick="openDatasetDetailModal('${item.fbKey}')" style="width:100%; padding:5px 10px; background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; border-radius:8px; font-weight:bold; font-size:10.5px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;">
                       <span>👁️</span> <span>ເບິ່ງຕາຕະລາງລາຍລະອຽດ</span>
                     </button>
