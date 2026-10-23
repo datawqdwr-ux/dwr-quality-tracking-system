@@ -20,6 +20,11 @@
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+  <!-- QR Code Generator & Camera Scanner Engines -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="dwr-qr-auth.js"></script>
+
   <style>
     @font-face {
       font-family: 'Phetsarath OT';
@@ -136,6 +141,16 @@
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
           <span id="sessionUserInfo" class="text-slate-200 font-semibold truncate max-w-[140px] sm:max-w-none">ກຳລັງກວດສອບບັນຊີ...</span>
         </div>
+
+        <!-- QR Scan & Generator Buttons -->
+        <button type="button" onclick="if(window.DwrQrAuth) window.DwrQrAuth.openScanner();" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm shadow-md transition cursor-pointer border border-emerald-500/30" title="ສະແກນ QR Code ເຂົ້າສູ່ລະບົບ">
+          <span class="text-sm sm:text-base">📷</span>
+          <span class="hidden sm:inline" data-i18n="qrScanBtn">ສະແກນ QR</span>
+        </button>
+        <button type="button" onclick="if(window.DwrQrAuth) window.DwrQrAuth.openGeneratorModal();" class="hidden md:flex items-center gap-1.5 px-3 py-1.5 sm:px-3 sm:py-2 rounded-2xl bg-slate-800 hover:bg-slate-750 text-slate-200 font-bold text-xs sm:text-sm border border-slate-700/80 shadow-sm transition cursor-pointer" title="ສ້າງບັດ QR Pass ເຂົ້າສູ່ລະບົບ">
+          <span>📱</span>
+          <span data-i18n="qrPassBtn">ສ້າງ QR Pass</span>
+        </button>
       </div>
     </div>
   </header>
@@ -401,6 +416,8 @@
           footerLink1: "ຄຸນນະພາບນໍ້າ",
           footerLink2: "ການນໍາໃຊ້ນໍ້າ",
           footerLink3: "ການປ່ອຍນໍ້າເປື້ອນ",
+          qrScanBtn: "ສະແກນ QR",
+          qrPassBtn: "ສ້າງ QR Pass",
           logoutSuccess: "ອອກຈາກລະບົບສຳເລັດ"
         },
         en: {
@@ -436,6 +453,8 @@
           footerLink1: "Water Quality",
           footerLink2: "Water Usage",
           footerLink3: "Wastewater",
+          qrScanBtn: "Scan QR",
+          qrPassBtn: "QR Pass",
           logoutSuccess: "Signed out successfully"
         }
       };
@@ -595,6 +614,7 @@
       }
 
       // Initial boot
+      window.refreshSessionUI = refreshSessionUI;
       const initialLang = getCurrentLanguage();
       setLanguage(initialLang);
 
