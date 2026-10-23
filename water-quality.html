@@ -1347,9 +1347,19 @@
             <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5">
               <!-- 📁 Dataset Selector -->
               <div class="md:col-span-4">
-                <label class="block text-[11px] font-bold text-slate-700 mb-1 flex items-center gap-1">
-                  <span>📁</span> ເລືອກຊຸດຂໍ້ມູນ (Dataset):
-                </label>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                    <span>📁</span> ເລືອກຊຸດຂໍ້ມູນ (Dataset):
+                  </label>
+                  <div class="flex items-center gap-1">
+                    <button type="button" onclick="openAddDatasetAuditModal()" class="px-2 py-0.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 text-[10px] font-bold transition flex items-center gap-0.5 shadow-2xs cursor-pointer active:scale-95" title="ເພີ່ມຊຸດຂໍ້ມູນໃໝ່ເຂົ້າລະບົບ">
+                      <span>➕</span> <span>ເພີ່ມຂໍ້ມູນ</span>
+                    </button>
+                    <button type="button" onclick="deleteSelectedAuditDataset()" class="px-2 py-0.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 text-[10px] font-bold transition flex items-center gap-0.5 shadow-2xs cursor-pointer active:scale-95" title="ລົບຊຸດຂໍ້ມູນທີ່ເລືອກ">
+                      <span>🗑️</span> <span>ລົບ</span>
+                    </button>
+                  </div>
+                </div>
                 <select id="auditDatasetSelect" onchange="onAuditDatasetChange()" class="w-full border border-slate-200 bg-white p-2.5 rounded-xl text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-2xs">
                   <option value="">-- ເລືອກຊຸດຂໍ້ມູນ --</option>
                   <!-- Populated dynamically via JS -->
@@ -1661,6 +1671,177 @@
           ປິດ
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal: ເພີ່ມຊຸດຂໍ້ມູນຄຸນນະພາບນ້ຳໃໝ່ (Add Dataset for Audit Comparator) -->
+  <div id="auditAddDatasetModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-5 z-[95] overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[94vh] animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Modal Header -->
+      <div class="bg-gradient-to-r from-emerald-900 via-teal-950 to-slate-900 text-white p-5 sm:p-6 border-b border-emerald-800/40 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-white/10 flex items-center justify-center text-white text-2xl shadow-inner ring-1 ring-white/20">
+            ➕
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">
+              ເພີ່ມຊຸດຂໍ້ມູນຄຸນນະພາບນ້ຳໃໝ່ (Add Water Quality Dataset)
+            </h3>
+            <p class="text-xs text-emerald-200 mt-0.5">
+              ບັນທຶກຊຸດຂໍ້ມູນ ແລະ ຈຸດວັດແທກພ້ອມຄ່າພາຣາມິເຕີ ເຂົ້າຖານຂໍ້ມູນຕົວຈິງ
+            </p>
+          </div>
+        </div>
+        <button type="button" onclick="closeAddDatasetAuditModal()" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xl transition cursor-pointer" title="ປິດ">
+          &times;
+        </button>
+      </div>
+
+      <!-- Modal Form Body -->
+      <form id="auditAddDatasetForm" onsubmit="event.preventDefault(); saveNewAuditDataset();" class="p-5 sm:p-6 overflow-y-auto max-h-[70vh] space-y-5">
+        
+        <!-- Section 1: Dataset Metadata -->
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/90 space-y-3">
+          <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1.5 uppercase tracking-wider">
+            <span>📁</span> 1. ຂໍ້ມູນທົ່ວໄປຂອງຊຸດຂໍ້ມູນ (Dataset Information)
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-slate-700 mb-1">ຊື່ຊຸດຂໍ້ມູນ / ບໍລິສັດ / ໂຄງການ <span class="text-rose-500">*</span></label>
+              <input type="text" id="newAuditDsTitle" required placeholder="ເຊັ່ນ: ສຳຫຼວດຄຸນນະພາບນ້ຳອ່າງນ້ຳຕົກ ປະຈຳປີ 2026" class="w-full border border-slate-200 bg-white p-2.5 rounded-xl font-medium outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">ແຫຼ່ງນ້ຳ / ອ່າງແມ່ນ້ຳ <span class="text-rose-500">*</span></label>
+              <input type="text" id="newAuditDsBasin" required placeholder="ເຊັ່ນ: ແມ່ນ້ຳຂອງ, ນ້ຳງື່ມ, ເຊບັ້ງໄຟ" class="w-full border border-slate-200 bg-white p-2.5 rounded-xl font-medium outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">ແຂວງ / ສະຖານທີ່</label>
+              <select id="newAuditDsProvince" class="w-full border border-slate-200 bg-white p-2.5 rounded-xl font-medium outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                <option value="ນະຄອນຫຼວງວຽງຈັນ">ນະຄອນຫຼວງວຽງຈັນ</option>
+                <option value="ວຽງຈັນ">ແຂວງ ວຽງຈັນ</option>
+                <option value="ຫຼວງພະບາງ">ແຂວງ ຫຼວງພະບາງ</option>
+                <option value="ຄຳມ່ວນ">ແຂວງ ຄຳມ່ວນ</option>
+                <option value="ສະຫວັນນະເຂດ">ແຂວງ ສະຫວັນນະເຂດ</option>
+                <option value="ຈຳປາສັກ">ແຂວງ ຈຳປາສັກ</option>
+                <option value="ບໍລິຄຳໄຊ">ແຂວງ ບໍລິຄຳໄຊ</option>
+                <option value="ອຸດົມໄຊ">ແຂວງ ອຸດົມໄຊ</option>
+                <option value="ໄຊຍະບູລີ">ແຂວງ ໄຊຍະບູລີ</option>
+                <option value="ຊຽງຂວາງ">ແຂວງ ຊຽງຂວາງ</option>
+                <option value="ຫົວພັນ">ແຂວງ ຫົວພັນ</option>
+                <option value="ຜົ້ງສາລີ">ແຂວງ ຜົ້ງສາລີ</option>
+                <option value="ບໍ່ແກ້ວ">ແຂວງ ບໍ່ແກ້ວ</option>
+                <option value="ຫຼວງນ້ຳທາ">ແຂວງ ຫຼວງນ້ຳທາ</option>
+                <option value="ສາລະວັນ">ແຂວງ ສາລະວັນ</option>
+                <option value="ເຊກອງ">ແຂວງ ເຊກອງ</option>
+                <option value="ອັດຕະປື">ແຂວງ ອັດຕະປື</option>
+                <option value="ໄຊສົມບູນ">ແຂວງ ໄຊສົມບູນ</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">ວັນທີເກັບຕົວຢ່າງ <span class="text-rose-500">*</span></label>
+              <input type="date" id="newAuditDsDate" required class="w-full border border-slate-200 bg-white p-2.5 rounded-xl font-medium outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">ຜູ້ກວດກາ / ບັນທຶກ</label>
+              <input type="text" id="newAuditDsInspector" placeholder="ເຊັ່ນ: ວິຊາການສິ່ງແວດລ້ອມ DWR" class="w-full border border-slate-200 bg-white p-2.5 rounded-xl font-medium outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Initial Station Point -->
+        <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-200/80 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-indigo-900 flex items-center gap-1.5 uppercase tracking-wider">
+              <span>📍</span> 2. ຈຸດວັດແທກຕົວຢ່າງເລີ່ມຕົ້ນ (Sampling Station Point)
+            </h4>
+            <button type="button" onclick="getGpsForNewAuditDataset()" class="px-2.5 py-1 rounded-xl bg-white hover:bg-slate-50 border border-indigo-200 text-indigo-700 font-bold text-[11px] shadow-2xs transition flex items-center gap-1 cursor-pointer">
+              <span>🧭</span> <span>ດຶງ GPS ປັດຈຸບັນ</span>
+            </button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">ລະຫັດສະຖານີ <span class="text-rose-500">*</span></label>
+              <input type="text" id="newAuditDsStCode" required value="ST-01" class="w-full border border-slate-200 bg-white p-2.5 rounded-xl font-bold font-mono outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+            </div>
+            <div class="sm:col-span-3">
+              <label class="block font-bold text-slate-700 mb-1">ຊື່ສະຖານີ / ຈຸດເກັບຕົວຢ່າງ <span class="text-rose-500">*</span></label>
+              <input type="text" id="newAuditDsStName" required placeholder="ເຊັ່ນ: ຈຸດຂົວມິດຕະພາບ 1, ຈຸດເໜືອເຂື່ອນ, ຈຸດປ່ອຍນ້ຳ" class="w-full border border-slate-200 bg-white p-2.5 rounded-xl font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-slate-700 mb-1">ພິກັດ Latitude (ເສັ້ນຂະໜານ)</label>
+              <input type="number" step="any" id="newAuditDsStLat" placeholder="ເຊັ່ນ: 17.9757" class="w-full border border-slate-200 bg-white p-2.5 rounded-xl font-mono text-xs outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-slate-700 mb-1">ພິກັດ Longitude (ເສັ້ນແວງ)</label>
+              <input type="number" step="any" id="newAuditDsStLng" placeholder="ເຊັ່ນ: 102.6331" class="w-full border border-slate-200 bg-white p-2.5 rounded-xl font-mono text-xs outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Water Parameters (Decree 81/PM) -->
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/90 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1.5 uppercase tracking-wider">
+              <span>🧪</span> 3. ຄ່າພາຣາມິເຕີຄຸນນະພາບນ້ຳ (ມາດຕະຖານ 81/ລບ)
+            </h4>
+            <span class="text-[10px] text-slate-500">ຄ່າເລີ່ມຕົ້ນຕາມເກນມາດຕະຖານຜ່ານ</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs">
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">pH</label>
+              <input type="number" step="0.1" id="newAuditParam_ph" value="7.2" class="w-full font-mono font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded p-1 text-center outline-none focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">DO (mg/L)</label>
+              <input type="number" step="0.1" id="newAuditParam_do" value="6.5" class="w-full font-mono font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded p-1 text-center outline-none focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">BOD (mg/L)</label>
+              <input type="number" step="0.1" id="newAuditParam_bod" value="2.0" class="w-full font-mono font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded p-1 text-center outline-none focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">COD (mg/L)</label>
+              <input type="number" step="0.5" id="newAuditParam_cod" value="8.5" class="w-full font-mono font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded p-1 text-center outline-none focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">TSS (mg/L)</label>
+              <input type="number" step="1" id="newAuditParam_tss" value="25" class="w-full font-mono font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded p-1 text-center outline-none focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Temp (°C)</label>
+              <input type="number" step="0.5" id="newAuditParam_temp" value="26.5" class="w-full font-mono font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded p-1 text-center outline-none focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">TDS (mg/L)</label>
+              <input type="number" step="1" id="newAuditParam_tds" value="120" class="w-full font-mono font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded p-1 text-center outline-none focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">NO₃-N (mg/L)</label>
+              <input type="number" step="0.1" id="newAuditParam_no3_n" value="1.2" class="w-full font-mono font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded p-1 text-center outline-none focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">NH₃-N (mg/L)</label>
+              <input type="number" step="0.01" id="newAuditParam_nh3_n" value="0.15" class="w-full font-mono font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded p-1 text-center outline-none focus:ring-1 focus:ring-emerald-500">
+            </div>
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Coliform</label>
+              <input type="number" step="5" id="newAuditParam_coliform" value="80" class="w-full font-mono font-bold text-slate-800 bg-slate-50 border border-slate-200 rounded p-1 text-center outline-none focus:ring-1 focus:ring-emerald-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-200">
+          <button type="button" onclick="closeAddDatasetAuditModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer">
+            ຍົກເລີກ
+          </button>
+          <button type="submit" id="saveNewAuditDsBtn" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition flex items-center gap-1.5 cursor-pointer active:scale-95">
+            <span>💾</span>
+            <span>ບັນທຶກຊຸດຂໍ້ມູນ (Save Dataset)</span>
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -4704,14 +4885,6 @@
           }
         });
       }
-
-      // Always include baseline datasets' stations
-      DEFAULT_BASELINE_DATASETS.forEach(bDs => {
-        bDs.stations.forEach(st => {
-          dbStations.push({ ...st, datasetKey: String(bDs.key) });
-        });
-      });
-
       return dbStations;
     }
 
@@ -5150,7 +5323,7 @@
 
       allAvailableRawDatasets = [];
 
-      // 1. User uploaded / Firebase datasets in system
+      // 1. User uploaded / Firebase datasets in system ONLY (reference datasets removed per user request)
       if (Array.isArray(waterData) && waterData.length > 0) {
         waterData.forEach((d, idx) => {
           const sts = (typeof stationsOf === 'function') ? stationsOf(d) : (Array.isArray(d.stations) ? d.stations : (d.stations && typeof d.stations === 'object' ? Object.values(d.stations) : []));
@@ -5176,20 +5349,6 @@
         });
       }
 
-      // 2. Official baseline survey datasets
-      DEFAULT_BASELINE_DATASETS.forEach(bDs => {
-        const dsKey = String(bDs.key);
-        allAvailableRawDatasets.push({
-          key: dsKey,
-          title: bDs.title,
-          date: bDs.date,
-          province: bDs.province,
-          basin: bDs.basin,
-          isUserUploaded: false,
-          stations: bDs.stations.map(st => ({ ...st, datasetKey: dsKey }))
-        });
-      });
-
       const totalStationsCount = allAvailableRawDatasets.reduce((sum, d) => sum + d.stations.length, 0);
 
       // Default to the FIRST specific dataset so stations are ALWAYS specific to that dataset!
@@ -5197,33 +5356,24 @@
         if (allAvailableRawDatasets.length > 0) {
           selectedAuditDatasetKey = String(allAvailableRawDatasets[0].key);
         } else {
-          selectedAuditDatasetKey = 'ALL';
+          selectedAuditDatasetKey = '';
         }
       }
 
       let optionsHtml = '';
-      const userDs = allAvailableRawDatasets.filter(d => d.isUserUploaded);
-      const baseDs = allAvailableRawDatasets.filter(d => !d.isUserUploaded);
-
-      if (userDs.length > 0) {
-        optionsHtml += `<optgroup label="🏢 ຖານຂໍ້ມູນຄຸນນະພາບນໍ້າໃນລະບົບ (${userDs.length} ຊຸດຂໍ້ມູນ)">`;
-        userDs.forEach(d => {
+      if (allAvailableRawDatasets.length > 0) {
+        optionsHtml += `<optgroup label="🏢 ຖານຂໍ້ມູນຄຸນນະພາບນໍ້າໃນລະບົບ (${allAvailableRawDatasets.length} ຊຸດຂໍ້ມູນ)">`;
+        allAvailableRawDatasets.forEach(d => {
           optionsHtml += `<option value="${escapeHtml(d.key)}">📁 ${escapeHtml(d.title)} (${d.stations.length} ຈຸດ) - [${escapeHtml(d.date)}]</option>`;
         });
         optionsHtml += `</optgroup>`;
-      }
 
-      if (baseDs.length > 0) {
-        optionsHtml += `<optgroup label="🏛️ ໂຄງການສຳຫຼວດແຫ່ງຊາດ / ອ້າງອີງ (${baseDs.length} ຊຸດຂໍ້ມູນ)">`;
-        baseDs.forEach(d => {
-          optionsHtml += `<option value="${escapeHtml(d.key)}">🏛️ ${escapeHtml(d.title)} (${d.stations.length} ຈຸດ) - ${escapeHtml(d.province)}</option>`;
-        });
-        optionsHtml += `</optgroup>`;
+        optionsHtml += `<optgroup label="🌐 ຕົວເລືອກລວມ">
+          <option value="ALL">🌐 ສະແດງລວມທຸກຈຸດໃນລະບົບ (${totalStationsCount} ຈຸດວັດແທກ)</option>
+        </optgroup>`;
+      } else {
+        optionsHtml = `<option value="">-- ຍັງບໍ່ມີຊຸດຂໍ້ມູນໃນລະບົບ (ກະລຸນາກົດ + ເພີ່ມຂໍ້ມູນ) --</option>`;
       }
-
-      optionsHtml += `<optgroup label="🌐 ຕົວເລືອກລວມ">
-        <option value="ALL">🌐 ສະແດງລວມທຸກຈຸດໃນລະບົບ (${totalStationsCount} ຈຸດວັດແທກ)</option>
-      </optgroup>`;
 
       select.innerHTML = optionsHtml;
       select.value = selectedAuditDatasetKey;
@@ -5311,6 +5461,265 @@
         currentAuditStationIndex = 0;
       }
       select.value = currentAuditStationIndex;
+    }
+
+    function openAddDatasetAuditModal() {
+      const modal = document.getElementById('auditAddDatasetModal');
+      if (!modal) return;
+      const titleEl = document.getElementById('newAuditDsTitle');
+      const basinEl = document.getElementById('newAuditDsBasin');
+      const dateEl = document.getElementById('newAuditDsDate');
+      const inspEl = document.getElementById('newAuditDsInspector');
+      const stCodeEl = document.getElementById('newAuditDsStCode');
+      const stNameEl = document.getElementById('newAuditDsStName');
+      const latEl = document.getElementById('newAuditDsStLat');
+      const lngEl = document.getElementById('newAuditDsStLng');
+
+      if (titleEl) titleEl.value = '';
+      if (basinEl) basinEl.value = '';
+      if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
+      if (inspEl) inspEl.value = (typeof currentUserName !== 'undefined' && currentUserName) ? currentUserName : 'ວິຊາການສິ່ງແວດລ້ອມ DWR';
+      if (stCodeEl) stCodeEl.value = 'ST-01';
+      if (stNameEl) stNameEl.value = '';
+      if (latEl) latEl.value = '';
+      if (lngEl) lngEl.value = '';
+
+      modal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function closeAddDatasetAuditModal() {
+      const modal = document.getElementById('auditAddDatasetModal');
+      if (modal) modal.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    function getGpsForNewAuditDataset() {
+      if (!navigator.geolocation) {
+        return Swal.fire({ icon: 'warning', title: 'ອຸປະກອນບໍ່ຮອງຮັບ GPS', text: 'ກະລຸນາປ້ອນພິກັດ Latitude ແລະ Longitude ດ້ວຍຕົນເອງ.' });
+      }
+      Swal.fire({
+        title: 'ກຳລັງກວດຫາພິກັດ GPS...',
+        text: 'ກະລຸນາລໍຖ້າຈັກໜ່ອຍ',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          Swal.close();
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const latEl = document.getElementById('newAuditDsStLat');
+          const lngEl = document.getElementById('newAuditDsStLng');
+          if (latEl) latEl.value = lat.toFixed(5);
+          if (lngEl) lngEl.value = lng.toFixed(5);
+          Swal.fire({
+            icon: 'success',
+            title: 'ດຶງພິກັດສຳເລັດ!',
+            text: `Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`,
+            timer: 2000,
+            showConfirmButton: false
+          });
+        },
+        (err) => {
+          Swal.close();
+          Swal.fire({ icon: 'error', title: 'ບໍ່ສາມາດດຶງພິກັດໄດ້', text: err.message || 'ກະລຸນາກວດສອບການເປີດ Location.' });
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+
+    async function saveNewAuditDataset() {
+      const title = document.getElementById('newAuditDsTitle')?.value.trim();
+      const basin = document.getElementById('newAuditDsBasin')?.value.trim();
+      const province = document.getElementById('newAuditDsProvince')?.value || 'ນະຄອນຫຼວງວຽງຈັນ';
+      const sampleDate = document.getElementById('newAuditDsDate')?.value || new Date().toISOString().slice(0, 10);
+      const inspector = document.getElementById('newAuditDsInspector')?.value.trim() || 'ວິຊາການສິ່ງແວດລ້ອມ DWR';
+
+      const stCode = document.getElementById('newAuditDsStCode')?.value.trim() || 'ST-01';
+      const stName = document.getElementById('newAuditDsStName')?.value.trim();
+      const latVal = parseFloat(document.getElementById('newAuditDsStLat')?.value);
+      const lngVal = parseFloat(document.getElementById('newAuditDsStLng')?.value);
+
+      if (!title || !basin || !stName) {
+        return Swal.fire({ icon: 'warning', title: 'ຂໍ້ມູນບໍ່ຄົບຖ້ວນ', text: 'ກະລຸນາປ້ອນຊື່ຊຸດຂໍ້ມູນ, ແຫຼ່ງນ້ຳ, ແລະ ຊື່ສະຖານີ!' });
+      }
+
+      const params = {
+        ph: parseFloat(document.getElementById('newAuditParam_ph')?.value) || 7.2,
+        do: parseFloat(document.getElementById('newAuditParam_do')?.value) || 6.5,
+        bod: parseFloat(document.getElementById('newAuditParam_bod')?.value) || 2.0,
+        cod: parseFloat(document.getElementById('newAuditParam_cod')?.value) || 8.5,
+        tss: parseFloat(document.getElementById('newAuditParam_tss')?.value) || 25,
+        temp: parseFloat(document.getElementById('newAuditParam_temp')?.value) || 26.5,
+        tds: parseFloat(document.getElementById('newAuditParam_tds')?.value) || 120,
+        no3_n: parseFloat(document.getElementById('newAuditParam_no3_n')?.value) || 1.2,
+        nh3_n: parseFloat(document.getElementById('newAuditParam_nh3_n')?.value) || 0.15,
+        coliform_fecal: parseFloat(document.getElementById('newAuditParam_coliform')?.value) || 80
+      };
+
+      const newRecord = {
+        companyName: title,
+        name: title,
+        projectLocation: basin,
+        waterSource: basin,
+        province: province,
+        date: sampleDate,
+        recordedBy: inspector,
+        inspector: inspector,
+        createdAt: Date.now(),
+        createdBy: (typeof currentUserName !== 'undefined' && currentUserName) ? currentUserName : inspector,
+        stations: [
+          {
+            code: stCode,
+            name: stName,
+            lat: !isNaN(latVal) ? latVal : null,
+            lng: !isNaN(lngVal) ? lngVal : null,
+            sampleDate: sampleDate,
+            basin: basin,
+            province: province,
+            section: basin,
+            customs: params,
+            status: { isAlert: false }
+          }
+        ]
+      };
+
+      Swal.fire({
+        title: 'ກຳລັງບັນທຶກຊຸດຂໍ້ມູນ...',
+        text: 'ກະລຸນາລໍຖ້າຈັກໜ່ອຍ',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      try {
+        let newFbKey = null;
+        if (typeof db !== 'undefined' && db) {
+          const pushRef = db.ref('water_records').push();
+          newFbKey = pushRef.key;
+          newRecord.fbKey = newFbKey;
+          newRecord.id = Date.now();
+          await pushRef.set(newRecord);
+
+          db.ref('activity_logs').push({
+            action: 'CREATE',
+            itemCode: `${title} (${stCode})`,
+            performedBy: (typeof currentUserName !== 'undefined' && currentUserName) ? currentUserName : inspector,
+            timestamp: new Date().toLocaleString('lo-LA'),
+            userRole: typeof currentUserRole !== 'undefined' ? currentUserRole : 'STAFF'
+          });
+        } else {
+          newFbKey = 'local_' + Date.now();
+          newRecord.fbKey = newFbKey;
+          newRecord.id = Date.now();
+        }
+
+        if (!waterData.some(d => String(d.fbKey || d.id) === String(newFbKey))) {
+          waterData.unshift(newRecord);
+        }
+
+        selectedAuditDatasetKey = String(newFbKey);
+        closeAddDatasetAuditModal();
+        populateAuditDatasetSelect();
+        onAuditDatasetChange();
+        if (typeof render === 'function') render();
+
+        Swal.fire({
+          icon: 'success',
+          title: 'ເພີ່ມຊຸດຂໍ້ມູນສຳເລັດ!',
+          text: `ຊຸດຂໍ້ມູນ "${title}" ຖືກບັນທຶກເຂົ້າລະບົບ ແລະ ພ້ອມສຳລັບການທຽບຄຸນນະພາບນ້ຳແລ້ວ`,
+          confirmButtonText: 'ຕົກລົງ'
+        });
+      } catch (err) {
+        console.error('Save dataset error:', err);
+        Swal.fire({ icon: 'error', title: 'ບັນທຶກບໍ່ສຳເລັດ', text: err.message || 'ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ' });
+      }
+    }
+
+    function deleteSelectedAuditDataset() {
+      if (typeof currentUserRole !== 'undefined' && currentUserRole !== 'SUPER_ADMIN' && currentUserRole !== 'STAFF') {
+        return Swal.fire({ icon: 'error', title: 'ສິດບໍ່ພຽງພໍ!', text: 'ສະເພາະເຈົ້າໜ້າທີ່ ຫຼື Super Admin ເທົ່ານັ້ນທີ່ສາມາດລົບຊຸດຂໍ້ມູນໄດ້' });
+      }
+
+      if (!selectedAuditDatasetKey || selectedAuditDatasetKey === 'ALL') {
+        return Swal.fire({
+          icon: 'info',
+          title: 'ກະລຸນາເລືອກຊຸດຂໍ້ມູນສະເພາະ',
+          text: 'ກະລຸນາເລືອກຊຸດຂໍ້ມູນສະເພາະທີ່ຕ້ອງການລົບຈາກຊ່ອງເລືອກ (ບໍ່ສາມາດລົບຕົວເລືອກ "ທຸກຊຸດຂໍ້ມູນ" ໄດ້)'
+        });
+      }
+
+      const ds = allAvailableRawDatasets.find(d => String(d.key) === String(selectedAuditDatasetKey));
+      const dsTitle = ds ? ds.title : selectedAuditDatasetKey;
+      const dsStationCount = ds ? ds.stations.length : 0;
+
+      const actorPromptFn = typeof actorPrompt === 'function' ? actorPrompt : (opt) => opt;
+
+      Swal.fire(actorPromptFn({
+        title: `🗑️ ຢືນຢັນການລົບຊຸດຂໍ້ມູນ?`,
+        html: `ທ່ານຕ້ອງການລົບຊຸດຂໍ້ມູນ: <b class="text-rose-600">"${escapeHtml(dsTitle)}"</b> ແທ້ຫຼືບໍ່?<br><span class="text-xs text-slate-500">ຂໍ້ມູນສະຖານີທັງໝົດ (${dsStationCount} ສະຖານີ) ຈະຖືກລຶບອອກຈາກຖານຂໍ້ມູນຖາວອນ!</span>`,
+        input: 'text',
+        inputPlaceholder: 'ພິມຊື່ຜູ້ລຶບເພື່ອຢືນຢັນ...',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'ຢືນຢັນການລົບ',
+        cancelButtonText: 'ຍົກເລີກ',
+        inputValidator: (value) => {
+          if (!value || !value.trim()) return 'ກະລຸນາປ້ອນຊື່ຜູ້ລຶບກ່ອນ!';
+        }
+      })).then((result) => {
+        if (result.isConfirmed) {
+          const removerName = (typeof currentUserName !== 'undefined' && currentUserName) ? currentUserName : String(result.value).trim();
+          const targetKey = selectedAuditDatasetKey;
+
+          if (typeof db !== 'undefined' && db && !String(targetKey).startsWith('local_') && !String(targetKey).startsWith('ds_user_')) {
+            db.ref('activity_logs').push({
+              action: 'DELETE',
+              itemCode: dsTitle || targetKey,
+              performedBy: removerName,
+              timestamp: new Date().toLocaleString('lo-LA'),
+              userRole: typeof currentUserRole !== 'undefined' ? currentUserRole : 'STAFF'
+            });
+
+            db.ref('water_records/' + targetKey).remove().then(() => {
+              const idx = waterData.findIndex(d => String(d.fbKey || d.id) === String(targetKey));
+              if (idx !== -1) waterData.splice(idx, 1);
+
+              selectedAuditDatasetKey = '';
+              populateAuditDatasetSelect();
+              onAuditDatasetChange();
+              if (typeof render === 'function') render();
+
+              Swal.fire({
+                title: 'ລຶບຊຸດຂໍ້ມູນສຳເລັດ!',
+                text: `ລົບຊຸດຂໍ້ມູນ "${dsTitle}" ຮຽບຮ້ອຍແລ້ວ (ດຳເນີນການໂດຍ: ${removerName})`,
+                icon: 'success',
+                confirmButtonText: 'ຕົກລົງ'
+              });
+            }).catch(err => {
+              console.error('Delete error:', err);
+              Swal.fire({ icon: 'error', title: 'ເກີດຂໍ້ຜິດພາດ', text: err.message || 'ບໍ່ສາມາດລົບຂໍ້ມູນໄດ້' });
+            });
+          } else {
+            const idx = waterData.findIndex(d => String(d.fbKey || d.id) === String(targetKey));
+            if (idx !== -1) waterData.splice(idx, 1);
+
+            selectedAuditDatasetKey = '';
+            populateAuditDatasetSelect();
+            onAuditDatasetChange();
+            if (typeof render === 'function') render();
+
+            Swal.fire({
+              title: 'ລຶບຊຸດຂໍ້ມູນສຳເລັດ!',
+              text: `ລົບຊຸດຂໍ້ມູນ "${dsTitle}" ຮຽບຮ້ອຍແລ້ວ`,
+              icon: 'success',
+              confirmButtonText: 'ຕົກລົງ'
+            });
+          }
+        }
+      });
     }
 
     function getLiveGpsForAudit() {
@@ -10957,10 +11366,19 @@
 
       ov.innerHTML = `
         <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-5" id="annualPrintable">
-          <div class="flex justify-end gap-2 no-print">
-            ${hasActiveFilters ? `<button onclick="resetAnnualFilters()" class="bg-amber-100 border border-amber-300 text-amber-800 rounded-xl px-3.5 py-2 text-xs font-bold hover:bg-amber-200 transition">🔄 ລ້າງຕົວກອງທັງໝົດ</button>` : ''}
-            <button onclick="window.print()" class="bg-white border border-slate-300 rounded-xl px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition">🖨️ ພິມ / PDF</button>
-            <button onclick="closeAnnualReport()" class="bg-slate-800 text-white rounded-xl px-4 py-2 text-xs font-bold hover:bg-slate-700 shadow-sm transition">✕ ປິດ</button>
+          <div class="flex flex-wrap items-center justify-between gap-2 no-print">
+            <div class="flex items-center gap-2 text-xs text-slate-600">
+              <span class="font-bold text-slate-800">📊 ບົດວິເຄາະສະຖິຕິ ${y}</span>
+              <span class="text-slate-400">·</span>
+              <span class="text-slate-500">${cur.n} ຕົວຢ່າງ (${cur.companies} ບໍລິສັດ)</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              ${hasActiveFilters ? `<button onclick="resetAnnualFilters()" class="bg-amber-100 border border-amber-300 text-amber-800 rounded-xl px-3 py-1.5 text-xs font-bold hover:bg-amber-200 transition">🔄 ລ້າງຕົວກອງ</button>` : ''}
+              <button onclick="exportAnnualReportExcel(${y})" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl px-3.5 py-1.5 text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer"><span>📊</span> Export Excel</button>
+              <button onclick="exportAnnualReportCSV(${y})" class="bg-sky-600 hover:bg-sky-500 text-white rounded-xl px-3.5 py-1.5 text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer"><span>📑</span> CSV</button>
+              <button onclick="window.print()" class="bg-white border border-slate-300 rounded-xl px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-sm transition cursor-pointer">🖨️ ພິມ / PDF</button>
+              <button onclick="closeAnnualReport()" class="bg-slate-800 text-white rounded-xl px-3.5 py-1.5 text-xs font-bold hover:bg-slate-700 shadow-sm transition cursor-pointer">✕ ປິດ</button>
+            </div>
           </div>
 
           <!-- Header & Year Selector Banner -->
@@ -11052,6 +11470,67 @@
             </div>
           </div>
 
+          <!-- 📥 ຊ່ອງ Export Reports (Export Water Quality Analytics Reports) -->
+          <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm space-y-3 no-print">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                  <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center text-sm">📥</span>
+                  <span>ຊ່ອງ Export Reports (ສົ່ງອອກບົດວິເຄາະສະຖິຕິ ປະຈຳປີ ${y})</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  ດາວໂຫຼດບົດລາຍງານສະຖິຕິຕາມຕົວກອງປັດຈຸບັນ (ມີທັງໝົດ <b class="text-slate-700">${cur.n}</b> ຕົວຢ່າງ, <b class="text-slate-700">${cur.companies}</b> ບໍລິສັດ, <b class="text-rose-600">${cur.alerts}</b> ເກີນເກນ)
+                </p>
+              </div>
+              ${hasActiveFilters ? `
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-800 text-[11px] font-bold">
+                  <span>⚙️ ຕົວກອງທີ່ໃຊ້ຢູ່:</span>
+                  <span>${annualCompany !== 'ALL' ? '🏢 ບໍລິສັດ' : ''} ${annualStation !== 'ALL' ? '📍 ຈຸດກວດ' : ''} ${annualIndicator !== 'ALL' ? '🧪 ໂຕຊີ້ວັດ' : ''} ${annualQuarter !== 'ALL' ? '🗓️ ' + escAttr(annualQuarter) : ''} ${annualStatus !== 'ALL' ? '🛡️ ' + escAttr(annualStatus) : ''}</span>
+                </div>
+              ` : `
+                <span class="text-[11px] font-semibold text-slate-400">📊 ລວມທຸກຂໍ້ມູນຕະຫຼອດປີ ${y}</span>
+              `}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <!-- 1. Export Full Excel (.xlsx) -->
+              <button onclick="exportAnnualReportExcel(${y})" class="flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50/70 border border-emerald-200 hover:border-emerald-300 hover:shadow-md transition text-left group cursor-pointer">
+                <span class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition">📊</span>
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-emerald-950 block leading-tight">Export Excel (.xlsx)</span>
+                  <span class="text-[10.5px] text-emerald-700 block mt-0.5">ບົດສະຫຼຸບ KPI, 5 ປີ, ຕາຕະລາງລາຍລະອຽດ</span>
+                </div>
+              </button>
+
+              <!-- 2. Export CSV -->
+              <button onclick="exportAnnualReportCSV(${y})" class="flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-br from-sky-50 to-indigo-50/70 border border-sky-200 hover:border-sky-300 hover:shadow-md transition text-left group cursor-pointer">
+                <span class="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition">📑</span>
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-sky-950 block leading-tight">Export CSV (UTF-8)</span>
+                  <span class="text-[10.5px] text-sky-700 block mt-0.5">ໄຟລ໌ CSV ພ້ອມ BOM ພາສາລາວສົມບູນ</span>
+                </div>
+              </button>
+
+              <!-- 3. Export Exceedances Only -->
+              <button onclick="exportAnnualExceedancesExcel(${y})" class="flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-br from-rose-50 to-pink-50/70 border border-rose-200 hover:border-rose-300 hover:shadow-md transition text-left group cursor-pointer">
+                <span class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition">🚨</span>
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-rose-950 block leading-tight">Export ເກີນມາດຕະຖານ</span>
+                  <span class="text-[10.5px] text-rose-700 block mt-0.5">${cur.alerts > 0 ? `ລາຍການເກີນເກນ (${cur.alerts} ຈຸດ)` : 'ບໍ່ມີຈຸດເກີນເກນ'}</span>
+                </div>
+              </button>
+
+              <!-- 4. Print / PDF Report -->
+              <button onclick="window.print()" class="flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100/70 border border-slate-300 hover:border-slate-400 hover:shadow-md transition text-left group cursor-pointer">
+                <span class="w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition">🖨️</span>
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-slate-900 block leading-tight">ພິມ / Save PDF</span>
+                  <span class="text-[10.5px] text-slate-600 block mt-0.5">ພິມບົດວິເຄາະສະຖິຕິປະຈຳປີ</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
           <!-- Specific Parameter Stats Card (If Parameter Selected) -->
           ${indStatCard}
 
@@ -11119,6 +11598,448 @@
           <p class="text-[10px] text-slate-400 text-center">ປີຂອງຂໍ້ມູນ ອີງຕາມວັນທີເກັບຕົວຢ່າງ (ຖ້າບໍ່ມີ ໃຊ້ວັນທີບັນທຶກ) · ສ້າງເມື່ອ ${new Date().toLocaleString('lo-LA')}</p>
         </div>`;
     }
+
+    /* =========================================================================
+       📊 ລະບົບສົ່ງອອກບົດວິເຄາະສະຖິຕິປະຈຳປີ (Annual Analytics Reports Export Engine)
+       ========================================================================= */
+
+    function exportAnnualReportExcel(y) {
+      const yearToExport = y || annualYear;
+      if (typeof requireExportPermission === 'function') {
+        requireExportPermission(() => {
+          _doExportAnnualReportExcel(yearToExport);
+        }, `Excel ບົດວິເຄາະສະຖິຕິ ປະຈຳປີ ${yearToExport}`);
+      } else {
+        _doExportAnnualReportExcel(yearToExport);
+      }
+    }
+
+    function _doExportAnnualReportExcel(y) {
+      if (typeof XLSX === 'undefined') {
+        return Swal.fire({ icon: 'error', title: 'ບໍ່ພົບໂມດູນ Excel', text: 'ກະລຸນາກວດສອບການເຊື່ອມຕໍ່ SheetJS' });
+      }
+
+      const rows = annualRows();
+      const cur = yearStats(rows, y);
+      const prev = yearStats(rows, y - 1);
+      const filteredRows = cur.rows;
+
+      if (!filteredRows || !filteredRows.length) {
+        return Swal.fire({ icon: 'info', title: 'ບໍ່ມີຂໍ້ມູນໃນປີນີ້', text: `ບໍ່ພົບຂໍ້ມູນທີ່ກົງກັບຕົວກອງໃນປີ ${y} ເພື່ອສົ່ງອອກ` });
+      }
+
+      const diff = cur.companies - prev.companies;
+      const diffPct = prev.companies ? (diff / prev.companies * 100).toFixed(1) : '0.0';
+
+      const filterSummary = [
+        `ປີ: ຄ.ສ ${y}`,
+        `ບໍລິສັດ: ${annualCompany === 'ALL' ? 'ທຸກບໍລິສັດ' : annualCompany}`,
+        `ຈຸດກວດ: ${annualStation === 'ALL' ? 'ທຸກຈຸດກວດ' : annualStation}`,
+        `ໂຕຊີ້ວັດ: ${annualIndicator === 'ALL' ? 'ທຸກໂຕຊີ້ວັດ' : annualIndicator}`,
+        `ງວດ/ເດືອນ: ${annualQuarter === 'ALL' ? 'ຕະຫຼອດປີ' : annualQuarter}`,
+        `ສະຖານະ: ${annualStatus === 'ALL' ? 'ທຸກສະຖານະ' : annualStatus}`
+      ].join(' | ');
+
+      const wb = XLSX.utils.book_new();
+
+      // --- SHEET 1: Summary (ບົດສະຫຼຸບສະຖິຕິ) ---
+      const summaryData = [
+        ['ບົດວິເຄາະສະຖິຕິຄຸນນະພາບນ້ຳ ປະຈຳປີ ' + y + ' (Annual Water Quality Analytics Report)'],
+        ['ກະຊວງຊັບພະຍາກອນທຳມະຊາດ ແລະ ສິ່ງແວດລ້ອມ · ກົມຊັບພະຍາກອນນ້ຳ'],
+        ['ວັນທີສ້າງບົດລາຍງານ:', new Date().toLocaleString('lo-LA')],
+        ['ເງື່ອນໄຂການກອງຂໍ້ມູນ (Active Filters):', filterSummary],
+        [],
+        ['=== 1. ສະຫຼຸບສະຖິຕິຫຼັກ (KPI SUMMARY) ==='],
+        ['ລາຍການສະຖິຕິ', 'ຄ່າສະຖິຕິ', 'ຫົວໜ່ວຍ', 'ທຽບກັບປີກ່ອນ (' + (y - 1) + ')'],
+        ['ຈຳນວນບໍລິສັດ / ໂຄງການ ທີ່ກວດ', cur.companies, 'ບໍລິສັດ', `${prev.companies} ບໍລິສັດ (${diff >= 0 ? '+' : ''}${diff}, ${diffPct}%)`],
+        ['ຈຳນວນຈຸດກວດ (Sampling Points)', cur.points, 'ຈຸດ', `${prev.points} ຈຸດ`],
+        ['ຈຳນວນຕົວຢ່າງທີ່ກວດທັງໝົດ (Samples)', cur.n, 'ຕົວຢ່າງ', `${prev.n} ຕົວຢ່າງ`],
+        ['ຈຳນວນຕົວຢ່າງທີ່ຜ່ານມາດຕະຖານ (Normal)', cur.n - cur.alerts, 'ຕົວຢ່າງ', `${cur.pass}%`],
+        ['ຈຳນວນຕົວຢ່າງທີ່ເກີນມາດຕະຖານ (Alerts)', cur.alerts, 'ຕົວຢ່າງ', `${cur.n ? (cur.alerts / cur.n * 100).toFixed(1) : 0}%`],
+        ['ອັດຕາຜ່ານມາດຕະຖານ (Compliance Rate)', `${cur.pass}%`, '%', `ປີກ່ອນ ${prev.pass}%`],
+        [],
+        ['=== 2. ແນວໂນ້ມ 5 ປີຍ້ອນຫຼັງ (5-YEAR TREND) ==='],
+        ['ປີ ຄ.ສ', 'ຈຳນວນບໍລິສັດ', 'ຈຳນວນຈຸດກວດ', 'ຕົວຢ່າງທັງໝົດ', 'ເກີນມາດຕະຖານ', 'ຜ່ານມາດຕະຖານ (%)', 'ການປ່ຽນແປງ (ບໍລິສັດ)']
+      ];
+
+      const span = Array.from({ length: 5 }, (_, i) => y - 4 + i);
+      const trendStats = span.map(yy => ({ yy, ...yearStats(rows, yy) }));
+      trendStats.forEach((t, i) => {
+        const d = i ? t.companies - trendStats[i - 1].companies : 0;
+        summaryData.push([
+          t.yy,
+          t.companies,
+          t.points,
+          t.n,
+          t.alerts,
+          t.n ? `${t.pass}%` : '-',
+          d > 0 ? `+${d}` : `${d}`
+        ]);
+      });
+
+      // ໂຕຊີ້ວັດທີ່ເກີນມາດຕະຖານຫຼາຍທີ່ສຸດ
+      const exceed = {};
+      cur.rows.forEach(({ st }) => Object.entries(st.customs || {}).forEach(([k, v]) => {
+        if (typeof isOutOfThreshold === 'function' && isOutOfThreshold(k, v)) {
+          exceed[k] = (exceed[k] || 0) + 1;
+        }
+      }));
+      const topExEntries = Object.entries(exceed).sort((a, b) => b[1] - a[1]);
+
+      summaryData.push([]);
+      summaryData.push(['=== 3. ໂຕຊີ້ວັດທີ່ເກີນມາດຕະຖານຫຼາຍທີ່ສຸດ ປະຈຳປີ ' + y + ' ===']);
+      summaryData.push(['ພາຣາມິເຕີ / ໂຕຊີ້ວັດ', 'ຈຳນວນຄັ້ງທີ່ເກີນເກນ', 'ອັດຕາສ່ວນ (%)']);
+      if (topExEntries.length) {
+        topExEntries.forEach(([k, n]) => {
+          const ind = customIndicators.find(i => i.key === k) || masterIndicators.find(i => i.key === k) || { name: k, unit: '' };
+          summaryData.push([
+            `${ind.name}${ind.unit ? ' (' + ind.unit + ')' : ''}`,
+            n,
+            `${cur.n ? (n / cur.n * 100).toFixed(1) : 0}%`
+          ]);
+        });
+      } else {
+        summaryData.push(['ບໍ່ມີພາຣາມິເຕີໃດເກີນມາດຕະຖານ (ຜ່ານ 100%)', 0, '0%']);
+      }
+
+      const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+
+      // --- SHEET 2: Full Data Records (ຕາຕະລາງຜົນກວດລະອຽດ) ---
+      const allIndsMap = new Map();
+      customIndicators.forEach(i => allIndsMap.set(i.key, i));
+      masterIndicators.forEach(i => { if (!allIndsMap.has(i.key)) allIndsMap.set(i.key, i); });
+      filteredRows.forEach(x => {
+        Object.keys(x.st.customs || {}).forEach(k => {
+          if (!allIndsMap.has(k)) allIndsMap.set(k, { key: k, name: k, unit: '' });
+        });
+      });
+      const inds = [...allIndsMap.values()];
+
+      const detailHeaders = [
+        'ລຳດັບ (No.)',
+        'ປີ (Year)',
+        'ບໍລິສັດ / ໂຄງການ (Company / Project)',
+        'ໂຄງການຍ່ອຍ / ຈຸດ (Section)',
+        'ລະຫັດສະຖານີ (Station Code)',
+        'ຊື່ສະຖານີ (Station Name)',
+        'ແຂວງ / ເມືອງ (Province)',
+        'ວັນທີເກັບຕົວຢ່າງ (Sample Date)',
+        'Latitude',
+        'Longitude',
+        'ພິກັດ GPS ອົງສາ (DMS)',
+        ...inds.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`),
+        'QWI Score (ດັດຊະນີ)',
+        'ການແປຜົນ QWI',
+        'ສະຖານະຜົນກວດ (Compliance Status)'
+      ];
+
+      const detailRows = [detailHeaders];
+      filteredRows.forEach((x, idx) => {
+        const st = x.st;
+        const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-')
+          ? st.qwi
+          : (typeof calculateAutoQWI === 'function' ? calculateAutoQWI(st.customs || {}) : '');
+        const qi = typeof interpretQWI === 'function' ? interpretQWI(qRaw) : null;
+        const isAlert = isAlertRow(st);
+
+        const row = [
+          idx + 1,
+          x.y,
+          x.company || '',
+          st.section || '',
+          st.code || '',
+          st.name || '',
+          st.province || '',
+          st.sampleDate || x.rec.date || '',
+          st.lat !== null && st.lat !== undefined ? st.lat : '',
+          st.lng !== null && st.lng !== undefined ? st.lng : '',
+          typeof gpsTextOf === 'function' ? gpsTextOf(st) : (st.gps || ''),
+          ...inds.map(i => (st.customs && st.customs[i.key] !== undefined && st.customs[i.key] !== null && st.customs[i.key] !== '') ? st.customs[i.key] : '-'),
+          qi ? (qi.score !== '-' ? qi.score : '') : (st.qwi ?? ''),
+          qi ? `${qi.label} (${qi.text})` : '',
+          isAlert ? '🚨 ເກີນມາດຕະຖານ (ALERT)' : '✅ ຜ່ານມາດຕະຖານ (PASS)'
+        ];
+        detailRows.push(row);
+      });
+
+      const wsDetails = XLSX.utils.aoa_to_sheet(detailRows);
+      XLSX.utils.book_append_sheet(wb, wsDetails, 'Data Records');
+
+      // --- SHEET 3: Exceedances Only (ລາຍການທີ່ເກີນເກນ) ---
+      const exceedRows = [
+        ['ລຳດັບ', 'ປີ ຄ.ສ', 'ບໍລິສັດ / ໂຄງການ', 'ໂຄງການຍ່ອຍ/ຈຸດ', 'ລະຫັດສະຖານີ', 'ຊື່ສະຖານີ', 'ແຂວງ', 'ວັນທີເກັບຕົວຢ່າງ', 'ພາຣາມິເຕີທີ່ເກີນເກນ', 'ຫົວໜ່ວຍ', 'ຄ່າທີ່ກວດວັດໄດ້', 'ເກນມາດຕະຖານຄວບຄຸມ', 'ສ່ວນຕ່າງ (Diff)', 'ສະຖານະ']
+      ];
+      let exCount = 0;
+      filteredRows.forEach(x => {
+        const st = x.st;
+        inds.forEach(ind => {
+          const val = st.customs ? st.customs[ind.key] : undefined;
+          if (val !== undefined && val !== null && val !== '' && val !== '-' && !isNaN(val)) {
+            const numVal = Number(val);
+            const minVal = sysThresholds[`cfg_${ind.key}_min`];
+            const maxVal = sysThresholds[`cfg_${ind.key}_max`];
+            let isEx = false;
+            let limitText = '';
+            let diffText = '';
+            let statusText = '';
+
+            if (minVal !== null && minVal !== undefined && minVal !== '' && numVal < Number(minVal)) {
+              isEx = true;
+              statusText = 'ຕ່ຳກວ່າເກນຂັ້ນຕ່ຳ';
+              limitText = `>= ${minVal}`;
+              diffText = `-${(Number(minVal) - numVal).toFixed(2)}`;
+            } else if (maxVal !== null && maxVal !== undefined && maxVal !== '' && numVal > Number(maxVal)) {
+              isEx = true;
+              statusText = 'ສູງກວ່າເກນຂັ້ນສູງ';
+              limitText = `<= ${maxVal}`;
+              diffText = `+${(numVal - Number(maxVal)).toFixed(2)}`;
+            }
+
+            if (isEx) {
+              exCount++;
+              exceedRows.push([
+                exCount,
+                x.y,
+                x.company || '',
+                st.section || '',
+                st.code || '',
+                st.name || '',
+                st.province || '',
+                st.sampleDate || x.rec.date || '',
+                ind.name,
+                ind.unit || '',
+                numVal,
+                limitText,
+                diffText,
+                statusText
+              ]);
+            }
+          }
+        });
+      });
+
+      if (exCount > 0) {
+        const wsExceed = XLSX.utils.aoa_to_sheet(exceedRows);
+        XLSX.utils.book_append_sheet(wb, wsExceed, 'Exceedances');
+      }
+
+      const safeFilter = annualCompany !== 'ALL' ? `_${String(annualCompany).slice(0, 15).replace(/[\\/:*?"<>|]/g, '_')}` : '';
+      const filename = `ບົດວິເຄາະສະຖິຕິຄຸນນະພາບນ້ຳ_ປະຈຳປີ_${y}${safeFilter}_${Date.now()}.xlsx`;
+      XLSX.writeFile(wb, filename);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'ສົ່ງອອກ Excel ສຳເລັດ!',
+        text: `ໄຟລ໌ ${filename} ຖືກສ້າງຮຽບຮ້ອຍແລ້ວ (ລວມ ${filteredRows.length} ແຖວ, ${exCount} ຈຸດເກີນເກນ)`,
+        timer: 2000,
+        showConfirmButton: false
+      });
+    }
+
+    function exportAnnualReportCSV(y) {
+      const yearToExport = y || annualYear;
+      if (typeof requireExportPermission === 'function') {
+        requireExportPermission(() => {
+          _doExportAnnualReportCSV(yearToExport);
+        }, `CSV ບົດວິເຄາະສະຖິຕິ ປະຈຳປີ ${yearToExport}`);
+      } else {
+        _doExportAnnualReportCSV(yearToExport);
+      }
+    }
+
+    function _doExportAnnualReportCSV(y) {
+      const rows = annualRows();
+      const cur = yearStats(rows, y);
+      const filteredRows = cur.rows;
+
+      if (!filteredRows || !filteredRows.length) {
+        return Swal.fire({ icon: 'info', title: 'ບໍ່ມີຂໍ້ມູນ', text: `ບໍ່ພົບຂໍ້ມູນໃນປີ ${y} ເພື່ອສົ່ງອອກ` });
+      }
+
+      const allIndsMap = new Map();
+      customIndicators.forEach(i => allIndsMap.set(i.key, i));
+      masterIndicators.forEach(i => { if (!allIndsMap.has(i.key)) allIndsMap.set(i.key, i); });
+      filteredRows.forEach(x => {
+        Object.keys(x.st.customs || {}).forEach(k => {
+          if (!allIndsMap.has(k)) allIndsMap.set(k, { key: k, name: k, unit: '' });
+        });
+      });
+      const inds = [...allIndsMap.values()];
+
+      const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+      const headers = [
+        'No.',
+        'Year',
+        'Company_Project',
+        'Section',
+        'Station_Code',
+        'Station_Name',
+        'Province',
+        'Sample_Date',
+        'Latitude',
+        'Longitude',
+        'GPS_DMS',
+        ...inds.map(i => `${i.name}${i.unit ? ' (' + i.unit + ')' : ''}`),
+        'QWI_Score',
+        'QWI_Rating',
+        'Status'
+      ];
+
+      let csv = '\uFEFF';
+      csv += q(`ບົດວິເຄາະສະຖິຕິຄຸນນະພາບນ້ຳ ປະຈຳປີ ${y}`) + '\n';
+      csv += q(`ສ້າງເມື່ອ: ${new Date().toLocaleString('lo-LA')} | ຈຳນວນ: ${filteredRows.length} ຕົວຢ່າງ | ເກີນເກນ: ${cur.alerts} ຈຸດ`) + '\n\n';
+      csv += headers.map(q).join(',') + '\n';
+
+      filteredRows.forEach((x, idx) => {
+        const st = x.st;
+        const qRaw = (st.qwi !== undefined && st.qwi !== null && st.qwi !== '' && st.qwi !== '-')
+          ? st.qwi
+          : (typeof calculateAutoQWI === 'function' ? calculateAutoQWI(st.customs || {}) : '');
+        const qi = typeof interpretQWI === 'function' ? interpretQWI(qRaw) : null;
+        const isAlert = isAlertRow(st);
+
+        const row = [
+          idx + 1,
+          x.y,
+          x.company || '',
+          st.section || '',
+          st.code || '',
+          st.name || '',
+          st.province || '',
+          st.sampleDate || x.rec.date || '',
+          st.lat !== null && st.lat !== undefined ? st.lat : '',
+          st.lng !== null && st.lng !== undefined ? st.lng : '',
+          typeof gpsTextOf === 'function' ? gpsTextOf(st) : (st.gps || ''),
+          ...inds.map(i => (st.customs && st.customs[i.key] !== undefined && st.customs[i.key] !== null && st.customs[i.key] !== '') ? st.customs[i.key] : '-'),
+          qi ? (qi.score !== '-' ? qi.score : '') : (st.qwi ?? ''),
+          qi ? `${qi.label} (${qi.text})` : '',
+          isAlert ? 'ALERT (ເກີນເກນ)' : 'PASS (ຜ່ານ)'
+        ];
+        csv += row.map(q).join(',') + '\n';
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ບົດວິເຄາະສະຖິຕິຄຸນນະພາບນ້ຳ_ປະຈຳປີ_${y}_${Date.now()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportAnnualExceedancesExcel(y) {
+      const yearToExport = y || annualYear;
+      if (typeof requireExportPermission === 'function') {
+        requireExportPermission(() => {
+          _doExportAnnualExceedancesExcel(yearToExport);
+        }, `Excel ລາຍການເກີນມາດຕະຖານ ປະຈຳປີ ${yearToExport}`);
+      } else {
+        _doExportAnnualExceedancesExcel(yearToExport);
+      }
+    }
+
+    function _doExportAnnualExceedancesExcel(y) {
+      if (typeof XLSX === 'undefined') {
+        return Swal.fire({ icon: 'error', title: 'ບໍ່ພົບໂມດູນ Excel' });
+      }
+
+      const rows = annualRows();
+      const cur = yearStats(rows, y);
+      const filteredRows = cur.rows;
+
+      const allIndsMap = new Map();
+      customIndicators.forEach(i => allIndsMap.set(i.key, i));
+      masterIndicators.forEach(i => { if (!allIndsMap.has(i.key)) allIndsMap.set(i.key, i); });
+      filteredRows.forEach(x => {
+        Object.keys(x.st.customs || {}).forEach(k => {
+          if (!allIndsMap.has(k)) allIndsMap.set(k, { key: k, name: k, unit: '' });
+        });
+      });
+      const inds = [...allIndsMap.values()];
+
+      const exceedRows = [
+        ['ລຳດັບ', 'ປີ ຄ.ສ', 'ບໍລິສັດ / ໂຄງການ', 'ໂຄງການຍ່ອຍ/ຈຸດ', 'ລະຫັດສະຖານີ', 'ຊື່ສະຖານີ', 'ແຂວງ', 'ວັນທີເກັບຕົວຢ່າງ', 'ພາຣາມິເຕີທີ່ເກີນເກນ', 'ຫົວໜ່ວຍ', 'ຄ່າທີ່ກວດວັດໄດ້', 'ເກນມາດຕະຖານຄວບຄຸມ', 'ສ່ວນຕ່າງ (Diff)', 'ສະຖານະ']
+      ];
+
+      let exCount = 0;
+      filteredRows.forEach(x => {
+        const st = x.st;
+        inds.forEach(ind => {
+          const val = st.customs ? st.customs[ind.key] : undefined;
+          if (val !== undefined && val !== null && val !== '' && val !== '-' && !isNaN(val)) {
+            const numVal = Number(val);
+            const minVal = sysThresholds[`cfg_${ind.key}_min`];
+            const maxVal = sysThresholds[`cfg_${ind.key}_max`];
+            let isEx = false;
+            let limitText = '';
+            let diffText = '';
+            let statusText = '';
+
+            if (minVal !== null && minVal !== undefined && minVal !== '' && numVal < Number(minVal)) {
+              isEx = true;
+              statusText = 'ຕ່ຳກວ່າເກນຂັ້ນຕ່ຳ';
+              limitText = `>= ${minVal}`;
+              diffText = `-${(Number(minVal) - numVal).toFixed(2)}`;
+            } else if (maxVal !== null && maxVal !== undefined && maxVal !== '' && numVal > Number(maxVal)) {
+              isEx = true;
+              statusText = 'ສູງກວ່າເກນຂັ້ນສູງ';
+              limitText = `<= ${maxVal}`;
+              diffText = `+${(numVal - Number(maxVal)).toFixed(2)}`;
+            }
+
+            if (isEx) {
+              exCount++;
+              exceedRows.push([
+                exCount,
+                x.y,
+                x.company || '',
+                st.section || '',
+                st.code || '',
+                st.name || '',
+                st.province || '',
+                st.sampleDate || x.rec.date || '',
+                ind.name,
+                ind.unit || '',
+                numVal,
+                limitText,
+                diffText,
+                statusText
+              ]);
+            }
+          }
+        });
+      });
+
+      if (exCount === 0) {
+        return Swal.fire({
+          icon: 'success',
+          title: 'ບໍ່ມີຈຸດທີ່ເກີນມາດຕະຖານ',
+          text: `ໃນປີ ${y} (ຕາມຕົວກອງທີ່ເລືອກ) ທຸກຈຸດກວດຜ່ານມາດຕະຖານ 100% ບໍ່ມີຄ່າໃດເກີນເກນ.`
+        });
+      }
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(exceedRows);
+      XLSX.utils.book_append_sheet(wb, ws, 'Exceedances');
+      const filename = `ລາຍການເກີນມາດຕະຖານ_ປະຈຳປີ_${y}_${Date.now()}.xlsx`;
+      XLSX.writeFile(wb, filename);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'ສົ່ງອອກລາຍການເກີນມາດຕະຖານສຳເລັດ!',
+        text: `ພົບທັງໝົດ ${exCount} ລາຍການທີ່ເກີນເກນມາດຕະຖານ`,
+        timer: 2000,
+        showConfirmButton: false
+      });
+    }
+
+    window.exportAnnualReportExcel = exportAnnualReportExcel;
+    window.exportAnnualReportCSV = exportAnnualReportCSV;
+    window.exportAnnualExceedancesExcel = exportAnnualExceedancesExcel;
 
     function showMoreRecords() {
       tableLimit += 50;
