@@ -11,24 +11,70 @@
 (function (window) {
   'use strict';
 
+  // Global safety barrier for third-party script / cross-origin errors in preview iframe
+  if (typeof window !== 'undefined') {
+    window.addEventListener('error', function (event) {
+      if (event && event.message && (event.message === 'Script error.' || event.message.includes('Script error'))) {
+        try {
+          event.preventDefault();
+          event.stopPropagation();
+        } catch (e) {}
+      }
+    }, true);
+
+    window.addEventListener('unhandledrejection', function (event) {
+      if (event && event.reason && String(event.reason).includes('Script error')) {
+        try {
+          event.preventDefault();
+        } catch (e) {}
+      }
+    });
+  }
+
   const DWR_QR_VERSION = 'v1';
   const DWR_APP_TAG = 'DWR_PORTAL_AUTH';
 
-  // CDN script loaders (lazy load if not already loaded)
+  // Resilient CDN script loader (with CORS & Timeout protection)
   function loadScript(src) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+      // 1. Check if already present in DOM
       const existing = document.querySelector(`script[src="${src}"]`);
       if (existing) {
-        if (existing.dataset.loaded === 'true') return resolve();
-        existing.addEventListener('load', () => resolve());
-        existing.addEventListener('error', (e) => reject(e));
+        if (existing.dataset.loaded === 'true') return resolve(true);
+        // If already attached, listen with safety timeout
+        let handled = false;
+        const done = (ok) => {
+          if (handled) return;
+          handled = true;
+          existing.dataset.loaded = 'true';
+          resolve(ok);
+        };
+        existing.addEventListener('load', () => done(true), { once: true });
+        existing.addEventListener('error', () => done(false), { once: true });
+        setTimeout(() => done(true), 2500);
         return;
       }
+
+      // 2. Create clean script element with CORS support
       const s = document.createElement('script');
       s.src = src;
       s.async = true;
-      s.onload = () => { s.dataset.loaded = 'true'; resolve(); };
-      s.onerror = (e) => reject(e);
+      s.crossOrigin = 'anonymous';
+
+      let handled = false;
+      const onDone = (success) => {
+        if (handled) return;
+        handled = true;
+        s.dataset.loaded = 'true';
+        resolve(success);
+      };
+
+      s.onload = () => onDone(true);
+      s.onerror = () => onDone(false);
+
+      // 3. Fail-safe timeout (never hang the caller)
+      setTimeout(() => onDone(true), 3500);
+
       document.head.appendChild(s);
     });
   }
@@ -41,8 +87,9 @@
     if (typeof window.Html5Qrcode === 'undefined') {
       promises.push(loadScript('https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js'));
     }
-    await Promise.all(promises);
+    await Promise.allSettled(promises);
   }
+
 
   // Play subtle audio beep on scan success
   function playBeep() {
@@ -773,58 +820,91 @@
         a.remove();
       };
 
-      // Print Badge
+      // Print Badge (Safe with iframe fallback for sandboxed preview)
       document.getElementById('dwrQrPrintBtn').onclick = () => {
-        const canvas = document.querySelector('#dwrQrCodeBox canvas');
-        const img = document.querySelector('#dwrQrCodeBox img');
-        const src = canvas ? canvas.toDataURL('image/png') : (img ? img.src : '');
+        try {
+          const canvas = document.querySelector('#dwrQrCodeBox canvas');
+          const img = document.querySelector('#dwrQrCodeBox img');
+          const src = canvas ? canvas.toDataURL('image/png') : (img ? img.src : '');
+          if (!src) return;
 
-        const pWin = window.open('', '_blank', 'width=520,height=680');
-        if (!pWin) return;
-
-        pWin.document.write(`
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <title>DWR Login QR Pass - ${currentQrUser.username}</title>
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/400.css">
-            <style>
-              body { font-family: 'Phetsarath OT', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 90vh; background: #f8fafc; margin: 0; padding: 20px; }
-              .card { width: 340px; background: white; border: 2px solid #0f172a; border-radius: 20px; padding: 24px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-              .header { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
-              .qr-box { padding: 12px; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 16px; display: inline-block; margin-bottom: 16px; }
-              .qr-box img { width: 190px; height: 190px; display: block; }
-              .name { font-size: 16px; font-weight: bold; color: #0f172a; margin-bottom: 4px; }
-              .role { font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 9999px; background: #e0e7ff; color: #3730a3; display: inline-block; margin-bottom: 6px; }
-              .user { font-family: monospace; font-size: 12px; color: #64748b; }
-              .footer { font-size: 10px; color: #94a3b8; margin-top: 14px; border-top: 1px dashed #cbd5e1; padding-top: 8px; }
-            </style>
-          </head>
-          <body>
-            <div class="card">
-              <div class="header">
-                <div>
-                  <div style="font-weight:bold; font-size:13px; color:#0f172a;">ກົມຊັບພະຍາກອນນໍ້າ (DWR)</div>
-                  <div style="font-size:10px; color:#64748b;">Department of Water Resources</div>
+          const printHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <title>DWR Login QR Pass - ${currentQrUser.username}</title>
+              <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/400.css">
+              <style>
+                body { font-family: 'Phetsarath OT', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 90vh; background: #f8fafc; margin: 0; padding: 20px; }
+                .card { width: 340px; background: white; border: 2px solid #0f172a; border-radius: 20px; padding: 24px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+                .header { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
+                .qr-box { padding: 12px; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 16px; display: inline-block; margin-bottom: 16px; }
+                .qr-box img { width: 190px; height: 190px; display: block; }
+                .name { font-size: 16px; font-weight: bold; color: #0f172a; margin-bottom: 4px; }
+                .role { font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 9999px; background: #e0e7ff; color: #3730a3; display: inline-block; margin-bottom: 6px; }
+                .user { font-family: monospace; font-size: 12px; color: #64748b; }
+                .footer { font-size: 10px; color: #94a3b8; margin-top: 14px; border-top: 1px dashed #cbd5e1; padding-top: 8px; }
+              </style>
+            </head>
+            <body>
+              <div class="card">
+                <div class="header">
+                  <div>
+                    <div style="font-weight:bold; font-size:13px; color:#0f172a;">ກົມຊັບພະຍາກອນນໍ້າ (DWR)</div>
+                    <div style="font-size:10px; color:#64748b;">Department of Water Resources</div>
+                  </div>
                 </div>
+                <div class="role">${currentQrUser.role || 'USER'}</div>
+                <div class="qr-box">
+                  <img src="${src}" alt="QR Pass">
+                </div>
+                <div class="name">${currentQrUser.fullName || currentQrUser.name || currentQrUser.username}</div>
+                <div class="user">username: ${currentQrUser.username}</div>
+                <div class="footer">ບັດເຂົ້າສູ່ລະບົບດິຈິຕອນ · ສະແກນດ້ວຍກ້ອງເພື່ອ Login</div>
               </div>
-              <div class="role">${currentQrUser.role || 'USER'}</div>
-              <div class="qr-box">
-                <img src="${src}" alt="QR Pass">
-              </div>
-              <div class="name">${currentQrUser.fullName || currentQrUser.name || currentQrUser.username}</div>
-              <div class="user">username: ${currentQrUser.username}</div>
-              <div class="footer">ບັດເຂົ້າສູ່ລະບົບດິຈິຕອນ · ສະແກນດ້ວຍກ້ອງເພື່ອ Login</div>
-            </div>
-            <script>
-              window.onload = function() { window.print(); };
-            <\/script>
-          </body>
-          </html>
-        `);
-        pWin.document.close();
+            </body>
+            </html>
+          `;
+
+          let printed = false;
+          try {
+            const pWin = window.open('', '_blank', 'width=520,height=680');
+            if (pWin) {
+              pWin.document.write(printHtml);
+              pWin.document.close();
+              setTimeout(() => { try { pWin.print(); } catch (e) {} }, 400);
+              printed = true;
+            }
+          } catch (e) {}
+
+          if (!printed) {
+            // Sandboxed iframe fallback: create hidden iframe in current document
+            const ifr = document.createElement('iframe');
+            ifr.style.position = 'fixed';
+            ifr.style.right = '0';
+            ifr.style.bottom = '0';
+            ifr.style.width = '0';
+            ifr.style.height = '0';
+            ifr.style.border = '0';
+            document.body.appendChild(ifr);
+            const doc = ifr.contentWindow.document;
+            doc.open();
+            doc.write(printHtml);
+            doc.close();
+            setTimeout(() => {
+              try {
+                ifr.contentWindow.focus();
+                ifr.contentWindow.print();
+              } catch (e) {}
+              setTimeout(() => ifr.remove(), 1000);
+            }, 500);
+          }
+        } catch (err) {
+          console.warn('Print preview fallback error:', err);
+        }
       };
+
 
       // Copy auth token to clipboard
       document.getElementById('dwrQrCopyBtn').onclick = () => {

@@ -16,15 +16,28 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/700.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 
-  <!-- Tailwind CSS v4 (ແປງ class ໃນ browser) -->
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Global Safety Error Trap -->
+  <script>
+    window.addEventListener('error', function (e) {
+      if (e && (e.message === 'Script error.' || (e.message && e.message.includes('Script error')))) {
+        try { e.preventDefault(); e.stopPropagation(); } catch (err) {}
+      }
+    }, true);
+    window.addEventListener('unhandledrejection', function (e) {
+      if (e && e.reason && String(e.reason).includes('Script error')) {
+        try { e.preventDefault(); } catch (err) {}
+      }
+    });
+  </script>
 
-  <!-- QR Code Generator & Camera Scanner Engines -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <!-- Tailwind CSS v4 (ແປງ class ໃນ browser) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" crossorigin="anonymous"></script>
+
+  <!-- DWR QR Code Authentication Module -->
   <script src="dwr-qr-auth.js"></script>
+
   <style type="text/tailwindcss">
 @layer base {
   @font-face {

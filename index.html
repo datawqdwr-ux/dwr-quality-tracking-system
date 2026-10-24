@@ -16,13 +16,25 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/400.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/phetsarath@5.3.0/700.css">
 
-  <!-- Tailwind CSS v4 -->
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Global Safety Error Trap -->
+  <script>
+    window.addEventListener('error', function (e) {
+      if (e && (e.message === 'Script error.' || (e.message && e.message.includes('Script error')))) {
+        try { e.preventDefault(); e.stopPropagation(); } catch (err) {}
+      }
+    }, true);
+    window.addEventListener('unhandledrejection', function (e) {
+      if (e && e.reason && String(e.reason).includes('Script error')) {
+        try { e.preventDefault(); } catch (err) {}
+      }
+    });
+  </script>
 
-  <!-- QR Code Generator & Camera Scanner Engines -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <!-- Tailwind CSS v4 & SweetAlert2 with CORS support -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" crossorigin="anonymous"></script>
+
+  <!-- DWR QR Authentication Module (Lazy-loads camera scanner on-demand) -->
   <script src="dwr-qr-auth.js"></script>
 
   <style>
@@ -369,8 +381,6 @@
       </div>
     </div>
 
-    </div>
-
     <!-- Unified Features & Security Strip (Larger Text) -->
     <div class="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-800 rounded-3xl p-7 sm:p-9 shadow-xl">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -648,16 +658,20 @@
               localStorage.removeItem('lao_water_current_user_v2');
               localStorage.removeItem('lao_wastewater_current_user_v2');
               sessionStorage.removeItem('guestMode');
-              Swal.fire({
-                icon: 'success',
-                title: dict.logoutSuccess,
-                timer: 1200,
-                showConfirmButton: false,
-                background: '#0f172a',
-                color: '#f8fafc'
-              }).then(() => {
+              if (window.Swal) {
+                window.Swal.fire({
+                  icon: 'success',
+                  title: dict.logoutSuccess,
+                  timer: 1200,
+                  showConfirmButton: false,
+                  background: '#0f172a',
+                  color: '#f8fafc'
+                }).then(() => {
+                  refreshSessionUI();
+                });
+              } else {
                 refreshSessionUI();
-              });
+              }
             };
           }
         } else {
