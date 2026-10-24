@@ -12318,22 +12318,29 @@ async function fetchSharedUsers() {
 function defaultAccountUser(d) {
   return normalizeUser({ id: d.uid, username: d.username, password: d.password, fullName: d.name, role: d.role, notes: "ບັນຊີເລີ່ມຕົ້ນ" }, d.uid);
 }
-// ກົດດຽວກັບ ລະບົບຄຸນນະພາບນ້ຳ: ບັນຊີເລີ່ມຕົ້ນໃຊ້ໄດ້ສະເພາະຕອນທີ່ຍັງບໍ່ມີຜູ້ໃຊ້ສິດນັ້ນ
+// ກົດດຽວກັບ ລະບົບຄຸນນະພາບນ້ຳ: ບັນຊີເລີ່ມຕົ້ນ ແລະ QR Pass ໃຊ້ງານໄດ້ຕະຫຼອດ
 function findSharedAccount(users, username, password) {
   const u = users.find((x) => normLogin(x.name || x.username) === normLogin(username) && String(x.password) === password);
   if (u) return { key: u.fbKey, role: u.role, user: normalizeUser({ ...u, id: u.fbKey }, u.fbKey) };
   const d = SHARED_DEFAULTS.find((x) => x.username === normLogin(username) && x.password === password);
-  if (d && !users.some((x) => x.role === d.role)) return { key: "default:" + d.role, role: d.role, user: defaultAccountUser(d) };
+  if (d) return { key: "default:" + d.role, role: d.role, user: defaultAccountUser(d) };
+  try {
+    const qrs = JSON.parse(localStorage.getItem('dwr_custom_qr_users') || '[]');
+    const q = qrs.find(x => normLogin(x.username) === normLogin(username) && String(x.password) === password);
+    if (q) return { key: q.fbKey || ('qr:' + q.username), role: q.role || 'STAFF', user: normalizeUser({ id: q.fbKey || ('qr-' + q.username), username: q.username, fullName: q.fullName || q.username, role: q.role || 'STAFF' }, q.fbKey || ('qr-' + q.username)) };
+  } catch (e) {}
   return null;
 }
 function findBySession(users, sess) {
   if (!sess || !sess.key) return null;
-  if (String(sess.key).startsWith("default:")) {
+  if (String(sess.key).startsWith("default:") || String(sess.key).startsWith("qr:")) {
     const d = SHARED_DEFAULTS.find((x) => "default:" + x.role === sess.key);
-    return d && !users.some((x) => x.role === d.role) ? { key: sess.key, role: d.role, user: defaultAccountUser(d) } : null;
+    if (d) return { key: sess.key, role: d.role, user: defaultAccountUser(d) };
+    return { key: sess.key, role: sess.role || 'STAFF', user: normalizeUser({ id: sess.key, username: sess.name || 'user', fullName: sess.name || 'User', role: sess.role || 'STAFF' }, sess.key) };
   }
   const u = users.find((x) => x.fbKey === sess.key);
-  return u && u.role === sess.role ? { key: u.fbKey, role: u.role, user: normalizeUser({ ...u, id: u.fbKey }, u.fbKey) } : null;
+  if (u) return { key: u.fbKey, role: u.role || sess.role, user: normalizeUser({ ...u, id: u.fbKey }, u.fbKey) };
+  return { key: sess.key, role: sess.role || 'STAFF', user: normalizeUser({ id: sess.key, username: sess.name || 'user', fullName: sess.name || 'User', role: sess.role || 'STAFF' }, sess.key) };
 }
 
 var appMounted = false;

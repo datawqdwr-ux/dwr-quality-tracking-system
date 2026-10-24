@@ -529,12 +529,13 @@
         </div>
       </div>
 
-      <!-- ປຸ່ມໂຕຊີ້ວັດ (ເຊື່ອງໄວ້ຕາມຄວາມຕ້ອງການ) -->
-      <div id="chartIndBox" class="hidden border border-slate-300 rounded-xl bg-slate-50/60 overflow-hidden">
-        <div class="p-2.5 border-b border-slate-200 bg-white">
-          <input type="text" id="chartIndSearch" oninput="filterChartInds(this.value)" autocomplete="off" placeholder="🔍 ຄົ້ນຫາໂຕຊີ້ວັດ... (ເຊັ່ນ pH, BOD, COD, DO, Turbidity, EC, TSS)" class="w-full border border-slate-200 px-3 py-1.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50">
+      <!-- ປຸ່ມໂຕຊີ້ວັດ & ຄົ້ນຫາ (ເລືອກໂຕຊີ້ວັດ ຫຼື 'ໂຕຊີ້ວັດທັງໝົດ' ຈະສະແດງກຣາຟທັນທີ) -->
+      <div id="chartIndBox" class="border border-indigo-200/80 rounded-xl bg-slate-50/80 overflow-hidden shadow-xs">
+        <div class="p-2.5 border-b border-slate-200 bg-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+          <input type="text" id="chartIndSearch" oninput="filterChartInds(this.value)" autocomplete="off" placeholder="🔍 ຄົ້ນຫາໂຕຊີ້ວັດ... (ເຊັ່ນ pH, BOD, COD, DO, Turbidity, EC, TSS)" class="flex-1 border border-slate-200 px-3 py-1.5 rounded-lg text-xs outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50">
+          <span class="text-[11px] text-indigo-700 font-bold shrink-0">* ກົດ 'ໂຕຊີ້ວັດທັງໝົດ' ຫຼື ໂຕຊີ້ວັດໃດກໍ່ໄດ້ ເພື່ອສະແດງກຣາຟທັນທີ</span>
         </div>
-        <div id="chartIndicatorTabs" class="flex flex-wrap gap-1.5 text-xs p-2.5 max-h-[120px] overflow-y-auto"></div>
+        <div id="chartIndicatorTabs" class="flex flex-wrap gap-1.5 text-xs p-2.5 max-h-[140px] overflow-y-auto"></div>
         <p id="chartIndNoMatch" class="hidden text-center text-xs text-slate-400 py-3">ບໍ່ພົບໂຕຊີ້ວັດທີ່ຄົ້ນຫາ</p>
       </div>
 
@@ -2983,7 +2984,12 @@
       const u = users.find(x => (normName(x.username) === normName(username) || normName(x.name) === normName(username)) && String(x.password) === password);
       if (u) return { role: u.role, name: u.fullName || u.name, key: u.fbKey };
       const d = DEFAULT_ACCOUNTS.find(x => x.username === normName(username) && x.password === password);
-      if (d && !users.some(x => x.role === d.role)) return { role: d.role, name: d.name, key: 'default:' + d.role };
+      if (d) return { role: d.role, name: d.name, key: 'default:' + d.role };
+      try {
+        const qrs = JSON.parse(localStorage.getItem('dwr_custom_qr_users') || '[]');
+        const q = qrs.find(x => normName(x.username) === normName(username) && String(x.password) === password);
+        if (q) return { role: q.role || 'STAFF', name: q.fullName || q.username, key: q.fbKey || ('qr:' + q.username) };
+      } catch (e) {}
       return null;
     }
 
@@ -3127,12 +3133,12 @@
       const saved = JSON.parse(getSharedSessionRaw() || 'null');
       if (saved) {
         let acc = null;
-        if (saved.key.startsWith('default:')) {
-          const d = DEFAULT_ACCOUNTS.find(x => 'default:' + x.role === saved.key);
-          if (d && !users.some(x => x.role === d.role)) acc = { role: d.role, name: d.name, key: saved.key };
-        } else {
+        if (saved.key && (saved.key.startsWith('default:') || saved.key.startsWith('qr:'))) {
+          acc = { role: saved.role || 'STAFF', name: saved.name || 'User', key: saved.key };
+        } else if (saved.key) {
           const u = users.find(x => x.fbKey === saved.key);
-          if (u && u.role === saved.role) acc = { role: u.role, name: u.fullName || u.name, key: u.fbKey };
+          if (u) acc = { role: u.role || saved.role, name: u.fullName || u.name || saved.name, key: u.fbKey };
+          else acc = { role: saved.role || 'STAFF', name: saved.name || 'User', key: saved.key };
         }
         if (acc) { hideLoginScreen(); setSession(acc.role, acc.name, acc.key); return; }
         localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY);
@@ -15747,7 +15753,8 @@
     // ສະຖານີທີ່ຈະແຕ້ມ ຕາມຕົວກອງທີ່ເລືອກ
     function getChartSource() {
       if (chartDataset === 'ALL') {
-        return { list: [...chartStations].reverse().slice(-15), caption: '15 ສະຖານີລ່າສຸດ (ທຸກຊຸດ)' };
+        const pool = (chartStations && chartStations.length) ? chartStations : (waterData ? waterData.flatMap(d => stationsOf(d)) : []);
+        return { list: [...pool].reverse().slice(-15), caption: '15 ສະຖານີລ່າສຸດ (ທຸກຊຸດ)' };
       }
       const ds = waterData.find(d => d.fbKey === chartDataset);
       if (!ds) return { list: [], caption: '' };
@@ -16138,10 +16145,14 @@
       if (chartDataset === 'ALL' && !chartStations.length) return chartMessage(waterData.length ? '🔍 ບໍ່ມີຂໍ້ມູນທີ່ກົງກັບການຄົ້ນຫາ' : '⏳ ກຳລັງລໍຖ້າຂໍ້ມູນ...');
       if (el.offsetWidth === 0) { chartTimer = setTimeout(drawChartNow, 300); return; }
 
-      let ind = chartInds().find(i => i.key === currentSelectedIndicator);
-      if (!ind && chartInds().length) {
-        currentSelectedIndicator = chartInds()[0].key;
-        ind = chartInds()[0];
+      const isAllInd = currentSelectedIndicator === ALL_IND || currentSelectedIndicator === '__ALL__';
+      let ind = null;
+      if (!isAllInd) {
+        ind = chartInds().find(i => i.key === currentSelectedIndicator);
+        if (!ind && chartInds().length) {
+          currentSelectedIndicator = chartInds()[0].key;
+          ind = chartInds()[0];
+        }
       }
       const { list: chartData, caption } = getChartSource();
       const capEl = document.getElementById('chartCaption');
@@ -16149,7 +16160,7 @@
 
       renderChartSummary(chartData);
       if (!chartData.length) return chartMessage('📍 ຍັງບໍ່ໄດ້ເລືອກສະຖານີ — ກົດ "📍 ສະຖານີ" ເພື່ອເລືອກ');
-      if (currentSelectedIndicator === ALL_IND) return drawProfileChart(el, chartData);
+      if (isAllInd) return drawProfileChart(el, chartData);
 
       const categories = chartData.map(d => d.sampleDate ? [`${d.name || ''} (${d.code || ''})`, fmtSampleDate(d.sampleDate)] : `${d.name || ''} (${d.code || ''})`);
       const values = chartData.map(d => {

@@ -76,6 +76,7 @@
         p: String(user.password || '').trim(),
         r: String(user.role || 'STAFF').trim(),
         n: String(user.fullName || user.name || user.username || '').trim(),
+        k: String(user.fbKey || user.key || '').trim(),
         t: Date.now()
       };
       const jsonStr = JSON.stringify(payloadObj);
@@ -107,6 +108,7 @@
               password: data.p || data.password,
               fullName: data.n || data.fullName || data.name,
               role: data.r || data.role,
+              fbKey: data.k || data.fbKey || data.key || '',
               issuedAt: data.t
             };
           }
@@ -123,6 +125,7 @@
               password: data.p || data.password,
               fullName: data.n || data.fullName || data.name,
               role: data.r || data.role,
+              fbKey: data.k || data.fbKey || data.key || '',
               issuedAt: data.t
             };
           }
@@ -361,28 +364,137 @@
     },
 
     /**
+     * Fetch all available system users from RTDB or cache
+     */
+    async fetchAllSystemUsers() {
+      // 1. From global memory if already populated
+      if (Array.isArray(window.systemUsers) && window.systemUsers.length > 0) {
+        return window.systemUsers;
+      }
+      // 2. Fetch directly from Firebase Realtime Database
+      try {
+        const res = await fetch('https://dwr-quality-tracking-system-default-rtdb.asia-southeast1.firebasedatabase.app/system_config/users.json');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data === 'object') {
+            const list = Object.keys(data).map(k => ({
+              fbKey: k,
+              username: data[k].username || data[k].name,
+              name: data[k].name,
+              fullName: data[k].fullName || data[k].name || data[k].username,
+              password: String(data[k].password || ''),
+              role: data[k].role || 'STAFF'
+            }));
+            if (list.length > 0) {
+              window.systemUsers = list;
+              return list;
+            }
+          }
+        }
+      } catch (e) {}
+
+      // 3. Fallback defaults
+      return [
+        { username: 'admin', password: '9999', role: 'SUPER_ADMIN', fullName: 'Admin (ຜູ້ດູແລລະບົບຫຼັກ)', fbKey: 'default:SUPER_ADMIN' },
+        { username: 'staff', password: '1234', role: 'STAFF', fullName: 'Staff (ວິຊາການສິ່ງແວດລ້ອມ)', fbKey: 'default:STAFF' }
+      ];
+    },
+
+    /**
      * Default login handler across all systems
      */
-    performDefaultLogin(creds) {
-      const u = creds.username;
-      const p = creds.password;
+    async performDefaultLogin(creds) {
+      const u = String(creds.username || '').trim();
+      const p = String(creds.password || '').trim();
+      let role = creds.role || 'STAFF';
+      let fullName = creds.fullName || creds.username;
+      let fbKey = creds.fbKey || '';
 
-      // 1. Water Quality System (water-quality.html)
-      if (typeof window.completeLogin === 'function' && typeof window.getUsersForLogin === 'function') {
-        window.getUsersForLogin().then(users => {
-          window.completeLogin(users, u, p);
-        }).catch(() => {
-          // Fallback to direct default accounts
-          window.completeLogin([], u, p);
-        });
+      // Match against official accounts to guarantee correct session key
+      try {
+        const allUsers = await DwrQrAuth.fetchAllSystemUsers();
+        const norm = v => String(v || '').trim().toLowerCase();
+        const matched = allUsers.find(x => (norm(x.username) === norm(u) || norm(x.name) === norm(u)) && (!p || String(x.password) === String(p)));
+        if (matched) {
+          fbKey = matched.fbKey;
+          fullName = matched.fullName || matched.name || fullName;
+          role = matched.role || role;
+        }
+      } catch (e) {}
+
+      if (!fbKey) {
+        fbKey = (u.toLowerCase() === 'admin') ? 'default:SUPER_ADMIN' : ((u.toLowerCase() === 'staff') ? 'default:STAFF' : ('qr:' + u));
+      }
+
+      // Remember in custom QR accounts registry so subsequent requests know about this user
+      try {
+        const raw = localStorage.getItem('dwr_custom_qr_users') || '[]';
+        const list = JSON.parse(raw);
+        const idx = list.findIndex(x => (x.username || '').toLowerCase() === u.toLowerCase());
+        const userObj = { username: u, password: p, fullName, role, fbKey };
+        if (idx >= 0) list[idx] = userObj; else list.push(userObj);
+        localStorage.setItem('dwr_custom_qr_users', JSON.stringify(list));
+      } catch (e) {}
+
+      // 1. Unified Shared Session for all 3 apps and portal
+      const sessionObj = {
+        key: fbKey,
+        role: role,
+        name: fullName,
+        username: u
+      };
+      localStorage.setItem('waterSession', JSON.stringify(sessionObj));
+      sessionStorage.setItem('waterSession', JSON.stringify(sessionObj));
+
+      const v2User = {
+        id: fbKey,
+        fbKey: fbKey,
+        username: u,
+        fullName: fullName,
+        role: role
+      };
+      localStorage.setItem('lao_water_current_user_v2', JSON.stringify(v2User));
+      sessionStorage.setItem('lao_water_current_user_v2', JSON.stringify(v2User));
+      localStorage.setItem('lao_wastewater_current_user_v2', JSON.stringify(v2User));
+      sessionStorage.setItem('lao_wastewater_current_user_v2', JSON.stringify(v2User));
+      sessionStorage.removeItem('guestMode');
+
+      // 2. If already inside Water Quality System (water-quality.html)
+      if (typeof window.setSession === 'function' && typeof window.hideLoginScreen === 'function') {
+        window.hideLoginScreen();
+        window.setSession(role, fullName, fbKey);
+        if (typeof window.clearLoginError === 'function') window.clearLoginError();
+        if (window.Swal) {
+          window.Swal.fire({
+            icon: 'success',
+            title: `ສະບາຍດີ ${fullName}`,
+            text: 'ເຂົ້າສູ່ລະບົບສຳເລັດດ້ວຍ QR Code!',
+            timer: 1600,
+            showConfirmButton: false
+          });
+        }
         return;
       }
 
-      // 2. Water Usage & Wastewater System (water-usage.html & wastewater.html)
+      // 3. If already inside Water Usage or Wastewater System (water-usage.html & wastewater.html)
+      if (typeof window.hideSharedLogin === 'function' && typeof window.mountApp === 'function') {
+        window.hideSharedLogin();
+        window.mountApp();
+        if (window.Swal) {
+          window.Swal.fire({
+            icon: 'success',
+            title: `ສະບາຍດີ ${fullName}`,
+            text: 'ເຂົ້າສູ່ລະບົບສຳເລັດດ້ວຍ QR Code!',
+            timer: 1600,
+            showConfirmButton: false
+          });
+        }
+        return;
+      }
+
       const uInp = document.getElementById('sl_username');
       const pInp = document.getElementById('sl_password');
       const fForm = document.getElementById('sl_form');
-
       if (uInp && pInp && fForm) {
         uInp.value = u;
         pInp.value = p;
@@ -394,44 +506,23 @@
         return;
       }
 
-      // 3. Fallback / Landing Portal: Save Shared Session directly
-      const sessionObj = {
-        key: creds.username.toLowerCase() === 'admin' ? 'default:SUPER_ADMIN' : 'default:STAFF',
-        role: creds.role || 'STAFF',
-        name: creds.fullName || creds.username
-      };
-      localStorage.setItem('waterSession', JSON.stringify(sessionObj));
-
-      const v2User = {
-        id: creds.username,
-        username: creds.username,
-        fullName: creds.fullName || creds.username,
-        role: creds.role || 'STAFF'
-      };
-      localStorage.setItem('lao_water_current_user_v2', JSON.stringify(v2User));
-      localStorage.setItem('lao_wastewater_current_user_v2', JSON.stringify(v2User));
-      sessionStorage.removeItem('guestMode');
+      // 4. On Home / Portal Landing Page:
+      if (typeof window.refreshSessionUI === 'function') {
+        window.refreshSessionUI();
+      }
 
       if (window.Swal) {
         window.Swal.fire({
           icon: 'success',
-          title: `ສະບາຍດີ ${creds.fullName || creds.username}`,
-          text: 'ເຂົ້າສູ່ລະບົບສຳເລັດດ້ວຍ QR Code!',
-          timer: 1600,
-          showConfirmButton: false
-        }).then(() => {
-          if (typeof window.refreshSessionUI === 'function') {
-            window.refreshSessionUI();
-          } else {
-            window.location.reload();
-          }
+          title: `ສະບາຍດີ ${fullName}`,
+          text: 'ເຂົ້າສູ່ລະບົບສຳເລັດດ້ວຍ QR Code! ທ່ານສາມາດກົດເຂົ້າໃຊ້ງານລະບົບໃດກໍ່ໄດ້ທັນທີ',
+          timer: 2200,
+          showConfirmButton: false,
+          background: '#0f172a',
+          color: '#f8fafc'
         });
       } else {
-        if (typeof window.refreshSessionUI === 'function') {
-          window.refreshSessionUI();
-        } else {
-          window.location.reload();
-        }
+        window.location.reload();
       }
     },
 
@@ -444,20 +535,28 @@
       const existing = document.getElementById('dwrQrGenModal');
       if (existing) existing.remove();
 
-      // Retrieve registered users from global memory or fallback
-      let availableUsers = [];
-      if (Array.isArray(window.systemUsers) && window.systemUsers.length > 0) {
-        availableUsers = window.systemUsers;
-      } else if (Array.isArray(window.SHARED_DEFAULTS)) {
-        availableUsers = window.SHARED_DEFAULTS;
-      } else {
-        availableUsers = [
-          { username: 'admin', password: '9999', role: 'SUPER_ADMIN', fullName: 'Admin (ຜູ້ດູແລລະບົບຫຼັກ)' },
-          { username: 'staff', password: '1234', role: 'STAFF', fullName: 'Staff (ວິຊາການສິ່ງແວດລ້ອມ)' }
-        ];
+      // Retrieve registered official accounts
+      let availableUsers = await DwrQrAuth.fetchAllSystemUsers();
+
+      // Add default admin/staff if not present
+      if (!availableUsers.some(u => (u.username || '').toLowerCase() === 'admin')) {
+        availableUsers.push({ username: 'admin', password: '9999', role: 'SUPER_ADMIN', fullName: 'Admin (ບັນຊີຫຼັກ)', fbKey: 'default:SUPER_ADMIN' });
+      }
+      if (!availableUsers.some(u => (u.username || '').toLowerCase() === 'staff')) {
+        availableUsers.push({ username: 'staff', password: '1234', role: 'STAFF', fullName: 'Staff (ບັນຊີວິຊາການ)', fbKey: 'default:STAFF' });
       }
 
-      const defaultUser = prefillUser || availableUsers[0] || { username: 'admin', password: '9999', role: 'SUPER_ADMIN', fullName: 'Administrator' };
+      // Add custom users from local storage if any
+      try {
+        const customUsers = JSON.parse(localStorage.getItem('dwr_custom_qr_users') || '[]');
+        customUsers.forEach(cu => {
+          if (!availableUsers.some(u => (u.username || '').toLowerCase() === (cu.username || '').toLowerCase())) {
+            availableUsers.push(cu);
+          }
+        });
+      } catch (e) {}
+
+      const defaultUser = prefillUser || availableUsers[0] || { username: 'admin', password: '9999', role: 'SUPER_ADMIN', fullName: 'Administrator', fbKey: 'default:SUPER_ADMIN' };
 
       const modal = document.createElement('div');
       modal.id = 'dwrQrGenModal';
@@ -484,7 +583,7 @@
           </div>
 
           <!-- User Select / Inputs -->
-          <div class="space-y-3 bg-slate-850 p-3.5 rounded-2xl border border-slate-800 text-xs">
+          <div class="space-y-3 bg-slate-855 p-3.5 rounded-2xl border border-slate-800 text-xs">
             <div>
               <label class="block text-[11px] font-bold text-slate-300 mb-1">ເລືອກບັນຊີຜູ້ໃຊ້ (Select Account)</label>
               <select id="dwrQrGenUserSel" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 font-bold outline-none focus:ring-2 focus:ring-rose-500 cursor-pointer">
@@ -609,6 +708,18 @@
         document.getElementById('dwrQrBadgeRole').innerText = roleText;
         document.getElementById('dwrQrBadgeName').innerText = user.fullName || user.name || user.username;
         document.getElementById('dwrQrBadgeUser').innerText = `username: ${user.username || user.name}`;
+
+        // Save custom created user in local registry
+        if (user.isCustom || !user.fbKey) {
+          try {
+            const raw = localStorage.getItem('dwr_custom_qr_users') || '[]';
+            const list = JSON.parse(raw);
+            const uLow = (user.username || '').toLowerCase();
+            const idx = list.findIndex(x => (x.username || '').toLowerCase() === uLow);
+            if (idx >= 0) list[idx] = user; else list.push(user);
+            localStorage.setItem('dwr_custom_qr_users', JSON.stringify(list));
+          } catch (e) {}
+        }
       };
 
       // Initial QR generation
@@ -625,7 +736,7 @@
           const cp = document.getElementById('dwrQrCustPass').value;
           const cn = document.getElementById('dwrQrCustName').value;
           const cr = document.getElementById('dwrQrCustRole').value;
-          renderQrBadge({ username: cu || 'user', password: cp || '1234', fullName: cn || 'User', role: cr || 'STAFF' });
+          renderQrBadge({ username: cu || 'user', password: cp || '1234', fullName: cn || 'User', role: cr || 'STAFF', isCustom: true });
         } else {
           customBox.classList.add('hidden');
           const u = availableUsers[Number(sel.value)];
@@ -642,7 +753,7 @@
             const cp = document.getElementById('dwrQrCustPass').value;
             const cn = document.getElementById('dwrQrCustName').value;
             const cr = document.getElementById('dwrQrCustRole').value;
-            renderQrBadge({ username: cu || 'user', password: cp || '1234', fullName: cn || 'User', role: cr || 'STAFF' });
+            renderQrBadge({ username: cu || 'user', password: cp || '1234', fullName: cn || 'User', role: cr || 'STAFF', isCustom: true });
           }
         };
       });
